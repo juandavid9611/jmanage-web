@@ -104,7 +104,7 @@ export default function UserNewEditForm({ currentUser }) {
       updateUser(currentUser.id, data);
       enqueueSnackbar('Update success!');
     }
-    router.push(paths.app.user.list);
+    router.push(paths.dashboard.admin.user.list);
   });
 
   const handleDrop = useCallback(
