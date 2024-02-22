@@ -19,7 +19,7 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export default function FirebaseForgotPasswordView() {
+export default function AmplifyForgotPasswordView() {
   const { forgotPassword } = useAuthContext();
 
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function FirebaseForgotPasswordView() {
         email: data.email,
       }).toString();
 
-      const href = `${paths.auth.firebase.verify}?${searchParams}`;
+      const href = `${paths.auth.amplify.newPassword}?${searchParams}`;
       router.push(href);
     } catch (error) {
       console.error(error);
@@ -73,7 +73,7 @@ export default function FirebaseForgotPasswordView() {
 
       <Link
         component={RouterLink}
-        href={paths.auth.firebase.login}
+        href={paths.auth.amplify.login}
         color="inherit"
         variant="subtitle2"
         sx={{

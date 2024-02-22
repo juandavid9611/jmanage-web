@@ -25,7 +25,7 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export default function FirebaseLoginView() {
+export default function AmplifyLoginView() {
   const { login } = useAuthContext();
 
   const router = useRouter();
@@ -74,11 +74,19 @@ export default function FirebaseLoginView() {
   const renderHead = (
     <Stack spacing={2} sx={{ mb: 5 }}>
       <Typography variant="h4">Sign in to Minimal</Typography>
+
+      <Stack direction="row" spacing={0.5}>
+        <Typography variant="body2">New user?</Typography>
+
+        <Link component={RouterLink} href={paths.auth.amplify.register} variant="subtitle2">
+          Create an account
+        </Link>
+      </Stack>
     </Stack>
   );
 
   const renderForm = (
-    <Stack spacing={2.5}>
+    <Stack spacing={3}>
       {!!errorMsg && <Alert severity="error">{errorMsg}</Alert>}
 
       <RHFTextField name="email" label="Email address" />
@@ -100,7 +108,7 @@ export default function FirebaseLoginView() {
 
       <Link
         component={RouterLink}
-        href={paths.auth.firebase.forgotPassword}
+        href={paths.auth.amplify.forgotPassword}
         variant="body2"
         color="inherit"
         underline="always"

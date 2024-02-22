@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-import { FirebaseForgotPasswordView } from 'src/sections/auth/firebase';
+import { AmplifyForgotPasswordView } from 'src/sections/auth/amplify';
 
 // ----------------------------------------------------------------------
 
@@ -8,10 +8,10 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <Helmet>
-        <title> Firebase: Forgot Password</title>
+        <title> Amplify: Forgot Password</title>
       </Helmet>
 
-      <FirebaseForgotPasswordView />
+      <AmplifyForgotPasswordView />
     </>
   );
 }

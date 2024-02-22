@@ -9,9 +9,12 @@ const ROOTS = {
 export const paths = {
   // AUTH
   auth: {
-    firebase: {
-      login: `${ROOTS.AUTH}/firebase/login`,
-      forgotPassword: `${ROOTS.AUTH}/firebase/forgot-password`,
+    amplify: {
+      login: `${ROOTS.AUTH}/amplify/login`,
+      verify: `${ROOTS.AUTH}/amplify/verify`,
+      register: `${ROOTS.AUTH}/amplify/register`,
+      newPassword: `${ROOTS.AUTH}/amplify/new-password`,
+      forgotPassword: `${ROOTS.AUTH}/amplify/forgot-password`,
     },
   },
   // DASHBOARD

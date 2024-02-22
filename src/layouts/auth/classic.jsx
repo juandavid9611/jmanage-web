@@ -21,10 +21,10 @@ import Logo from 'src/components/logo';
 
 const METHODS = [
   {
-    id: 'firebase',
-    label: 'Firebase',
-    path: paths.auth.firebase.login,
-    icon: '/assets/icons/auth/ic_firebase.svg',
+    id: 'amplify',
+    label: 'Amplify',
+    path: paths.auth.amplify.login,
+    icon: '/assets/icons/auth/ic_amplify.svg',
   },
 ];
 

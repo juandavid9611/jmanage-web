@@ -22,7 +22,7 @@ import UserQuickEditForm from './user-quick-edit-form';
 // ----------------------------------------------------------------------
 
 export default function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
-  const { name, avatarUrl, company, role, status, email, phoneNumber } = row;
+  const { name, avatarUrl, company, role, confirmationStatus, email, phoneNumber } = row;
 
   const confirm = useBoolean();
 
@@ -61,13 +61,13 @@ export default function UserTableRow({ row, selected, onEditRow, onSelectRow, on
           <Label
             variant="soft"
             color={
-              (status === 'active' && 'success') ||
-              (status === 'pending' && 'warning') ||
-              (status === 'banned' && 'error') ||
+              (confirmationStatus === 'confirmed' && 'success') ||
+              (confirmationStatus === 'pending' && 'warning') ||
+              (confirmationStatus === 'deleted' && 'error') ||
               'default'
             }
           >
-            {status}
+            {confirmationStatus}
           </Label>
         </TableCell>
 

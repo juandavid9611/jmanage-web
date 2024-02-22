@@ -59,6 +59,7 @@ export function useNavData() {
             title: t('app'),
             path: paths.dashboard.root,
             icon: ICONS.dashboard,
+            roles: ['admin', 'user'],
           },
           {
             title: t('analytics'),

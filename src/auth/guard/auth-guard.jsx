@@ -11,7 +11,7 @@ import { useAuthContext } from '../hooks';
 // ----------------------------------------------------------------------
 
 const loginPaths = {
-  firebase: paths.auth.firebase.login,
+  amplify: paths.auth.amplify.login,
 };
 
 // ----------------------------------------------------------------------

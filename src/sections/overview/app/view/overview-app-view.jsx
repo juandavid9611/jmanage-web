@@ -22,9 +22,11 @@ import AnalyticsOrderTimeline from '../analytics-order-timeline';
 export default function OverviewAppView() {
   const { user } = useAuthContext();
 
+  console.log('user', user);
+
   const settings = useSettingsContext();
 
-  const { metrics } = useGetUserMetrics(user?.uid);
+  const { metrics } = useGetUserMetrics(user?.id);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>

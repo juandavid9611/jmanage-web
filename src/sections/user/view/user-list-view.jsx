@@ -53,7 +53,7 @@ const TABLE_HEAD = [
   { id: 'phoneNumber', label: 'Phone Number', width: 180 },
   { id: 'company', label: 'Company', width: 220 },
   { id: 'role', label: 'Role', width: 180 },
-  { id: 'status', label: 'Status', width: 100 },
+  { id: 'confirmationStatus', label: 'Status', width: 100 },
   { id: '', width: 88 },
 ];
 
@@ -200,22 +200,22 @@ export default function UserListView() {
                       ((tab.value === 'all' || tab.value === filters.status) && 'filled') || 'soft'
                     }
                     color={
-                      (tab.value === 'active' && 'success') ||
+                      (tab.value === 'confirmed' && 'success') ||
                       (tab.value === 'pending' && 'warning') ||
-                      (tab.value === 'banned' && 'error') ||
+                      (tab.value === 'deleted' && 'error') ||
                       'default'
                     }
                   >
                     {tab.value === 'all' && users.length}
-                    {tab.value === 'active' &&
-                      users.filter((user) => user.status === 'active').length}
+                    {tab.value === 'confirmed' &&
+                      users.filter((user) => user.confirmationStatus === 'confirmed').length}
 
                     {tab.value === 'pending' &&
-                      users.filter((user) => user.status === 'pending').length}
-                    {tab.value === 'banned' &&
-                      users.filter((user) => user.status === 'banned').length}
+                      users.filter((user) => user.confirmationStatus === 'pending').length}
+                    {tab.value === 'deleted' &&
+                      users.filter((user) => user.confirmationStatus === 'deleted').length}
                     {tab.value === 'rejected' &&
-                      users.filter((user) => user.status === 'rejected').length}
+                      users.filter((user) => user.confirmationStatus === 'rejected').length}
                   </Label>
                 }
               />

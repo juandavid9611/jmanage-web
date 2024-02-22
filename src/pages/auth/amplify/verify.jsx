@@ -1,17 +1,17 @@
 import { Helmet } from 'react-helmet-async';
 
-import { FirebaseLoginView } from 'src/sections/auth/firebase';
+import { AmplifyVerifyView } from 'src/sections/auth/amplify';
 
 // ----------------------------------------------------------------------
 
-export default function LoginPage() {
+export default function VerifyPage() {
   return (
     <>
       <Helmet>
-        <title> Firebase: Login</title>
+        <title> Amplify: Verify</title>
       </Helmet>
 
-      <FirebaseLoginView />
+      <AmplifyVerifyView />
     </>
   );
 }
