@@ -83,7 +83,7 @@ export function AuthProvider({ children }) {
 
   // LOGIN
   const login = useCallback(async (email, password) => {
-    const currentUser = await Auth.signIn(email, password);
+    const currentUser = await Auth.signIn(email.toLowerCase(), password);
 
     dispatch({
       type: 'INITIAL',

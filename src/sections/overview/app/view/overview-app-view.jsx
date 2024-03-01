@@ -1,4 +1,3 @@
-import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Unstable_Grid2';
 
@@ -26,19 +25,29 @@ export default function OverviewAppView() {
 
   const { metrics } = useGetUserMetrics(user?.id);
 
+  function formatDateTime(datetimeString) {
+    const dateTime = new Date(datetimeString);
+
+    // Format date
+    const formattedDate = dateTime.toLocaleDateString(); // Adjust options as needed
+
+    // Format time
+    const formattedTime = dateTime.toLocaleTimeString(undefined, { hour12: false });
+
+    // Combine date, time, and milliseconds
+    const formattedDateTime = `${formattedDate} ${formattedTime}`;
+
+    return formattedDateTime;
+}
+
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>
       <Grid container spacing={3}>
         <Grid xs={12} md={8}>
           <AppWelcome
             title={`Welcome back 👋 \n ${user?.displayName}`}
-            description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
+            description="We're Vittoria CD. We're more than a team, we're a family. We're here to help you with your goals and to make you a better player. Let's get started!"
             img={<SeoIllustration />}
-            action={
-              <Button variant="contained" color="primary">
-                Go Now
-              </Button>
-            }
           />
         </Grid>
 
@@ -50,11 +59,11 @@ export default function OverviewAppView() {
           <Grid xs={12} md={4}>
             <MetricTotalWidget
               title="Your Metrics"
-              subheader={`Last date updated: ${metrics?.last_update}`}
+              subheader={`Last date updated: ${formatDateTime(metrics?.last_update)}`}
               chart={{
                 series: [
                   { label: 'Earned Percentage', value: metrics?.total },
-                  { label: 'Available', value: 100 - (metrics?.total ?? 0) },
+                  { label: 'Min beca', value: 100 - (metrics?.total ?? 0) },
                 ],
               }}
             />

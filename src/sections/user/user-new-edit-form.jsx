@@ -95,12 +95,14 @@ export default function UserNewEditForm({ currentUser }) {
   const onSubmit = handleSubmit(async (data) => {
     if (!currentUser) {
       try {
+        data.email = data.email.toLowerCase();
         createUser(data);
         enqueueSnackbar('Create success!');
       } catch (error) {
         enqueueSnackbar(error.detail, { variant: 'error' });
       }
     } else {
+      data.email = data.email.toLowerCase();
       updateUser(currentUser.id, data);
       enqueueSnackbar('Update success!');
     }
