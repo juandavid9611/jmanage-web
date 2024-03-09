@@ -375,7 +375,7 @@ function applyFilter({ inputData, comparator, filters }) {
   }
 
   if (status !== 'all') {
-    inputData = inputData.filter((user) => user.status === status);
+    inputData = inputData.filter((user) => user.confirmationStatus === status);
   }
 
   if (role.length) {
