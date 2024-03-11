@@ -60,7 +60,7 @@ export const _appInvoices = [...Array(5)].map((_, index) => {
   };
 });
 
-export const _appFeatured = [...Array(5)].map((_, index) => ({
+export const _appFeatured = [...Array(10)].map((_, index) => ({
   coverUrl: _mock.image.cover(index),
 }));
 
