@@ -1,12 +1,14 @@
-import useSWR from 'swr';
-import { useMemo } from 'react';
 
-import axiosInstance, { fetcher } from 'src/utils/axios';
+import { useMemo } from 'react';
+import useSWR, { mutate } from 'swr';
+
+import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
 
+const URL = endpoints.paymentRequests;
+
 export function useGetPaymentRequests() {
-  const URL = '/payment_requests';
 
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
 
@@ -25,9 +27,7 @@ export function useGetPaymentRequests() {
 }
 
 export function useGetPaymentRequestsByUser(userId) {
-  const URL = `/payment_requests?user_id=${userId}`;
-
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(`${URL}?user_id=${userId}`, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
@@ -44,9 +44,8 @@ export function useGetPaymentRequestsByUser(userId) {
 }
 
 export function useGetPaymentRequest(id) {
-  const URL = `/payment_requests/${id}`;
 
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(`${URL}/${id}`, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
@@ -62,23 +61,19 @@ export function useGetPaymentRequest(id) {
 }
 
 export async function createPaymentRequests(paymentRequestsData) {
-  const URL = `/payment_requests`;
   const res = await axiosInstance.post(URL, paymentRequestsData);
-
+  mutate(URL);
   return res;
 }
 
 export async function updatePaymentRequest(id, paymentRequestData) {
-  const URL = `/payment_requests/${id}`;
-  const res = await axiosInstance.put(URL, paymentRequestData);
-
+  const res = await axiosInstance.put(`${URL}/${id}`, paymentRequestData);
+  mutate(URL);
   return res;
 }
 
 export async function deletePaymentRequest(id) {
-  const URL = `/payment_requests/${id}`;
-
-  const res = await axiosInstance.delete(URL);
-
+  const res = await axiosInstance.delete(`${URL}/${id}`);
+  mutate(URL);
   return res.data;
 }

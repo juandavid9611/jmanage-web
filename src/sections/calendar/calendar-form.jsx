@@ -16,6 +16,7 @@ import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 import uuidv4 from 'src/utils/uuidv4';
 import { fTimestamp } from 'src/utils/format-time';
 
+import { useAuthContext } from 'src/auth/hooks';
 import { createEvent, updateEvent, deleteEvent } from 'src/api/calendar';
 
 import Iconify from 'src/components/iconify';
@@ -26,6 +27,8 @@ import FormProvider, { RHFSwitch, RHFTextField } from 'src/components/hook-form'
 // ----------------------------------------------------------------------
 
 export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
+  const { user } = useAuthContext();
+  const isAdmin = user?.role === 'admin';
   const { enqueueSnackbar } = useSnackbar();
 
   const EventSchema = Yup.object().shape({
@@ -96,13 +99,14 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
       <Stack spacing={3} sx={{ px: 3 }}>
-        <RHFTextField name="title" label="Title" />
+        <RHFTextField disabled={!isAdmin} name="title" label="Title" />
 
-        <RHFTextField name="description" label="Description" multiline rows={3} />
+        <RHFTextField disabled={!isAdmin} name="description" label="Description" multiline rows={3} />
 
-        <RHFSwitch name="allDay" label="All day" />
+        <RHFSwitch disabled={!isAdmin} name="allDay" label="All day" />
 
         <Controller
+          disabled={!isAdmin}
           name="start"
           control={control}
           render={({ field }) => (
@@ -126,6 +130,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
         />
 
         <Controller
+          disabled={!isAdmin}
           name="end"
           control={control}
           render={({ field }) => (
@@ -150,7 +155,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
           )}
         />
 
-        <Controller
+        {isAdmin && (<Controller
           name="color"
           control={control}
           render={({ field }) => (
@@ -161,10 +166,11 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
             />
           )}
         />
+        )}
       </Stack>
 
       <DialogActions>
-        {!!currentEvent?.id && (
+        {!!currentEvent?.id && isAdmin && (
           <Tooltip title="Delete Event">
             <IconButton onClick={onDelete}>
               <Iconify icon="solar:trash-bin-trash-bold" />
@@ -178,7 +184,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
           Cancel
         </Button>
 
-        <LoadingButton
+        {isAdmin && (<LoadingButton
           type="submit"
           variant="contained"
           loading={isSubmitting}
@@ -186,6 +192,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
         >
           Save Changes
         </LoadingButton>
+        )}
       </DialogActions>
     </FormProvider>
   );

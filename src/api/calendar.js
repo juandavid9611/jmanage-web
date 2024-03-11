@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
 
-import { fetcher, endpoints } from 'src/utils/axios';
+import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
 
@@ -17,7 +17,7 @@ export function useGetEvents() {
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher, options);
 
   const memoizedValue = useMemo(() => {
-    const events = data?.events.map((event) => ({
+    const events = data?.map((event) => ({
       ...event,
       textColor: event.color,
     }));
@@ -27,9 +27,9 @@ export function useGetEvents() {
       eventsLoading: isLoading,
       eventsError: error,
       eventsValidating: isValidating,
-      eventsEmpty: !isLoading && !data?.events.length,
+      eventsEmpty: !isLoading && !data?.length,
     };
-  }, [data?.events, error, isLoading, isValidating]);
+  }, [data, error, isLoading, isValidating]);
 
   return memoizedValue;
 }
@@ -37,79 +37,24 @@ export function useGetEvents() {
 // ----------------------------------------------------------------------
 
 export async function createEvent(eventData) {
-  /**
-   * Work on server
-   */
-  // const data = { eventData };
-  // await axios.post(URL, data);
-
-  /**
-   * Work in local
-   */
-  mutate(
-    URL,
-    (currentData) => {
-      const events = [...currentData.events, eventData];
-
-      return {
-        ...currentData,
-        events,
-      };
-    },
-    false
-  );
+  const res = await axiosInstance.post(URL, eventData);
+  mutate(URL);
+  return res;
 }
 
 // ----------------------------------------------------------------------
 
 export async function updateEvent(eventData) {
-  /**
-   * Work on server
-   */
-  // const data = { eventData };
-  // await axios.put(endpoints.calendar, data);
+  const res = await axiosInstance.put(URL, eventData);
+  mutate(URL);
+  return res;
 
-  /**
-   * Work in local
-   */
-  mutate(
-    URL,
-    (currentData) => {
-      const events = currentData.events.map((event) =>
-        event.id === eventData.id ? { ...event, ...eventData } : event
-      );
-
-      return {
-        ...currentData,
-        events,
-      };
-    },
-    false
-  );
 }
 
 // ----------------------------------------------------------------------
 
 export async function deleteEvent(eventId) {
-  /**
-   * Work on server
-   */
-  // const data = { eventId };
-  // await axios.patch(endpoints.calendar, data);
-
-  /**
-   * Work in local
-   */
-  mutate(
-    URL,
-    (currentData) => {
-      const events = currentData.events.filter((event) => event.id !== eventId);
-
-      return {
-        ...currentData,
-        events,
-      };
-    },
-    false
-  );
+  const data = { eventId };
+  mutate(URL);
+  await axiosInstance.delete(`${URL}/${eventId}`, data);
 }

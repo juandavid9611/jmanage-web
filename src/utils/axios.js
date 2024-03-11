@@ -45,4 +45,6 @@ export const fetcher = async (args) => {
 export const endpoints = {
   chat: '/api/chat',
   calendar: '/calendar',
+  paymentRequests: '/payment_requests',
+  users: '/users',
 };
