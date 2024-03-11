@@ -20,6 +20,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 
 import { fTimestamp } from 'src/utils/format-time';
 
+import { useAuthContext } from 'src/auth/hooks';
 import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
 import { updateEvent, useGetEvents } from 'src/api/calendar';
 
@@ -44,6 +45,8 @@ const defaultFilters = {
 // ----------------------------------------------------------------------
 
 export default function CalendarView() {
+  const { user } = useAuthContext();
+  const isAdmin = user?.role === 'admin';
   const theme = useTheme();
 
   const settings = useSettingsContext();
@@ -137,13 +140,14 @@ export default function CalendarView() {
           }}
         >
           <Typography variant="h4">Calendar</Typography>
-          <Button
+          {isAdmin && (<Button
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={onOpenForm}
           >
             New Event
           </Button>
+          )}
         </Stack>
 
         {canReset && renderResults}

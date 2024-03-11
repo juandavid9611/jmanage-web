@@ -1,10 +1,11 @@
-import useSWR from 'swr';
 import { useMemo } from 'react';
+import useSWR, { mutate } from 'swr';
 
-import axiosInstance, { fetcher } from 'src/utils/axios';
+import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
+
+const URL = endpoints.users;
 
 export function useGetUsers() {
-  const URL = '/users';
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
 
   const memoizedValue = useMemo(
@@ -21,8 +22,7 @@ export function useGetUsers() {
 }
 
 export function useGetUser(userId) {
-  const URL = `/users/${userId}`;
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(`${URL}/${userId}`, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
@@ -38,8 +38,8 @@ export function useGetUser(userId) {
 
 export async function createUser(userData) {
   try {
-    const URL = `/users`;
     const res = await axiosInstance.post(URL, userData);
+    mutate(URL);
     return res.data;
   } catch (error) {
     return { error: error.message };
@@ -47,21 +47,20 @@ export async function createUser(userData) {
 }
 
 export async function updateUser(id, userData) {
-  const URL = `/users/${id}`;
   userData.id = id;
-  const res = await axiosInstance.put(URL, userData);
+  const res = await axiosInstance.put(`${URL}/${id}`, userData);
+  mutate(URL);
   return res.data;
 }
 
 export async function deleteUser(id) {
-  const URL = `/users/${id}`;
-  const res = await axiosInstance.delete(URL);
+  const res = await axiosInstance.delete(`${URL}/${id}`);
+  mutate(URL);
   return res.data;
 }
 
 export function useGetUserMetrics(userId) {
-  const URL = `/users/${userId}/metrics`;
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(`${URL}/${userId}/metrics`, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
