@@ -61,6 +61,7 @@ export const _appInvoices = [...Array(5)].map((_, index) => {
 });
 
 export const _appFeatured = [...Array(10)].map((_, index) => ({
+  id: _mock.id(index),
   coverUrl: _mock.image.cover(index),
 }));
 

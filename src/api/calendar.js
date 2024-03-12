@@ -55,6 +55,12 @@ export async function updateEvent(eventData) {
 
 export async function deleteEvent(eventId) {
   const data = { eventId };
-  mutate(URL);
   await axiosInstance.delete(`${URL}/${eventId}`, data);
+  mutate(URL);
+}
+
+export async function participateEvent(eventId, value) {
+  const data = { value };
+  await axiosInstance.post(`${URL}/${eventId}/participate`, data);
+  mutate(URL);
 }

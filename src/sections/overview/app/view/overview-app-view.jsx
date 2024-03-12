@@ -2,9 +2,10 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Unstable_Grid2';
 
 import { useAuthContext } from 'src/auth/hooks';
+import { useGetEvents } from 'src/api/calendar';
 import { useGetUserMetrics } from 'src/api/user';
+import { _appAuthors, _appFeatured } from 'src/_mock';
 import { SeoIllustration } from 'src/assets/illustrations';
-import { _appAuthors, _appFeatured, _analyticOrderTimeline } from 'src/_mock';
 
 import { useSettingsContext } from 'src/components/settings';
 
@@ -24,6 +25,8 @@ export default function OverviewAppView() {
   const settings = useSettingsContext();
 
   const { metrics } = useGetUserMetrics(user?.id);
+
+  const { events } = useGetEvents();
 
   function formatDateTime(datetimeString) {
     const dateTime = new Date(datetimeString);
@@ -62,8 +65,8 @@ export default function OverviewAppView() {
               subheader={`Last date updated: ${formatDateTime(metrics?.last_update)}`}
               chart={{
                 series: [
-                  { label: 'Earned Percentage', value: metrics?.total },
-                  { label: 'Min beca', value: 100 - (metrics?.total ?? 0) },
+                  { label: 'Earned Percentage', value: metrics?.total || 0},
+                  { label: 'Min beca', value: 100 - (metrics?.total || 0) },
                 ],
               }}
             />
@@ -72,10 +75,10 @@ export default function OverviewAppView() {
             <MetricWidget
               chart={{
                 series: [
-                  { label: 'Puntualidad en pagos', percent: metrics?.puntualidad_pagos, total: 40 },
+                  { label: 'Puntualidad en pagos', percent: metrics?.puntualidad_pagos || 0, total: 40 },
                   {
                     label: 'Asistencia Entrenos',
-                    percent: metrics?.asistencia_entrenos,
+                    percent: metrics?.asistencia_entrenos || 0,
                     total: 25,
                   },
                 ],
@@ -84,10 +87,10 @@ export default function OverviewAppView() {
             <MetricWidget
               chart={{
                 series: [
-                  { label: 'Llegadas tarde', percent: metrics?.llegadas_tarde, total: 10 },
+                  { label: 'Llegadas tarde', percent: metrics?.llegadas_tarde || 0, total: 10 },
                   {
                     label: 'Asistencias a partidos',
-                    percent: metrics?.asistencia_partidos,
+                    percent: metrics?.asistencia_partidos || 0,
                     total: 5,
                   },
                 ],
@@ -96,7 +99,7 @@ export default function OverviewAppView() {
             <MetricWidget
               chart={{
                 series: [
-                  { label: 'Deuda Acumulada', percent: metrics?.deuda_acumulada, total: 20 },
+                  { label: 'Deuda Acumulada', percent: metrics?.deuda_acumulada || 0, total: 20 },
                 ],
               }}
             />
@@ -156,7 +159,7 @@ export default function OverviewAppView() {
           </Grid>
 
           <Grid xs={12} md={6}>
-            <AnalyticsOrderTimeline title="Next Events" list={_analyticOrderTimeline} />
+            <AnalyticsOrderTimeline title="Next Events" list={events} />
           </Grid>
         </Grid>
 

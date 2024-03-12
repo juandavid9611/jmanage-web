@@ -1,6 +1,6 @@
 import * as Yup from 'yup';
 import PropTypes from 'prop-types';
-import { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 
@@ -11,31 +11,38 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
+import { Switch, FormControlLabel } from '@mui/material';
 import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 
 import uuidv4 from 'src/utils/uuidv4';
 import { fTimestamp } from 'src/utils/format-time';
 
 import { useAuthContext } from 'src/auth/hooks';
-import { createEvent, updateEvent, deleteEvent } from 'src/api/calendar';
+import { CALENDAR_EVENT_CATEGORIES } from 'src/_mock';
+import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/api/calendar';
 
 import Iconify from 'src/components/iconify';
 import { useSnackbar } from 'src/components/snackbar';
 import { ColorPicker } from 'src/components/color-utils';
-import FormProvider, { RHFSwitch, RHFTextField } from 'src/components/hook-form';
+import FormProvider, { RHFSelect, RHFSwitch, RHFTextField } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
 export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
+  console.log('currentEvent', currentEvent);
   const { user } = useAuthContext();
   const isAdmin = user?.role === 'admin';
   const { enqueueSnackbar } = useSnackbar();
+  const [isParticipating, setIsParticipating] = useState(
+    currentEvent?.participants?.includes(user?.id) || false
+  );
 
   const EventSchema = Yup.object().shape({
     title: Yup.string().max(255).required('Title is required'),
     description: Yup.string().max(5000, 'Description must be at most 5000 characters'),
     // not required
     color: Yup.string(),
+    category: Yup.string(),
     allDay: Yup.boolean(),
     start: Yup.mixed(),
     end: Yup.mixed(),
@@ -67,6 +74,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
       description: data?.description,
       end: data?.end,
       start: data?.start,
+      category: data?.category || 'match',
     };
 
     try {
@@ -86,6 +94,19 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
     }
   });
 
+  const handleChangeIsParticipating = useCallback(
+    async (event) => {
+      try {
+        setIsParticipating(event.target.checked);
+        enqueueSnackbar('Participate success!');
+        await participateEvent(`${currentEvent?.id}`, event.target.checked);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    [enqueueSnackbar, currentEvent?.id, setIsParticipating]
+  );
+
   const onDelete = useCallback(async () => {
     try {
       await deleteEvent(`${currentEvent?.id}`);
@@ -101,9 +122,39 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
       <Stack spacing={3} sx={{ px: 3 }}>
         <RHFTextField disabled={!isAdmin} name="title" label="Title" />
 
-        <RHFTextField disabled={!isAdmin} name="description" label="Description" multiline rows={3} />
+        <RHFTextField
+          disabled={!isAdmin}
+          name="description"
+          label="Description"
+          multiline
+          rows={3}
+        />
 
-        <RHFSwitch disabled={!isAdmin} name="allDay" label="All day" />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+          <RHFSwitch disabled={!isAdmin} name="allDay" label="All day" />
+
+          <RHFSelect
+            disabled={!isAdmin}
+            native
+            name="category"
+            label="Category"
+            InputLabelProps={{ shrink: true }}
+          >
+            {CALENDAR_EVENT_CATEGORIES.map((group) => (
+              <option key={group.label} value={group.value}>
+                {group.label}
+              </option>
+            ))}
+          </RHFSelect>
+
+          {!isAdmin && currentEvent?.id && (
+            <FormControlLabel
+              disabled={values.category === 'money' || values.category === 'other'}
+              control={<Switch checked={isParticipating} onChange={handleChangeIsParticipating} />}
+              label="Participate"
+            />
+          )}
+        </Stack>
 
         <Controller
           disabled={!isAdmin}
@@ -155,17 +206,18 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
           )}
         />
 
-        {isAdmin && (<Controller
-          name="color"
-          control={control}
-          render={({ field }) => (
-            <ColorPicker
-              selected={field.value}
-              onSelectColor={(color) => field.onChange(color)}
-              colors={colorOptions}
-            />
-          )}
-        />
+        {isAdmin && (
+          <Controller
+            name="color"
+            control={control}
+            render={({ field }) => (
+              <ColorPicker
+                selected={field.value}
+                onSelectColor={(color) => field.onChange(color)}
+                colors={colorOptions}
+              />
+            )}
+          />
         )}
       </Stack>
 
@@ -184,14 +236,15 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
           Cancel
         </Button>
 
-        {isAdmin && (<LoadingButton
-          type="submit"
-          variant="contained"
-          loading={isSubmitting}
-          disabled={dateError}
-        >
-          Save Changes
-        </LoadingButton>
+        {isAdmin && (
+          <LoadingButton
+            type="submit"
+            variant="contained"
+            loading={isSubmitting}
+            disabled={dateError}
+          >
+            Save Changes
+          </LoadingButton>
         )}
       </DialogActions>
     </FormProvider>
