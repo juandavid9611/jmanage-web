@@ -39,6 +39,13 @@ export const TEAM_GROUPS = [
   { value: 'kids', label: 'Kids Group' },
 ];
 
+export const CALENDAR_EVENT_CATEGORIES = [
+  { value: 'training', label: 'Training' },
+  { value: 'match', label: 'Match' },
+  { value: 'money', label: 'Money' },
+  { value: 'other', label: 'Other' },
+];
+
 export const PAYMENT_REQUEST_SERVICE_OPTIONS = [...Array(8)].map((_, index) => ({
   id: _mock.id(index),
   name: _mock.role(index),

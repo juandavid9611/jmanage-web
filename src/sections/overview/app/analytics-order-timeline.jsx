@@ -9,8 +9,10 @@ import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
+import { Paid, OtherHouses, EmojiEvents, SportsSoccer } from '@mui/icons-material';
 
 import { fDateTime } from 'src/utils/format-time';
+
 
 // ----------------------------------------------------------------------
 
@@ -46,19 +48,29 @@ AnalyticsOrderTimeline.propTypes = {
 // ----------------------------------------------------------------------
 
 function OrderItem({ item, lastTimeline }) {
-  const { type, title, time } = item;
+  const { title, start, color, category} = item;
   return (
     <TimelineItem>
       <TimelineSeparator>
         <TimelineDot
-          color={
-            (type === 'order1' && 'primary') ||
-            (type === 'order2' && 'success') ||
-            (type === 'order3' && 'info') ||
-            (type === 'order4' && 'warning') ||
-            'error'
-          }
-        />
+          sx={{
+            color,
+          }}
+          variant="outlined"
+        >
+          {(() => {
+            switch (category) {
+              case 'training':
+                return <SportsSoccer sx={{ width: 20, height: 20 }} />;
+              case 'money':
+                return <Paid sx={{ width: 20, height: 20 }} />;
+              case 'match':
+                return <EmojiEvents sx={{ width: 20, height: 20 }} />;
+              default:
+                return <OtherHouses sx={{ width: 20, height: 20 }} />;
+            }
+          })()}
+        </TimelineDot>
         {lastTimeline ? null : <TimelineConnector />}
       </TimelineSeparator>
 
@@ -66,7 +78,7 @@ function OrderItem({ item, lastTimeline }) {
         <Typography variant="subtitle2">{title}</Typography>
 
         <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-          {fDateTime(time)}
+          {fDateTime(start)}
         </Typography>
       </TimelineContent>
     </TimelineItem>
