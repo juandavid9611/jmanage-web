@@ -34,7 +34,9 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const isAdmin = user?.role === 'admin';
   const { enqueueSnackbar } = useSnackbar();
   const [isParticipating, setIsParticipating] = useState(
-    currentEvent?.participants?.has(user?.id) || false
+    console.log('currentEvent?.participants', currentEvent?.participants) ||
+      (currentEvent?.participants && user?.id in currentEvent.participants) ||
+      false
   );
 
   const EventSchema = Yup.object().shape({
@@ -147,7 +149,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
             ))}
           </RHFSelect>
 
-          {!isAdmin && currentEvent?.id && (
+          {currentEvent?.id && (
             <FormControlLabel
               disabled={values.category === 'money' || values.category === 'other'}
               control={<Switch checked={isParticipating} onChange={handleChangeIsParticipating} />}
