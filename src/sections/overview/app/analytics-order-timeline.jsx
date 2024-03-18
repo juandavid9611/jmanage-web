@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 
+import { Box } from '@mui/system';
 import Card from '@mui/material/Card';
+import { Popover } from '@mui/material';
 import Timeline from '@mui/lab/Timeline';
 import TimelineDot from '@mui/lab/TimelineDot';
 import Typography from '@mui/material/Typography';
@@ -13,6 +15,7 @@ import { Paid, OtherHouses, EmojiEvents, SportsSoccer } from '@mui/icons-materia
 
 import { fDateTime } from 'src/utils/format-time';
 
+import { usePopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
@@ -48,7 +51,9 @@ AnalyticsOrderTimeline.propTypes = {
 // ----------------------------------------------------------------------
 
 function OrderItem({ item, lastTimeline }) {
-  const { title, start, color, category} = item;
+  const { title, start, color, category, participants } = item;
+  const clickPopover = usePopover();
+
   return (
     <TimelineItem>
       <TimelineSeparator>
@@ -57,6 +62,7 @@ function OrderItem({ item, lastTimeline }) {
             color,
           }}
           variant="outlined"
+          onClick={clickPopover.onOpen}
         >
           {(() => {
             switch (category) {
@@ -76,11 +82,36 @@ function OrderItem({ item, lastTimeline }) {
 
       <TimelineContent>
         <Typography variant="subtitle2">{title}</Typography>
-
         <Typography variant="caption" sx={{ color: 'text.disabled' }}>
           {fDateTime(start)}
         </Typography>
       </TimelineContent>
+      <Popover
+        open={Boolean(clickPopover.open)}
+        anchorEl={clickPopover.open}
+        onClose={clickPopover.onClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+      >
+        <Box sx={{ p: 2, maxWidth: 280 }}>
+          <Typography variant="subtitle1" gutterBottom>
+            Participants
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {participants.map((participant, index) => (
+              <Typography key={index} variant="body2" sx={{ color: 'text.secondary' }}>
+                {participant}
+              </Typography>
+            ))}
+          </Typography>
+        </Box>
+      </Popover>
     </TimelineItem>
   );
 }
