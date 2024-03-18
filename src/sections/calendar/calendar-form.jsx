@@ -34,7 +34,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const isAdmin = user?.role === 'admin';
   const { enqueueSnackbar } = useSnackbar();
   const [isParticipating, setIsParticipating] = useState(
-    currentEvent?.participants?.includes(user?.id) || false
+    currentEvent?.participants?.has(user?.id) || false
   );
 
   const EventSchema = Yup.object().shape({

@@ -106,19 +106,17 @@ function OrderItem({ item, lastTimeline }) {
           <Typography variant="subtitle1" gutterBottom>
             Participants
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {Object.entries(participants).map((entry, index) =>
-              entry[0] === user?.id ? (
-                <Typography key={entry[0]} variant="body2" sx={{ color: 'text.primary' }}>
-                  {entry[1]}
-                </Typography>
-              ) : (
-                <Typography key={entry[0]} variant="body2" sx={{ color: 'text.secondary' }}>
-                  {entry[1]}
-                </Typography>
-              )
-            )}
-          </Typography>
+          {Object.entries(participants).map((entry, index) =>
+            entry[0] === user?.id ? (
+              <Typography key={entry[0]} variant="body2" sx={{ color: 'text.primary' }}>
+                {entry[1]}
+              </Typography>
+            ) : (
+              <Typography key={entry[0]} variant="body2" sx={{ color: 'text.secondary' }}>
+                {entry[1]}
+              </Typography>
+            )
+          )}
         </Box>
       </Popover>
     </TimelineItem>

@@ -6,6 +6,7 @@ export default function usePopover() {
   const [open, setOpen] = useState(null);
 
   const onOpen = useCallback((event) => {
+    console.log('event', event);
     setOpen(event.currentTarget);
   }, []);
 

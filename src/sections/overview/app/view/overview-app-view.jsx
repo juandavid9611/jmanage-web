@@ -43,8 +43,6 @@ export default function OverviewAppView() {
     return formattedDateTime;
   }
 
-  console.log('events', events);
-
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>
       <Grid container spacing={3}>
