@@ -15,6 +15,8 @@ import { Paid, OtherHouses, EmojiEvents, SportsSoccer } from '@mui/icons-materia
 
 import { fDateTime } from 'src/utils/format-time';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { usePopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
@@ -53,6 +55,7 @@ AnalyticsOrderTimeline.propTypes = {
 function OrderItem({ item, lastTimeline }) {
   const { title, start, color, category, participants } = item;
   const clickPopover = usePopover();
+  const { user } = useAuthContext();
 
   return (
     <TimelineItem>
@@ -104,11 +107,17 @@ function OrderItem({ item, lastTimeline }) {
             Participants
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {participants.map((participant, index) => (
-              <Typography key={index} variant="body2" sx={{ color: 'text.secondary' }}>
-                {participant}
-              </Typography>
-            ))}
+            {Object.entries(participants).map((entry, index) =>
+              entry[0] === user?.id ? (
+                <Typography key={entry[0]} variant="body2" sx={{ color: 'text.primary' }}>
+                  {entry[1]}
+                </Typography>
+              ) : (
+                <Typography key={entry[0]} variant="body2" sx={{ color: 'text.secondary' }}>
+                  {entry[1]}
+                </Typography>
+              )
+            )}
           </Typography>
         </Box>
       </Popover>

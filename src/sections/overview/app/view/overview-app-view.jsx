@@ -41,7 +41,9 @@ export default function OverviewAppView() {
     const formattedDateTime = `${formattedDate} ${formattedTime}`;
 
     return formattedDateTime;
-}
+  }
+
+  console.log('events', events);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>
@@ -65,7 +67,7 @@ export default function OverviewAppView() {
               subheader={`Last date updated: ${formatDateTime(metrics?.last_update)}`}
               chart={{
                 series: [
-                  { label: 'Earned Percentage', value: metrics?.total || 0},
+                  { label: 'Earned Percentage', value: metrics?.total || 0 },
                   { label: 'Min beca', value: 100 - (metrics?.total || 0) },
                 ],
               }}
@@ -75,7 +77,11 @@ export default function OverviewAppView() {
             <MetricWidget
               chart={{
                 series: [
-                  { label: 'Puntualidad en pagos', percent: metrics?.puntualidad_pagos || 0, total: 40 },
+                  {
+                    label: 'Puntualidad en pagos',
+                    percent: metrics?.puntualidad_pagos || 0,
+                    total: 40,
+                  },
                   {
                     label: 'Asistencia Entrenos',
                     percent: metrics?.asistencia_entrenos || 0,
