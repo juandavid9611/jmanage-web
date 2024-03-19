@@ -8,60 +8,50 @@ import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import MenuItem from '@mui/material/MenuItem';
+import { Typography } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
-import { countries } from 'src/assets/data';
-import { USER_STATUS_OPTIONS } from 'src/_mock';
+import { updateUserMetrics } from 'src/api/user';
 
-import Iconify from 'src/components/iconify';
 import { useSnackbar } from 'src/components/snackbar';
-import FormProvider, { RHFSelect, RHFTextField, RHFAutocomplete } from 'src/components/hook-form';
+import FormProvider, { RHFTextField } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
 export default function UserQuickEditForm({ currentUser, open, onClose }) {
   const { enqueueSnackbar } = useSnackbar();
 
-  const NewUserSchema = Yup.object().shape({
-    name: Yup.string().required('Name is required'),
-    email: Yup.string().required('Email is required').email('Email must be a valid email address'),
-    phoneNumber: Yup.string().required('Phone number is required'),
-    address: Yup.string().required('Address is required'),
-    country: Yup.string().required('Country is required'),
-    company: Yup.string().required('Company is required'),
-    state: Yup.string().required('State is required'),
-    city: Yup.string().required('City is required'),
-    role: Yup.string().required('Role is required'),
+  const NewMetricsSchema = Yup.object().shape({
+    asistencia_entrenos: Yup.number().required('Asistencia a entrenos is required'),
+    asistencia_partidos: Yup.number().required('Asistencia a partidos is required'),
+    puntualidad_pagos: Yup.number().required('Puntualidad en pagos is required'),
+    llegadas_tarde: Yup.number().required('Llegadas tarde is required'),
+    deuda_acumulada: Yup.number().required('Deuda acumlada is required'),
+    total: Yup.number().required('Total number is required'),
   });
 
   const defaultValues = useMemo(
     () => ({
       name: currentUser?.name || '',
-      email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      address: currentUser?.address || '',
-      country: currentUser?.country || '',
-      state: currentUser?.state || '',
-      city: currentUser?.city || '',
-      zipCode: currentUser?.zipCode || '',
-      status: currentUser?.status,
-      company: currentUser?.company || '',
-      role: currentUser?.role || '',
+      asistencia_entrenos: currentUser?.user_metrics?.asistencia_entrenos || 0,
+      asistencia_partidos: currentUser?.user_metrics?.asistencia_partidos || 0,
+      puntualidad_pagos: currentUser?.user_metrics?.puntualidad_pagos || 0,
+      llegadas_tarde: currentUser?.user_metrics?.llegadas_tarde || 0,
+      deuda_acumulada: currentUser?.user_metrics?.deuda_acumulada || 0,
+      total: currentUser?.user_metrics?.total || 0,
     }),
     [currentUser]
   );
 
   const methods = useForm({
-    resolver: yupResolver(NewUserSchema),
+    resolver: yupResolver(NewMetricsSchema),
     defaultValues,
   });
 
   const {
-    reset,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
@@ -69,11 +59,10 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      reset();
       onClose();
-      enqueueSnackbar('Update success!');
-      // updateUser(currentUser.id, data);
-      console.info('DATA', data);
+      enqueueSnackbar('Update metrics success!');
+      updateUserMetrics(currentUser.id, data);
+      currentUser.user_metrics = data;
     } catch (error) {
       console.error(error);
     }
@@ -90,11 +79,13 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
       }}
     >
       <FormProvider methods={methods} onSubmit={onSubmit}>
-        <DialogTitle>Quick Update</DialogTitle>
+        <DialogTitle>Quick Metrics Update</DialogTitle>
 
         <DialogContent>
           <Alert variant="outlined" severity="info" sx={{ mb: 3 }}>
-            Account is waiting for confirmation
+            <Typography>
+              Update the metrics for <strong>{currentUser?.name}</strong> user of group <strong>{currentUser?.group}</strong>
+            </Typography>
           </Alert>
 
           <Box
@@ -106,54 +97,18 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
               sm: 'repeat(2, 1fr)',
             }}
           >
-            <RHFSelect name="status" label="Status">
-              {USER_STATUS_OPTIONS.map((status) => (
-                <MenuItem key={status.value} value={status.value}>
-                  {status.label}
-                </MenuItem>
-              ))}
-            </RHFSelect>
 
-            <Box sx={{ display: { xs: 'none', sm: 'block' } }} />
+            <RHFTextField name="asistencia_entrenos" label="Asistencia entrenos" />
 
-            <RHFTextField name="name" label="Full Name" />
-            <RHFTextField name="email" label="Email Address" />
-            <RHFTextField name="phoneNumber" label="Phone Number" />
+            <RHFTextField name="asistencia_partidos" label="Asistencia partidos" />
 
-            <RHFAutocomplete
-              name="country"
-              label="Country"
-              options={countries.map((country) => country.label)}
-              getOptionLabel={(option) => option}
-              renderOption={(props, option) => {
-                const { code, label, phone } = countries.filter(
-                  (country) => country.label === option
-                )[0];
+            <RHFTextField name="puntualidad_pagos" label="Puntualidad pagos" />
 
-                if (!label) {
-                  return null;
-                }
+            <RHFTextField name="llegadas_tarde" label="Llegadas tarde" />
 
-                return (
-                  <li {...props} key={label}>
-                    <Iconify
-                      key={label}
-                      icon={`circle-flags:${code.toLowerCase()}`}
-                      width={28}
-                      sx={{ mr: 1 }}
-                    />
-                    {label} ({code}) +{phone}
-                  </li>
-                );
-              }}
-            />
+            <RHFTextField name="deuda_acumulada" label="Deuda acumulada" />
 
-            <RHFTextField name="state" label="State/Region" />
-            <RHFTextField name="city" label="City" />
-            <RHFTextField name="address" label="Address" />
-            <RHFTextField name="zipCode" label="Zip/Code" />
-            <RHFTextField name="company" label="Company" />
-            <RHFTextField name="role" label="Role" />
+            <RHFTextField name="total" label="Total" />
           </Box>
         </DialogContent>
 
