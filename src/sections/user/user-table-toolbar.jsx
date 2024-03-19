@@ -21,7 +21,7 @@ export default function UserTableToolbar({
   filters,
   onFilters,
   //
-  roleOptions,
+  groupOptions,
 }) {
   const popover = usePopover();
 
@@ -32,10 +32,10 @@ export default function UserTableToolbar({
     [onFilters]
   );
 
-  const handleFilterRole = useCallback(
+  const handleFilterGroup = useCallback(
     (event) => {
       onFilters(
-        'role',
+        'group',
         typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value
       );
     },
@@ -62,13 +62,13 @@ export default function UserTableToolbar({
             width: { xs: 1, md: 200 },
           }}
         >
-          <InputLabel>Role</InputLabel>
+          <InputLabel>Group</InputLabel>
 
           <Select
             multiple
-            value={filters.role}
-            onChange={handleFilterRole}
-            input={<OutlinedInput label="Role" />}
+            value={filters.group}
+            onChange={handleFilterGroup}
+            input={<OutlinedInput label="Group" />}
             renderValue={(selected) => selected.map((value) => value).join(', ')}
             MenuProps={{
               PaperProps: {
@@ -76,9 +76,9 @@ export default function UserTableToolbar({
               },
             }}
           >
-            {roleOptions.map((option) => (
+            {groupOptions.map((option) => (
               <MenuItem key={option} value={option}>
-                <Checkbox disableRipple size="small" checked={filters.role.includes(option)} />
+                <Checkbox disableRipple size="small" checked={filters.group.includes(option)} />
                 {option}
               </MenuItem>
             ))}
@@ -146,5 +146,5 @@ export default function UserTableToolbar({
 UserTableToolbar.propTypes = {
   filters: PropTypes.object,
   onFilters: PropTypes.func,
-  roleOptions: PropTypes.array,
+  groupOptions: PropTypes.array,
 };
