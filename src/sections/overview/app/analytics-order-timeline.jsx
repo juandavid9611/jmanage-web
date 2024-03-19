@@ -22,6 +22,9 @@ import { usePopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export default function AnalyticsOrderTimeline({ title, subheader, list, ...other }) {
+  const limit_time = new Date();
+  limit_time.setHours(0, 0, 0, 0);
+
   return (
     <Card {...other}>
       <CardHeader title={title} subheader={subheader} />
@@ -36,9 +39,12 @@ export default function AnalyticsOrderTimeline({ title, subheader, list, ...othe
           },
         }}
       >
-        {list.map((item, index) => (
-          <OrderItem key={item.id} item={item} lastTimeline={index === list.length - 1} />
-        ))}
+        {list.map(
+          (item, index) =>
+            item.start > limit_time && (
+              <OrderItem key={item.id} item={item} lastTimeline={index === list.length - 1} />
+            )
+        )}
       </Timeline>
     </Card>
   );

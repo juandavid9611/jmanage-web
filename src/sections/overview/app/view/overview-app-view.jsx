@@ -72,41 +72,46 @@ export default function OverviewAppView() {
             />
           </Grid>
           <Grid xs={12} md={8}>
-            <MetricWidget
-              chart={{
-                series: [
-                  {
-                    label: 'Puntualidad en pagos',
-                    percent: metrics?.puntualidad_pagos || 0,
-                    total: 40,
-                  },
-                  {
-                    label: 'Asistencia Entrenos',
-                    percent: metrics?.asistencia_entrenos || 0,
-                    total: 25,
-                  },
-                ],
-              }}
-            />
-            <MetricWidget
-              chart={{
-                series: [
-                  { label: 'Llegadas tarde', percent: metrics?.llegadas_tarde || 0, total: 10 },
-                  {
-                    label: 'Asistencias a partidos',
-                    percent: metrics?.asistencia_partidos || 0,
-                    total: 5,
-                  },
-                ],
-              }}
-            />
-            <MetricWidget
-              chart={{
-                series: [
-                  { label: 'Deuda Acumulada', percent: metrics?.deuda_acumulada || 0, total: 20 },
-                ],
-              }}
-            />
+            <Grid>
+              <MetricWidget
+                chart={{
+                  series: [
+                    {
+                      label: 'Puntualidad en pagos',
+                      percent: metrics?.puntualidad_pagos || 0,
+                      total: 40,
+                    },
+                    {
+                      label: 'Asistencia Entrenos',
+                      percent: metrics?.asistencia_entrenos || 0,
+                      total: 25,
+                    },
+                  ],
+                }}
+              />
+              <MetricWidget
+                chart={{
+                  series: [
+                    { label: 'Llegadas tarde', percent: metrics?.llegadas_tarde || 0, total: 10 },
+                    {
+                      label: 'Asistencias a partidos',
+                      percent: metrics?.asistencia_partidos || 0,
+                      total: 5,
+                    },
+                  ],
+                }}
+              />
+              <MetricWidget
+                chart={{
+                  series: [
+                    { label: 'Deuda Acumulada', percent: metrics?.deuda_acumulada || 0, total: 20 },
+                  ],
+                }}
+              />
+            </Grid>
+            <Grid xs={12} md={6} marginTop={2}>
+              <AnalyticsOrderTimeline title="Next Events" list={events} />
+            </Grid>
           </Grid>
         </Grid>
 
@@ -160,10 +165,6 @@ export default function OverviewAppView() {
                 ],
               }}
             />
-          </Grid>
-
-          <Grid xs={12} md={6}>
-            <AnalyticsOrderTimeline title="Next Events" list={events} />
           </Grid>
         </Grid>
 
