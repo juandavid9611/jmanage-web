@@ -20,7 +20,7 @@ import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { deleteUser, useGetUsers } from 'src/api/user';
-import { _roles, USER_STATUS_OPTIONS } from 'src/_mock';
+import { GROUP_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
@@ -59,7 +59,7 @@ const TABLE_HEAD = [
 
 const defaultFilters = {
   name: '',
-  role: [],
+  group: [],
   status: 'all',
 };
 
@@ -226,7 +226,7 @@ export default function UserListView() {
             filters={filters}
             onFilters={handleFilters}
             //
-            roleOptions={_roles}
+            groupOptions={GROUP_OPTIONS}
           />
 
           {canReset && (
@@ -356,7 +356,7 @@ export default function UserListView() {
 // ----------------------------------------------------------------------
 
 function applyFilter({ inputData, comparator, filters }) {
-  const { name, status, role } = filters;
+  const { name, status, group } = filters;
 
   const stabilizedThis = inputData.map((el, index) => [el, index]);
 
@@ -378,8 +378,8 @@ function applyFilter({ inputData, comparator, filters }) {
     inputData = inputData.filter((user) => user.confirmationStatus === status);
   }
 
-  if (role.length) {
-    inputData = inputData.filter((user) => role.includes(user.role));
+  if (group.length) {
+    inputData = inputData.filter((user) => group.includes(user.group));
   }
 
   return inputData;

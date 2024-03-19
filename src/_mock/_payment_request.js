@@ -38,6 +38,7 @@ export const TEAM_GROUPS = [
   { value: 'female', label: 'Female Group' },
   { value: 'kids', label: 'Kids Group' },
 ];
+export const GROUP_OPTIONS = ['male', 'female', 'kids'];
 
 export const CALENDAR_EVENT_CATEGORIES = [
   { value: 'training', label: 'Training' },

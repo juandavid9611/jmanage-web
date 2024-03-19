@@ -23,9 +23,9 @@ export default function UserTableFiltersResult({
     onFilters('status', 'all');
   };
 
-  const handleRemoveRole = (inputValue) => {
-    const newValue = filters.role.filter((item) => item !== inputValue);
-    onFilters('role', newValue);
+  const handleRemoveGroup = (inputValue) => {
+    const newValue = filters.group.filter((item) => item !== inputValue);
+    onFilters('group', newValue);
   };
 
   return (
@@ -44,10 +44,10 @@ export default function UserTableFiltersResult({
           </Block>
         )}
 
-        {!!filters.role.length && (
-          <Block label="Role:">
-            {filters.role.map((item) => (
-              <Chip key={item} label={item} size="small" onDelete={() => handleRemoveRole(item)} />
+        {!!filters.group.length && (
+          <Block label="Group:">
+            {filters.group.map((item) => (
+              <Chip key={item} label={item} size="small" onDelete={() => handleRemoveGroup(item)} />
             ))}
           </Block>
         )}
