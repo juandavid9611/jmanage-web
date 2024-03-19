@@ -52,9 +52,15 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
   });
 
   const {
+    reset,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
+
+  const onCloseHandle = () => {
+    onClose();
+    reset(defaultValues);
+  };
 
   const onSubmit = handleSubmit(async (data) => {
     try {
@@ -113,7 +119,7 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
         </DialogContent>
 
         <DialogActions>
-          <Button variant="outlined" onClick={onClose}>
+          <Button variant="outlined" onClick={onCloseHandle}>
             Cancel
           </Button>
 
