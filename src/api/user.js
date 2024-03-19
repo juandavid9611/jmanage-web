@@ -53,6 +53,13 @@ export async function updateUser(id, userData) {
   return res.data;
 }
 
+export async function updateUserMetrics(id, metricsData) {
+  const res = await axiosInstance.put(`${URL}/${id}/metrics`, metricsData);
+  mutate(URL);
+  return res.data;
+}
+
+
 export async function deleteUser(id) {
   const res = await axiosInstance.delete(`${URL}/${id}`);
   mutate(URL);
