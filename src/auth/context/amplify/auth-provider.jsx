@@ -113,12 +113,12 @@ export function AuthProvider({ children }) {
 
   // CONFIRM REGISTER
   const confirmRegister = useCallback(async (email, code) => {
-    await Auth.confirmSignUp(email, code);
+    await Auth.confirmSignUp(email.toLowerCase(), code);
   }, []);
 
   // RESEND CODE REGISTER
   const resendCodeRegister = useCallback(async (email) => {
-    await Auth.resendSignUp(email);
+    await Auth.resendSignUp(email.toLowerCase());
   }, []);
 
   // LOGOUT
@@ -131,12 +131,12 @@ export function AuthProvider({ children }) {
 
   // FORGOT PASSWORD
   const forgotPassword = useCallback(async (email) => {
-    await Auth.forgotPassword(email);
+    await Auth.forgotPassword(email.toLowerCase());
   }, []);
 
   // NEW PASSWORD
   const newPassword = useCallback(async (email, code, password) => {
-    await Auth.forgotPasswordSubmit(email, code, password);
+    await Auth.forgotPasswordSubmit(email.toLowerCase(), code, password);
   }, []);
 
   // ----------------------------------------------------------------------

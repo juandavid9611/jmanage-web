@@ -29,14 +29,11 @@ import FormProvider, { RHFSelect, RHFSwitch, RHFTextField } from 'src/components
 // ----------------------------------------------------------------------
 
 export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
-  console.log('currentEvent', currentEvent);
   const { user } = useAuthContext();
   const isAdmin = user?.role === 'admin';
   const { enqueueSnackbar } = useSnackbar();
   const [isParticipating, setIsParticipating] = useState(
-    console.log('currentEvent?.participants', currentEvent?.participants) ||
-      (currentEvent?.participants && user?.id in currentEvent.participants) ||
-      false
+    (currentEvent?.participants && user?.id in currentEvent.participants) || false
   );
 
   const EventSchema = Yup.object().shape({
