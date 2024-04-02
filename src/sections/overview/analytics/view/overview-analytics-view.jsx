@@ -22,7 +22,6 @@ export default function OverviewAnalyticsView() {
   const theme = useTheme();
   const settings = useSettingsContext();
   const { user } = useAuthContext();
-  console.log(user);
   const isAdmin = user?.role === 'admin';
   const isFem = user?.myUser.group === 'female';
 
