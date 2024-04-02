@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import { Auth } from '@aws-amplify/auth';
 import { useMemo, useEffect, useReducer, useCallback } from 'react';
 
+import { getUser } from 'src/api/user';
 import { AMPLIFY_API } from 'src/config-global';
 
 import { AuthContext } from './auth-context';
@@ -47,6 +48,7 @@ export function AuthProvider({ children }) {
       const currentUser = await Auth.currentAuthenticatedUser();
 
       if (currentUser) {
+        const myUser = await getUser(currentUser.attributes.sub);
         dispatch({
           type: 'INITIAL',
           payload: {
@@ -55,6 +57,8 @@ export function AuthProvider({ children }) {
               id: currentUser.attributes.sub,
               displayName: currentUser.attributes.name,
               role: currentUser.attributes['custom:role'] || 'user',
+              group: myUser.group,
+              myUser,
             },
           },
         });
@@ -84,6 +88,7 @@ export function AuthProvider({ children }) {
   // LOGIN
   const login = useCallback(async (email, password) => {
     const currentUser = await Auth.signIn(email.toLowerCase(), password);
+    const myUser = await getUser(currentUser.attributes.sub);
 
     dispatch({
       type: 'INITIAL',
@@ -93,6 +98,8 @@ export function AuthProvider({ children }) {
           id: currentUser.attributes.sub,
           displayName: currentUser.attributes.name,
           role: currentUser.attributes['custom:role'] || 'user',
+          group: myUser.group,
+          myUser,
         },
       },
     });

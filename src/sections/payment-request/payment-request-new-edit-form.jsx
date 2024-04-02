@@ -194,6 +194,7 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
                 name="paymentRequestTo"
                 label="Users"
                 placeholder="+ User"
+                disableCloseOnSelect
                 multiple
                 options={users.filter((option) => option.group === values?.group)}
                 getOptionLabel={(option) => option.name}
