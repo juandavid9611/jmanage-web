@@ -36,6 +36,10 @@ export function useGetUser(userId) {
   return memoizedValue;
 }
 
+export async function getUser(userId) {
+  return axiosInstance.get(`${URL}/${userId}`).then((res) => res.data);
+}
+
 export async function createUser(userData) {
   try {
     const res = await axiosInstance.post(URL, userData);

@@ -50,7 +50,7 @@ export default function AnalyticsConversionRates({ title, subheader, chart, ...o
           series={[{ data: chartSeries }]}
           options={chartOptions}
           width="100%"
-          height={364}
+          height={600}
         />
       </Box>
     </Card>
