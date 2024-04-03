@@ -1,4 +1,5 @@
 import isEqual from 'lodash/isEqual';
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
@@ -49,11 +50,11 @@ import UserTableFiltersResult from '../user-table-filters-result';
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name' },
-  { id: 'phoneNumber', label: 'Phone Number', width: 180 },
-  { id: 'company', label: 'Company', width: 220 },
-  { id: 'role', label: 'Role', width: 180 },
-  { id: 'confirmationStatus', label: 'Status', width: 100 },
+  { id: 'name', label: 'name' },
+  { id: 'phoneNumber', label: 'phone_number', width: 180 },
+  { id: 'company', label: 'company', width: 220 },
+  { id: 'role', label: 'role', width: 180 },
+  { id: 'confirmationStatus', label: 'status', width: 100 },
   { id: '', width: 88 },
 ];
 
@@ -79,6 +80,8 @@ export default function UserListView() {
   const { users, usersLoading, usersEmpty } = useGetUsers();
 
   const [filters, setFilters] = useState(defaultFilters);
+
+  const { t } = useTranslation();
 
   const dataFiltered = applyFilter({
     inputData: tableData,
@@ -158,11 +161,11 @@ export default function UserListView() {
     <>
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
         <CustomBreadcrumbs
-          heading="List"
+          heading={t('list')}
           links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'User', href: paths.dashboard.admin.user.root },
-            { name: 'List' },
+            { name: t('app'), href: paths.dashboard.root },
+            { name: t('user'), href: paths.dashboard.admin.user.root },
+            { name: t('list') },
           ]}
           action={
             <Button
@@ -171,7 +174,7 @@ export default function UserListView() {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              New User
+              {t('new_user')}
             </Button>
           }
           sx={{
@@ -193,7 +196,7 @@ export default function UserListView() {
                 key={tab.value}
                 iconPosition="end"
                 value={tab.value}
-                label={tab.label}
+                label={t(tab.label)}
                 icon={
                   <Label
                     variant={
@@ -333,7 +336,7 @@ export default function UserListView() {
         title="Delete"
         content={
           <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> items?
+            {t('delete_confirmation')} <strong> {table.selected.length} </strong> {t('delete_confirmation_2')}
           </>
         }
         action={
@@ -345,7 +348,7 @@ export default function UserListView() {
               confirm.onFalse();
             }}
           >
-            Delete
+            {t('delete')}
           </Button>
         }
       />

@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import { alpha, useTheme } from '@mui/material/styles';
 
 import { bgGradient } from 'src/theme/css';
+import LogoAnimated from 'src/layouts/auth/logo-animated';
 
 // ----------------------------------------------------------------------
 
@@ -63,12 +64,12 @@ export default function AppWelcome({ title, description, action, img, ...other }
           component="span"
           justifyContent="center"
           sx={{
-            p: { xs: 5, md: 3 },
+            p: { xs: 5, md: 5 },
             maxWidth: 360,
             mx: 'auto',
           }}
         >
-          {img}
+          <LogoAnimated/>
         </Stack>
       )}
     </Stack>

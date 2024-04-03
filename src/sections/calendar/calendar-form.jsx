@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 import PropTypes from 'prop-types';
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 
@@ -29,6 +30,7 @@ import FormProvider, { RHFSelect, RHFSwitch, RHFTextField } from 'src/components
 // ----------------------------------------------------------------------
 
 export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const isAdmin = user?.role === 'admin';
   const { enqueueSnackbar } = useSnackbar();
@@ -37,8 +39,8 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
   );
 
   const EventSchema = Yup.object().shape({
-    title: Yup.string().max(255).required('Title is required'),
-    description: Yup.string().max(5000, 'Description must be at most 5000 characters'),
+    title: Yup.string().max(255).required(t('title_required')),
+    description: Yup.string().max(5000, t('description_max')),
     // not required
     color: Yup.string(),
     category: Yup.string(),
@@ -119,7 +121,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
       <Stack spacing={3} sx={{ px: 3 }}>
-        <RHFTextField disabled={!isAdmin} name="title" label="Title" />
+        <RHFTextField disabled={!isAdmin} name="title" label={t('title')} />
 
         <RHFTextField
           disabled={!isAdmin}
@@ -130,18 +132,18 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
         />
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-          <RHFSwitch disabled={!isAdmin} name="allDay" label="All day" />
+          <RHFSwitch disabled={!isAdmin} name="allDay" label={t('all_day')} />
 
           <RHFSelect
             disabled={!isAdmin}
             native
             name="category"
-            label="Category"
+            label={t('category')}
             InputLabelProps={{ shrink: true }}
           >
             {CALENDAR_EVENT_CATEGORIES.map((group) => (
               <option key={group.label} value={group.value}>
-                {group.label}
+                {t(group.label)}
               </option>
             ))}
           </RHFSelect>
@@ -150,7 +152,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
             <FormControlLabel
               disabled={values.category === 'money' || values.category === 'other'}
               control={<Switch checked={isParticipating} onChange={handleChangeIsParticipating} />}
-              label="Participate"
+              label={t('participate')}
             />
           )}
         </Stack>
@@ -168,7 +170,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
                   field.onChange(fTimestamp(newValue));
                 }
               }}
-              label="Start date"
+              label={t('start_date')}
               format="dd/MM/yyyy hh:mm a"
               slotProps={{
                 textField: {
@@ -192,7 +194,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
                   field.onChange(fTimestamp(newValue));
                 }
               }}
-              label="End date"
+              label={t('end_date')}
               format="dd/MM/yyyy hh:mm a"
               slotProps={{
                 textField: {
@@ -232,7 +234,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
         <Box sx={{ flexGrow: 1 }} />
 
         <Button variant="outlined" color="inherit" onClick={onClose}>
-          Cancel
+          {t('cancel')}
         </Button>
 
         {isAdmin && (
@@ -242,7 +244,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
             loading={isSubmitting}
             disabled={dateError}
           >
-            Save Changes
+            {t('save_changes')}
           </LoadingButton>
         )}
       </DialogActions>

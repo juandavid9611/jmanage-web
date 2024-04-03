@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
@@ -37,6 +38,8 @@ export default function PaymentRequestTableRow({
   const confirm = useBoolean();
 
   const popover = usePopover();
+
+  const { t } = useTranslation();
 
   return (
     <>
@@ -112,7 +115,7 @@ export default function PaymentRequestTableRow({
               'default'
             }
           >
-            {status}
+            {t(status)}
           </Label>
         </TableCell>
 
@@ -134,22 +137,12 @@ export default function PaymentRequestTableRow({
         >
           <MenuItem
             onClick={() => {
-              onViewRow();
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:eye-bold" />
-            View
-          </MenuItem>
-
-          <MenuItem
-            onClick={() => {
               onEditRow();
               popover.onClose();
             }}
           >
             <Iconify icon="solar:pen-bold" />
-            Edit
+            {t('edit')}
           </MenuItem>
 
           <Divider sx={{ borderStyle: 'dashed' }} />
@@ -162,7 +155,7 @@ export default function PaymentRequestTableRow({
             sx={{ color: 'error.main' }}
           >
             <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
+            {t('delete')}
           </MenuItem>
         </CustomPopover>
       )}
@@ -171,10 +164,10 @@ export default function PaymentRequestTableRow({
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure want to delete?"
+        content={`${t('delete_confirmation')}, ${t('delete_confirmation_2')}`}
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
-            Delete
+            {t('delete')}
           </Button>
         }
       />

@@ -1,40 +1,36 @@
 import merge from 'lodash/merge';
 import {
-  fr as frFRAdapter,
-  vi as viVNAdapter,
+  es as esESAdapter,
   enUS as enUSAdapter,
-  zhCN as zhCNAdapter,
-  arSA as arSAAdapter,
 } from 'date-fns/locale';
 
-// date-pickers
-import {
-  enUS as enUSDate,
-  frFR as frFRDate,
-  viVN as viVNDate,
-  zhCN as zhCNDate,
-} from '@mui/x-date-pickers/locales';
 // core
 import {
   enUS as enUSCore,
-  frFR as frFRCore,
-  viVN as viVNCore,
-  zhCN as zhCNCore,
-  arSA as arSACore,
+  esES as esESCore,
 } from '@mui/material/locale';
 // data-grid
 import {
+  esES as esESDataGrid,
   enUS as enUSDataGrid,
-  frFR as frFRDataGrid,
-  viVN as viVNDataGrid,
-  zhCN as zhCNDataGrid,
-  arSD as arSDDataGrid,
 } from '@mui/x-data-grid';
+// date-pickers
+import {
+  esES as esESDate,
+  enUS as enUSDate,
+} from '@mui/x-date-pickers/locales';
 
 // PLEASE REMOVE `LOCAL STORAGE` WHEN YOU CHANGE SETTINGS.
 // ----------------------------------------------------------------------
 
 export const allLangs = [
+  {
+    label: 'Spanish',
+    value: 'es',
+    systemValue: merge(esESDate, esESDataGrid, esESCore),
+    adapterLocale: esESAdapter,
+    icon: 'flagpack:co',
+  },
   {
     label: 'English',
     value: 'en',
@@ -42,37 +38,9 @@ export const allLangs = [
     adapterLocale: enUSAdapter,
     icon: 'flagpack:gb-nir',
   },
-  {
-    label: 'French',
-    value: 'fr',
-    systemValue: merge(frFRDate, frFRDataGrid, frFRCore),
-    adapterLocale: frFRAdapter,
-    icon: 'flagpack:fr',
-  },
-  {
-    label: 'Vietnamese',
-    value: 'vi',
-    systemValue: merge(viVNDate, viVNDataGrid, viVNCore),
-    adapterLocale: viVNAdapter,
-    icon: 'flagpack:vn',
-  },
-  {
-    label: 'Chinese',
-    value: 'cn',
-    systemValue: merge(zhCNDate, zhCNDataGrid, zhCNCore),
-    adapterLocale: zhCNAdapter,
-    icon: 'flagpack:cn',
-  },
-  {
-    label: 'Arabic',
-    value: 'ar',
-    systemValue: merge(arSDDataGrid, arSACore),
-    adapterLocale: arSAAdapter,
-    icon: 'flagpack:sa',
-  },
 ];
 
-export const defaultLang = allLangs[0]; // English
+export const defaultLang = allLangs[0]; // Spanish
 
 // GET MORE COUNTRY FLAGS
 // https://icon-sets.iconify.design/flagpack/

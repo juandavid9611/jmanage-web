@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import Container from '@mui/material/Container';
 
@@ -19,17 +20,18 @@ export default function UserEditView({ id }) {
 
   const { user: currentUser, userLoading } = useGetUser(id);
 
+  const { t } = useTranslation();
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
         heading="Edit"
         links={[
           {
-            name: 'Dashboard',
+            name: t('app'),
             href: paths.dashboard.root,
           },
           {
-            name: 'User',
+            name: t('user'),
             href: paths.dashboard.admin.user.list,
           },
           { name: currentUser?.name },

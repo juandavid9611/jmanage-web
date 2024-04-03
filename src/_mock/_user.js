@@ -5,9 +5,9 @@ import { _mock } from './_mock';
 // ----------------------------------------------------------------------
 
 export const USER_STATUS_OPTIONS = [
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'deleted', label: 'Deleted' },
+  { value: 'confirmed', label: 'confirmed' },
+  { value: 'pending', label: 'pending' },
+  { value: 'deleted', label: 'deleted' },
 ];
 
 export const _userAbout = {

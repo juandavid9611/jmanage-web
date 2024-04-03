@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { yupResolver } from '@hookform/resolvers/yup';
 
 import Link from '@mui/material/Link';
@@ -19,6 +20,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useAuthContext } from 'src/auth/hooks';
 import { PATH_AFTER_LOGIN } from 'src/config-global';
+import LogoAnimated from 'src/layouts/auth/logo-animated';
 
 import Iconify from 'src/components/iconify';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
@@ -37,6 +39,10 @@ export default function AmplifyLoginView() {
   const returnTo = searchParams.get('returnTo');
 
   const password = useBoolean();
+
+  const { t } = useTranslation();
+
+  const [count, setCount] = useState(0);
 
   const LoginSchema = Yup.object().shape({
     email: Yup.string().required('Email is required').email('Email must be a valid email address'),
@@ -71,15 +77,38 @@ export default function AmplifyLoginView() {
     }
   });
 
+  const renderLogo = (
+    <Stack
+      spacing={3}
+      direction="row"
+      alignItems="center"
+      justifyContent="center"
+      flexWrap="wrap"
+      sx={{
+        p: 5,
+        minHeight: 180,
+      }}
+    >
+      <IconButton
+        onClick={() => setCount(count + 1)}
+        sx={{ position: 'absolute', right: 40, top: 80 }}
+      >
+        <Iconify icon="eva:refresh-fill" />
+      </IconButton>
+
+      <LogoAnimated key={count} />
+    </Stack>
+  );
+
   const renderHead = (
     <Stack spacing={2} sx={{ mb: 5 }}>
-      <Typography variant="h4">Sign in to JManage</Typography>
+      <Typography variant="h4">{t('sign_in')}</Typography>
 
       <Stack direction="row" spacing={0.5}>
-        <Typography variant="body2">New user?</Typography>
+        <Typography variant="body2">{t('new_user?')}</Typography>
 
         <Link component={RouterLink} href={paths.auth.amplify.verify} variant="subtitle2">
-          Verify email
+          {t('verify_email')}
         </Link>
       </Stack>
     </Stack>
@@ -89,11 +118,11 @@ export default function AmplifyLoginView() {
     <Stack spacing={3}>
       {!!errorMsg && <Alert severity="error">{errorMsg}</Alert>}
 
-      <RHFTextField name="email" label="Email address" />
+      <RHFTextField name="email" label={t('email_address')} />
 
       <RHFTextField
         name="password"
-        label="Password"
+        label={t('password')}
         type={password.value ? 'text' : 'password'}
         InputProps={{
           endAdornment: (
@@ -114,7 +143,7 @@ export default function AmplifyLoginView() {
         underline="always"
         sx={{ alignSelf: 'flex-end' }}
       >
-        Forgot password?
+        {t('forgot_password')}
       </Link>
 
       <LoadingButton
@@ -125,15 +154,15 @@ export default function AmplifyLoginView() {
         variant="contained"
         loading={isSubmitting}
       >
-        Login
+        {t('login')}
       </LoadingButton>
     </Stack>
   );
 
   return (
     <FormProvider methods={methods} onSubmit={onSubmit}>
+      {renderLogo}
       {renderHead}
-
       {renderForm}
     </FormProvider>
   );

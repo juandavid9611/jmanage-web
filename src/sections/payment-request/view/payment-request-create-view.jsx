@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Container from '@mui/material/Container';
 
 import { paths } from 'src/routes/paths';
@@ -12,20 +14,22 @@ import PaymentRequestNewEditForm from '../payment-request-new-edit-form';
 export default function PaymentRequestCreateView() {
   const settings = useSettingsContext();
 
+  const { t } = useTranslation();
+
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Create a new Payment Request"
+        heading={t('create_new_payment_request')}
         links={[
           {
-            name: 'Dashboard',
+            name: t('app'),
             href: paths.dashboard.root,
           },
           {
-            name: 'Payment request',
+            name: t('payment_requests'),
             href: paths.dashboard.admin.paymentRequest.root,
           },
-          { name: 'New' },
+          { name: t('new') },
         ]}
         sx={{
           mb: { xs: 3, md: 5 },

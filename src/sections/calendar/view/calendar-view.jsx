@@ -1,5 +1,6 @@
 import Calendar from '@fullcalendar/react'; // => request placed at the top
 import listPlugin from '@fullcalendar/list';
+import { useTranslation } from 'react-i18next';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
@@ -45,6 +46,7 @@ const defaultFilters = {
 // ----------------------------------------------------------------------
 
 export default function CalendarView() {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const isAdmin = user?.role === 'admin';
   const theme = useTheme();
@@ -145,7 +147,7 @@ export default function CalendarView() {
             startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={onOpenForm}
           >
-            New Event
+            {t('new_event')}
           </Button>
           )}
         </Stack>
@@ -212,7 +214,7 @@ export default function CalendarView() {
         }}
       >
         <DialogTitle sx={{ minHeight: 76 }}>
-          {openForm && <> {currentEvent?.id ? 'Edit Event' : 'Add Event'}</>}
+          {openForm && <> {currentEvent?.id ? t('edit_event') : t('add_event')}</>}
         </DialogTitle>
 
         <CalendarForm

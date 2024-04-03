@@ -1,4 +1,5 @@
 import sumBy from 'lodash/sumBy';
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
@@ -50,15 +51,17 @@ import PaymentRequestTableFiltersResult from '../payment-request-table-filters-r
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'paymentRequestNumber', label: 'Customer' },
-  { id: 'concept', label: 'Concept' },
-  { id: 'createDate', label: 'Create' },
-  { id: 'dueDate', label: 'Due' },
-  { id: 'price', label: 'Amount' },
-  { id: 'status', label: 'Status' },
-  { id: '' },
-];
+function get_table_head(t) {
+  return [
+    { id: 'paymentRequestNumber', label: t('user') },
+    { id: 'concept', label: t('concept') },
+    { id: 'createDate', label: t('creation') },
+    { id: 'dueDate', label: t('due') },
+    { id: 'price', label: t('amount') },
+    { id: 'status', label: t('status') },
+    { id: '' },
+  ];
+}
 
 const defaultFilters = {
   name: '',
@@ -71,6 +74,7 @@ const defaultFilters = {
 // ----------------------------------------------------------------------
 
 export default function PaymentRequestListView() {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   const settings = useSettingsContext();
@@ -129,25 +133,25 @@ export default function PaymentRequestListView() {
     { value: 'all', label: 'All', color: 'default', count: tableData.length },
     {
       value: 'paid',
-      label: 'Paid',
+      label: t('paid'),
       color: 'success',
       count: getPaymentRequestLength('paid'),
     },
     {
       value: 'pending',
-      label: 'Pending',
+      label: t('pending'),
       color: 'warning',
       count: getPaymentRequestLength('pending'),
     },
     {
       value: 'overdue',
-      label: 'Overdue',
+      label: t('overdue'),
       color: 'error',
       count: getPaymentRequestLength('overdue'),
     },
     {
       value: 'draft',
-      label: 'Draft',
+      label: t('cancelled'),
       color: 'default',
       count: getPaymentRequestLength('draft'),
     },
@@ -193,13 +197,6 @@ export default function PaymentRequestListView() {
     [router]
   );
 
-  const handleViewRow = useCallback(
-    (id) => {
-      router.push(paths.dashboard.admin.paymentRequest.details(id));
-    },
-    [router]
-  );
-
   const handleFilterStatus = useCallback(
     (event, newValue) => {
       handleFilters('status', newValue);
@@ -221,14 +218,14 @@ export default function PaymentRequestListView() {
     <>
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
         <CustomBreadcrumbs
-          heading="Payment Request List"
+          heading={t('payment_requests')}
           links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
+            { name: t('app'), href: paths.dashboard.root },
             {
-              name: 'Payment Request',
+              name: t('payment_request'),
               href: paths.dashboard.admin.paymentRequest.root,
             },
-            { name: 'List' },
+            { name: t('list') },
           ]}
           action={
             <Button
@@ -237,7 +234,7 @@ export default function PaymentRequestListView() {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              New Payment Request
+              {t('new_payment_request')}
             </Button>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
@@ -255,7 +252,7 @@ export default function PaymentRequestListView() {
               sx={{ py: 2 }}
             >
               <PaymentRequestAnalytic
-                title="Total"
+                title={t('total')}
                 total={tableData.length}
                 percent={100}
                 price={sumBy(tableData, 'totalAmount')}
@@ -264,7 +261,7 @@ export default function PaymentRequestListView() {
               />
 
               <PaymentRequestAnalytic
-                title="Paid"
+                title={t('paid')}
                 total={getPaymentRequestLength('paid')}
                 percent={getPercentByStatus('paid')}
                 price={getTotalAmount('paid')}
@@ -273,7 +270,7 @@ export default function PaymentRequestListView() {
               />
 
               <PaymentRequestAnalytic
-                title="Pending"
+                title={t('pending')}
                 total={getPaymentRequestLength('pending')}
                 percent={getPercentByStatus('pending')}
                 price={getTotalAmount('pending')}
@@ -282,7 +279,7 @@ export default function PaymentRequestListView() {
               />
 
               <PaymentRequestAnalytic
-                title="Overdue"
+                title={t('overdue')}
                 total={getPaymentRequestLength('overdue')}
                 percent={getPercentByStatus('overdue')}
                 price={getTotalAmount('overdue')}
@@ -291,7 +288,7 @@ export default function PaymentRequestListView() {
               />
 
               <PaymentRequestAnalytic
-                title="Cancelled"
+                title={t('cancelled')}
                 total={getPaymentRequestLength('cancelled')}
                 percent={getPercentByStatus('cancelled')}
                 price={getTotalAmount('cancelled')}
@@ -395,7 +392,7 @@ export default function PaymentRequestListView() {
                 <TableHeadCustom
                   order={table.order}
                   orderBy={table.orderBy}
-                  headLabel={TABLE_HEAD}
+                  headLabel={get_table_head(t)}
                   rowCount={tableData.length}
                   numSelected={table.selected.length}
                   onSort={table.onSort}
@@ -425,7 +422,6 @@ export default function PaymentRequestListView() {
                             row={row}
                             selected={table.selected.includes(row.id)}
                             onSelectRow={() => table.onSelectRow(row.id)}
-                            onViewRow={() => handleViewRow(row.id)}
                             onEditRow={() => handleEditRow(row.id)}
                             onDeleteRow={() => handleDeleteRow(row.id)}
                             isAdmin
@@ -464,7 +460,7 @@ export default function PaymentRequestListView() {
         title="Delete"
         content={
           <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> items?
+            {t('delete_confirmation')} <strong> {table.selected.length} </strong> {t('delete_confirmation_2')}
           </>
         }
         action={
@@ -476,7 +472,7 @@ export default function PaymentRequestListView() {
               confirm.onFalse();
             }}
           >
-            Delete
+            {t('delete')}
           </Button>
         }
       />

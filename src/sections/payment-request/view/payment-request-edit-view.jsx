@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import Container from '@mui/material/Container';
 
@@ -18,14 +19,16 @@ export default function PaymentRequestEditView({ id }) {
 
   const { paymentRequest: currentPaymentRequest, paymentRequestLoading } = useGetPaymentRequest(id);
 
+  const { t } = useTranslation();
+
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Edit"
+        heading={t('edit')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: t('app'), href: paths.dashboard.root },
           {
-            name: 'Payment Request',
+            name: t('payment_request'),
             href: paths.dashboard.admin.paymentRequest.root,
           },
           { name: currentPaymentRequest?.concept },

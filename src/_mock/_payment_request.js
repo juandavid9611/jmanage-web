@@ -34,17 +34,17 @@ export const PAYMENT_REQUEST_PRICES = [
 ];
 
 export const TEAM_GROUPS = [
-  { value: 'male', label: 'Male Group' },
-  { value: 'female', label: 'Female Group' },
-  { value: 'kids', label: 'Kids Group' },
+  { value: 'male', label: 'male' },
+  { value: 'female', label: 'female' },
+  { value: 'kids', label: 'kids' },
 ];
 export const GROUP_OPTIONS = ['male', 'female', 'kids'];
 
 export const CALENDAR_EVENT_CATEGORIES = [
-  { value: 'training', label: 'Training' },
-  { value: 'match', label: 'Match' },
-  { value: 'money', label: 'Money' },
-  { value: 'other', label: 'Other' },
+  { value: 'training', label: 'training' },
+  { value: 'match', label: 'match' },
+  { value: 'money', label: 'money' },
+  { value: 'other', label: 'other' },
 ];
 
 export const PAYMENT_REQUEST_SERVICE_OPTIONS = [...Array(8)].map((_, index) => ({
