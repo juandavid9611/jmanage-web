@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Container from '@mui/material/Container';
 
 import { paths } from 'src/routes/paths';
@@ -12,20 +14,22 @@ import UserNewEditForm from '../user-new-edit-form';
 export default function UserCreateView() {
   const settings = useSettingsContext();
 
+  const { t } = useTranslation();
+
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Create a new user"
+        heading={t('create_new_user')}
         links={[
           {
-            name: 'Dashboard',
+            name: t('app'),
             href: paths.dashboard.root,
           },
           {
-            name: 'User',
+            name: t('user'),
             href: paths.dashboard.admin.user.list,
           },
-          { name: 'New user' },
+          { name: t('new_user') },
         ]}
         sx={{
           mb: { xs: 3, md: 5 },

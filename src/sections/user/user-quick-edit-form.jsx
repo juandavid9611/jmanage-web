@@ -2,6 +2,7 @@ import * as Yup from 'yup';
 import { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { yupResolver } from '@hookform/resolvers/yup';
 
 import Box from '@mui/material/Box';
@@ -22,6 +23,7 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 export default function UserQuickEditForm({ currentUser, open, onClose }) {
+  const { t } = useTranslation();
   const { enqueueSnackbar } = useSnackbar();
 
   const NewMetricsSchema = Yup.object().shape({
@@ -66,7 +68,7 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
       onClose();
-      enqueueSnackbar('Update metrics success!');
+      enqueueSnackbar(t('update_metrics_success'));
       updateUserMetrics(currentUser.id, data);
       currentUser.user_metrics = data;
     } catch (error) {

@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
 import { alpha, useTheme } from '@mui/material/styles';
 
 import { paths } from 'src/routes/paths';
@@ -15,7 +14,6 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import { bgGradient } from 'src/theme/css';
 import { useAuthContext } from 'src/auth/hooks';
 
-import Logo from 'src/components/logo';
 
 // ----------------------------------------------------------------------
 
@@ -34,16 +32,6 @@ export default function AuthClassicLayout({ children, image, title }) {
   const theme = useTheme();
 
   const mdUp = useResponsive('up', 'md');
-
-  const renderLogo = (
-    <Logo
-      sx={{
-        zIndex: 9,
-        position: 'absolute',
-        m: { xs: 2, md: 5 },
-      }}
-    />
-  );
 
   const renderContent = (
     <Stack
@@ -76,10 +64,6 @@ export default function AuthClassicLayout({ children, image, title }) {
         }),
       }}
     >
-      <Typography variant="h3" sx={{ maxWidth: 480, textAlign: 'center' }}>
-        {title || 'Hi, Welcome back'}
-      </Typography>
-
       <Box
         component="img"
         alt="auth"
@@ -124,7 +108,6 @@ export default function AuthClassicLayout({ children, image, title }) {
         minHeight: '100vh',
       }}
     >
-      {renderLogo}
 
       {mdUp && renderSection}
 

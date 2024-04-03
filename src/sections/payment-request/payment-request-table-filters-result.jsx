@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -36,12 +37,14 @@ export default function PaymentRequestTableFiltersResult({
     onFilters('endDate', null);
   };
 
+  const { t } = useTranslation();
+
   return (
     <Stack spacing={1.5} {...other}>
       <Box sx={{ typography: 'body2' }}>
         <strong>{results}</strong>
         <Box component="span" sx={{ color: 'text.secondary', ml: 0.25 }}>
-          results found
+          {t('results_found')}
         </Box>
       </Box>
 
@@ -76,7 +79,7 @@ export default function PaymentRequestTableFiltersResult({
           onClick={onResetFilters}
           startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
         >
-          Clear
+          {t('clear')}
         </Button>
       </Stack>
     </Stack>

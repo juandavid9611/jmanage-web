@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
@@ -29,7 +30,8 @@ export default function UserTableRow({ row, selected, onEditRow, onSelectRow, on
   const quickEdit = useBoolean();
 
   const popover = usePopover();
-
+  
+  const { t } = useTranslation();
   return (
     <>
       <TableRow hover selected={selected}>
@@ -67,7 +69,7 @@ export default function UserTableRow({ row, selected, onEditRow, onSelectRow, on
               'default'
             }
           >
-            {confirmationStatus}
+            {t(confirmationStatus)}
           </Label>
         </TableCell>
 
@@ -100,7 +102,7 @@ export default function UserTableRow({ row, selected, onEditRow, onSelectRow, on
           sx={{ color: 'error.main' }}
         >
           <Iconify icon="solar:trash-bin-trash-bold" />
-          Delete
+          {t('delete')}
         </MenuItem>
 
         <MenuItem
@@ -110,7 +112,7 @@ export default function UserTableRow({ row, selected, onEditRow, onSelectRow, on
           }}
         >
           <Iconify icon="solar:pen-bold" />
-          Edit
+          {t('edit')}
         </MenuItem>
       </CustomPopover>
 
@@ -118,10 +120,10 @@ export default function UserTableRow({ row, selected, onEditRow, onSelectRow, on
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure want to delete?"
+        content={`${t('delete_confirmation')}, ${t('delete_confirmation_2')}`}
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
-            Delete
+            {t('delete')}
           </Button>
         }
       />

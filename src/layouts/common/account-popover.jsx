@@ -1,4 +1,5 @@
 import { m } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -22,11 +23,11 @@ import CustomPopover, { usePopover } from 'src/components/custom-popover';
 
 const OPTIONS = [
   {
-    label: 'Home',
+    label: 'app',
     linkTo: '/',
   },
   {
-    label: 'Settings',
+    label: 'settings',
     linkTo: paths.dashboard.admin.user.account,
   },
 ];
@@ -43,6 +44,8 @@ export default function AccountPopover() {
   const { enqueueSnackbar } = useSnackbar();
 
   const popover = usePopover();
+
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     try {
@@ -107,7 +110,7 @@ export default function AccountPopover() {
         <Stack sx={{ p: 1 }}>
           {OPTIONS.map((option) => (
             <MenuItem key={option.label} onClick={() => handleClickItem(option.linkTo)}>
-              {option.label}
+              {t(option.label)}
             </MenuItem>
           ))}
         </Stack>
@@ -118,7 +121,7 @@ export default function AccountPopover() {
           onClick={handleLogout}
           sx={{ m: 1, fontWeight: 'fontWeightBold', color: 'error.main' }}
         >
-          Logout
+          {t('logout')}
         </MenuItem>
       </CustomPopover>
     </>

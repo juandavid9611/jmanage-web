@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -13,6 +14,7 @@ import Iconify from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export default function PaymentRequestAnalytic({ title, total, icon, color, percent, price }) {
+  const { t } = useTranslation();
   return (
     <Stack
       spacing={2.5}
@@ -51,7 +53,7 @@ export default function PaymentRequestAnalytic({ title, total, icon, color, perc
         <Typography variant="subtitle1">{title}</Typography>
 
         <Box component="span" sx={{ color: 'text.disabled', typography: 'body2' }}>
-          {fShortenNumber(total)} payments
+          {fShortenNumber(total)} {t('payments')}
         </Box>
 
         <Typography variant="subtitle2">{fCurrency(price)}</Typography>

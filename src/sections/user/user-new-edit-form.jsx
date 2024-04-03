@@ -1,17 +1,16 @@
 import * as Yup from 'yup';
 import PropTypes from 'prop-types';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMemo, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
-import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
@@ -27,7 +26,6 @@ import Iconify from 'src/components/iconify';
 import { useSnackbar } from 'src/components/snackbar';
 import FormProvider, {
   RHFSelect,
-  RHFSwitch,
   RHFTextField,
   RHFUploadAvatar,
   RHFAutocomplete,
@@ -40,18 +38,20 @@ export default function UserNewEditForm({ currentUser }) {
 
   const { enqueueSnackbar } = useSnackbar();
 
+  const { t } = useTranslation();
+
   const NewUserSchema = Yup.object().shape({
-    name: Yup.string().required('Name is required'),
-    email: Yup.string().required('Email is required').email('Email must be a valid email address'),
-    phoneNumber: Yup.string().required('Phone number is required'),
-    address: Yup.string().required('Address is required'),
-    group: Yup.string().required('Group is required'),
-    company: Yup.string().required('Company is required'),
-    state: Yup.string().required('State is required'),
-    city: Yup.string().required('City is required'),
-    country: Yup.string().required('Country is required'),
-    role: Yup.string().required('Role is required'),
-    zipCode: Yup.string().required('Zip code is required'),
+    name: Yup.string().required(t('name_required')),
+    email: Yup.string().required(t('email_required')).email(t('email_invalid')),
+    phoneNumber: Yup.string().required(t('phone_number_required')),
+    address: Yup.string().required(t('address_required')),
+    group: Yup.string().required(t('group_required')),
+    company: Yup.string().required(t('company_required')),
+    state: Yup.string().required(t('state_required')),
+    city: Yup.string().required(t('city_required')),
+    country: Yup.string().required(t('country_required')),
+    role: Yup.string().required(t('role_required')),
+    zipCode: Yup.string().required(t('zip_code_required')),
     // not required
     status: Yup.string(),
     isVerified: Yup.boolean(),
@@ -82,7 +82,7 @@ export default function UserNewEditForm({ currentUser }) {
     defaultValues,
   });
 
-  const { reset, watch, control, setValue, handleSubmit } = methods;
+  const { reset, watch, setValue, handleSubmit } = methods;
 
   const values = watch();
 
@@ -164,54 +164,6 @@ export default function UserNewEditForm({ currentUser }) {
                 }
               />
             </Box>
-
-            {currentUser && (
-              <FormControlLabel
-                labelPlacement="start"
-                control={
-                  <Controller
-                    name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        {...field}
-                        checked={field.value !== 'active'}
-                        onChange={(event) =>
-                          field.onChange(event.target.checked ? 'banned' : 'active')
-                        }
-                      />
-                    )}
-                  />
-                }
-                label={
-                  <>
-                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                      Banned
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Apply disable account
-                    </Typography>
-                  </>
-                }
-                sx={{ mx: 0, mb: 3, width: 1, justifyContent: 'space-between' }}
-              />
-            )}
-
-            <RHFSwitch
-              name="isVerified"
-              labelPlacement="start"
-              label={
-                <>
-                  <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                    Email Verified
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Disabling this will automatically send the user a verification email
-                  </Typography>
-                </>
-              }
-              sx={{ mx: 0, width: 1, justifyContent: 'space-between' }}
-            />
           </Card>
         </Grid>
 
@@ -226,21 +178,21 @@ export default function UserNewEditForm({ currentUser }) {
                 sm: 'repeat(2, 1fr)',
               }}
             >
-              <RHFTextField name="name" label="Full Name" />
-              <RHFTextField name="email" label="Email Address" />
-              <RHFTextField name="phoneNumber" label="Phone Number" />
+              <RHFTextField name="name" label={t('full_name')} />
+              <RHFTextField name="email" label={t('email_address')} />
+              <RHFTextField name="phoneNumber" label={t('phone_number')} />
 
-              <RHFSelect native name="group" label="Group" InputLabelProps={{ shrink: true }}>
+              <RHFSelect native name="group" label={t('group')} InputLabelProps={{ shrink: true }}>
                 {TEAM_GROUPS.map((group) => (
                   <option key={group.label} value={group.value}>
-                    {group.label}
+                    {t(group.label)}
                   </option>
                 ))}
               </RHFSelect>
 
               <RHFAutocomplete
                 name="country"
-                label="Country"
+                label={t('country')}
                 options={countries.map((country) => country.label)}
                 getOptionLabel={(option) => option}
                 renderOption={(props, option) => {
@@ -265,17 +217,17 @@ export default function UserNewEditForm({ currentUser }) {
                   );
                 }}
               />
-              <RHFTextField name="state" label="State/Region" />
-              <RHFTextField name="city" label="City" />
-              <RHFTextField name="address" label="Address" />
-              <RHFTextField name="zipCode" label="Zip/Code" />
-              <RHFTextField name="company" label="Company" />
-              <RHFTextField name="role" label="Role" />
+              <RHFTextField name="state" label={t('state_region')} />
+              <RHFTextField name="city" label={t('city')} />
+              <RHFTextField name="address" label={t('address')} />
+              <RHFTextField name="zipCode" label={t('zip_code')} />
+              <RHFTextField name="company" label={t('company')} />
+              <RHFTextField name="role" label={t('role')} />
             </Box>
 
             <Stack alignItems="flex-end" sx={{ mt: 3 }}>
               <LoadingButton type="submit" variant="contained">
-                {!currentUser ? 'Create User' : 'Save Changes'}
+                {!currentUser ? t('create_user') : t('save_changes')}
               </LoadingButton>
             </Stack>
           </Card>

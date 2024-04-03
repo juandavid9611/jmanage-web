@@ -53,7 +53,7 @@ export function useNavData() {
       // VITTORIA
       // ----------------------------------------------------------------------
       {
-        subheader: t('JManage v1.0.0'),
+        subheader: t('JManage v3.2.1'),
         items: [
           {
             title: t('app'),
@@ -82,7 +82,7 @@ export function useNavData() {
         subheader: t('management'),
         items: [
           {
-            title: t('payment request'),
+            title: t('payment_request'),
             path: paths.dashboard.admin.paymentRequest.root,
             icon: ICONS.dashboard,
             roles: ['admin'],
@@ -122,7 +122,7 @@ export function useNavData() {
         subheader: t('user management'),
         items: [
           {
-            title: t('user payment request'),
+            title: t('user_payment_request'),
             path: paths.dashboard.employee.paymentRequest.employeeList,
             icon: ICONS.dashboard,
             roles: ['user', 'admin'],

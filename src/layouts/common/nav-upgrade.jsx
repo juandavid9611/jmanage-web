@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
@@ -11,6 +13,8 @@ import Label from 'src/components/label';
 
 export default function NavUpgrade() {
   const { user } = useAuthContext();
+
+  const { t } = useTranslation();
 
   return (
     <Stack
@@ -35,7 +39,7 @@ export default function NavUpgrade() {
               borderBottomLeftRadius: 2,
             }}
           >
-            {user?.role === 'admin' ? 'Admin' : 'User'}
+            {t(user?.role === 'admin' ? 'admin' : 'user')}
           </Label>
         </Box>
 

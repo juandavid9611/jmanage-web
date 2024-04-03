@@ -1,4 +1,5 @@
 import sumBy from 'lodash/sumBy';
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
@@ -42,13 +43,16 @@ import PaymentRequestTableFiltersResult from '../payment-request-table-filters-r
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'concept', label: 'Concept' },
-  { id: 'createDate', label: 'Create' },
-  { id: 'dueDate', label: 'Due' },
-  { id: 'price', label: 'Amount' },
-  { id: 'status', label: 'Status' },
-];
+function get_table_head(t) {
+  return [
+    { id: 'concept', label: t('concept') },
+    { id: 'createDate', label: t('creation') },
+    { id: 'dueDate', label: t('due') },
+    { id: 'price', label: t('amount') },
+    { id: 'status', label: t('status') },
+    { id: '' },
+  ];
+}
 
 const defaultFilters = {
   name: '',
@@ -61,6 +65,7 @@ const defaultFilters = {
 // ----------------------------------------------------------------------
 
 export default function EmployeePaymentRequestListView() {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
 
   const theme = useTheme();
@@ -113,27 +118,27 @@ export default function EmployeePaymentRequestListView() {
     { value: 'all', label: 'All', color: 'default', count: tableData.length },
     {
       value: 'paid',
-      label: 'Paid',
+      label: t('paid'),
       color: 'success',
       count: getPaymentRequestLength('paid'),
     },
     {
       value: 'pending',
-      label: 'Pending',
+      label: t('pending'),
       color: 'warning',
       count: getPaymentRequestLength('pending'),
     },
     {
       value: 'overdue',
-      label: 'Overdue',
+      label: t('overdue'),
       color: 'error',
       count: getPaymentRequestLength('overdue'),
     },
     {
-      value: 'cancelled',
-      label: 'Cancelled',
+      value: 'draft',
+      label: t('cancelled'),
       color: 'default',
-      count: getPaymentRequestLength('cancelled'),
+      count: getPaymentRequestLength('draft'),
     },
   ];
 
@@ -168,14 +173,14 @@ export default function EmployeePaymentRequestListView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="User Payment Request List"
+        heading={t('payment_requests')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: t('app'), href: paths.dashboard.root },
           {
-            name: 'User Payment Request',
+            name: t('payment_request'),
             href: paths.dashboard.employee.paymentRequest.employeeList,
           },
-          { name: 'List' },
+          { name: t('list') },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
@@ -192,7 +197,7 @@ export default function EmployeePaymentRequestListView() {
             sx={{ py: 2 }}
           >
             <PaymentRequestAnalytic
-              title="Total"
+              title={t('total')}
               total={tableData.length}
               percent={100}
               price={sumBy(tableData, 'totalAmount')}
@@ -201,7 +206,7 @@ export default function EmployeePaymentRequestListView() {
             />
 
             <PaymentRequestAnalytic
-              title="Paid"
+              title={t('paid')}
               total={getPaymentRequestLength('paid')}
               percent={getPercentByStatus('paid')}
               price={getTotalAmount('paid')}
@@ -210,7 +215,7 @@ export default function EmployeePaymentRequestListView() {
             />
 
             <PaymentRequestAnalytic
-              title="Pending"
+              title={t('pending')}
               total={getPaymentRequestLength('pending')}
               percent={getPercentByStatus('pending')}
               price={getTotalAmount('pending')}
@@ -219,7 +224,7 @@ export default function EmployeePaymentRequestListView() {
             />
 
             <PaymentRequestAnalytic
-              title="Overdue"
+              title={t('overdue')}
               total={getPaymentRequestLength('overdue')}
               percent={getPercentByStatus('overdue')}
               price={getTotalAmount('overdue')}
@@ -228,7 +233,7 @@ export default function EmployeePaymentRequestListView() {
             />
 
             <PaymentRequestAnalytic
-              title="Cancelled"
+              title={t('cancelled')}
               total={getPaymentRequestLength('cancelled')}
               percent={getPercentByStatus('cancelled')}
               price={getTotalAmount('cancelled')}
@@ -305,7 +310,7 @@ export default function EmployeePaymentRequestListView() {
               <TableHeadCustom
                 order={table.order}
                 orderBy={table.orderBy}
-                headLabel={TABLE_HEAD}
+                headLabel={get_table_head(t)}
                 rowCount={tableData.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}

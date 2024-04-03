@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import TableRow from '@mui/material/TableRow';
@@ -33,6 +34,7 @@ export default function TableHeadCustom({
   onSelectAllRows,
   sx,
 }) {
+  const { t } = useTranslation();
   return (
     <TableHead sx={sx}>
       <TableRow>
@@ -60,7 +62,7 @@ export default function TableHeadCustom({
                 direction={orderBy === headCell.id ? order : 'asc'}
                 onClick={() => onSort(headCell.id)}
               >
-                {headCell.label}
+                {t(headCell.label)}
 
                 {orderBy === headCell.id ? (
                   <Box sx={{ ...visuallyHidden }}>

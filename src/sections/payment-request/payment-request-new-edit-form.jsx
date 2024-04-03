@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 import PropTypes from 'prop-types';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -44,15 +45,17 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
 
   const { users } = useGetUsers();
 
+  const { t } = useTranslation();
+
   const NewPaymentRequestSchema = Yup.object().shape({
-    concept: Yup.string().required('Concept is required'),
-    description: Yup.string().required('Dscription is required'),
-    createDate: Yup.date().required('Create date is required'),
+    concept: Yup.string().required(t('concept_required')),
+    description: Yup.string().required(t('description_required')),
+    createDate: Yup.date().required(t('create_date_required')),
     dueDate: Yup.date(),
-    status: Yup.string().required('Status is required'),
-    category: Yup.string().required('Category is required'),
-    group: Yup.string().required('Group is required'),
-    paymentRequestTo: Yup.array().min(1, 'Must have at least 1 user'),
+    status: Yup.string().required(t('status_required')),
+    category: Yup.string().required(t('category_required')),
+    group: Yup.string().required(t('group_required')),
+    paymentRequestTo: Yup.array().min(1, t('payment_request_to_required')),
     userPrice: Yup.number(),
     sponsorPrice: Yup.number(),
     sponsorPercentage: Yup.number(),
@@ -141,10 +144,10 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
       {mdUp && (
         <Grid md={4}>
           <Typography variant="h6" sx={{ mb: 0.5 }}>
-            Properties
+            {t('properties')}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Additional functions and attributes...
+            {t('payment_request_properties')}
           </Typography>
         </Grid>
       )}
@@ -164,11 +167,11 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
                 md: 'repeat(2, 1fr)',
               }}
             >
-              <RHFTextField name="concept" label="Payment Request Concept" />
+              <RHFTextField name="concept" label={t('concept')} />
 
-              <RHFTextField name="description" label="Payment Request Description" />
+              <RHFTextField name="description" label={t('description')} />
 
-              <RHFSelect native name="category" label="Category" InputLabelProps={{ shrink: true }}>
+              <RHFSelect native name="category" label={t('category')} InputLabelProps={{ shrink: true }}>
                 {PAYMENT_REQUEST_CATEGORY_OPTIONS.map((category) => (
                   <optgroup key={category.group} label={category.group}>
                     {category.classify.map((classify) => (
@@ -180,10 +183,10 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
                 ))}
               </RHFSelect>
 
-              <RHFSelect native name="group" label="Group" InputLabelProps={{ shrink: true }}>
+              <RHFSelect native name="group" label={t('group')} InputLabelProps={{ shrink: true }}>
                 {TEAM_GROUPS.map((group) => (
                   <option key={group.label} value={group.value}>
-                    {group.label}
+                    {t(group.label)}
                   </option>
                 ))}
               </RHFSelect>
@@ -192,8 +195,8 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
             {!currentPaymentRequest ? (
               <RHFAutocomplete
                 name="paymentRequestTo"
-                label="Users"
-                placeholder="+ User"
+                label={t('users')}
+                placeholder={`+${t('user')}`}
                 disableCloseOnSelect
                 multiple
                 options={users.filter((option) => option.group === values?.group)}
@@ -215,7 +218,7 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
               <RHFTextField
                 disabled
                 name="paymentRequestTo"
-                label="Payment request To"
+                label={t('users')}
                 value={currentPaymentRequest?.paymentRequestTo?.name || ''}
               />
             )}
@@ -224,7 +227,7 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
             <Stack spacing={3}>
               <RHFTextField
                 name="userPrice"
-                label="User Price"
+                label={t('user_price')}
                 placeholder="0.00"
                 type="number"
                 InputLabelProps={{ shrink: true }}
@@ -241,7 +244,7 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
 
               <RHFTextField
                 name="sponsorPrice"
-                label="Sponsor Price"
+                label={t('sponsor_price')}
                 placeholder="0.00"
                 type="number"
                 InputLabelProps={{ shrink: true }}
@@ -258,7 +261,7 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
 
               <FormControlLabel
                 control={<Switch checked={includeSponsor} onChange={handleChangeIncludeSponsor} />}
-                label="Price includes sponsor"
+                label={t('price_include_sponsor')}
               />
 
               {includeSponsor && (
@@ -290,11 +293,7 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
     <>
       {mdUp && <Grid md={4} />}
       <Grid xs={12} md={8} sx={{ display: 'flex', alignItems: 'center' }}>
-        <FormControlLabel
-          control={<Switch defaultChecked />}
-          label="Publish"
-          sx={{ flexGrow: 1, pl: 3 }}
-        />
+        <Box sx={{ flexGrow: 1 }} />
 
         <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting}>
           {!currentPaymentRequest ? 'Create Payment Request' : 'Save Changes'}
@@ -307,7 +306,6 @@ export default function PaymentRequestNewEditForm({ currentPaymentRequest }) {
     <FormProvider methods={methods} onSubmit={onSubmit}>
       <Grid container spacing={3}>
         {renderProperties}
-
         {renderActions}
       </Grid>
     </FormProvider>

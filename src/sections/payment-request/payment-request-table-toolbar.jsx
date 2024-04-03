@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
@@ -37,6 +38,8 @@ export default function PaymentRequestTableToolbar({
     [onFilters]
   );
 
+  const { t } = useTranslation();
+
   return (
     <Stack
       spacing={2}
@@ -51,7 +54,7 @@ export default function PaymentRequestTableToolbar({
       }}
     >
       <DatePicker
-        label="Start date"
+        label={t('start_date')}
         value={filters.startDate}
         onChange={handleFilterStartDate}
         slotProps={{ textField: { fullWidth: true } }}
@@ -61,7 +64,7 @@ export default function PaymentRequestTableToolbar({
       />
 
       <DatePicker
-        label="End date"
+        label={t('end_date')}
         value={filters.endDate}
         onChange={handleFilterEndDate}
         slotProps={{
@@ -80,7 +83,7 @@ export default function PaymentRequestTableToolbar({
           fullWidth
           value={filters.name}
           onChange={handleFilterName}
-          placeholder="Search customer or request concept..."
+          placeholder={t('search_tooltip')}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import Stack from '@mui/material/Stack';
@@ -13,6 +14,8 @@ export default function PaymentRequestNewEditStatusDate() {
 
   const values = watch();
 
+  const { t } = useTranslation();
+
   return (
     <Stack
       spacing={2}
@@ -22,20 +25,20 @@ export default function PaymentRequestNewEditStatusDate() {
       <RHFTextField
         disabled
         name="id"
-        label="Payment request id"
+        label="ID"
         value={`PR-${values.paymentRequestId?.slice(-6) || '9090jd'}`}
       />
 
       <RHFSelect
         fullWidth
         name="status"
-        label="Status"
+        label={t('status')}
         InputLabelProps={{ shrink: true }}
         PaperPropsSx={{ textTransform: 'capitalize' }}
       >
         {['paid', 'pending', 'overdue', 'draft'].map((option) => (
           <MenuItem key={option} value={option}>
-            {option}
+            {t(option)}
           </MenuItem>
         ))}
       </RHFSelect>
@@ -45,7 +48,7 @@ export default function PaymentRequestNewEditStatusDate() {
         control={control}
         render={({ field, fieldState: { error } }) => (
           <DatePicker
-            label="Date create"
+            label={t('creation')}
             value={field.value}
             onChange={(newValue) => {
               field.onChange(newValue);
@@ -66,7 +69,7 @@ export default function PaymentRequestNewEditStatusDate() {
         control={control}
         render={({ field, fieldState: { error } }) => (
           <DatePicker
-            label="Due date"
+            label={t('due')}
             value={field.value}
             onChange={(newValue) => {
               field.onChange(newValue);

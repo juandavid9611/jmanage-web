@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
@@ -33,6 +34,8 @@ export default function CustomDateRangePicker({
   const mdUp = useResponsive('up', 'md');
 
   const isCalendarView = variant === 'calendar';
+
+  const { t } = useTranslation();
 
   return (
     <Dialog
@@ -90,9 +93,9 @@ export default function CustomDateRangePicker({
             </>
           ) : (
             <>
-              <DatePicker label="Start date" value={startDate} onChange={onChangeStartDate} />
+              <DatePicker label={t('start_date')} value={startDate} onChange={onChangeStartDate} />
 
-              <DatePicker label="End date" value={endDate} onChange={onChangeEndDate} />
+              <DatePicker label={t('end_date')} value={endDate} onChange={onChangeEndDate} />
             </>
           )}
         </Stack>

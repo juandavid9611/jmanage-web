@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { useCallback } from 'react';
 import orderBy from 'lodash/orderBy';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -38,6 +39,7 @@ export default function CalendarFilters({
   colorOptions,
   onClickEvent,
 }) {
+  const { t } = useTranslation();
   const handleFilterColors = useCallback(
     (newValue) => {
       onFilters('colors', newValue);
@@ -67,7 +69,7 @@ export default function CalendarFilters({
       sx={{ py: 2, pr: 1, pl: 2.5 }}
     >
       <Typography variant="h6" sx={{ flexGrow: 1 }}>
-        Filters
+        {t('filters')}
       </Typography>
 
       <Tooltip title="Reset">
@@ -97,19 +99,19 @@ export default function CalendarFilters({
 
   const renderDateRange = (
     <Stack spacing={1.5} sx={{ mb: 3, px: 2.5 }}>
-      <Typography variant="subtitle2">Range</Typography>
+      <Typography variant="subtitle2">{t('range')}</Typography>
 
       <Stack spacing={2}>
-        <DatePicker label="Start date" value={filters.startDate} onChange={handleFilterStartDate} />
+        <DatePicker label={t('start_date')} value={filters.startDate} onChange={handleFilterStartDate} />
 
         <DatePicker
-          label="End date"
+          label={t('end_date')}
           value={filters.endDate}
           onChange={handleFilterEndDate}
           slotProps={{
             textField: {
               error: dateError,
-              helperText: dateError && 'End date must be later than start date',
+              helperText: dateError && t('end_date_restriction'),
             },
           }}
         />
@@ -120,7 +122,7 @@ export default function CalendarFilters({
   const renderEvents = (
     <>
       <Typography variant="subtitle2" sx={{ px: 2.5, mb: 1 }}>
-        Events ({events.length})
+        {t('events')} ({events.length})
       </Typography>
 
       <Scrollbar sx={{ height: 1 }}>
