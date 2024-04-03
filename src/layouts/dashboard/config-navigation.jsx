@@ -72,7 +72,6 @@ export function useNavData() {
             //   </Label>
             // ),
             roles: ['admin', 'user'],
-            disabled: true,
           },
         ],
       },
