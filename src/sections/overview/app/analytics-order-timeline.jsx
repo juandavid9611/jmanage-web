@@ -115,11 +115,11 @@ function OrderItem({ item, lastTimeline }) {
           {Object.entries(participants || {}).map((entry, index) =>
             entry[0] === user?.id ? (
               <Typography key={entry[0]} variant="body2" sx={{ color: 'text.primary' }}>
-                {entry[1]}
+                {index + 1}. {entry[1]}
               </Typography>
             ) : (
               <Typography key={entry[0]} variant="body2" sx={{ color: 'text.secondary' }}>
-                {entry[1]}
+                {index + 1}. {entry[1]}
               </Typography>
             )
           )}
