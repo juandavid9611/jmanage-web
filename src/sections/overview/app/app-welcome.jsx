@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import Stack from '@mui/material/Stack';
@@ -11,6 +12,7 @@ import LogoAnimated from 'src/layouts/auth/logo-animated';
 
 export default function AppWelcome({ title, description, action, img, ...other }) {
   const theme = useTheme();
+  const [count, setCount] = useState(0);
 
   return (
     <Stack
@@ -68,8 +70,9 @@ export default function AppWelcome({ title, description, action, img, ...other }
             maxWidth: 360,
             mx: 'auto',
           }}
+          onClick={() => setCount(count + 1)}
         >
-          <LogoAnimated/>
+          <LogoAnimated key={count}/>
         </Stack>
       )}
     </Stack>
