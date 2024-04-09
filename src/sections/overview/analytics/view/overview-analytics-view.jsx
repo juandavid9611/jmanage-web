@@ -46,11 +46,11 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Intercepciones',
-          data: [61, 68, 44, 66, 71],
+          data: [61, 68, 72, 66, 71],
         },
         {
           name: 'Recuperaciones',
-          data: [1, 4, 64, 3, 3],
+          data: [1, 4, 6, 3, 3],
         },
       ],
     },
@@ -59,11 +59,11 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Pases totales',
-          data: [275, 154, 359, 267, 261],
+          data: [275, 154, 315, 267, 261],
         },
         {
           name: 'Pases completados',
-          data: [232, 113, 298, 234, 216],
+          data: [232, 113, 254, 234, 216],
         },
       ],
     },
