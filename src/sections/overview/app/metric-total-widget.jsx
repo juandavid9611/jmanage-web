@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
 import { Divider } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
@@ -115,7 +114,7 @@ export default function MetricTotalWidget({ title, subheader, chart, ...other })
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 5 }} />
       <Divider sx={{ borderStyle: 'dashed' }} />
 
-      <Stack spacing={2} sx={{ p: 5 }}>
+      {/* <Stack spacing={2} sx={{ p: 5 }}>
         <Stack
           key={series[0].label}
           spacing={1}
@@ -235,7 +234,7 @@ export default function MetricTotalWidget({ title, subheader, chart, ...other })
             </Box>
           </Stack>
         </Stack>
-      </Stack>
+      </Stack> */}
     </Card>
   );
 }
