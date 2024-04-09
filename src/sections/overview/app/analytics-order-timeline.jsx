@@ -59,7 +59,7 @@ AnalyticsOrderTimeline.propTypes = {
 // ----------------------------------------------------------------------
 
 function OrderItem({ item, lastTimeline }) {
-  const { title, start, color, category, participants } = item;
+  const { title, description, start, color, category, participants } = item;
   const clickPopover = usePopover();
   const { user } = useAuthContext();
 
@@ -90,7 +90,8 @@ function OrderItem({ item, lastTimeline }) {
       </TimelineSeparator>
 
       <TimelineContent>
-        <Typography variant="subtitle2">{title}</Typography>
+        <Typography variant="subtitle2">{title}</Typography> 
+        <Typography variant="subtitle2" sx={{ color: 'text.disabled' }}>{description}</Typography>
         <Typography variant="caption" sx={{ color: 'text.disabled' }}>
           {fDateTime(start)}
         </Typography>

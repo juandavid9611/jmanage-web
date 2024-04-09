@@ -298,10 +298,10 @@ export const _bookings = [...Array(5)].map((_, index) => {
   };
 });
 
-export const _bookingsOverview = [...Array(3)].map((_, index) => ({
-  status: ['Pending', 'Canceled', 'Sold'][index],
-  quantity: _mock.number.nativeL(index),
-  value: _mock.number.percent(index),
+export const _bookingsOverview = [...Array(5)].map((_, index) => ({
+  status: ['Puntualidad en Pagos', 'Asistencia a Entrenos', 'Llegadas Tarde', 'Asistencia a Partidos', 'Deuda Acumulada'][index],
+  quantity: (index + 1) * 100,
+  value: 75,
 }));
 
 export const _bookingReview = [...Array(5)].map((_, index) => ({

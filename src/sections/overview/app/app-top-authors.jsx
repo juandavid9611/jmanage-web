@@ -1,4 +1,3 @@
-import { random } from 'lodash';
 import PropTypes from 'prop-types';
 import orderBy from 'lodash/orderBy';
 
@@ -20,8 +19,12 @@ export default function AppTopAuthors({ title, subheader, list, ...other }) {
       <CardHeader title={title} subheader={subheader} />
 
       <Stack spacing={3} sx={{ p: 3 }}>
-        {orderBy(list, ['totalFavorites'], ['desc']).map((author, index) => (
-          <AuthorItem key={author.id} author={author} index={index} />
+        {orderBy(list, ['goals'], ['desc']).map((author, index) => (
+          <AuthorItem
+            key={index}
+            author={author}
+            index={index}
+          />
         ))}
       </Stack>
     </Card>
@@ -47,7 +50,7 @@ function AuthorItem({ author, index }) {
 
       <Typography variant="caption">
         <Iconify icon="fluent:sport-soccer-20-filled" width={14} sx={{ mr: 0.5 }} />
-        {random(1, 20)} Goals &middot;{random(1, 20)} Assists
+        {author.goals} Goals &middot;{author.assists} Assists
       </Typography>
 
       <Iconify
@@ -57,15 +60,15 @@ function AuthorItem({ author, index }) {
           width: 40,
           height: 40,
           borderRadius: '50%',
-          color: 'primary.main',
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+          color: 'error.main',
+          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+          ...(index === 0 && {
+            color: 'success.main',
+            bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
+          }),
           ...(index === 1 && {
             color: 'info.main',
             bgcolor: (theme) => alpha(theme.palette.info.main, 0.08),
-          }),
-          ...(index === 2 && {
-            color: 'error.main',
-            bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
           }),
         }}
       />

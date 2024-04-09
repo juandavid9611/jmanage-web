@@ -4,6 +4,8 @@ import { paths } from 'src/routes/paths';
 
 import { useTranslate } from 'src/locales';
 
+import Label from 'src/components/label';
+import Iconify from 'src/components/iconify';
 import SvgColor from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -63,14 +65,14 @@ export function useNavData() {
           },
           {
             title: t('analytics'),
-            path: '#analytics',
-            // path: paths.dashboard.general.analytics,
+            // path: '#analytics',
+            path: paths.dashboard.general.analytics,
             icon: ICONS.analytics,
-            // info: (
-            //   <Label color="info" startIcon={<Iconify icon="solar:bell-bing-bold-duotone" />}>
-            //     NEW
-            //   </Label>
-            // ),
+            info: (
+              <Label color="info" startIcon={<Iconify icon="solar:bell-bing-bold-duotone" />}>
+                NEW
+              </Label>
+            ),
             roles: ['admin', 'user'],
           },
         ],
