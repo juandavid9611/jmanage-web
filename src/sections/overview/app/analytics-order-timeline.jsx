@@ -41,7 +41,7 @@ export default function AnalyticsOrderTimeline({ title, subheader, list, ...othe
       >
         {list.map(
           (item, index) =>
-            item.start > limit_time && (
+            item.start >= limit_time && (
               <OrderItem key={item.id} item={item} lastTimeline={index === list.length - 1} />
             )
         )}
