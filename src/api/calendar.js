@@ -22,8 +22,10 @@ export function useGetEvents() {
       textColor: event.color,
     }));
 
+    const sortedEvents = events?.sort((a, b) => new Date(a.start) - new Date(b.start));
+
     return {
-      events: events || [],
+      events: sortedEvents || [],
       eventsLoading: isLoading,
       eventsError: error,
       eventsValidating: isValidating,
