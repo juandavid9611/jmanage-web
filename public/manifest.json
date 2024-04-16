@@ -1,6 +1,6 @@
 {
-  "name": "Minimal UI",
-  "short_name": "Minimal UI",
+  "name": "JManage",
+  "short_name": "JManage",
   "display": "standalone",
   "start_url": "/",
   "theme_color": "#000000",
