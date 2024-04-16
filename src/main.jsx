@@ -13,7 +13,7 @@ root.render(
   <HelmetProvider>
     <BrowserRouter>
       <Suspense>
-        <App />
+        <App/>
       </Suspense>
     </BrowserRouter>
   </HelmetProvider>

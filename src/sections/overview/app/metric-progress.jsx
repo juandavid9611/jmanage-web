@@ -72,7 +72,6 @@ function MetricLineItem({ metric }) {
           height: 8,
           bgcolor: (bgTheme) => alpha(bgTheme.palette.grey[500], 0.16),
         }}
-        onHover={clickPopover.onOpen}
       />
       <Popover
         open={Boolean(clickPopover.open)}
