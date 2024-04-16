@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
-import addNotification from 'react-push-notification';
 
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -71,16 +70,7 @@ export default function AppWelcome({ title, description, action, img, ...other }
             maxWidth: 360,
             mx: 'auto',
           }}
-          onClick={() => {
-            console.log('click');
-            addNotification({
-              title: 'Juanda',
-              subtitle: 'This is a subtitle',
-              message: 'This is a very long message',
-              theme: 'darkblue',
-              native: true // when using native, your OS will handle theming.
-            });}
-          }
+          onClick={() => setCount(count + 1)}
         >
           <LogoAnimated key={count}/>
         </Stack>

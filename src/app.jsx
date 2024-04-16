@@ -20,7 +20,6 @@ import SnackbarProvider from 'src/components/snackbar/snackbar-provider';
 import { SettingsDrawer, SettingsProvider } from 'src/components/settings';
 
 import { AuthProvider } from 'src/auth/context/amplify';
-import { Notifications } from 'react-push-notification';
 
 // ----------------------------------------------------------------------
 
@@ -41,7 +40,6 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <Notifications />
       <LocalizationProvider>
         <SettingsProvider
           defaultSettings={{
