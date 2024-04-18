@@ -70,7 +70,18 @@ export default function AppWelcome({ title, description, action, img, ...other }
             maxWidth: 360,
             mx: 'auto',
           }}
-          onClick={() => setCount(count + 1)}
+          onClick={() => Notification.requestPermission().then((result) => {
+            if (result === "granted") {
+              const notifTitle = "Check this out!]";
+              const notifBody = `You might like this game!`;
+              const options = {
+                body: notifBody,
+              };
+              const a = new Notification(notifTitle, options);
+              setTimeout(a, 30000);
+              console.log('New notification');
+            }
+          })}
         >
           <LogoAnimated key={count}/>
         </Stack>
