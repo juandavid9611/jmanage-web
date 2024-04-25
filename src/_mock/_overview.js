@@ -299,7 +299,13 @@ export const _bookings = [...Array(5)].map((_, index) => {
 });
 
 export const _bookingsOverview = [...Array(5)].map((_, index) => ({
-  status: ['Puntualidad en Pagos', 'Asistencia a Entrenos', 'Llegadas Tarde', 'Asistencia a Partidos', 'Deuda Acumulada'][index],
+  status: [
+    'Puntualidad en Pagos',
+    'Asistencia a Entrenos',
+    'Llegadas Tarde',
+    'Asistencia a Partidos',
+    'Deuda Acumulada',
+  ][index],
   quantity: (index + 1) * 100,
   value: 75,
 }));

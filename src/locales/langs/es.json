@@ -51,7 +51,7 @@
   "only_admin_can_see_this_item": "Solo los administradores pueden ver este elemento",
   "upgrade_to_pro": "Actualizar a Pro",
   "payment_request": "Solicitud de pago",
-  "payment_requests" : "Solicitudes de pago",
+  "payment_requests": "Solicitudes de pago",
   "new_payment_request": "Nueva solicitud de pago",
   "user_payment_request": "Solicitud de pago usuario",
   "create_new_payment_request": "Crear nueva solicitud de pago",
@@ -155,5 +155,6 @@
   "cancel": "Cancelar",
   "filters": "Filtros",
   "range": "Rango",
-  "events": "Eventos"
+  "events": "Eventos",
+  "monthly_players": "Jugadores del mes"
 }
