@@ -25,19 +25,29 @@ export default function OverviewAnalyticsView() {
   const isAdmin = user?.role === 'admin';
   const isFem = user?.myUser.group === 'female';
 
-  const mascCategories = ['Pescara FC', 'Albalon FC', 'Deportivo AZ', 'Curramba FC', 'Canterbury FC'];
-  const femCategories = ['Funcode FC', 'Mambe FC', 'Sabana SC', 'Forta FC', 'Joga Bonito'];
+  const mascCategories = ['Pescara FC', 'Albalon FC', 'Deportivo AZ', 'Curramba FC', 'Canterbury FC', 'Country FC'];
+  const femCategories = ['Funcode FC', 'Mambe FC', 'Sabana SC', 'Forta FC', 'Joga Bonito', 'Espal', 'Furia', 'Dilex', 'Leonas'];
+  const mascJugados = 6
+  const mascGolFavor = 13
+  const mascGolContra = 6
+  const mascDifGoles = mascGolFavor - mascGolContra
+  
+  const femJugados = 9
+  const femGolFavor = 7
+  const femGolContra = 15
+  const femDifGoles = femGolFavor - femGolContra
+
   const mascSeries = [
     {
       type: 'Fase Ofensiva',
       data: [
         {
           name: 'Remates totales',
-          data: [14, 9, 5, 15, 16],
+          data: [14, 9, 5, 15, 16, 20],
         },
         {
           name: 'Remates a puerta',
-          data: [8, 5, 4, 7, 10],
+          data: [8, 5, 4, 7, 10, 9],
         },
       ],
     },
@@ -46,11 +56,11 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Intercepciones',
-          data: [61, 68, 72, 66, 71],
+          data: [61, 68, 72, 66, 71, 59],
         },
         {
           name: 'Recuperaciones',
-          data: [1, 4, 6, 3, 3],
+          data: [1, 4, 6, 3, 3, 4],
         },
       ],
     },
@@ -59,11 +69,11 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Pases totales',
-          data: [275, 154, 315, 267, 261],
+          data: [275, 154, 315, 267, 261, 321],
         },
         {
           name: 'Pases completados',
-          data: [232, 113, 254, 234, 216],
+          data: [232, 113, 254, 234, 216, 278],
         },
       ],
     },
@@ -72,7 +82,7 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Porcentaje de posesión',
-          data: [73, 64, 83, 75, 68],
+          data: [73, 64, 83, 75, 68, 86],
         },
       ],
     },
@@ -83,11 +93,11 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Remates totales',
-          data: [3, 5, 7, 11, 3],
+          data: [3, 5, 7, 11, 3, 4, 11, 7, 18],
         },
         {
           name: 'Remates a puerta',
-          data: [3, 1, 6, 6, 2],
+          data: [3, 1, 6, 6, 2, 1, 5, 5, 8],
         },
       ],
     },
@@ -96,11 +106,11 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Intercepciones',
-          data: [62, 58, 49, 57, 58],
+          data: [62, 58, 49, 57, 58, 11, 70, 15, 43],
         },
         {
           name: 'Recuperaciones',
-          data: [4, 6, 3, 1, 5],
+          data: [4, 6, 3, 1, 5, 14, 1, 9, 5],
         },
       ],
     },
@@ -109,11 +119,11 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Pases totales',
-          data: [138, 102, 104, 181, 78],
+          data: [138, 102, 104, 181, 78, 192, 116, 149, 196],
         },
         {
           name: 'Pases completados',
-          data: [97, 69, 67, 131, 45],
+          data: [97, 69, 67, 131, 45, 149, 85, 112, 162],
         },
       ],
     },
@@ -122,64 +132,67 @@ export default function OverviewAnalyticsView() {
       data: [
         {
           name: 'Porcentaje de posesión',
-          data: [44, 36, 54, 53, 23],
+          data: [44, 36, 54, 53, 23, 80, 59, 75, 93],
         },
       ],
     },
   ]
   const mascMinutos = [
-    { label: 'Adrian Villalba', value: 359 },
-    { label: 'Juan Quilaguy', value: 352 },
-    { label: 'Santiago Motta', value: 345 },
-    { label: 'Cristian Gomez', value: 340 },
+    { label: 'Adrian Villalba', value: 442 },
+    { label: 'Juan Quilaguy', value: 442 },
+    { label: 'Santiago Motta', value: 435 },
+    { label: 'Cristian Gomez', value: 396 },
+
+    { label: 'William Cabrera', value: 315 },
+    { label: 'Cristian Medina', value: 312 },
+    { label: 'Jonathan Mindiola', value: 300 },
     { label: 'Julio Mejia', value: 298 },
+    { label: 'Alejandro Archila', value: 285 },
+    { label: 'Juan Alarcon', value: 282 },
     { label: 'Leonardo Triviño', value: 246 },
-    { label: 'Cristian Medina', value: 242 },
-    { label: 'William Cabrera', value: 225 },
-    { label: 'Juan Alarcon', value: 212 },
-    { label: 'Jonathan Mindiola', value: 210 },
+    { label: 'Cristian Lozano', value: 242 },
+    { label: 'Abdulh Daza', value: 216 },
     { label: 'David Reina', value: 207 },
-    { label: 'Alejandro Archila', value: 195 },
     { label: 'Nicolas Gomez', value: 185 },
-    { label: 'Cristian Lozano', value: 152 },
-    { label: 'Abdulh Daza', value: 126 },
+    { label: 'Santiago Lozano', value: 128 },
+    { label: 'Felipe Morales', value: 117 },
     { label: 'Pablo Salamanca', value: 106 },
-    { label: 'Felipe Morales', value: 101 },
-    { label: 'Santiago Lozano', value: 98 },
     { label: 'Diego Rincon', value: 90 },
     { label: 'Camilo Arango', value: 83 },
+    { label: 'Wilmis Gonzalez', value: 77 },
     { label: 'Andres Zuñiga', value: 76 },
     { label: 'Roberto Moralez', value: 73 },
-    { label: 'Wilmis Gonzalez', value: 61 },
     { label: 'Jorge Carrasco', value: 50 },
     { label: 'Herrera Diego', value: 25 },
-    { label: 'Garcia Luis', value: 18 },
+    { label: 'Garcia Luis', value: 21 },
     { label: 'Carlos Castellanos', value: 8 },
   ];
 
   const femMinutos = [
-    { label: 'Luisa Pineda', value: 278 },
-    { label: 'Tatiana Montoya', value: 247 },
+    { label: 'Luisa Pineda', value: 433 },
+    { label: 'Tatiana Montoya', value: 404 },
+    { label: 'Valentina Bello', value: 343 },
+    { label: 'Monica Pacheco', value: 317 },
+    { label: 'Valentina Garcia', value: 306 },
+    { label: 'Juliana Castillo', value: 302 },
+    { label: 'Laura Gomez', value: 273 },
+    { label: 'Paula Sierra', value: 254 },
+    { label: 'Valentina Murillo', value: 248 },
     { label: 'Valentina Suarez', value: 240 },
-    { label: 'Monica Pacheco', value: 229 },
-    { label: 'Valentina Garcia', value: 206 },
-    { label: 'Valentina Bello', value: 198 },
-    { label: 'Valentina Murillo', value: 189 },
-    { label: 'Laura Gomez', value: 181 },
+    { label: 'Estefania Losada', value: 222 },
+    { label: 'Karen Chaves', value: 187 },
+    { label: 'Sofia Cordoba', value: 183 },
     { label: 'Alison De Armas', value: 173 },
-    { label: 'Juliana Castillo', value: 134 },
-    { label: 'Karen Chaves', value: 127 },
-    { label: 'Sofia Cordoba', value: 103 },
-    { label: 'Estefania Losada', value: 90 },
-    { label: 'Camila Chiquiza', value: 76 },
-    { label: 'Paula Sierra', value: 74 },
-    { label: 'Maria Pertuz', value: 43 },
-    { label: 'Maria Guerra', value: 30 },
-    { label: 'Paola Garzon', value: 29 },
+    { label: 'Camila Chiquiza', value: 160 },
+    { label: 'Maria Pertuz', value: 155 },
+    { label: 'Maria Guerra', value: 106 },
+    { label: 'Lady Sanchez', value: 85 },
+    { label: 'Paola Garzon', value: 83 },
+    { label: 'Alejandra Rojas', value: 68 },
+    { label: 'Laura Suarez', value: 60 },
+    { label: 'Cristina Perez', value: 51 },
+    { label: 'Valeria Cortes', value: 41 },
     { label: 'Camila Amador', value: 26 },
-    { label: 'Alejandra Rojas', value: 15 },
-    { label: 'Lady Sanchez', value: 12 },
-    { label: 'Cristina Perez', value: 12 },
   ];
 
   return (
@@ -207,27 +220,27 @@ export default function OverviewAnalyticsView() {
       <Grid xs={12} md={3}>
           <ValueWidgetSummary
             title="Partidos jugados"
-            total={isFem ? 5:5}
+            total={isFem ? femJugados:mascJugados}
             icon={<SeoIllustration />}
           />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Goles a favor" total={isFem ? 2:11} icon={<MotivationIllustration />} />
+          <ValueWidgetSummary title="Goles a favor" total={isFem ? femGolFavor:mascGolFavor} icon={<MotivationIllustration />} />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Goles en contra" total={isFem ? 15:6} icon={<ComingSoonIllustration />} />
+          <ValueWidgetSummary title="Goles en contra" total={isFem ? femGolContra:mascGolContra} icon={<ComingSoonIllustration />} />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Diferencia de Goles" total={isFem ? -13:5} icon={<MaintenanceIllustration />} />
+          <ValueWidgetSummary title="Diferencia de Goles" total={isFem ? femDifGoles:mascDifGoles} icon={<MaintenanceIllustration />} />
         </Grid>
 
         <Grid xs={12} md={6} lg={6}>
           <AnalyticsPartidos
             title="Rendimiento en partidos"
-            subheader="Ultima actualización: 8 Abril 2024"
+            subheader="Ultima actualización: 24 Abril 2024"
             chart={{
               colors: [theme.palette.primary.main, theme.palette.error.light, theme.palette.warning.main, theme.palette.success.main],
               categories: isFem ? femCategories : mascCategories,
@@ -250,27 +263,27 @@ export default function OverviewAnalyticsView() {
       <Grid xs={12} md={3}>
           <ValueWidgetSummary
             title="Partidos jugados"
-            total={!isFem ? 5:5}
+            total={!isFem ? femJugados:mascJugados}
             icon={<SeoIllustration />}
           />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Goles a favor" total={!isFem ? 2:11} icon={<MotivationIllustration />} />
+          <ValueWidgetSummary title="Goles a favor" total={!isFem ? femGolFavor:mascGolFavor} icon={<MotivationIllustration />} />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Goles en contra" total={!isFem ? 15:6} icon={<ComingSoonIllustration />} />
+          <ValueWidgetSummary title="Goles en contra" total={!isFem ? femGolContra:mascGolContra} icon={<ComingSoonIllustration />} />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Diferencia de Goles" total={!isFem ? -13:5} icon={<MaintenanceIllustration />} />
+          <ValueWidgetSummary title="Diferencia de Goles" total={!isFem ? femDifGoles:mascDifGoles} icon={<MaintenanceIllustration />} />
         </Grid>
 
         <Grid xs={12} md={6} lg={6}>
           <AnalyticsPartidos
             title="Rendimiento en partidos"
-            subheader="Ultima actualización: 8 Abril 2024"
+            subheader="Ultima actualización: 24 Abril 2024"
             chart={{
               colors: [theme.palette.primary.main, theme.palette.error.light, theme.palette.warning.main, theme.palette.success.main],
               categories: !isFem ? femCategories : mascCategories,

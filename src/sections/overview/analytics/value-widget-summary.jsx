@@ -22,10 +22,10 @@ export default function ValueWidgetSummary({ title, total, icon, sx, ...other })
     >
       <Box>
         {title === 'Diferencia de Goles' && total > 0 && (
-          <Box sx={{ color: 'success.main', typography: 'subtitle2' }}>+200%</Box>
+          <Box sx={{ color: 'success.main', typography: 'subtitle2' }}>+146%</Box>
         )}
         {title === 'Diferencia de Goles' && total < 0 && (
-          <Box sx={{ color: 'error.main', typography: 'subtitle2' }}>-600%</Box>
+          <Box sx={{ color: 'error.main', typography: 'subtitle2' }}>-113%</Box>
         )}
          {title === 'Diferencia de Goles' && (
           <Box sx={{ mb: 1, typography: 'h3' }}>{total > 0 ? '+' : '-'}{fShortenNumber(Math.abs(total))}</Box>
