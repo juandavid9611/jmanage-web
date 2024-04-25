@@ -11,6 +11,7 @@ import { LoadingScreen } from 'src/components/loading-screen';
 // OVERVIEW
 const IndexPage = lazy(() => import('src/pages/dashboard/app'));
 const OverviewAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
+const MonthlyPlayerComingPage = lazy(() => import('src/pages/dashboard/monthly-player-coming'));
 // PAYMENT REQUEST
 const PaymentRequestListPage = lazy(() => import('src/pages/dashboard/payment-request/list'));
 const EmployeePaymentRequestListPage = lazy(() =>
@@ -43,6 +44,7 @@ export const dashboardRoutes = [
     children: [
       { element: <IndexPage />, index: true },
       { path: 'analytics', element: <OverviewAnalyticsPage /> },
+      { path: 'monthly-player-coming-soon', element: <MonthlyPlayerComingPage /> },
       {
         path: 'user',
         children: [

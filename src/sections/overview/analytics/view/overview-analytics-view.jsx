@@ -25,17 +25,34 @@ export default function OverviewAnalyticsView() {
   const isAdmin = user?.role === 'admin';
   const isFem = user?.myUser.group === 'female';
 
-  const mascCategories = ['Pescara FC', 'Albalon FC', 'Deportivo AZ', 'Curramba FC', 'Canterbury FC', 'Country FC'];
-  const femCategories = ['Funcode FC', 'Mambe FC', 'Sabana SC', 'Forta FC', 'Joga Bonito', 'Espal', 'Furia', 'Dilex', 'Leonas'];
-  const mascJugados = 6
-  const mascGolFavor = 13
-  const mascGolContra = 6
-  const mascDifGoles = mascGolFavor - mascGolContra
-  
-  const femJugados = 9
-  const femGolFavor = 7
-  const femGolContra = 15
-  const femDifGoles = femGolFavor - femGolContra
+  const mascCategories = [
+    'Pescara FC',
+    'Albalon FC',
+    'Deportivo AZ',
+    'Curramba FC',
+    'Canterbury FC',
+    'Country FC',
+  ];
+  const femCategories = [
+    'Funcode FC',
+    'Mambe FC',
+    'Sabana SC',
+    'Forta FC',
+    'Joga Bonito',
+    'Espal',
+    'Furia',
+    'Dilex',
+    'Leonas',
+  ];
+  const mascJugados = 6;
+  const mascGolFavor = 13;
+  const mascGolContra = 6;
+  const mascDifGoles = mascGolFavor - mascGolContra;
+
+  const femJugados = 9;
+  const femGolFavor = 7;
+  const femGolContra = 15;
+  const femDifGoles = femGolFavor - femGolContra;
 
   const mascSeries = [
     {
@@ -136,7 +153,7 @@ export default function OverviewAnalyticsView() {
         },
       ],
     },
-  ]
+  ];
   const mascMinutos = [
     { label: 'Adrian Villalba', value: 442 },
     { label: 'Juan Quilaguy', value: 442 },
@@ -203,7 +220,14 @@ export default function OverviewAnalyticsView() {
           mb: { xs: 3, md: 5 },
         }}
       >
-        Conoce tu rendimiento y mejora continuamente 👋 <a href="https://lookerstudio.google.com/u/0/reporting/bb0f5ac2-0bf0-4807-8ed5-0dac04e4ff06" target="_blank" rel="noopener noreferrer">Looker Studio</a>
+        Conoce tu rendimiento y mejora continuamente 👋{' '}
+        <a
+          href="https://lookerstudio.google.com/u/0/reporting/bb0f5ac2-0bf0-4807-8ed5-0dac04e4ff06"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Looker Studio
+        </a>
       </Typography>
       <Typography
         variant="body2"
@@ -213,28 +237,39 @@ export default function OverviewAnalyticsView() {
         }}
       >
         Conoce tus estadísticas y mejora tu rendimiento continuamente.
-        </Typography>
-        
+      </Typography>
 
       <Grid container spacing={3}>
-      <Grid xs={12} md={3}>
+        <Grid xs={12} md={3}>
           <ValueWidgetSummary
             title="Partidos jugados"
-            total={isFem ? femJugados:mascJugados}
+            total={isFem ? femJugados : mascJugados}
             icon={<SeoIllustration />}
           />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Goles a favor" total={isFem ? femGolFavor:mascGolFavor} icon={<MotivationIllustration />} />
+          <ValueWidgetSummary
+            title="Goles a favor"
+            total={isFem ? femGolFavor : mascGolFavor}
+            icon={<MotivationIllustration />}
+          />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Goles en contra" total={isFem ? femGolContra:mascGolContra} icon={<ComingSoonIllustration />} />
+          <ValueWidgetSummary
+            title="Goles en contra"
+            total={isFem ? femGolContra : mascGolContra}
+            icon={<ComingSoonIllustration />}
+          />
         </Grid>
 
         <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Diferencia de Goles" total={isFem ? femDifGoles:mascDifGoles} icon={<MaintenanceIllustration />} />
+          <ValueWidgetSummary
+            title="Diferencia de Goles"
+            total={isFem ? femDifGoles : mascDifGoles}
+            icon={<MaintenanceIllustration />}
+          />
         </Grid>
 
         <Grid xs={12} md={6} lg={6}>
@@ -242,7 +277,12 @@ export default function OverviewAnalyticsView() {
             title="Rendimiento en partidos"
             subheader="Ultima actualización: 24 Abril 2024"
             chart={{
-              colors: [theme.palette.primary.main, theme.palette.error.light, theme.palette.warning.main, theme.palette.success.main],
+              colors: [
+                theme.palette.primary.main,
+                theme.palette.error.light,
+                theme.palette.warning.main,
+                theme.palette.success.main,
+              ],
               categories: isFem ? femCategories : mascCategories,
               series: isFem ? femSeries : mascSeries,
             }}
@@ -259,48 +299,66 @@ export default function OverviewAnalyticsView() {
         </Grid>
       </Grid>
       {isAdmin && (
-      <Grid container spacing={3}>
-      <Grid xs={12} md={3}>
-          <ValueWidgetSummary
-            title="Partidos jugados"
-            total={!isFem ? femJugados:mascJugados}
-            icon={<SeoIllustration />}
-          />
-        </Grid>
+        <Grid container spacing={3}>
+          <Grid xs={12} md={3}>
+            <ValueWidgetSummary
+              title="Partidos jugados"
+              total={!isFem ? femJugados : mascJugados}
+              icon={<SeoIllustration />}
+            />
+          </Grid>
 
-        <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Goles a favor" total={!isFem ? femGolFavor:mascGolFavor} icon={<MotivationIllustration />} />
-        </Grid>
+          <Grid xs={12} md={3}>
+            <ValueWidgetSummary
+              title="Goles a favor"
+              total={!isFem ? femGolFavor : mascGolFavor}
+              icon={<MotivationIllustration />}
+            />
+          </Grid>
 
-        <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Goles en contra" total={!isFem ? femGolContra:mascGolContra} icon={<ComingSoonIllustration />} />
-        </Grid>
+          <Grid xs={12} md={3}>
+            <ValueWidgetSummary
+              title="Goles en contra"
+              total={!isFem ? femGolContra : mascGolContra}
+              icon={<ComingSoonIllustration />}
+            />
+          </Grid>
 
-        <Grid xs={12} md={3}>
-          <ValueWidgetSummary title="Diferencia de Goles" total={!isFem ? femDifGoles:mascDifGoles} icon={<MaintenanceIllustration />} />
-        </Grid>
+          <Grid xs={12} md={3}>
+            <ValueWidgetSummary
+              title="Diferencia de Goles"
+              total={!isFem ? femDifGoles : mascDifGoles}
+              icon={<MaintenanceIllustration />}
+            />
+          </Grid>
 
-        <Grid xs={12} md={6} lg={6}>
-          <AnalyticsPartidos
-            title="Rendimiento en partidos"
-            subheader="Ultima actualización: 24 Abril 2024"
-            chart={{
-              colors: [theme.palette.primary.main, theme.palette.error.light, theme.palette.warning.main, theme.palette.success.main],
-              categories: !isFem ? femCategories : mascCategories,
-              series: !isFem ? femSeries : mascSeries,
-            }}
-          />
-        </Grid>
+          <Grid xs={12} md={6} lg={6}>
+            <AnalyticsPartidos
+              title="Rendimiento en partidos"
+              subheader="Ultima actualización: 24 Abril 2024"
+              chart={{
+                colors: [
+                  theme.palette.primary.main,
+                  theme.palette.error.light,
+                  theme.palette.warning.main,
+                  theme.palette.success.main,
+                ],
+                categories: !isFem ? femCategories : mascCategories,
+                series: !isFem ? femSeries : mascSeries,
+              }}
+            />
+          </Grid>
 
-        <Grid xs={12} md={6} lg={6}>
-          <AnalyticsConversionRates
-            title="Minutos en partidos"
-            chart={{
-              series: !isFem ? femMinutos : mascMinutos,
-            }}
-          />
+          <Grid xs={12} md={6} lg={6}>
+            <AnalyticsConversionRates
+              title="Minutos en partidos"
+              chart={{
+                series: !isFem ? femMinutos : mascMinutos,
+              }}
+            />
+          </Grid>
         </Grid>
-      </Grid>)}
+      )}
     </Container>
   );
 }

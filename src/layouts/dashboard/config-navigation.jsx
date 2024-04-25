@@ -68,6 +68,12 @@ export function useNavData() {
             // path: '#analytics',
             path: paths.dashboard.general.analytics,
             icon: ICONS.analytics,
+            roles: ['admin', 'user'],
+          },
+          {
+            title: t('monthly_players'),
+            path: paths.dashboard.general.monthlyPlayerComingSoon,
+            icon: ICONS.dashboard,
             info: (
               <Label color="info" startIcon={<Iconify icon="solar:bell-bing-bold-duotone" />}>
                 NEW

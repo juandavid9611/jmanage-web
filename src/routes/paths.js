@@ -24,6 +24,7 @@ export const paths = {
     general: {
       app: `${ROOTS.DASHBOARD}/app`,
       analytics: `${ROOTS.DASHBOARD}/analytics`,
+      monthlyPlayerComingSoon: `${ROOTS.DASHBOARD}/monthly-player-coming-soon`,
     },
     admin: {
       user: {
