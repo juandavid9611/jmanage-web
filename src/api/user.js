@@ -89,7 +89,7 @@ export function useGetLateArrives(userId) {
 
   const memoizedValue = useMemo(
     () => ({
-      lateArrives: data || [],
+      lateArrives: data ?? [],
       lateArrivesLoading: isLoading,
       lateArrivesError: error,
       lateArrivesValidating: isValidating,
