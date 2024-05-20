@@ -33,6 +33,8 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
     llegadas_tarde: Yup.number().required('Llegadas tarde is required'),
     deuda_acumulada: Yup.number().required('Deuda acumlada is required'),
     total: Yup.number().required('Total number is required'),
+    puntaje_asistencia: Yup.number().required('Puntaje asistencia is required').max(3),
+    puntaje_asistencia_description: Yup.string(),
   });
 
   const defaultValues = useMemo(
@@ -44,6 +46,9 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
       llegadas_tarde: currentUser?.user_metrics?.llegadas_tarde || 0,
       deuda_acumulada: currentUser?.user_metrics?.deuda_acumulada || 0,
       total: currentUser?.user_metrics?.total || 0,
+      puntaje_asistencia: currentUser?.user_metrics?.puntaje_asistencia || 0,
+      puntaje_asistencia_description:
+        currentUser?.user_metrics?.puntaje_asistencia_description || '',
     }),
     [currentUser]
   );
@@ -92,7 +97,8 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
         <DialogContent>
           <Alert variant="outlined" severity="info" sx={{ mb: 3 }}>
             <Typography>
-              Update the metrics for <strong>{currentUser?.name}</strong> user of group <strong>{currentUser?.group}</strong>
+              Update the metrics for <strong>{currentUser?.name}</strong> user of group{' '}
+              <strong>{currentUser?.group}</strong>
             </Typography>
           </Alert>
 
@@ -105,7 +111,6 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
               sm: 'repeat(2, 1fr)',
             }}
           >
-
             <RHFTextField name="asistencia_entrenos" label="Asistencia entrenos" />
 
             <RHFTextField name="asistencia_partidos" label="Asistencia partidos" />
@@ -117,6 +122,13 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
             <RHFTextField name="deuda_acumulada" label="Deuda acumulada" />
 
             <RHFTextField name="total" label="Total" />
+
+            <RHFTextField name="puntaje_asistencia" label="Puntaje asistencia" />
+
+            <RHFTextField
+              name="puntaje_asistencia_description"
+              label="Descripción puntaje asistencia"
+            />
           </Box>
         </DialogContent>
 

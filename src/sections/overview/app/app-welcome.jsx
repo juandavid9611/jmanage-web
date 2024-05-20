@@ -72,7 +72,7 @@ export default function AppWelcome({ title, description, action, img, ...other }
           }}
           onClick={() => setCount(count + 1)}
         >
-          <LogoAnimated key={count}/>
+          <LogoAnimated key={count} />
         </Stack>
       )}
     </Stack>

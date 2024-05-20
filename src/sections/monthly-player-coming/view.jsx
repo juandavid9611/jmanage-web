@@ -137,22 +137,13 @@ export default function MonthlyPlayerComingSoonView() {
 
   const isAdmin = true;
   const isFem = user?.myUser.group === 'female';
-  const enableVoting = false;
+  const enableVoting = true;
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'xl'}>
       <Stack direction="row" justifyContent="center">
         <Typography variant="h3" sx={{ mb: 2 }}>
-          Nuestro jugador y jugadora del mes se acercan a su victoria!
-        </Typography>
-      </Stack>
-      <Stack
-        direction="row"
-        justifyContent="center"
-        divider={<Box sx={{ mx: { xs: 1, sm: 2.5 } }}>:</Box>}
-      >
-        <Typography sx={{ color: 'text.secondary' }}>
-          Reconocemos y valoramos el esfuerzo personal de cada uno de nuestros jugadores y jugadoras
+          Jugador y jugadora del mes!
         </Typography>
       </Stack>
 
