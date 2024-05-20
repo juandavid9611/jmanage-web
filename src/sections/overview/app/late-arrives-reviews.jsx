@@ -15,7 +15,7 @@ import Carousel, { useCarousel, CarouselArrows } from 'src/components/carousel';
 
 // ----------------------------------------------------------------------
 
-export default function LateArrivesReviews({ title, subheader, list, ...other }) {
+export default function LateArrivesReviews({ title, playersList, ...other }) {
   const carousel = useCarousel({
     adaptiveHeight: true,
   });
@@ -24,12 +24,16 @@ export default function LateArrivesReviews({ title, subheader, list, ...other })
     <Card {...other}>
       <CardHeader
         title={title}
-        subheader={subheader}
+        subheader={
+          playersList.length > 0
+            ? `${playersList.length} jugadores`
+            : 'No hay jugadores con llegadas tarde'
+        }
         action={<CarouselArrows onNext={carousel.onNext} onPrev={carousel.onPrev} />}
       />
 
       <Carousel ref={carousel.carouselRef} {...carousel.carouselSettings}>
-        {list.map((item) => (
+        {playersList.map((item) => (
           <ReviewItem key={item.id} item={item} />
         ))}
       </Carousel>
@@ -40,8 +44,7 @@ export default function LateArrivesReviews({ title, subheader, list, ...other })
 }
 
 LateArrivesReviews.propTypes = {
-  list: PropTypes.array,
-  subheader: PropTypes.string,
+  playersList: PropTypes.array,
   title: PropTypes.string,
 };
 
