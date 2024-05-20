@@ -30,7 +30,7 @@ export default function OverviewAppView() {
 
   const { lateArrives } = useGetLateArrives(user?.id);
 
-  const { groupLateArrives } = lateArrives.filter((item) => item.group === user.group);
+  const groupLateArrives = lateArrives.filter((item) => item.group === user.group);
 
   const { events } = useGetEvents();
 
