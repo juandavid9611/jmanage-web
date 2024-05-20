@@ -30,7 +30,11 @@ export default function OverviewAppView() {
 
   const { lateArrives } = useGetLateArrives(user?.id);
 
+  const { groupLateArrives } = lateArrives.filter((item) => item.group === user.group);
+
   const { events } = useGetEvents();
+
+  const isAdmin = user?.role === 'admin';
 
   const masc_goals_and_assits = [
     {
@@ -183,10 +187,7 @@ export default function OverviewAppView() {
         <Grid xs={12} md={4}>
           <LateArrivesReviews
             title="Jugadores con llegadas tarde"
-            subheader={`${
-              lateArrives.filter((item) => item.group === user.group).length
-            } jugadores`}
-            list={lateArrives.filter((item) => item.group === user.group)}
+            playersList={isAdmin ? lateArrives : groupLateArrives}
           />
         </Grid>
         <Grid xs={12} md={4}>
