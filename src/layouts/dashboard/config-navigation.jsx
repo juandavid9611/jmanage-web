@@ -4,8 +4,6 @@ import { paths } from 'src/routes/paths';
 
 import { useTranslate } from 'src/locales';
 
-import Label from 'src/components/label';
-import Iconify from 'src/components/iconify';
 import SvgColor from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -72,13 +70,9 @@ export function useNavData() {
           },
           {
             title: t('monthly_players'),
-            path: paths.dashboard.general.monthlyPlayerComingSoon,
+            path: '#monthlyPlayerComingSoon',
             icon: ICONS.dashboard,
-            info: (
-              <Label color="info" startIcon={<Iconify icon="solar:bell-bing-bold-duotone" />}>
-                NEW
-              </Label>
-            ),
+            disabled: true,
             roles: ['admin', 'user'],
           },
         ],

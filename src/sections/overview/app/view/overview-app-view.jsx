@@ -5,8 +5,8 @@ import { _appFeatured } from 'src/_mock';
 import { useTranslate } from 'src/locales';
 import { useAuthContext } from 'src/auth/hooks';
 import { useGetEvents } from 'src/api/calendar';
-import { useGetUserMetrics } from 'src/api/user';
 import { SeoIllustration } from 'src/assets/illustrations';
+import { useGetLateArrives, useGetUserMetrics } from 'src/api/user';
 
 import { useSettingsContext } from 'src/components/settings';
 
@@ -15,6 +15,7 @@ import AppFeatured from '../app-featured';
 import AppTopAuthors from '../app-top-authors';
 import MetricProgress from '../metric-progress';
 import MetricTotalWidget from '../metric-total-widget';
+import LateArrivesReviews from '../late-arrives-reviews';
 import AnalyticsOrderTimeline from '../analytics-order-timeline';
 
 // ----------------------------------------------------------------------
@@ -26,6 +27,8 @@ export default function OverviewAppView() {
   const settings = useSettingsContext();
 
   const { metrics } = useGetUserMetrics(user?.id);
+
+  const { lateArrives } = useGetLateArrives(user?.id);
 
   const { events } = useGetEvents();
 
@@ -175,6 +178,15 @@ export default function OverviewAppView() {
             title="Progreso"
             subheader={`Última actualización: ${formatDateTime(metrics?.last_update)}`}
             data={getMetricsProgress(metrics)}
+          />
+        </Grid>
+        <Grid xs={12} md={4}>
+          <LateArrivesReviews
+            title="Jugadores con llegadas tarde"
+            subheader={`${
+              lateArrives.filter((item) => item.group === user.group).length
+            } jugadores`}
+            list={lateArrives.filter((item) => item.group === user.group)}
           />
         </Grid>
         <Grid xs={12} md={4}>

@@ -63,7 +63,6 @@ export async function updateUserMetrics(id, metricsData) {
   return res.data;
 }
 
-
 export async function deleteUser(id) {
   const res = await axiosInstance.delete(`${URL}/${id}`);
   mutate(URL);
@@ -79,6 +78,21 @@ export function useGetUserMetrics(userId) {
       metricsLoading: isLoading,
       metricsError: error,
       metricsValidating: isValidating,
+    }),
+    [data, error, isLoading, isValidating]
+  );
+  return memoizedValue;
+}
+
+export function useGetLateArrives(userId) {
+  const { data, isLoading, error, isValidating } = useSWR(`${URL}/${userId}/late_arrives`, fetcher);
+
+  const memoizedValue = useMemo(
+    () => ({
+      lateArrives: data || [],
+      lateArrivesLoading: isLoading,
+      lateArrivesError: error,
+      lateArrivesValidating: isValidating,
     }),
     [data, error, isLoading, isValidating]
   );
