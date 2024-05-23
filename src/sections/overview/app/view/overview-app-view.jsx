@@ -38,50 +38,85 @@ export default function OverviewAppView() {
 
   const masc_goals_and_assits = [
     {
-      name: 'Cristian Medina',
+      name: 'Santiago Lozano',
       goals: 3,
       assists: 0,
       avatarUrl: '/assets/images/avatar/masc_1.jpg',
     },
-    { name: 'Julio Mejia', goals: 2, assists: 1, avatarUrl: '/assets/images/avatar/masc_2.jpg' },
+    {
+      name: 'Cristian Medina',
+      goals: 3,
+      assists: 0,
+      avatarUrl: '/assets/images/avatar/masc_2.jpg',
+    },
+    {
+      name: 'Daniel Rodriguez',
+      goals: 2,
+      assists: 1,
+      avatarUrl: '/assets/images/avatar/masc_3.jpg',
+    },
+    {
+      name: 'Abdulh Daza',
+      goals: 2,
+      assists: 3,
+      avatarUrl: '/assets/images/avatar/masc_4.jpg',
+    },
+    { name: 'Julio Mejia', goals: 2, assists: 1, avatarUrl: '/assets/images/avatar/masc_5.jpg' },
     {
       name: 'Alejandro Archila',
       goals: 2,
       assists: 0,
       avatarUrl: '/assets/images/avatar/masc_3.jpg',
     },
-    { name: 'Felipe Morales', goals: 1, assists: 0, avatarUrl: '/assets/images/avatar/masc_4.jpg' },
-    { name: 'Abdulh Daza', goals: 1, assists: 1, avatarUrl: '/assets/images/avatar/masc_5.jpg' },
+    { name: 'Felipe Morales', goals: 2, assists: 0, avatarUrl: '/assets/images/avatar/masc_6.jpg' },
     {
       name: 'Adrian Villalba',
       goals: 1,
       assists: 1,
-      avatarUrl: '/assets/images/avatar/masc_6.jpg',
+      avatarUrl: '/assets/images/avatar/masc_7.jpg',
+    },
+    {
+      name: 'Cristian Gomez',
+      goals: 1,
+      assists: 1,
+      avatarUrl: '/assets/images/avatar/masc_8.jpg',
+    },
+    {
+      name: 'Diego Herrera',
+      goals: 1,
+      assists: 0,
+      avatarUrl: '/assets/images/avatar/masc_9.jpg',
     },
     {
       name: 'Leonardo Triviño',
       goals: 1,
       assists: 0,
-      avatarUrl: '/assets/images/avatar/masc_7.jpg',
+      avatarUrl: '/assets/images/avatar/masc_10.jpg',
     },
     {
       name: 'Jonathan Mindiola',
       goals: 0,
       assists: 1,
-      avatarUrl: '/assets/images/avatar/masc_8.jpg',
+      avatarUrl: '/assets/images/avatar/masc_11.jpg',
     },
     {
       name: 'Cristian Lozano',
       goals: 0,
       assists: 1,
-      avatarUrl: '/assets/images/avatar/masc_9.jpg',
+      avatarUrl: '/assets/images/avatar/masc_1.jpg',
     },
-    { name: 'Juan Alarcon', goals: 0, assists: 1, avatarUrl: '/assets/images/avatar/masc_10.jpg' },
+    { name: 'Juan Alarcon', goals: 0, assists: 1, avatarUrl: '/assets/images/avatar/masc_2.jpg' },
     {
       name: 'Santiago Motta',
       goals: 0,
       assists: 1,
-      avatarUrl: '/assets/images/avatar/masc_11.jpg',
+      avatarUrl: '/assets/images/avatar/masc_3.jpg',
+    },
+    {
+      name: 'Luis Garcia',
+      goals: 0,
+      assists: 1,
+      avatarUrl: '/assets/images/avatar/masc_4.jpg',
     },
   ];
 
@@ -93,7 +128,19 @@ export default function OverviewAppView() {
       avatarUrl: '/assets/images/avatar/fem_1.jpg',
     },
     { name: 'Laura Gomez', goals: 1, assists: 0, avatarUrl: '/assets/images/avatar/fem_2.jpg' },
-    { name: 'Tatiana Montoya', goals: 0, assists: 2, avatarUrl: '/assets/images/avatar/fem_3.jpg' },
+    {
+      name: 'Luisa Pineda',
+      goals: 1,
+      assists: 0,
+      avatarUrl: '/assets/images/avatar/fem_3.jpg',
+    },
+    {
+      name: 'Valentina Bello',
+      goals: 1,
+      assists: 0,
+      avatarUrl: '/assets/images/avatar/fem_1.jpg',
+    },
+    { name: 'Tatiana Montoya', goals: 0, assists: 2, avatarUrl: '/assets/images/avatar/fem_2.jpg' },
   ];
 
   function formatDateTime(datetimeString) {
