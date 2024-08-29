@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import FormHelperText from '@mui/material/FormHelperText';
@@ -8,30 +7,34 @@ import { Upload, UploadBox, UploadAvatar } from '../upload';
 // ----------------------------------------------------------------------
 
 export function RHFUploadAvatar({ name, ...other }) {
-  const { control } = useFormContext();
+  const { control, setValue } = useFormContext();
 
   return (
     <Controller
       name={name}
       control={control}
-      render={({ field, fieldState: { error } }) => (
-        <div>
-          <UploadAvatar error={!!error} file={field.value} {...other} />
+      render={({ field, fieldState: { error } }) => {
+        const onDrop = (acceptedFiles) => {
+          const value = acceptedFiles[0];
 
-          {!!error && (
-            <FormHelperText error sx={{ px: 2, textAlign: 'center' }}>
-              {error.message}
-            </FormHelperText>
-          )}
-        </div>
-      )}
+          setValue(name, value, { shouldValidate: true });
+        };
+
+        return (
+          <div>
+            <UploadAvatar value={field.value} error={!!error} onDrop={onDrop} {...other} />
+
+            {!!error && (
+              <FormHelperText error sx={{ px: 2, textAlign: 'center' }}>
+                {error.message}
+              </FormHelperText>
+            )}
+          </div>
+        );
+      }}
     />
   );
 }
-
-RHFUploadAvatar.propTypes = {
-  name: PropTypes.string,
-};
 
 // ----------------------------------------------------------------------
 
@@ -43,63 +46,37 @@ export function RHFUploadBox({ name, ...other }) {
       name={name}
       control={control}
       render={({ field, fieldState: { error } }) => (
-        <UploadBox files={field.value} error={!!error} {...other} />
+        <UploadBox value={field.value} error={!!error} {...other} />
       )}
     />
   );
 }
 
-RHFUploadBox.propTypes = {
-  name: PropTypes.string,
-};
-
 // ----------------------------------------------------------------------
 
 export function RHFUpload({ name, multiple, helperText, ...other }) {
-  const { control } = useFormContext();
+  const { control, setValue } = useFormContext();
 
   return (
     <Controller
       name={name}
       control={control}
-      render={({ field, fieldState: { error } }) =>
-        multiple ? (
-          <Upload
-            multiple
-            accept={{ 'image/*': [] }}
-            files={field.value}
-            error={!!error}
-            helperText={
-              (!!error || helperText) && (
-                <FormHelperText error={!!error} sx={{ px: 2 }}>
-                  {error ? error?.message : helperText}
-                </FormHelperText>
-              )
-            }
-            {...other}
-          />
-        ) : (
-          <Upload
-            accept={{ 'image/*': [] }}
-            file={field.value}
-            error={!!error}
-            helperText={
-              (!!error || helperText) && (
-                <FormHelperText error={!!error} sx={{ px: 2 }}>
-                  {error ? error?.message : helperText}
-                </FormHelperText>
-              )
-            }
-            {...other}
-          />
-        )
-      }
+      render={({ field, fieldState: { error } }) => {
+        const uploadProps = {
+          multiple,
+          accept: { 'image/*': [] },
+          error: !!error,
+          helperText: error?.message ?? helperText,
+        };
+
+        const onDrop = (acceptedFiles) => {
+          const value = multiple ? [...field.value, ...acceptedFiles] : acceptedFiles[0];
+
+          setValue(name, value, { shouldValidate: true });
+        };
+
+        return <Upload {...uploadProps} value={field.value} onDrop={onDrop} {...other} />;
+      }}
     />
   );
 }
-
-RHFUpload.propTypes = {
-  helperText: PropTypes.string,
-  multiple: PropTypes.bool,
-  name: PropTypes.string,
-};

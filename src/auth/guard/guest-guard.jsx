@@ -1,8 +1,8 @@
-import PropTypes from 'prop-types';
-import { useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
-import { paths } from 'src/routes/paths';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
+
+import { CONFIG } from 'src/config-global';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
@@ -10,40 +10,38 @@ import { useAuthContext } from '../hooks';
 
 // ----------------------------------------------------------------------
 
-export default function GuestGuard({ children }) {
-  const { loading } = useAuthContext();
-
-  return <>{loading ? <SplashScreen /> : <Container> {children}</Container>}</>;
-}
-
-GuestGuard.propTypes = {
-  children: PropTypes.node,
-};
-
-// ----------------------------------------------------------------------
-
-function Container({ children }) {
+export function GuestGuard({ children }) {
   const router = useRouter();
 
   const searchParams = useSearchParams();
 
-  const returnTo = searchParams.get('returnTo') || paths.dashboard.root;
+  const { loading, authenticated } = useAuthContext();
 
-  const { authenticated } = useAuthContext();
+  const [isChecking, setIsChecking] = useState(true);
 
-  const check = useCallback(() => {
+  const returnTo = searchParams.get('returnTo') || CONFIG.auth.redirectPath;
+
+  const checkPermissions = async () => {
+    if (loading) {
+      return;
+    }
+
     if (authenticated) {
       router.replace(returnTo);
+      return;
     }
-  }, [authenticated, returnTo, router]);
+
+    setIsChecking(false);
+  };
 
   useEffect(() => {
-    check();
-  }, [check]);
+    checkPermissions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated, loading]);
+
+  if (isChecking) {
+    return <SplashScreen />;
+  }
 
   return <>{children}</>;
 }
-
-Container.propTypes = {
-  children: PropTypes.node,
-};

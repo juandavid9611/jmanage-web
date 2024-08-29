@@ -1,12 +1,10 @@
-import sumBy from 'lodash/sumBy';
-import PropTypes from 'prop-types';
-
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import { Divider } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 
+import { sumBy } from 'src/utils/helper';
 import { fNumber } from 'src/utils/format-number';
 
 import Chart, { useChart } from 'src/components/chart';
@@ -22,7 +20,7 @@ export default function MetricTotalWidget({ title, subheader, chart, ...other })
     options,
   } = chart;
 
-  const total = sumBy(series, 'value');
+  const total = sumBy(series, (item) => item.value);
 
   const chartSeries =
     (series.filter((i) => i.label === 'Earned Percentage')[0].value / total) * 100;
@@ -113,134 +111,6 @@ export default function MetricTotalWidget({ title, subheader, chart, ...other })
       />
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 5 }} />
       <Divider sx={{ borderStyle: 'dashed' }} />
-
-      {/* <Stack spacing={2} sx={{ p: 5 }}>
-        <Stack
-          key={series[0].label}
-          spacing={1}
-          direction="row"
-          alignItems="left"
-          sx={{
-            typography: 'subtitle2',
-          }}
-        >
-          <Box sx={{ color: 'text.primary', flexGrow: 1 }}>Puntualidad en pagos</Box>
-          <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>1-5 100%</Box>
-          <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>6-10 75%</Box>
-          <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>11-28 50%</Box>
-          <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>{'>'}28 25%</Box>
-          <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>No pago .0%</Box>
-        </Stack>
-        <Divider sx={{ borderStyle: 'dashed' }} />
-        <Stack
-          spacing={1}
-          direction="row"
-          alignItems="left"
-          sx={{
-            typography: 'subtitle2',
-          }}
-        >
-          <Box sx={{ color: 'text.primary', flexGrow: 1 }}>Asistencia a entrenos</Box>
-          <Stack
-            spacing={1}
-            direction="column"
-            alignItems="left"
-            sx={{
-              typography: 'subtitle2',
-            }}
-          >
-            <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>
-              Asistencias / Total de Entrenos Válidos
-            </Box>
-            <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>
-              Los fallos se clasifican por lesión, trabajo o no asistencia
-            </Box>
-          </Stack>
-        </Stack>
-        <Divider sx={{ borderStyle: 'dashed' }} />
-        <Stack
-          spacing={1}
-          direction="row"
-          alignItems="left"
-          sx={{
-            typography: 'subtitle2',
-          }}
-        >
-          <Box sx={{ color: 'text.primary', flexGrow: 1 }}>Deuda acumulada</Box>
-          <Stack
-            spacing={1}
-            direction="column"
-            alignItems="left"
-            sx={{
-              typography: 'subtitle2',
-            }}
-          >
-            <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>
-              Resultado de comparativo de deuda vs cobros totales por mes
-            </Box>
-            <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>
-              Promedio semestral de calificaciones mensuales
-            </Box>
-          </Stack>
-        </Stack>
-        <Divider sx={{ borderStyle: 'dashed' }} />
-        <Stack
-          spacing={1}
-          direction="row"
-          alignItems="left"
-          sx={{
-            typography: 'subtitle2',
-          }}
-        >
-          <Divider sx={{ borderStyle: 'dashed' }} />
-          <Box sx={{ color: 'text.primary', flexGrow: 1 }}>Llegadas tarde</Box>
-          <Stack
-            spacing={1}
-            direction="column"
-            alignItems="left"
-            sx={{
-              typography: 'subtitle2',
-            }}
-          >
-            <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>
-              Se compara por jugador vs total de asistencias
-            </Box>
-            <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>1 - Llegadas Tarde/Asistencias</Box>
-          </Stack>
-        </Stack>
-        <Divider sx={{ borderStyle: 'dashed' }} />
-        <Stack
-          spacing={1}
-          direction="row"
-          alignItems="left"
-          sx={{
-            typography: 'subtitle2',
-          }}
-        >
-          <Box sx={{ color: 'text.primary', flexGrow: 1 }}>Asistencia a partidos</Box>
-          <Stack
-            spacing={1}
-            direction="column"
-            alignItems="left"
-            sx={{
-              typography: 'subtitle2',
-            }}
-          >
-            <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>
-              Los fallos se clasifican por lesión, trabajo o no asistencia
-            </Box>
-            <Box sx={{ color: 'text.secondary', flexGrow: 1 }}>
-              # Asistencias / # Total de Partidos Válidos
-            </Box>
-          </Stack>
-        </Stack>
-      </Stack> */}
     </Card>
   );
 }
-
-MetricTotalWidget.propTypes = {
-  chart: PropTypes.object,
-  subheader: PropTypes.string,
-  title: PropTypes.string,
-};

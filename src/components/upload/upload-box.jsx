@@ -1,14 +1,14 @@
-import PropTypes from 'prop-types';
 import { useDropzone } from 'react-dropzone';
 
 import Box from '@mui/material/Box';
-import { alpha } from '@mui/material/styles';
 
-import Iconify from '../iconify';
+import { varAlpha } from 'src/theme/styles';
+
+import { Iconify } from '../iconify';
 
 // ----------------------------------------------------------------------
 
-export default function UploadBox({ placeholder, error, disabled, sx, ...other }) {
+export function UploadBox({ placeholder, error, disabled, sx, ...other }) {
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     disabled,
     ...other,
@@ -20,7 +20,6 @@ export default function UploadBox({ placeholder, error, disabled, sx, ...other }
     <Box
       {...getRootProps()}
       sx={{
-        m: 0.5,
         width: 64,
         height: 64,
         flexShrink: 0,
@@ -30,23 +29,16 @@ export default function UploadBox({ placeholder, error, disabled, sx, ...other }
         alignItems: 'center',
         color: 'text.disabled',
         justifyContent: 'center',
-        bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
-        border: (theme) => `dashed 1px ${alpha(theme.palette.grey[500], 0.16)}`,
-        ...(isDragActive && {
-          opacity: 0.72,
-        }),
-        ...(disabled && {
-          opacity: 0.48,
-          pointerEvents: 'none',
-        }),
+        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+        border: (theme) => `dashed 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
+        ...(isDragActive && { opacity: 0.72 }),
+        ...(disabled && { opacity: 0.48, pointerEvents: 'none' }),
         ...(hasError && {
           color: 'error.main',
           borderColor: 'error.main',
-          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+          bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.08),
         }),
-        '&:hover': {
-          opacity: 0.72,
-        },
+        '&:hover': { opacity: 0.72 },
         ...sx,
       }}
     >
@@ -56,10 +48,3 @@ export default function UploadBox({ placeholder, error, disabled, sx, ...other }
     </Box>
   );
 }
-
-UploadBox.propTypes = {
-  disabled: PropTypes.object,
-  error: PropTypes.bool,
-  placeholder: PropTypes.object,
-  sx: PropTypes.object,
-};

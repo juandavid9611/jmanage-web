@@ -1,13 +1,22 @@
-import PropTypes from 'prop-types';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import { alpha } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
+
+import { CONFIG } from 'src/config-global';
+import { varAlpha } from 'src/theme/styles';
 
 // ----------------------------------------------------------------------
 
-export default function EmptyContent({ title, imgUrl, action, filled, description, sx, ...other }) {
+export function EmptyContent({
+  sx,
+  imgUrl,
+  action,
+  filled,
+  slotProps,
+  description,
+  title = 'No data',
+  ...other
+}) {
   return (
     <Stack
       flexGrow={1}
@@ -18,8 +27,8 @@ export default function EmptyContent({ title, imgUrl, action, filled, descriptio
         height: 1,
         ...(filled && {
           borderRadius: 2,
-          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
-          border: (theme) => `dashed 1px ${alpha(theme.palette.grey[500], 0.08)}`,
+          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+          border: (theme) => `dashed 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
         }),
         ...sx,
       }}
@@ -28,22 +37,35 @@ export default function EmptyContent({ title, imgUrl, action, filled, descriptio
       <Box
         component="img"
         alt="empty content"
-        src={imgUrl || '/assets/icons/empty/ic_content.svg'}
-        sx={{ width: 1, maxWidth: 160 }}
+        src={imgUrl ?? `${CONFIG.site.basePath}/assets/icons/empty/ic-content.svg`}
+        sx={{ width: 1, maxWidth: 160, ...slotProps?.img }}
       />
 
       {title && (
         <Typography
           variant="h6"
           component="span"
-          sx={{ mt: 1, color: 'text.disabled', textAlign: 'center' }}
+          sx={{
+            mt: 1,
+            textAlign: 'center',
+            ...slotProps?.title,
+            color: 'text.disabled',
+          }}
         >
           {title}
         </Typography>
       )}
 
       {description && (
-        <Typography variant="caption" sx={{ mt: 1, color: 'text.disabled', textAlign: 'center' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            mt: 1,
+            textAlign: 'center',
+            color: 'text.disabled',
+            ...slotProps?.description,
+          }}
+        >
           {description}
         </Typography>
       )}
@@ -52,12 +74,3 @@ export default function EmptyContent({ title, imgUrl, action, filled, descriptio
     </Stack>
   );
 }
-
-EmptyContent.propTypes = {
-  action: PropTypes.node,
-  description: PropTypes.string,
-  filled: PropTypes.bool,
-  imgUrl: PropTypes.string,
-  sx: PropTypes.object,
-  title: PropTypes.string,
-};

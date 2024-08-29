@@ -1,45 +1,41 @@
+import { today } from 'src/utils/format-time';
+
+import { CONFIG } from 'src/config-global';
+
 import { _mock } from './_mock';
 
 // APP
 // ----------------------------------------------------------------------
 
-export const _appRelated = ['Chrome', 'Drive', 'Dropbox', 'Evernote', 'Github'].map(
-  (name, index) => {
-    const system = [2, 4].includes(index) ? 'Windows' : 'Mac';
-
-    const price = [2, 4].includes(index) ? _mock.number.price(index) : 0;
-
-    const shortcut =
-      (name === 'Chrome' && '/assets/icons/app/ic_chrome.svg') ||
-      (name === 'Drive' && '/assets/icons/app/ic_drive.svg') ||
-      (name === 'Dropbox' && '/assets/icons/app/ic_dropbox.svg') ||
-      (name === 'Evernote' && '/assets/icons/app/ic_evernote.svg') ||
-      '/assets/icons/app/ic_github.svg';
-
-    return {
-      id: _mock.id(index),
-      name,
-      price,
-      system,
-      shortcut,
-      ratingNumber: _mock.number.rating(index),
-      totalReviews: _mock.number.nativeL(index),
-    };
-  }
-);
+export const _appRelated = [
+  'Microsoft office 365',
+  'Opera',
+  'Adobe acrobat reader DC',
+  'Joplin',
+  'Topaz photo AI',
+].map((name, index) => ({
+  id: _mock.id(index),
+  name,
+  downloaded: _mock.number.nativeL(index),
+  ratingNumber: _mock.number.rating(index),
+  size: _mock.number.nativeL(index) * 1024,
+  totalReviews: _mock.number.nativeL(index),
+  shortcut: `${CONFIG.site.basePath}/assets/icons/app/ic-app-${index + 1}.webp`,
+  price: [2, 4].includes(index) ? _mock.number.price(index) : 0,
+}));
 
 export const _appInstalled = ['Germany', 'England', 'France', 'Korean', 'USA'].map(
-  (name, index) => ({
+  (country, index) => ({
     id: _mock.id(index),
-    name,
+    countryName: country,
     android: _mock.number.nativeL(index),
     windows: _mock.number.nativeL(index + 1),
     apple: _mock.number.nativeL(index + 2),
-    flag: ['flagpack:de', 'flagpack:gb-nir', 'flagpack:fr', 'flagpack:kr', 'flagpack:us'][index],
+    countryCode: ['de', 'gb', 'fr', 'kr', 'us'][index],
   })
 );
 
-export const _appAuthors = [...Array(10)].map((_, index) => ({
+export const _appAuthors = [...Array(3)].map((_, index) => ({
   id: _mock.id(index),
   name: _mock.fullName(index),
   avatarUrl: _mock.image.avatar(index),
@@ -81,12 +77,13 @@ export const _analyticPosts = [...Array(5)].map((_, index) => ({
   description: _mock.sentence(index),
 }));
 
-export const _analyticOrderTimeline = [...Array(4)].map((_, index) => {
+export const _analyticOrderTimeline = [...Array(5)].map((_, index) => {
   const title = [
-    'Entrega de Uniformes y anuncio patrocinadores',
-    'Partido vs Colina FC Amistoso',
-    'Entrenamiento sede Creativo FC',
-    'Partido Torneo Suarez copa Fuego vs Clan FC',
+    '1983, orders, $4220',
+    '12 Invoices have been paid',
+    'Order #37745 from September',
+    'New order placed #XF-2356',
+    'New order placed #XF-2346',
   ][index];
 
   return {
@@ -100,34 +97,30 @@ export const _analyticOrderTimeline = [...Array(4)].map((_, index) => {
 export const _analyticTraffic = [
   {
     value: 'facebook',
-    label: 'FaceBook',
+    label: 'Facebook',
     total: _mock.number.nativeL(1),
-    icon: 'eva:facebook-fill',
   },
   {
     value: 'google',
     label: 'Google',
     total: _mock.number.nativeL(2),
-    icon: 'eva:google-fill',
   },
   {
     value: 'linkedin',
     label: 'Linkedin',
     total: _mock.number.nativeL(3),
-    icon: 'eva:linkedin-fill',
   },
   {
     value: 'twitter',
     label: 'Twitter',
     total: _mock.number.nativeL(4),
-    icon: 'eva:twitter-fill',
   },
 ];
 
 // ECOMMERCE
 // ----------------------------------------------------------------------
 
-export const _ecommerceSalesOverview = ['Total Profit', 'Total Income', 'Total Expenses'].map(
+export const _ecommerceSalesOverview = ['Total profit', 'Total income', 'Total expenses'].map(
   (label, index) => ({
     label,
     totalAmount: _mock.number.price(index) * 100,
@@ -136,21 +129,17 @@ export const _ecommerceSalesOverview = ['Total Profit', 'Total Income', 'Total E
 );
 
 export const _ecommerceBestSalesman = [...Array(5)].map((_, index) => {
-  const category = ['CAP', 'Branded Shoes', 'Headphone', 'Cell Phone', 'Earings'][index];
-
-  const flag = ['flagpack:de', 'flagpack:gb-nir', 'flagpack:fr', 'flagpack:kr', 'flagpack:us'][
-    index
-  ];
+  const category = ['CAP', 'Branded shoes', 'Headphone', 'Cell phone', 'Earings'][index];
 
   return {
     id: _mock.id(index),
-    flag,
     category,
     rank: `Top ${index + 1}`,
     email: _mock.email(index),
     name: _mock.fullName(index),
     totalAmount: _mock.number.price(index),
     avatarUrl: _mock.image.avatar(index + 8),
+    countryCode: ['de', 'gb', 'fr', 'kr', 'us'][index],
   };
 });
 
@@ -170,7 +159,7 @@ export const _ecommerceLatestProducts = [...Array(5)].map((_, index) => {
   };
 });
 
-export const _ecommerceNewProducts = [...Array(5)].map((_, index) => ({
+export const _ecommerceNewProducts = [...Array(4)].map((_, index) => ({
   id: _mock.id(index),
   name: _mock.productName(index),
   coverUrl: _mock.image.product(index),
@@ -220,7 +209,7 @@ export const _bankingRecentTransitions = [
     avatarUrl: _mock.image.avatar(2),
     type: 'Income',
     message: 'Receive money from',
-    category: 'Annette Black',
+    category: 'Annette black',
     date: _mock.time(2),
     status: 'progress',
     amount: _mock.number.price(2),
@@ -231,7 +220,7 @@ export const _bankingRecentTransitions = [
     avatarUrl: _mock.image.avatar(3),
     type: 'Expenses',
     message: 'Payment for',
-    category: 'Courtney Henry',
+    category: 'Courtney henry',
     date: _mock.time(3),
     status: 'completed',
     amount: _mock.number.price(3),
@@ -242,7 +231,7 @@ export const _bankingRecentTransitions = [
     avatarUrl: _mock.image.avatar(4),
     type: 'Receive',
     message: 'Payment for',
-    category: 'Theresa Webb',
+    category: 'Theresa webb',
     date: _mock.time(4),
     status: 'failed',
     amount: _mock.number.price(4),
@@ -253,7 +242,7 @@ export const _bankingRecentTransitions = [
     avatarUrl: null,
     type: 'Expenses',
     message: 'Payment for',
-    category: 'Beauty & Health',
+    category: 'Fast food',
     date: _mock.time(5),
     status: 'completed',
     amount: _mock.number.price(5),
@@ -264,7 +253,7 @@ export const _bankingRecentTransitions = [
     avatarUrl: null,
     type: 'Expenses',
     message: 'Payment for',
-    category: 'Books',
+    category: 'Fitness',
     date: _mock.time(6),
     status: 'progress',
     amount: _mock.number.price(6),
@@ -298,16 +287,10 @@ export const _bookings = [...Array(5)].map((_, index) => {
   };
 });
 
-export const _bookingsOverview = [...Array(5)].map((_, index) => ({
-  status: [
-    'Puntualidad en Pagos',
-    'Asistencia a Entrenos',
-    'Llegadas Tarde',
-    'Asistencia a Partidos',
-    'Deuda Acumulada',
-  ][index],
-  quantity: (index + 1) * 100,
-  value: 75,
+export const _bookingsOverview = [...Array(3)].map((_, index) => ({
+  status: ['Pending', 'Canceled', 'Sold'][index],
+  quantity: _mock.number.nativeL(index),
+  value: _mock.number.percent(index + 5),
 }));
 
 export const _bookingReview = [...Array(5)].map((_, index) => ({
@@ -317,10 +300,10 @@ export const _bookingReview = [...Array(5)].map((_, index) => ({
   rating: _mock.number.rating(index),
   avatarUrl: _mock.image.avatar(index),
   description: _mock.description(index),
-  tags: ['Great Sevice', 'Recommended', 'Best Price'],
+  tags: ['Great sevice', 'Recommended', 'Best price'],
 }));
 
-export const _bookingNew = [...Array(5)].map((_, index) => ({
+export const _bookingNew = [...Array(8)].map((_, index) => ({
   guests: '3-5',
   id: _mock.id(index),
   bookedAt: _mock.time(index),
@@ -330,4 +313,32 @@ export const _bookingNew = [...Array(5)].map((_, index) => ({
   price: _mock.number.price(index),
   avatarUrl: _mock.image.avatar(index),
   coverUrl: _mock.image.travel(index),
+}));
+
+// COURSE
+// ----------------------------------------------------------------------
+
+export const _coursesContinue = [...Array(4)].map((_, index) => ({
+  id: _mock.id(index),
+  title: _mock.courseNames(index),
+  coverUrl: _mock.image.course(index),
+  totalLesson: 12,
+  currentLesson: index + 7,
+}));
+
+export const _coursesFeatured = [...Array(6)].map((_, index) => ({
+  id: _mock.id(index),
+  title: _mock.courseNames(index),
+  coverUrl: _mock.image.course(index + 6),
+  totalDuration: 220,
+  totalStudents: _mock.number.nativeM(index),
+  price: _mock.number.price(index),
+}));
+
+export const _coursesReminder = [...Array(4)].map((_, index) => ({
+  id: _mock.id(index),
+  title: _mock.courseNames(index),
+  totalLesson: 12,
+  reminderAt: today(),
+  currentLesson: index + 7,
 }));

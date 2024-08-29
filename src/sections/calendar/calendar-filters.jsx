@@ -1,10 +1,6 @@
-import PropTypes from 'prop-types';
 import { useCallback } from 'react';
-import orderBy from 'lodash/orderBy';
-import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
 import Drawer from '@mui/material/Drawer';
 import Divider from '@mui/material/Divider';
@@ -15,168 +11,162 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-import { fDateTime } from 'src/utils/format-time';
+import { orderBy } from 'src/utils/helper';
+import { fDate, fDateTime } from 'src/utils/format-time';
 
-import Iconify from 'src/components/iconify';
-import Scrollbar from 'src/components/scrollbar';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { ColorPicker } from 'src/components/color-utils';
 
 // ----------------------------------------------------------------------
 
-export default function CalendarFilters({
+export function CalendarFilters({
   open,
-  onClose,
-  //
-  filters,
-  onFilters,
-  //
-  canReset,
-  onResetFilters,
-  //
-  dateError,
-  //
   events,
+  onClose,
+  filters,
+  canReset,
+  dateError,
   colorOptions,
   onClickEvent,
 }) {
-  const { t } = useTranslation();
   const handleFilterColors = useCallback(
     (newValue) => {
-      onFilters('colors', newValue);
+      filters.setState({ colors: newValue });
     },
-    [onFilters]
+    [filters]
   );
 
   const handleFilterStartDate = useCallback(
     (newValue) => {
-      onFilters('startDate', newValue);
+      filters.setState({ startDate: newValue });
     },
-    [onFilters]
+    [filters]
   );
 
   const handleFilterEndDate = useCallback(
     (newValue) => {
-      onFilters('endDate', newValue);
+      filters.setState({ endDate: newValue });
     },
-    [onFilters]
+    [filters]
   );
 
   const renderHead = (
-    <Stack
-      direction="row"
-      alignItems="center"
-      justifyContent="space-between"
-      sx={{ py: 2, pr: 1, pl: 2.5 }}
-    >
-      <Typography variant="h6" sx={{ flexGrow: 1 }}>
-        {t('filters')}
-      </Typography>
+    <>
+      <Box display="flex" alignItems="center" sx={{ py: 2, pr: 1, pl: 2.5 }}>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Filters
+        </Typography>
 
-      <Tooltip title="Reset">
-        <IconButton onClick={onResetFilters}>
-          <Badge color="error" variant="dot" invisible={!canReset}>
-            <Iconify icon="solar:restart-bold" />
-          </Badge>
+        <Tooltip title="Reset">
+          <IconButton onClick={filters.onResetState}>
+            <Badge color="error" variant="dot" invisible={!canReset}>
+              <Iconify icon="solar:restart-bold" />
+            </Badge>
+          </IconButton>
+        </Tooltip>
+
+        <IconButton onClick={onClose}>
+          <Iconify icon="mingcute:close-line" />
         </IconButton>
-      </Tooltip>
+      </Box>
 
-      <IconButton onClick={onClose}>
-        <Iconify icon="mingcute:close-line" />
-      </IconButton>
-    </Stack>
+      <Divider sx={{ borderStyle: 'dashed' }} />
+    </>
   );
 
   const renderColors = (
-    <Stack spacing={1} sx={{ my: 3, px: 2.5 }}>
-      <Typography variant="subtitle2">Colors</Typography>
+    <Box display="flex" flexDirection="column" sx={{ my: 3, px: 2.5 }}>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        Colors
+      </Typography>
       <ColorPicker
         colors={colorOptions}
-        selected={filters.colors}
+        selected={filters.state.colors}
         onSelectColor={handleFilterColors}
       />
-    </Stack>
+    </Box>
   );
 
   const renderDateRange = (
-    <Stack spacing={1.5} sx={{ mb: 3, px: 2.5 }}>
-      <Typography variant="subtitle2">{t('range')}</Typography>
+    <Box display="flex" flexDirection="column" sx={{ mb: 3, px: 2.5 }}>
+      <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
+        Range
+      </Typography>
 
-      <Stack spacing={2}>
-        <DatePicker label={t('start_date')} value={filters.startDate} onChange={handleFilterStartDate} />
+      <DatePicker
+        label="Start date"
+        value={filters.state.startDate}
+        onChange={handleFilterStartDate}
+        sx={{ mb: 2.5 }}
+      />
 
-        <DatePicker
-          label={t('end_date')}
-          value={filters.endDate}
-          onChange={handleFilterEndDate}
-          slotProps={{
-            textField: {
-              error: dateError,
-              helperText: dateError && t('end_date_restriction'),
-            },
-          }}
-        />
-      </Stack>
-    </Stack>
+      <DatePicker
+        label="End date"
+        value={filters.state.endDate}
+        onChange={handleFilterEndDate}
+        slotProps={{
+          textField: {
+            error: dateError,
+            helperText: dateError ? 'End date must be later than start date' : null,
+          },
+        }}
+      />
+    </Box>
   );
 
   const renderEvents = (
     <>
       <Typography variant="subtitle2" sx={{ px: 2.5, mb: 1 }}>
-        {t('events')} ({events.length})
+        Events ({events.length})
       </Typography>
 
-      <Scrollbar sx={{ height: 1 }}>
+      <Box component="ul">
         {orderBy(events, ['end'], ['desc']).map((event) => (
-          <ListItemButton
-            key={event.id}
-            onClick={() => onClickEvent(`${event.id}`)}
-            sx={{
-              py: 1.5,
-              borderBottom: (theme) => `dashed 1px ${theme.palette.divider}`,
-            }}
-          >
-            <Box
+          <Box component="li" key={event.id}>
+            <ListItemButton
+              onClick={() => onClickEvent(`${event.id}`)}
               sx={{
-                top: 16,
-                left: 0,
-                width: 0,
-                height: 0,
-                position: 'absolute',
-                borderRight: '10px solid transparent',
-                borderTop: `10px solid ${event.color}`,
+                py: 1.5,
+                borderBottom: (theme) => `dashed 1px ${theme.vars.palette.divider}`,
               }}
-            />
+            >
+              <Box
+                sx={{
+                  top: 16,
+                  left: 0,
+                  width: 0,
+                  height: 0,
+                  position: 'absolute',
+                  borderRight: '10px solid transparent',
+                  borderTop: `10px solid ${event.color}`,
+                }}
+              />
 
-            <ListItemText
-              disableTypography
-              primary={
-                <Typography variant="subtitle2" sx={{ fontSize: 13, mt: 0.5 }}>
-                  {event.title}
-                </Typography>
-              }
-              secondary={
-                <Typography
-                  variant="caption"
-                  component="div"
-                  sx={{ fontSize: 11, color: 'text.disabled' }}
-                >
-                  {event.allDay ? (
-                    fDateTime(event.start, 'dd MMM yy')
-                  ) : (
-                    <>
-                      {`${fDateTime(event.start, 'dd MMM yy p')} - ${fDateTime(
-                        event.end,
-                        'dd MMM yy p'
-                      )}`}
-                    </>
-                  )}
-                </Typography>
-              }
-              sx={{ display: 'flex', flexDirection: 'column-reverse' }}
-            />
-          </ListItemButton>
+              <ListItemText
+                disableTypography
+                primary={
+                  <Typography variant="subtitle2" sx={{ fontSize: 13, mt: 0.5 }}>
+                    {event.title}
+                  </Typography>
+                }
+                secondary={
+                  <Typography
+                    variant="caption"
+                    component="div"
+                    sx={{ fontSize: 11, color: 'text.disabled' }}
+                  >
+                    {event.allDay
+                      ? fDate(event.start)
+                      : `${fDateTime(event.start)} - ${fDateTime(event.end)}`}
+                  </Typography>
+                }
+                sx={{ display: 'flex', flexDirection: 'column-reverse' }}
+              />
+            </ListItemButton>
+          </Box>
         ))}
-      </Scrollbar>
+      </Box>
     </>
   );
 
@@ -185,35 +175,16 @@ export default function CalendarFilters({
       anchor="right"
       open={open}
       onClose={onClose}
-      slotProps={{
-        backdrop: { invisible: true },
-      }}
-      PaperProps={{
-        sx: { width: 320 },
-      }}
+      slotProps={{ backdrop: { invisible: true } }}
+      PaperProps={{ sx: { width: 320 } }}
     >
       {renderHead}
 
-      <Divider sx={{ borderStyle: 'dashed' }} />
-
-      {renderColors}
-
-      {renderDateRange}
-
-      {renderEvents}
+      <Scrollbar>
+        {renderColors}
+        {renderDateRange}
+        {renderEvents}
+      </Scrollbar>
     </Drawer>
   );
 }
-
-CalendarFilters.propTypes = {
-  canReset: PropTypes.bool,
-  colorOptions: PropTypes.arrayOf(PropTypes.string),
-  dateError: PropTypes.bool,
-  events: PropTypes.array,
-  filters: PropTypes.object,
-  onClickEvent: PropTypes.func,
-  onClose: PropTypes.func,
-  onFilters: PropTypes.func,
-  onResetFilters: PropTypes.func,
-  open: PropTypes.bool,
-};

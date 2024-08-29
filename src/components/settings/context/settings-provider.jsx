@@ -1,40 +1,22 @@
-import PropTypes from 'prop-types';
-import isEqual from 'lodash/isEqual';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useCallback, createContext } from 'react';
 
 import { useLocalStorage } from 'src/hooks/use-local-storage';
 
-import { localStorageGetItem } from 'src/utils/storage-available';
-
-import { SettingsContext } from './settings-context';
+import { STORAGE_KEY } from '../config-settings';
 
 // ----------------------------------------------------------------------
 
-const STORAGE_KEY = 'settings';
+export const SettingsContext = createContext(undefined);
 
-export function SettingsProvider({ children, defaultSettings }) {
-  const { state, update, reset } = useLocalStorage(STORAGE_KEY, defaultSettings);
+export const SettingsConsumer = SettingsContext.Consumer;
+
+// ----------------------------------------------------------------------
+
+export function SettingsProvider({ children, settings }) {
+  const values = useLocalStorage(STORAGE_KEY, settings);
 
   const [openDrawer, setOpenDrawer] = useState(false);
 
-  const isArabic = localStorageGetItem('i18nextLng') === 'ar';
-
-  useEffect(() => {
-    if (isArabic) {
-      onChangeDirectionByLang('ar');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isArabic]);
-
-  // Direction by lang
-  const onChangeDirectionByLang = useCallback(
-    (lang) => {
-      update('themeDirection', lang === 'ar' ? 'rtl' : 'ltr');
-    },
-    [update]
-  );
-
-  // Drawer
   const onToggleDrawer = useCallback(() => {
     setOpenDrawer((prev) => !prev);
   }, []);
@@ -43,38 +25,28 @@ export function SettingsProvider({ children, defaultSettings }) {
     setOpenDrawer(false);
   }, []);
 
-  const canReset = !isEqual(state, defaultSettings);
-
   const memoizedValue = useMemo(
     () => ({
-      ...state,
-      onUpdate: update,
-      // Direction
-      onChangeDirectionByLang,
-      // Reset
-      canReset,
-      onReset: reset,
-      // Drawer
-      open: openDrawer,
-      onToggle: onToggleDrawer,
-      onClose: onCloseDrawer,
-    }),
-    [
-      reset,
-      update,
-      state,
-      canReset,
+      ...values.state,
+      canReset: values.canReset,
+      onReset: values.resetState,
+      onUpdate: values.setState,
+      onUpdateField: values.setField,
       openDrawer,
       onCloseDrawer,
       onToggleDrawer,
-      onChangeDirectionByLang,
+    }),
+    [
+      values.canReset,
+      values.resetState,
+      values.setField,
+      values.setState,
+      values.state,
+      openDrawer,
+      onCloseDrawer,
+      onToggleDrawer,
     ]
   );
 
   return <SettingsContext.Provider value={memoizedValue}>{children}</SettingsContext.Provider>;
 }
-
-SettingsProvider.propTypes = {
-  children: PropTypes.node,
-  defaultSettings: PropTypes.object,
-};

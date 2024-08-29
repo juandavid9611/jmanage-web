@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
@@ -24,15 +23,15 @@ const visuallyHidden = {
 
 // ----------------------------------------------------------------------
 
-export default function TableHeadCustom({
-  order,
-  orderBy,
-  rowCount = 0,
-  headLabel,
-  numSelected = 0,
-  onSort,
-  onSelectAllRows,
+export function TableHeadCustom({
   sx,
+  order,
+  onSort,
+  orderBy,
+  headLabel,
+  rowCount = 0,
+  numSelected = 0,
+  onSelectAllRows,
 }) {
   const { t } = useTranslation();
   return (
@@ -44,6 +43,10 @@ export default function TableHeadCustom({
               indeterminate={!!numSelected && numSelected < rowCount}
               checked={!!rowCount && numSelected === rowCount}
               onChange={(event) => onSelectAllRows(event.target.checked)}
+              inputProps={{
+                name: 'select-all-rows',
+                'aria-label': 'select all rows',
+              }}
             />
           </TableCell>
         )}
@@ -79,14 +82,3 @@ export default function TableHeadCustom({
     </TableHead>
   );
 }
-
-TableHeadCustom.propTypes = {
-  sx: PropTypes.object,
-  onSort: PropTypes.func,
-  orderBy: PropTypes.string,
-  headLabel: PropTypes.array,
-  rowCount: PropTypes.number,
-  numSelected: PropTypes.number,
-  onSelectAllRows: PropTypes.func,
-  order: PropTypes.oneOf(['asc', 'desc']),
-};

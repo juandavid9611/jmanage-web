@@ -5,16 +5,16 @@ import { useTheme } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
-function CheckoutIllustration({ ...other }) {
+function CheckoutIllustration({ sx, ...other }) {
   const theme = useTheme();
 
-  const PRIMARY_LIGHT = theme.palette.primary.light;
+  const PRIMARY_LIGHT = theme.vars.palette.primary.light;
 
-  const PRIMARY_MAIN = theme.palette.primary.main;
+  const PRIMARY_MAIN = theme.vars.palette.primary.main;
 
-  const PRIMARY_DARK = theme.palette.primary.dark;
+  const PRIMARY_DARK = theme.vars.palette.primary.dark;
 
-  const PRIMARY_DARKER = theme.palette.primary.darker;
+  const PRIMARY_DARKER = theme.vars.palette.primary.darker;
 
   return (
     <Box
@@ -23,6 +23,7 @@ function CheckoutIllustration({ ...other }) {
       height="100%"
       viewBox="0 0 200 200"
       xmlns="http://www.w3.org/2000/svg"
+      sx={{ width: 120, maxWidth: 1, flexShrink: 0, height: 'auto', ...sx }}
       {...other}
     >
       <path

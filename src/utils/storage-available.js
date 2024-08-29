@@ -11,6 +11,8 @@ export function localStorageAvailable() {
   }
 }
 
+// ----------------------------------------------------------------------
+
 export function localStorageGetItem(key, defaultValue = '') {
   const storageAvailable = localStorageAvailable();
 

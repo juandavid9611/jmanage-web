@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 
 // ----------------------------------------------------------------------
 
-export default function useTable(props) {
+export function useTable(props) {
   const [dense, setDense] = useState(!!props?.defaultDense);
 
   const [page, setPage] = useState(props?.defaultCurrentPage || 0);
@@ -75,7 +75,7 @@ export default function useTable(props) {
   );
 
   const onUpdatePageDeleteRows = useCallback(
-    ({ totalRows, totalRowsInPage, totalRowsFiltered }) => {
+    ({ totalRowsInPage, totalRowsFiltered }) => {
       const totalSelected = selected.length;
 
       setSelected([]);
@@ -86,7 +86,8 @@ export default function useTable(props) {
         } else if (totalSelected === totalRowsFiltered) {
           setPage(0);
         } else if (totalSelected > totalRowsInPage) {
-          const newPage = Math.ceil((totalRows - totalSelected) / rowsPerPage) - 1;
+          const newPage = Math.ceil((totalRowsFiltered - totalSelected) / rowsPerPage) - 1;
+
           setPage(newPage);
         }
       }

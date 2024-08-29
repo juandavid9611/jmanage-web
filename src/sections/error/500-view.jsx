@@ -1,24 +1,25 @@
 import { m } from 'framer-motion';
 
 import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 
 import { RouterLink } from 'src/routes/components';
 
-import CompactLayout from 'src/layouts/compact';
-import { SeverErrorIllustration } from 'src/assets/illustrations';
+import { SimpleLayout } from 'src/layouts/simple';
+import { ServerErrorIllustration } from 'src/assets/illustrations';
 
 import { varBounce, MotionContainer } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
 
-export default function Page500() {
+export function View500() {
   return (
-    <CompactLayout>
-      <MotionContainer>
+    <SimpleLayout content={{ compact: true }}>
+      <Container component={MotionContainer}>
         <m.div variants={varBounce().in}>
           <Typography variant="h3" sx={{ mb: 2 }}>
-            500 Internal Server Error
+            500 Internal server error
           </Typography>
         </m.div>
 
@@ -29,13 +30,13 @@ export default function Page500() {
         </m.div>
 
         <m.div variants={varBounce().in}>
-          <SeverErrorIllustration sx={{ height: 260, my: { xs: 5, sm: 10 } }} />
+          <ServerErrorIllustration sx={{ my: { xs: 5, sm: 10 } }} />
         </m.div>
 
         <Button component={RouterLink} href="/" size="large" variant="contained">
-          Go to Home
+          Go to home
         </Button>
-      </MotionContainer>
-    </CompactLayout>
+      </Container>
+    </SimpleLayout>
   );
 }
