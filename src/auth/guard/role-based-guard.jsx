@@ -1,5 +1,4 @@
 import { m } from 'framer-motion';
-import PropTypes from 'prop-types';
 
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -8,39 +7,26 @@ import { ForbiddenIllustration } from 'src/assets/illustrations';
 
 import { varBounce, MotionContainer } from 'src/components/animate';
 
-import { useAuthContext } from '../hooks';
-
 // ----------------------------------------------------------------------
 
-export default function RoleBasedGuard({ hasContent, roles, children, sx }) {
-  // Logic here to get current user role
-  const { user } = useAuthContext();
-
-  // const currentRole = 'user';
-  const currentRole = user?.role; // admin;
-
-  if (typeof roles !== 'undefined' && !roles.includes(currentRole)) {
+export function RoleBasedGuard({ sx, children, hasContent, currentRole, acceptRoles }) {
+  if (typeof acceptRoles !== 'undefined' && !acceptRoles.includes(currentRole)) {
     return hasContent ? (
       <Container component={MotionContainer} sx={{ textAlign: 'center', ...sx }}>
         <m.div variants={varBounce().in}>
           <Typography variant="h3" sx={{ mb: 2 }}>
-            Permission Denied
+            Permission denied
           </Typography>
         </m.div>
 
         <m.div variants={varBounce().in}>
           <Typography sx={{ color: 'text.secondary' }}>
-            You do not have permission to access this page
+            You do not have permission to access this page.
           </Typography>
         </m.div>
 
         <m.div variants={varBounce().in}>
-          <ForbiddenIllustration
-            sx={{
-              height: 260,
-              my: { xs: 5, sm: 10 },
-            }}
-          />
+          <ForbiddenIllustration sx={{ my: { xs: 5, sm: 10 } }} />
         </m.div>
       </Container>
     ) : null;
@@ -48,10 +34,3 @@ export default function RoleBasedGuard({ hasContent, roles, children, sx }) {
 
   return <> {children} </>;
 }
-
-RoleBasedGuard.propTypes = {
-  children: PropTypes.node,
-  hasContent: PropTypes.bool,
-  roles: PropTypes.arrayOf(PropTypes.string),
-  sx: PropTypes.object,
-};

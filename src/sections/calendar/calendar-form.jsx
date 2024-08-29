@@ -1,9 +1,8 @@
-import * as Yup from 'yup';
-import PropTypes from 'prop-types';
+import { z as zod } from 'zod';
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -12,45 +11,50 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
-import { Switch, FormControlLabel } from '@mui/material';
-import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
+import { Switch, MenuItem, FormControlLabel } from '@mui/material';
 
-import uuidv4 from 'src/utils/uuidv4';
-import { fTimestamp } from 'src/utils/format-time';
+import { uuidv4 } from 'src/utils/uuidv4';
+import { fIsAfter, fTimestamp } from 'src/utils/format-time';
+
+import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/actions/calendar';
+
+import { toast } from 'src/components/snackbar';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { Form, Field } from 'src/components/hook-form';
+import { ColorPicker } from 'src/components/color-utils';
 
 import { useAuthContext } from 'src/auth/hooks';
-import { CALENDAR_EVENT_CATEGORIES } from 'src/_mock';
-import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/api/calendar';
-
-import Iconify from 'src/components/iconify';
-import { useSnackbar } from 'src/components/snackbar';
-import { ColorPicker } from 'src/components/color-utils';
-import FormProvider, { RHFSelect, RHFSwitch, RHFTextField } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
+export const EventSchema = zod.object({
+  title: zod
+    .string()
+    .min(1, { message: 'Title is required!' })
+    .max(100, { message: 'Title must be less than 100 characters' }),
+  description: zod.string().max(5000, { message: 'Description must be less than 5000 characters' }),
+  // Not required
+  color: zod.string(),
+  allDay: zod.boolean(),
+  start: zod.union([zod.string(), zod.number()]),
+  end: zod.union([zod.string(), zod.number()]),
+  category: zod.string().min(1, { message: 'Category is required!' }),
+});
+
+// ----------------------------------------------------------------------
+
+export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const isAdmin = user?.role === 'admin';
-  const { enqueueSnackbar } = useSnackbar();
+  // const isAdmin = false;
   const [isParticipating, setIsParticipating] = useState(
     (currentEvent?.participants && user?.id in currentEvent.participants) || false
   );
-
-  const EventSchema = Yup.object().shape({
-    title: Yup.string().max(255).required(t('title_required')),
-    description: Yup.string().max(5000, t('description_max')),
-    // not required
-    color: Yup.string(),
-    category: Yup.string(),
-    allDay: Yup.boolean(),
-    start: Yup.mixed(),
-    end: Yup.mixed(),
-  });
-
   const methods = useForm({
-    resolver: yupResolver(EventSchema),
+    mode: 'all',
+    resolver: zodResolver(EventSchema),
     defaultValues: currentEvent,
   });
 
@@ -64,28 +68,30 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const values = watch();
 
-  const dateError = values.start && values.end ? values.start > values.end : false;
+  const dateError = fIsAfter(values.start, values.end);
 
   const onSubmit = handleSubmit(async (data) => {
+    const start_time_stamp = fTimestamp(data?.start);
+    const end_time_stamp = fTimestamp(data?.end);
     const eventData = {
       id: currentEvent?.id ? currentEvent?.id : uuidv4(),
       color: data?.color,
       title: data?.title,
       allDay: data?.allDay,
       description: data?.description,
-      end: data?.end,
-      start: data?.start,
-      category: data?.category || 'match',
+      end: end_time_stamp,
+      start: start_time_stamp,
+      category: data?.category,
     };
 
     try {
       if (!dateError) {
         if (currentEvent?.id) {
           await updateEvent(eventData);
-          enqueueSnackbar('Update success!');
+          toast.success('Update success!');
         } else {
           await createEvent(eventData);
-          enqueueSnackbar('Create success!');
+          toast.success('Create success!');
         }
         onClose();
         reset();
@@ -97,117 +103,79 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const handleChangeIsParticipating = useCallback(
     async (event) => {
+      toast.success('Participate success!');
       try {
         setIsParticipating(event.target.checked);
-        enqueueSnackbar('Participate success!');
         await participateEvent(`${currentEvent?.id}`, event.target.checked);
+        toast.success('Participate success!');
       } catch (error) {
         console.error(error);
       }
     },
-    [enqueueSnackbar, currentEvent?.id, setIsParticipating]
+    [currentEvent?.id, setIsParticipating]
   );
 
   const onDelete = useCallback(async () => {
     try {
       await deleteEvent(`${currentEvent?.id}`);
-      enqueueSnackbar('Delete success!');
+      toast.success('Delete success!');
       onClose();
     } catch (error) {
       console.error(error);
     }
-  }, [currentEvent?.id, enqueueSnackbar, onClose]);
+  }, [currentEvent?.id, onClose]);
 
   return (
-    <FormProvider methods={methods} onSubmit={onSubmit}>
-      <Stack spacing={3} sx={{ px: 3 }}>
-        <RHFTextField disabled={!isAdmin} name="title" label={t('title')} />
+    <Form methods={methods} onSubmit={onSubmit}>
+      <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
+        <Stack spacing={3}>
+          <Field.Text name="title" label="Title" disabled={!isAdmin} />
 
-        <RHFTextField
-          disabled={!isAdmin}
-          name="description"
-          label="Description"
-          multiline
-          rows={3}
-        />
-
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-          <RHFSwitch disabled={!isAdmin} name="allDay" label={t('all_day')} />
-
-          <RHFSelect
+          <Field.Text
+            name="description"
+            label="Description"
+            multiline
+            rows={3}
             disabled={!isAdmin}
-            native
-            name="category"
-            label={t('category')}
-            InputLabelProps={{ shrink: true }}
-          >
-            {CALENDAR_EVENT_CATEGORIES.map((group) => (
-              <option key={group.label} value={group.value}>
-                {t(group.label)}
-              </option>
-            ))}
-          </RHFSelect>
+          />
 
-          {currentEvent?.id && (
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+            <Field.Switch name="allDay" label="All day" disabled={!isAdmin} />
+
             <FormControlLabel
               disabled={values.category === 'money' || values.category === 'other'}
               control={<Switch checked={isParticipating} onChange={handleChangeIsParticipating} />}
-              label={t('participate')}
+              label="Participate"
             />
-          )}
-        </Stack>
 
-        <Controller
-          disabled={!isAdmin}
-          name="start"
-          control={control}
-          render={({ field }) => (
-            <MobileDateTimePicker
-              {...field}
-              value={new Date(field.value)}
-              onChange={(newValue) => {
-                if (newValue) {
-                  field.onChange(fTimestamp(newValue));
-                }
-              }}
-              label={t('start_date')}
-              format="dd/MM/yyyy hh:mm a"
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                },
-              }}
-            />
-          )}
-        />
+            <Field.Select
+              name="category"
+              label="Category"
+              InputLabelProps={{ shrink: true }}
+              disabled={!isAdmin}
+            >
+              {['match', 'training', 'money', 'other'].map((option) => (
+                <MenuItem key={option} value={option} sx={{ textTransform: 'capitalize' }}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Field.Select>
+          </Stack>
 
-        <Controller
-          disabled={!isAdmin}
-          name="end"
-          control={control}
-          render={({ field }) => (
-            <MobileDateTimePicker
-              {...field}
-              value={new Date(field.value)}
-              onChange={(newValue) => {
-                if (newValue) {
-                  field.onChange(fTimestamp(newValue));
-                }
-              }}
-              label={t('end_date')}
-              format="dd/MM/yyyy hh:mm a"
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  error: dateError,
-                  helperText: dateError && 'End date must be later than start date',
-                },
-              }}
-            />
-          )}
-        />
+          <Field.MobileDateTimePicker name="start" label="Start date" disabled={!isAdmin} />
 
-        {isAdmin && (
+          <Field.MobileDateTimePicker
+            name="end"
+            label="End date"
+            slotProps={{
+              textField: {
+                error: dateError,
+                helperText: dateError ? 'End date must be later than start date' : null,
+              },
+            }}
+            disabled={!isAdmin}
+          />
+
           <Controller
             name="color"
             control={control}
@@ -218,13 +186,14 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
                 colors={colorOptions}
               />
             )}
+            disabled={!isAdmin}
           />
-        )}
-      </Stack>
+        </Stack>
+      </Scrollbar>
 
-      <DialogActions>
+      <DialogActions sx={{ flexShrink: 0 }}>
         {!!currentEvent?.id && isAdmin && (
-          <Tooltip title="Delete Event">
+          <Tooltip title="Delete event">
             <IconButton onClick={onDelete}>
               <Iconify icon="solar:trash-bin-trash-bold" />
             </IconButton>
@@ -234,7 +203,7 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
         <Box sx={{ flexGrow: 1 }} />
 
         <Button variant="outlined" color="inherit" onClick={onClose}>
-          {t('cancel')}
+          Cancel
         </Button>
 
         {isAdmin && (
@@ -248,12 +217,6 @@ export default function CalendarForm({ currentEvent, colorOptions, onClose }) {
           </LoadingButton>
         )}
       </DialogActions>
-    </FormProvider>
+    </Form>
   );
 }
-
-CalendarForm.propTypes = {
-  colorOptions: PropTypes.arrayOf(PropTypes.string),
-  currentEvent: PropTypes.object,
-  onClose: PropTypes.func,
-};

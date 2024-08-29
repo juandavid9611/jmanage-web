@@ -1,134 +1,65 @@
-import PropTypes from 'prop-types';
-import { useTranslation } from 'react-i18next';
+import { useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import { alpha } from '@mui/material/styles';
 
-import Iconify from 'src/components/iconify';
-import { shortDateLabel } from 'src/components/custom-date-range-picker';
+import { fDateRangeShortLabel } from 'src/utils/format-time';
+
+import { varAlpha } from 'src/theme/styles';
+
+import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-result';
 
 // ----------------------------------------------------------------------
 
-export default function CalendarFiltersResult({
-  filters,
-  onFilters,
-  //
-  canReset,
-  onResetFilters,
-  //
-  results,
-  ...other
-}) {
-  const { t } = useTranslation();
-  const shortLabel = shortDateLabel(filters.startDate, filters.endDate);
+export function CalendarFiltersResult({ filters, totalResults, sx }) {
+  const handleRemoveColor = useCallback(
+    (inputValue) => {
+      const newValue = filters.state.colors.filter((item) => item !== inputValue);
 
-  const handleRemoveColor = (inputValue) => {
-    const newValue = filters.colors.filter((item) => item !== inputValue);
-    onFilters('colors', newValue);
-  };
+      filters.setState({ colors: newValue });
+    },
+    [filters]
+  );
 
-  const handleRemoveDate = () => {
-    onFilters('startDate', null);
-    onFilters('endDate', null);
-  };
+  const handleRemoveDate = useCallback(() => {
+    filters.setState({ startDate: null, endDate: null });
+  }, [filters]);
 
   return (
-    <Stack spacing={1.5} {...other}>
-      <Box sx={{ typography: 'body2' }}>
-        <strong>{results}</strong>
-        <Box component="span" sx={{ color: 'text.secondary', ml: 0.25 }}>
-          {t('results_found')}
-        </Box>
-      </Box>
-
-      <Stack flexGrow={1} spacing={1} direction="row" flexWrap="wrap" alignItems="center">
-        {!!filters.colors.length && (
-          <Block label="Colors:">
-            {filters.colors.map((item) => (
-              <Chip
-                key={item}
-                size="small"
-                label={
-                  <Box
-                    sx={{
-                      ml: -0.5,
-                      width: 18,
-                      height: 18,
-                      bgcolor: item,
-                      borderRadius: '50%',
-                      border: (theme) => `solid 1px ${alpha(theme.palette.common.white, 0.24)}`,
-                    }}
-                  />
-                }
-                onDelete={() => handleRemoveColor(item)}
+    <FiltersResult totalResults={totalResults} onReset={filters.onResetState} sx={sx}>
+      <FiltersBlock label="Colors:" isShow={!!filters.state.colors.length}>
+        {filters.state.colors.map((item) => (
+          <Chip
+            {...chipProps}
+            key={item}
+            label={
+              <Box
+                sx={{
+                  ml: -0.5,
+                  width: 18,
+                  height: 18,
+                  bgcolor: item,
+                  borderRadius: '50%',
+                  border: (theme) =>
+                    `solid 1px ${varAlpha(theme.vars.palette.common.whiteChannel, 0.24)}`,
+                }}
               />
-            ))}
-          </Block>
-        )}
+            }
+            onDelete={() => handleRemoveColor(item)}
+          />
+        ))}
+      </FiltersBlock>
 
-        {filters.startDate && filters.endDate && (
-          <Block label="Date:">
-            <Chip size="small" label={shortLabel} onDelete={handleRemoveDate} />
-          </Block>
-        )}
-
-        {canReset && (
-          <Button
-            color="error"
-            onClick={onResetFilters}
-            startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
-          >
-            {t('clear')}
-          </Button>
-        )}
-      </Stack>
-    </Stack>
+      <FiltersBlock
+        label="Date:"
+        isShow={Boolean(filters.state.startDate && filters.state.endDate)}
+      >
+        <Chip
+          {...chipProps}
+          label={fDateRangeShortLabel(filters.state.startDate, filters.state.endDate)}
+          onDelete={handleRemoveDate}
+        />
+      </FiltersBlock>
+    </FiltersResult>
   );
 }
-
-CalendarFiltersResult.propTypes = {
-  canReset: PropTypes.bool,
-  filters: PropTypes.object,
-  onFilters: PropTypes.func,
-  onResetFilters: PropTypes.func,
-  results: PropTypes.number,
-};
-
-// ----------------------------------------------------------------------
-
-function Block({ label, children, sx, ...other }) {
-  return (
-    <Stack
-      component={Paper}
-      variant="outlined"
-      spacing={1}
-      direction="row"
-      sx={{
-        p: 1,
-        borderRadius: 1,
-        overflow: 'hidden',
-        borderStyle: 'dashed',
-        ...sx,
-      }}
-      {...other}
-    >
-      <Box component="span" sx={{ typography: 'subtitle2' }}>
-        {label}
-      </Box>
-
-      <Stack spacing={1} direction="row" flexWrap="wrap">
-        {children}
-      </Stack>
-    </Stack>
-  );
-}
-
-Block.propTypes = {
-  children: PropTypes.node,
-  label: PropTypes.string,
-  sx: PropTypes.object,
-};

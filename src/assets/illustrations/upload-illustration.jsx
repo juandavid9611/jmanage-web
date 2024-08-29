@@ -3,18 +3,18 @@ import { memo } from 'react';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
-import BackgroundShape from './background-shape';
+import { BackgroundShape } from './background-shape';
 
 // ----------------------------------------------------------------------
 
-function UploadIllustration({ ...other }) {
+function UploadIllustration({ hideBackground, sx, ...other }) {
   const theme = useTheme();
 
-  const PRIMARY_MAIN = theme.palette.primary.main;
+  const PRIMARY_MAIN = theme.vars.palette.primary.main;
 
-  const PRIMARY_DARK = theme.palette.primary.dark;
+  const PRIMARY_DARK = theme.vars.palette.primary.dark;
 
-  const PRIMARY_DARKER = theme.palette.primary.darker;
+  const PRIMARY_DARKER = theme.vars.palette.primary.darker;
 
   return (
     <Box
@@ -23,9 +23,10 @@ function UploadIllustration({ ...other }) {
       height="100%"
       viewBox="0 0 480 360"
       xmlns="http://www.w3.org/2000/svg"
+      sx={{ width: 320, maxWidth: 1, flexShrink: 0, height: 'auto', ...sx }}
       {...other}
     >
-      <BackgroundShape />
+      {!hideBackground && <BackgroundShape />}
 
       <defs>
         <linearGradient id="linearGradient-2" x1="30.113%" x2="30.113%" y1="0%" y2="100%">

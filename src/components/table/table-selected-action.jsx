@@ -1,12 +1,10 @@
-import PropTypes from 'prop-types';
-
 import Stack from '@mui/material/Stack';
 import Checkbox from '@mui/material/Checkbox';
 import Typography from '@mui/material/Typography';
 
 // ----------------------------------------------------------------------
 
-export default function TableSelectedAction({
+export function TableSelectedAction({
   dense,
   action,
   rowCount,
@@ -33,9 +31,7 @@ export default function TableSelectedAction({
         height: 58,
         position: 'absolute',
         bgcolor: 'primary.lighter',
-        ...(dense && {
-          height: 38,
-        }),
+        ...(dense && { height: 38 }),
         ...sx,
       }}
       {...other}
@@ -52,9 +48,7 @@ export default function TableSelectedAction({
           ml: 2,
           flexGrow: 1,
           color: 'primary.main',
-          ...(dense && {
-            ml: 3,
-          }),
+          ...(dense && { ml: 3 }),
         }}
       >
         {numSelected} selected
@@ -64,12 +58,3 @@ export default function TableSelectedAction({
     </Stack>
   );
 }
-
-TableSelectedAction.propTypes = {
-  action: PropTypes.node,
-  dense: PropTypes.bool,
-  numSelected: PropTypes.number,
-  onSelectAllRows: PropTypes.func,
-  rowCount: PropTypes.number,
-  sx: PropTypes.object,
-};

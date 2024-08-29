@@ -1,4 +1,5 @@
 // ----------------------------------------------------------------------
+
 const ROOTS = {
   AUTH: '/auth',
   DASHBOARD: '/dashboard',
@@ -7,43 +8,42 @@ const ROOTS = {
 // ----------------------------------------------------------------------
 
 export const paths = {
+  faqs: '/faqs',
+  minimalStore: 'https://mui.com/store/items/minimal-dashboard/',
   // AUTH
   auth: {
     amplify: {
-      login: `${ROOTS.AUTH}/amplify/login`,
+      signIn: `${ROOTS.AUTH}/amplify/sign-in`,
       verify: `${ROOTS.AUTH}/amplify/verify`,
-      register: `${ROOTS.AUTH}/amplify/register`,
-      newPassword: `${ROOTS.AUTH}/amplify/new-password`,
-      forgotPassword: `${ROOTS.AUTH}/amplify/forgot-password`,
+      signUp: `${ROOTS.AUTH}/amplify/sign-up`,
+      updatePassword: `${ROOTS.AUTH}/amplify/update-password`,
+      resetPassword: `${ROOTS.AUTH}/amplify/reset-password`,
     },
   },
   // DASHBOARD
   dashboard: {
     root: ROOTS.DASHBOARD,
-    calendar: `${ROOTS.DASHBOARD}/calendar`,
-    general: {
-      app: `${ROOTS.DASHBOARD}/app`,
-      analytics: `${ROOTS.DASHBOARD}/analytics`,
-      monthlyPlayerComingSoon: `${ROOTS.DASHBOARD}/monthly-player-coming-soon`,
+    analytics: {
+      overview: `${ROOTS.DASHBOARD}/analytics`,
+      top: `${ROOTS.DASHBOARD}/analytics/top`,
+      lateArrives: `${ROOTS.DASHBOARD}/analytics/late-arrives`,
     },
+    calendar: `${ROOTS.DASHBOARD}/calendar`,
     admin: {
       user: {
-        root: `${ROOTS.DASHBOARD}/user`,
+        list: `${ROOTS.DASHBOARD}/user`,
         new: `${ROOTS.DASHBOARD}/user/new`,
-        list: `${ROOTS.DASHBOARD}/user/list`,
-        cards: `${ROOTS.DASHBOARD}/user/cards`,
         edit: (id) => `${ROOTS.DASHBOARD}/user/${id}/edit`,
       },
-      paymentRequest: {
-        root: `${ROOTS.DASHBOARD}/payment_request`,
-        employeeList: `${ROOTS.DASHBOARD}/payment_request/employee-list`,
-        new: `${ROOTS.DASHBOARD}/payment_request/new`,
-        edit: (id) => `${ROOTS.DASHBOARD}/payment_request/${id}/edit`,
+      invoice: {
+        root: `${ROOTS.DASHBOARD}/invoice`,
+        new: `${ROOTS.DASHBOARD}/invoice/new`,
+        edit: (id) => `${ROOTS.DASHBOARD}/invoice/${id}/edit`,
       },
     },
-    employee: {
-      paymentRequest: {
-        employeeList: `${ROOTS.DASHBOARD}/payment_request/employee-list`,
+    user: {
+      invoice: {
+        invoiceList: `${ROOTS.DASHBOARD}/invoice/user-list`,
       },
     },
   },

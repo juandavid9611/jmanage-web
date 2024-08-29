@@ -3,20 +3,22 @@ import { memo } from 'react';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
-import BackgroundShape from './background-shape';
+import { CONFIG } from 'src/config-global';
+
+import { BackgroundShape } from './background-shape';
 
 // ----------------------------------------------------------------------
 
-function MaintenanceIllustration({ ...other }) {
+function MaintenanceIllustration({ hideBackground, sx, ...other }) {
   const theme = useTheme();
 
-  const PRIMARY_LIGHT = theme.palette.primary.light;
+  const PRIMARY_LIGHT = theme.vars.palette.primary.light;
 
-  const PRIMARY_MAIN = theme.palette.primary.main;
+  const PRIMARY_MAIN = theme.vars.palette.primary.main;
 
-  const PRIMARY_DARK = theme.palette.primary.dark;
+  const PRIMARY_DARK = theme.vars.palette.primary.dark;
 
-  const PRIMARY_DARKER = theme.palette.primary.darker;
+  const PRIMARY_DARKER = theme.vars.palette.primary.darker;
 
   return (
     <Box
@@ -25,9 +27,10 @@ function MaintenanceIllustration({ ...other }) {
       height="100%"
       viewBox="0 0 480 360"
       xmlns="http://www.w3.org/2000/svg"
+      sx={{ width: 320, maxWidth: 1, flexShrink: 0, height: 'auto', ...sx }}
       {...other}
     >
-      <BackgroundShape />
+      {!hideBackground && <BackgroundShape />}
 
       <path
         fill={PRIMARY_MAIN}
@@ -207,7 +210,12 @@ function MaintenanceIllustration({ ...other }) {
         </linearGradient>
       </defs>
 
-      <image href="/assets/illustrations/characters/character_5.png" height="300" x="245" y="30" />
+      <image
+        href={`${CONFIG.site.basePath}/assets/illustrations/characters/character-5.webp`}
+        height="300"
+        x="245"
+        y="30"
+      />
     </Box>
   );
 }

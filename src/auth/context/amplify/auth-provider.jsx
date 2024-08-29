@@ -1,149 +1,77 @@
-import PropTypes from 'prop-types';
-import { Auth } from '@aws-amplify/auth';
-import { useMemo, useEffect, useReducer, useCallback } from 'react';
+import { Amplify } from 'aws-amplify';
+import { useMemo, useEffect, useCallback } from 'react';
+import { fetchAuthSession, fetchUserAttributes } from 'aws-amplify/auth';
 
-import { getUser } from 'src/api/user';
-import { AMPLIFY_API } from 'src/config-global';
+import { useSetState } from 'src/hooks/use-set-state';
 
-import { AuthContext } from './auth-context';
+import axios from 'src/utils/axios';
 
-// ----------------------------------------------------------------------
+import { CONFIG } from 'src/config-global';
+import { getUser } from 'src/actions/user';
 
-// NOTE:
-// We only build demo at basic level.
-// Customer will need to do some extra handling yourself if you want to extend the logic and other features...
+import { AuthContext } from '../auth-context';
 
 // ----------------------------------------------------------------------
 
-const initialState = {
-  user: null,
-  loading: true,
-};
+/**
+ * NOTE:
+ * We only build demo at basic level.
+ * Customer will need to do some extra handling yourself if you want to extend the logic and other features...
+ */
 
-const reducer = (state, action) => {
-  if (action.type === 'INITIAL') {
-    return {
-      loading: false,
-      user: action.payload.user,
-    };
-  }
-  if (action.type === 'LOGOUT') {
-    return {
-      ...state,
-      user: null,
-    };
-  }
-  return state;
-};
+/**
+ * Docs:
+ * https://docs.amplify.aws/react/build-a-backend/auth/manage-user-session/
+ */
+
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: CONFIG.amplify.userPoolId,
+      userPoolClientId: CONFIG.amplify.userPoolWebClientId,
+    },
+  },
+});
 
 // ----------------------------------------------------------------------
-
-Auth.configure(AMPLIFY_API);
 
 export function AuthProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const { state, setState } = useSetState({
+    user: null,
+    loading: true,
+  });
 
-  const initialize = useCallback(async () => {
+  const checkUserSession = useCallback(async () => {
     try {
-      const currentUser = await Auth.currentAuthenticatedUser();
+      const authSession = (await fetchAuthSession()).tokens;
 
-      if (currentUser) {
-        const myUser = await getUser(currentUser.attributes.sub);
-        dispatch({
-          type: 'INITIAL',
-          payload: {
-            user: {
-              ...currentUser,
-              id: currentUser.attributes.sub,
-              displayName: currentUser.attributes.name,
-              role: currentUser.attributes['custom:role'] || 'user',
-              group: myUser.group,
-              myUser,
-            },
-          },
-        });
+      if (authSession) {
+        const userAttributes = await fetchUserAttributes();
+
+        const accessToken = authSession.idToken.toString();
+        axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+
+        const dbUser = await getUser(userAttributes.sub);
+
+        if (!dbUser) {
+          setState({ user: null, loading: false });
+          delete axios.defaults.headers.common.Authorization;
+          return;
+        }
+        setState({ user: { ...authSession, ...userAttributes }, loading: false });
       } else {
-        dispatch({
-          type: 'INITIAL',
-          payload: {
-            user: null,
-          },
-        });
+        setState({ user: null, loading: false });
+        delete axios.defaults.headers.common.Authorization;
       }
     } catch (error) {
       console.error(error);
-      dispatch({
-        type: 'INITIAL',
-        payload: {
-          user: null,
-        },
-      });
+      setState({ user: null, loading: false });
     }
-  }, []);
+  }, [setState]);
 
   useEffect(() => {
-    initialize();
-  }, [initialize]);
-
-  // LOGIN
-  const login = useCallback(async (email, password) => {
-    const currentUser = await Auth.signIn(email.toLowerCase(), password);
-    const myUser = await getUser(currentUser.attributes.sub);
-
-    dispatch({
-      type: 'INITIAL',
-      payload: {
-        user: {
-          ...currentUser,
-          id: currentUser.attributes.sub,
-          displayName: currentUser.attributes.name,
-          role: currentUser.attributes['custom:role'] || 'user',
-          group: myUser.group,
-          myUser,
-        },
-      },
-    });
-  }, []);
-
-  // REGISTER
-  const register = useCallback(async (email, password, firstName, lastName) => {
-    await Auth.signUp({
-      username: email,
-      password,
-      attributes: {
-        email,
-        given_name: firstName,
-        family_name: lastName,
-      },
-    });
-  }, []);
-
-  // CONFIRM REGISTER
-  const confirmRegister = useCallback(async (email, code) => {
-    await Auth.confirmSignUp(email.toLowerCase(), code);
-  }, []);
-
-  // RESEND CODE REGISTER
-  const resendCodeRegister = useCallback(async (email) => {
-    await Auth.resendSignUp(email.toLowerCase());
-  }, []);
-
-  // LOGOUT
-  const logout = useCallback(async () => {
-    await Auth.signOut();
-    dispatch({
-      type: 'LOGOUT',
-    });
-  }, []);
-
-  // FORGOT PASSWORD
-  const forgotPassword = useCallback(async (email) => {
-    await Auth.forgotPassword(email.toLowerCase());
-  }, []);
-
-  // NEW PASSWORD
-  const newPassword = useCallback(async (email, code, password) => {
-    await Auth.forgotPasswordSubmit(email.toLowerCase(), code, password);
+    checkUserSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ----------------------------------------------------------------------
@@ -154,37 +82,23 @@ export function AuthProvider({ children }) {
 
   const memoizedValue = useMemo(
     () => ({
-      user: state.user,
-      method: 'amplify',
+      user: state.user
+        ? {
+            ...state.user,
+            id: state.user?.sub,
+            accessToken: state.user?.accessToken?.toString(),
+            displayName: state.user?.name,
+            role: state.user?.['custom:role'],
+            group: state.user?.group,
+          }
+        : null,
+      checkUserSession,
       loading: status === 'loading',
       authenticated: status === 'authenticated',
       unauthenticated: status === 'unauthenticated',
-      //
-      login,
-      logout,
-      register,
-      newPassword,
-      forgotPassword,
-      confirmRegister,
-      resendCodeRegister,
     }),
-    [
-      status,
-      state.user,
-      //
-      login,
-      logout,
-      register,
-      newPassword,
-      forgotPassword,
-      confirmRegister,
-      resendCodeRegister,
-    ]
+    [checkUserSession, state.user, status]
   );
 
   return <AuthContext.Provider value={memoizedValue}>{children}</AuthContext.Provider>;
 }
-
-AuthProvider.propTypes = {
-  children: PropTypes.node,
-};
