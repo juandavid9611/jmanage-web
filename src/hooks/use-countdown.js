@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 // ----------------------------------------------------------------------
 
@@ -11,7 +11,8 @@ export function useCountdownDate(date) {
   });
 
   useEffect(() => {
-    const interval = setInterval(() => setNewTime(), 1000);
+    setNewTime();
+    const interval = setInterval(setNewTime, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -25,28 +26,22 @@ export function useCountdownDate(date) {
 
     const getDays = Math.floor(distanceToNow / (1000 * 60 * 60 * 24));
 
-    const getHours = `0${Math.floor(
-      (distanceToNow % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    )}`.slice(-2);
+    const getHours =
+      `0${Math.floor((distanceToNow % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))}`.slice(-2);
 
     const getMinutes = `0${Math.floor((distanceToNow % (1000 * 60 * 60)) / (1000 * 60))}`.slice(-2);
 
     const getSeconds = `0${Math.floor((distanceToNow % (1000 * 60)) / 1000)}`.slice(-2);
 
     setCountdown({
-      days: getDays.toString() || '000',
-      hours: getHours || '000',
-      minutes: getMinutes || '000',
-      seconds: getSeconds || '000',
+      days: getDays < 10 ? `0${getDays}` : `${getDays}`,
+      hours: getHours,
+      minutes: getMinutes,
+      seconds: getSeconds,
     });
   };
 
-  return {
-    days: countdown.days,
-    hours: countdown.hours,
-    minutes: countdown.minutes,
-    seconds: countdown.seconds,
-  };
+  return countdown;
 }
 
 // Usage
@@ -57,22 +52,32 @@ export function useCountdownDate(date) {
 export function useCountdownSeconds(initCountdown) {
   const [countdown, setCountdown] = useState(initCountdown);
 
+  const remainingSecondsRef = useRef(countdown);
+
   const startCountdown = useCallback(() => {
-    let remainingSeconds = countdown;
+    remainingSecondsRef.current = countdown;
 
     const intervalId = setInterval(() => {
-      remainingSeconds -= 1;
+      remainingSecondsRef.current -= 1;
 
-      if (remainingSeconds === 0) {
+      if (remainingSecondsRef.current === 0) {
         clearInterval(intervalId);
         setCountdown(initCountdown);
       } else {
-        setCountdown(remainingSeconds);
+        setCountdown(remainingSecondsRef.current);
       }
     }, 1000);
   }, [initCountdown, countdown]);
 
   const counting = initCountdown > countdown;
 
-  return { counting, countdown, setCountdown, startCountdown };
+  return {
+    counting,
+    countdown,
+    startCountdown,
+    setCountdown,
+  };
 }
+
+// Usage
+// const { countdown, startCountdown, counting } = useCountdownSeconds(30);

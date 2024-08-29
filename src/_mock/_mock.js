@@ -1,4 +1,6 @@
-import { sub } from 'date-fns';
+import { fSub } from 'src/utils/format-time';
+
+import { CONFIG } from 'src/config-global';
 
 import {
   _id,
@@ -18,23 +20,32 @@ import {
   _tourNames,
   _jobTitles,
   _taskNames,
+  _fileNames,
   _postTitles,
   _firstNames,
+  _eventNames,
+  _courseNames,
   _fullAddress,
   _companyNames,
   _productNames,
   _descriptions,
   _phoneNumbers,
+  _countryNames,
 } from './assets';
 
 // ----------------------------------------------------------------------
 
+const { assetURL } = CONFIG.site;
+
 export const _mock = {
   id: (index) => _id[index],
-  time: (index) => sub(new Date(), { days: index, hours: index }),
+  time: (index) => fSub({ days: index, hours: index }),
   boolean: (index) => _booleans[index],
   role: (index) => _roles[index],
   // Text
+  courseNames: (index) => _courseNames[index],
+  fileNames: (index) => _fileNames[index],
+  eventNames: (index) => _eventNames[index],
   taskNames: (index) => _taskNames[index],
   postTitle: (index) => _postTitles[index],
   jobTitle: (index) => _jobTitles[index],
@@ -50,7 +61,8 @@ export const _mock = {
   firstName: (index) => _firstNames[index],
   lastName: (index) => _lastNames[index],
   fullName: (index) => _fullNames[index],
-  companyName: (index) => _companyNames[index],
+  companyNames: (index) => _companyNames[index],
+  countryNames: (index) => _countryNames[index],
   // Number
   number: {
     percent: (index) => _percents[index],
@@ -63,11 +75,12 @@ export const _mock = {
   },
   // Image
   image: {
-    cover: (index) => `/assets/images/cover/cover_${index + 1}.jpg`,
-    avatar: (index) => `/assets/images/avatar/avatar_${index + 1}.jpg`,
-    travel: (index) => `/assets/images/travel/travel_${index + 1}.jpg`,
-    company: (index) => `/assets/images/company/company_${index + 1}.png`,
-    product: (index) => `/assets/images/m_product/product_${index + 1}.jpg`,
-    portrait: (index) => `/assets/images/portrait/portrait_${index + 1}.jpg`,
+    cover: (index) => `${assetURL}/assets/images/cover/cover-${index + 1}.webp`,
+    avatar: (index) => `${assetURL}/assets/images/avatar/avatar-${index + 1}.webp`,
+    travel: (index) => `${assetURL}/assets/images/travel/travel-${index + 1}.webp`,
+    course: (index) => `${assetURL}/assets/images/course/course-${index + 1}.webp`,
+    company: (index) => `${assetURL}/assets/images/company/company-${index + 1}.webp`,
+    product: (index) => `${assetURL}/assets/images/m-product/product-${index + 1}.webp`,
+    portrait: (index) => `${assetURL}/assets/images/portrait/portrait-${index + 1}.webp`,
   },
 };

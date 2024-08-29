@@ -1,82 +1,106 @@
-import PropTypes from 'prop-types';
-import orderBy from 'lodash/orderBy';
-
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
-import { alpha } from '@mui/material/styles';
+import { Button, Divider } from '@mui/material';
 import CardHeader from '@mui/material/CardHeader';
-import Typography from '@mui/material/Typography';
 
-import Iconify from 'src/components/iconify';
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
+import { varAlpha } from 'src/theme/styles';
+
+import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export default function AppTopAuthors({ title, subheader, list, ...other }) {
+export function AppTopAuthors({ title, subheader, list, ...other }) {
+  const router = useRouter();
   return (
     <Card {...other}>
       <CardHeader title={title} subheader={subheader} />
 
-      <Stack spacing={3} sx={{ p: 3 }}>
-        {orderBy(list, ['goals'], ['desc']).map((author, index) => (
-          <AuthorItem
-            key={index}
-            author={author}
-            index={index}
-          />
+      <Box
+        sx={{
+          p: 3,
+          gap: 3,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {list.map((item, index) => (
+          <Item key={index} item={item} index={index} />
         ))}
-      </Stack>
+      </Box>
+      <Divider sx={{ borderStyle: 'dashed' }} />
+
+      <Box sx={{ p: 2, textAlign: 'right' }}>
+        <Button
+          size="medium"
+          color="inherit"
+          endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
+          onClick={() => router.push(paths.dashboard.analytics.top)}
+        >
+          View all
+        </Button>
+      </Box>
     </Card>
   );
 }
 
-AppTopAuthors.propTypes = {
-  list: PropTypes.array,
-  subheader: PropTypes.string,
-  title: PropTypes.string,
-};
-
-// ----------------------------------------------------------------------
-
-function AuthorItem({ author, index }) {
+function Item({ item, index, sx, ...other }) {
   return (
-    <Stack direction="row" alignItems="center" spacing={2}>
-      <Avatar alt={author.name} src={author.avatarUrl} />
+    <Box
+      sx={{
+        gap: 2,
+        display: 'flex',
+        alignItems: 'center',
+        ...sx,
+      }}
+      {...other}
+    >
+      <Avatar alt={item.name} src={item.avatarUrl} />
 
-      <Box sx={{ flexGrow: 1 }}>
-        <Typography variant="subtitle2">{author.name}</Typography>
+      <Box flexGrow={1}>
+        <Box sx={{ typography: 'subtitle2' }}>{item.name}</Box>
+        <Box
+          sx={{
+            gap: 0.5,
+            mt: 0.5,
+            alignItems: 'center',
+            typography: 'caption',
+            display: 'inline-flex',
+            color: 'text.secondary',
+          }}
+        >
+          <Iconify icon="emojione-monotone:goal-net" width={14} />
+          {item.goals} Goals
+          <Iconify icon="fluent:sport-soccer-20-filled" width={14} />
+          {item.assists} Assists
+        </Box>
       </Box>
 
-      <Typography variant="caption">
-        <Iconify icon="fluent:sport-soccer-20-filled" width={14} sx={{ mr: 0.5 }} />
-        {author.goals} Goals &middot;{author.assists} Assists
-      </Typography>
-
-      <Iconify
-        icon="solar:cup-star-bold"
+      <Box
         sx={{
-          p: 1,
           width: 40,
           height: 40,
+          display: 'flex',
           borderRadius: '50%',
-          color: 'error.main',
-          bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-          ...(index === 0 && {
-            color: 'success.main',
-            bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-          }),
+          alignItems: 'center',
+          color: 'primary.main',
+          justifyContent: 'center',
+          bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
           ...(index === 1 && {
             color: 'info.main',
-            bgcolor: (theme) => alpha(theme.palette.info.main, 0.08),
+            bgcolor: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.08),
+          }),
+          ...(index === 2 && {
+            color: 'error.main',
+            bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.08),
           }),
         }}
-      />
-    </Stack>
+      >
+        <Iconify width={24} icon="solar:cup-star-bold" />
+      </Box>
+    </Box>
   );
 }
-
-AuthorItem.propTypes = {
-  author: PropTypes.object,
-  index: PropTypes.number,
-};

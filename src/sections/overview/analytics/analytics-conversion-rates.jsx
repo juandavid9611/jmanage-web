@@ -1,16 +1,14 @@
-import PropTypes from 'prop-types';
-
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 
 import { fNumber } from 'src/utils/format-number';
 
-import Chart, { useChart } from 'src/components/chart';
+import { Chart, useChart } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
 
-export default function AnalyticsConversionRates({ title, subheader, chart, ...other }) {
+export function AnalyticsConversionRates({ title, subheader, chart, ...other }) {
   const { colors, series, options } = chart;
 
   const chartSeries = series.map((i) => i.value);
@@ -56,9 +54,3 @@ export default function AnalyticsConversionRates({ title, subheader, chart, ...o
     </Card>
   );
 }
-
-AnalyticsConversionRates.propTypes = {
-  chart: PropTypes.object,
-  subheader: PropTypes.string,
-  title: PropTypes.string,
-};

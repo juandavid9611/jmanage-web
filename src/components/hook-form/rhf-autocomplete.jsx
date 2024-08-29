@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import TextField from '@mui/material/TextField';
@@ -6,7 +5,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 
 // ----------------------------------------------------------------------
 
-export default function RHFAutocomplete({ name, label, placeholder, helperText, ...other }) {
+export function RHFAutocomplete({ name, label, helperText, hiddenLabel, placeholder, ...other }) {
   const { control, setValue } = useFormContext();
 
   return (
@@ -16,14 +15,19 @@ export default function RHFAutocomplete({ name, label, placeholder, helperText, 
       render={({ field, fieldState: { error } }) => (
         <Autocomplete
           {...field}
+          id={`rhf-autocomplete-${name}`}
           onChange={(event, newValue) => setValue(name, newValue, { shouldValidate: true })}
           renderInput={(params) => (
             <TextField
+              {...params}
               label={label}
               placeholder={placeholder}
               error={!!error}
               helperText={error ? error?.message : helperText}
-              {...params}
+              inputProps={{
+                ...params.inputProps,
+                autoComplete: 'new-password',
+              }}
             />
           )}
           {...other}
@@ -32,10 +36,3 @@ export default function RHFAutocomplete({ name, label, placeholder, helperText, 
     />
   );
 }
-
-RHFAutocomplete.propTypes = {
-  helperText: PropTypes.string,
-  label: PropTypes.string,
-  name: PropTypes.string,
-  placeholder: PropTypes.string,
-};

@@ -1,50 +1,37 @@
-import PropTypes from 'prop-types';
-
 import Stack from '@mui/material/Stack';
+import Badge from '@mui/material/Badge';
 import Button from '@mui/material/Button';
+import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
 
-import { useResponsive } from 'src/hooks/use-responsive';
-
-import { fDate } from 'src/utils/format-time';
-
-import Iconify from 'src/components/iconify';
-import CustomPopover, { usePopover } from 'src/components/custom-popover';
+import { Iconify } from 'src/components/iconify';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
 const VIEW_OPTIONS = [
-  {
-    value: 'dayGridMonth',
-    label: 'Month',
-    icon: 'mingcute:calendar-month-line',
-  },
+  { value: 'dayGridMonth', label: 'Month', icon: 'mingcute:calendar-month-line' },
   { value: 'timeGridWeek', label: 'Week', icon: 'mingcute:calendar-week-line' },
   { value: 'timeGridDay', label: 'Day', icon: 'mingcute:calendar-day-line' },
-  {
-    value: 'listWeek',
-    label: 'Agenda',
-    icon: 'fluent:calendar-agenda-24-regular',
-  },
+  { value: 'listWeek', label: 'Agenda', icon: 'fluent:calendar-agenda-24-regular' },
 ];
 
 // ----------------------------------------------------------------------
 
-export default function CalendarToolbar({
+export function CalendarToolbar({
   date,
   view,
   loading,
   onToday,
+  canReset,
   onNextDate,
   onPrevDate,
   onChangeView,
   onOpenFilters,
 }) {
-  const smUp = useResponsive('up', 'sm');
-
   const popover = usePopover();
 
   const selectedItem = VIEW_OPTIONS.filter((item) => item.value === view)[0];
@@ -57,24 +44,23 @@ export default function CalendarToolbar({
         justifyContent="space-between"
         sx={{ p: 2.5, pr: 2, position: 'relative' }}
       >
-        {smUp && (
-          <Button
-            size="small"
-            color="inherit"
-            onClick={popover.onOpen}
-            startIcon={<Iconify icon={selectedItem.icon} />}
-            endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
-          >
-            {selectedItem.label}
-          </Button>
-        )}
+        <Button
+          size="small"
+          color="inherit"
+          onClick={popover.onOpen}
+          startIcon={<Iconify icon={selectedItem.icon} />}
+          endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
+          sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+        >
+          {selectedItem.label}
+        </Button>
 
         <Stack direction="row" alignItems="center" spacing={1}>
           <IconButton onClick={onPrevDate}>
             <Iconify icon="eva:arrow-ios-back-fill" />
           </IconButton>
 
-          <Typography variant="h6">{fDate(date)}</Typography>
+          <Typography variant="h6">{date}</Typography>
 
           <IconButton onClick={onNextDate}>
             <Iconify icon="eva:arrow-ios-forward-fill" />
@@ -87,7 +73,9 @@ export default function CalendarToolbar({
           </Button>
 
           <IconButton onClick={onOpenFilters}>
-            <Iconify icon="ic:round-filter-list" />
+            <Badge color="error" variant="dot" invisible={!canReset}>
+              <Iconify icon="ic:round-filter-list" />
+            </Badge>
           </IconButton>
         </Stack>
 
@@ -95,11 +83,12 @@ export default function CalendarToolbar({
           <LinearProgress
             color="inherit"
             sx={{
-              height: 2,
-              width: 1,
-              position: 'absolute',
-              bottom: 0,
               left: 0,
+              width: 1,
+              height: 2,
+              bottom: 0,
+              borderRadius: 0,
+              position: 'absolute',
             }}
           />
         )}
@@ -107,35 +96,26 @@ export default function CalendarToolbar({
 
       <CustomPopover
         open={popover.open}
+        anchorEl={popover.anchorEl}
         onClose={popover.onClose}
-        arrow="top-left"
-        sx={{ width: 160 }}
+        slotProps={{ arrow: { placement: 'top-left' } }}
       >
-        {VIEW_OPTIONS.map((viewOption) => (
-          <MenuItem
-            key={viewOption.value}
-            selected={viewOption.value === view}
-            onClick={() => {
-              popover.onClose();
-              onChangeView(viewOption.value);
-            }}
-          >
-            <Iconify icon={viewOption.icon} />
-            {viewOption.label}
-          </MenuItem>
-        ))}
+        <MenuList>
+          {VIEW_OPTIONS.map((viewOption) => (
+            <MenuItem
+              key={viewOption.value}
+              selected={viewOption.value === view}
+              onClick={() => {
+                popover.onClose();
+                onChangeView(viewOption.value);
+              }}
+            >
+              <Iconify icon={viewOption.icon} />
+              {viewOption.label}
+            </MenuItem>
+          ))}
+        </MenuList>
       </CustomPopover>
     </>
   );
 }
-
-CalendarToolbar.propTypes = {
-  date: PropTypes.object,
-  loading: PropTypes.bool,
-  onChangeView: PropTypes.func,
-  onNextDate: PropTypes.func,
-  onOpenFilters: PropTypes.func,
-  onPrevDate: PropTypes.func,
-  onToday: PropTypes.func,
-  view: PropTypes.oneOf(['dayGridMonth', 'timeGridWeek', 'timeGridDay', 'listWeek']),
-};

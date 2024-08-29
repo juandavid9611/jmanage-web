@@ -1,12 +1,11 @@
-import PropTypes from 'prop-types';
-
 import Box from '@mui/material/Box';
+import Portal from '@mui/material/Portal';
 import LinearProgress from '@mui/material/LinearProgress';
 
 // ----------------------------------------------------------------------
 
-export default function LoadingScreen({ sx, ...other }) {
-  return (
+export function LoadingScreen({ portal, sx, ...other }) {
+  const content = (
     <Box
       sx={{
         px: 5,
@@ -23,8 +22,10 @@ export default function LoadingScreen({ sx, ...other }) {
       <LinearProgress color="inherit" sx={{ width: 1, maxWidth: 360 }} />
     </Box>
   );
-}
 
-LoadingScreen.propTypes = {
-  sx: PropTypes.object,
-};
+  if (portal) {
+    return <Portal>{content}</Portal>;
+  }
+
+  return content;
+}

@@ -1,5 +1,3 @@
-import PropTypes from 'prop-types';
-
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 
@@ -7,7 +5,7 @@ import { fShortenNumber } from 'src/utils/format-number';
 
 // ----------------------------------------------------------------------
 
-export default function ValueWidgetSummary({ title, total, icon, sx, ...other }) {
+export function ValueWidgetSummary({ title, total, icon, sx, ...other }) {
   return (
     <Card
       sx={{
@@ -27,8 +25,11 @@ export default function ValueWidgetSummary({ title, total, icon, sx, ...other })
         {title === 'Diferencia de Goles' && total < 0 && (
           <Box sx={{ color: 'error.main', typography: 'subtitle2' }}>-113%</Box>
         )}
-         {title === 'Diferencia de Goles' && (
-          <Box sx={{ mb: 1, typography: 'h3' }}>{total > 0 ? '+' : '-'}{fShortenNumber(Math.abs(total))}</Box>
+        {title === 'Diferencia de Goles' && (
+          <Box sx={{ mb: 1, typography: 'h3' }}>
+            {total > 0 ? '+' : '-'}
+            {fShortenNumber(Math.abs(total))}
+          </Box>
         )}
         {title !== 'Diferencia de Goles' && (
           <Box sx={{ mb: 1, typography: 'h3' }}>{fShortenNumber(total)}</Box>
@@ -50,10 +51,3 @@ export default function ValueWidgetSummary({ title, total, icon, sx, ...other })
     </Card>
   );
 }
-
-ValueWidgetSummary.propTypes = {
-  icon: PropTypes.oneOfType([PropTypes.element, PropTypes.string]),
-  sx: PropTypes.object,
-  title: PropTypes.string,
-  total: PropTypes.number,
-};

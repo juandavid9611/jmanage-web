@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import PropTypes from 'prop-types';
 
 import Box from '@mui/material/Box';
 
@@ -14,10 +13,7 @@ function AvatarShape({ sx, ...other }) {
       fill="none"
       viewBox="0 0 144 62"
       xmlns="http://www.w3.org/2000/svg"
-      sx={{
-        color: 'background.paper',
-        ...sx,
-      }}
+      sx={{ color: 'background.paper', ...sx }}
       {...other}
     >
       <path
@@ -28,9 +24,5 @@ function AvatarShape({ sx, ...other }) {
     </Box>
   );
 }
-
-AvatarShape.propTypes = {
-  sx: PropTypes.object,
-};
 
 export default memo(AvatarShape);

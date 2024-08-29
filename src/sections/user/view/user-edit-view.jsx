@@ -1,28 +1,19 @@
-import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
-
-import Container from '@mui/material/Container';
 
 import { paths } from 'src/routes/paths';
 
-import { useGetUser } from 'src/api/user';
+import { DashboardContent } from 'src/layouts/dashboard';
 
-import { useSettingsContext } from 'src/components/settings';
-import { SplashScreen } from 'src/components/loading-screen';
-import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import UserNewEditForm from '../user-new-edit-form';
+import { UserNewEditForm } from '../user-new-edit-form';
 
 // ----------------------------------------------------------------------
 
-export default function UserEditView({ id }) {
-  const settings = useSettingsContext();
-
-  const { user: currentUser, userLoading } = useGetUser(id);
-
+export function UserEditView({ user: currentUser }) {
   const { t } = useTranslation();
   return (
-    <Container maxWidth={settings.themeStretch ? false : 'lg'}>
+    <DashboardContent>
       <CustomBreadcrumbs
         heading="Edit"
         links={[
@@ -40,11 +31,7 @@ export default function UserEditView({ id }) {
           mb: { xs: 3, md: 5 },
         }}
       />
-      {userLoading ? <SplashScreen /> : <UserNewEditForm currentUser={currentUser} />}
-    </Container>
+      <UserNewEditForm currentUser={currentUser} />
+    </DashboardContent>
   );
 }
-
-UserEditView.propTypes = {
-  id: PropTypes.string,
-};

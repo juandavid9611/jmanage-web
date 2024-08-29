@@ -2,21 +2,22 @@ import { useState, useCallback } from 'react';
 
 // ----------------------------------------------------------------------
 
-export default function usePopover() {
-  const [open, setOpen] = useState(null);
+export function usePopover() {
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const onOpen = useCallback((event) => {
-    setOpen(event.currentTarget);
+    setAnchorEl(event.currentTarget);
   }, []);
 
   const onClose = useCallback(() => {
-    setOpen(null);
+    setAnchorEl(null);
   }, []);
 
   return {
-    open,
+    open: !!anchorEl,
+    anchorEl,
     onOpen,
     onClose,
-    setOpen,
+    setAnchorEl,
   };
 }

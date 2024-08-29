@@ -1,10 +1,8 @@
-import PropTypes from 'prop-types';
-
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import { Popover } from '@mui/material';
-import { alpha  } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import { InfoOutlined } from '@mui/icons-material';
@@ -14,7 +12,7 @@ import { usePopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-export default function MetricProgress({ title, subheader, data, ...other }) {
+export function MetricProgress({ title, subheader, data, ...other }) {
   return (
     <Card {...other}>
       <CardHeader title={title} subheader={subheader} />
@@ -28,20 +26,14 @@ export default function MetricProgress({ title, subheader, data, ...other }) {
   );
 }
 
-MetricProgress.propTypes = {
-  data: PropTypes.array,
-  subheader: PropTypes.string,
-  title: PropTypes.string,
-};
-
 function MetricLineItem({ metric }) {
   const clickPopover = usePopover();
 
   const getColor = (value) => {
-    if (value >= 100)  return 'success';
+    if (value >= 100) return 'success';
     if (value >= 75) return 'warning';
     return 'error';
-  }
+  };
 
   return (
     <Stack key={metric?.label}>
@@ -56,9 +48,7 @@ function MetricLineItem({ metric }) {
             <InfoOutlined sx={{ width: 20, height: 15 }} />
           </Typography>
         </Box>
-        <Typography variant="caption" >
-          {metric?.percent || 0}%
-        </Typography>
+        <Typography variant="caption">{metric?.percent || 0}%</Typography>
         <Box variant="caption" sx={{ typography: 'subtitle1' }}>
           ({metric?.total || 0}%)
         </Box>
@@ -95,7 +85,3 @@ function MetricLineItem({ metric }) {
     </Stack>
   );
 }
-
-MetricLineItem.propTypes = {
-  metric: PropTypes.object,
-};

@@ -1,87 +1,71 @@
 import { useState } from 'react';
-import PropTypes from 'prop-types';
 
-import Stack from '@mui/material/Stack';
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-import { alpha, useTheme } from '@mui/material/styles';
 
-import { bgGradient } from 'src/theme/css';
-import LogoAnimated from 'src/layouts/auth/logo-animated';
+import { CONFIG } from 'src/config-global';
+import { varAlpha, bgGradient } from 'src/theme/styles';
+import LogoAnimated from 'src/layouts/core/logo-animated';
 
 // ----------------------------------------------------------------------
 
-export default function AppWelcome({ title, description, action, img, ...other }) {
+export function AppWelcome({ title, description, action, img, sx, ...other }) {
   const theme = useTheme();
   const [count, setCount] = useState(0);
 
   return (
-    <Stack
-      flexDirection={{ xs: 'column', md: 'row' }}
+    <Box
       sx={{
         ...bgGradient({
-          direction: '135deg',
-          startColor: alpha(theme.palette.primary.light, 0.2),
-          endColor: alpha(theme.palette.primary.main, 0.2),
+          color: `to right, ${varAlpha(
+            theme.vars.palette.grey['900Channel'],
+            0.88
+          )} 0%, ${theme.vars.palette.grey[900]} 75%`,
+          imgUrl: `${CONFIG.site.basePath}/assets/background/background-5.webp`,
         }),
-        height: { md: 1 },
+        pt: 5,
+        pb: 5,
+        pr: 3,
+        gap: 5,
         borderRadius: 2,
+        display: 'flex',
+        height: { md: 1 },
         position: 'relative',
-        color: 'primary.darker',
-        backgroundColor: 'common.white',
+        pl: { xs: 3, md: 5 },
+        alignItems: 'center',
+        color: 'common.white',
+        textAlign: { xs: 'center', md: 'left' },
+        flexDirection: { xs: 'column', md: 'row' },
+        border: `solid 1px ${theme.vars.palette.grey[800]}`,
+        ...sx,
       }}
       {...other}
     >
-      <Stack
-        flexGrow={1}
-        justifyContent="center"
-        alignItems={{ xs: 'center', md: 'flex-start' }}
+      <Box
         sx={{
-          p: {
-            xs: theme.spacing(5, 3, 0, 3),
-            md: theme.spacing(5),
-          },
-          textAlign: { xs: 'center', md: 'left' },
+          display: 'flex',
+          flex: '1 1 auto',
+          flexDirection: 'column',
+          alignItems: { xs: 'center', md: 'flex-start' },
         }}
       >
-        <Typography variant="h4" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+        <Typography variant="h4" sx={{ whiteSpace: 'pre-line', mb: 1 }}>
           {title}
         </Typography>
 
-        <Typography
-          variant="body2"
-          sx={{
-            opacity: 0.8,
-            maxWidth: 360,
-            mb: { xs: 3, xl: 5 },
-          }}
-        >
+        <Typography variant="body2" sx={{ opacity: 0.64, maxWidth: 360, ...(action && { mb: 3 }) }}>
           {description}
         </Typography>
 
         {action && action}
-      </Stack>
+      </Box>
 
       {img && (
-        <Stack
-          component="span"
-          justifyContent="center"
-          sx={{
-            p: { xs: 5, md: 5 },
-            maxWidth: 360,
-            mx: 'auto',
-          }}
-          onClick={() => setCount(count + 1)}
-        >
+        <Box sx={{ maxWidth: 260 }} onClick={() => setCount(count + 1)}>
           <LogoAnimated key={count} />
-        </Stack>
+        </Box>
       )}
-    </Stack>
+    </Box>
   );
 }
-
-AppWelcome.propTypes = {
-  action: PropTypes.node,
-  description: PropTypes.string,
-  img: PropTypes.node,
-  title: PropTypes.string,
-};

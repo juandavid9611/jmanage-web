@@ -1,22 +1,25 @@
-import PropTypes from 'prop-types';
+/* eslint-disable perfectionist/sort-imports */
 
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider as MuiLocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import 'dayjs/locale/en';
+import 'dayjs/locale/es';
 
-import { useLocales } from './use-locales';
+import dayjs from 'dayjs';
+
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider as Provider } from '@mui/x-date-pickers/LocalizationProvider';
+
+import { useTranslate } from './use-locales';
 
 // ----------------------------------------------------------------------
 
-export default function LocalizationProvider({ children }) {
-  const { currentLang } = useLocales();
+export function LocalizationProvider({ children }) {
+  const { currentLang } = useTranslate();
+
+  dayjs.locale(currentLang.adapterLocale);
 
   return (
-    <MuiLocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={currentLang.adapterLocale}>
+    <Provider dateAdapter={AdapterDayjs} adapterLocale={currentLang.adapterLocale}>
       {children}
-    </MuiLocalizationProvider>
+    </Provider>
   );
 }
-
-LocalizationProvider.propTypes = {
-  children: PropTypes.node,
-};

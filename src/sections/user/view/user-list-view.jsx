@@ -1,37 +1,38 @@
-import isEqual from 'lodash/isEqual';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
+import { Box } from '@mui/material';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
-import { alpha } from '@mui/material/styles';
-import Container from '@mui/material/Container';
 import TableBody from '@mui/material/TableBody';
 import IconButton from '@mui/material/IconButton';
-import TableContainer from '@mui/material/TableContainer';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSetState } from 'src/hooks/use-set-state';
 
-import { deleteUser, useGetUsers } from 'src/api/user';
+import { varAlpha } from 'src/theme/styles';
+import { DashboardContent } from 'src/layouts/dashboard';
+import { deleteUser, useGetUsers } from 'src/actions/user';
 import { GROUP_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 
-import Label from 'src/components/label';
-import Iconify from 'src/components/iconify';
-import Scrollbar from 'src/components/scrollbar';
+import { Label } from 'src/components/label';
+import { toast } from 'src/components/snackbar';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/custom-dialog';
-import { useSettingsContext } from 'src/components/settings';
-import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useTable,
   emptyRows,
+  rowInPage,
   TableNoData,
   getComparator,
   TableSkeleton,
@@ -41,9 +42,9 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import UserTableRow from '../user-table-row';
-import UserTableToolbar from '../user-table-toolbar';
-import UserTableFiltersResult from '../user-table-filters-result';
+import { UserTableRow } from '../user-table-row';
+import { UserTableToolbar } from '../user-table-toolbar';
+import { UserTableFiltersResult } from '../user-table-filters-result';
 
 // ----------------------------------------------------------------------
 
@@ -58,18 +59,10 @@ const TABLE_HEAD = [
   { id: '', width: 88 },
 ];
 
-const defaultFilters = {
-  name: '',
-  group: [],
-  status: 'all',
-};
-
 // ----------------------------------------------------------------------
 
-export default function UserListView() {
+export function UserListView() {
   const table = useTable();
-
-  const settings = useSettingsContext();
 
   const router = useRouter();
 
@@ -79,42 +72,30 @@ export default function UserListView() {
 
   const { users, usersLoading, usersEmpty } = useGetUsers();
 
-  const [filters, setFilters] = useState(defaultFilters);
+  const filters = useSetState({ name: '', group: [], status: 'all' });
 
   const { t } = useTranslation();
 
   const dataFiltered = applyFilter({
     inputData: tableData,
     comparator: getComparator(table.order, table.orderBy),
-    filters,
+    filters: filters.state,
   });
 
-  const dataInPage = dataFiltered.slice(
-    table.page * table.rowsPerPage,
-    table.page * table.rowsPerPage + table.rowsPerPage
-  );
+  const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
 
-  const denseHeight = table.dense ? 52 : 72;
-
-  const canReset = !isEqual(defaultFilters, filters);
+  const canReset =
+    !!filters.state.name || filters.state.group.length > 0 || filters.state.status !== 'all';
 
   const notFound = (!dataFiltered.length && canReset) || usersEmpty;
-
-  const handleFilters = useCallback(
-    (name, value) => {
-      table.onResetPage();
-      setFilters((prevState) => ({
-        ...prevState,
-        [name]: value,
-      }));
-    },
-    [table]
-  );
 
   const handleDeleteRow = useCallback(
     (id) => {
       deleteUser(id);
       const deleteRow = tableData.filter((row) => row.id !== id);
+
+      toast.success('Delete success!');
+
       setTableData(deleteRow);
 
       table.onUpdatePageDeleteRow(dataInPage.length);
@@ -124,10 +105,12 @@ export default function UserListView() {
 
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
+
+    toast.success('Delete success!');
+
     setTableData(deleteRows);
 
     table.onUpdatePageDeleteRows({
-      totalRows: tableData.length,
       totalRowsInPage: dataInPage.length,
       totalRowsFiltered: dataFiltered.length,
     });
@@ -142,14 +125,11 @@ export default function UserListView() {
 
   const handleFilterStatus = useCallback(
     (event, newValue) => {
-      handleFilters('status', newValue);
+      table.onResetPage();
+      filters.setState({ status: newValue });
     },
-    [handleFilters]
+    [filters, table]
   );
-
-  const handleResetFilters = useCallback(() => {
-    setFilters(defaultFilters);
-  }, []);
 
   useEffect(() => {
     if (users.length) {
@@ -159,9 +139,9 @@ export default function UserListView() {
 
   return (
     <>
-      <Container maxWidth={settings.themeStretch ? false : 'lg'}>
+      <DashboardContent>
         <CustomBreadcrumbs
-          heading={t('list')}
+          heading={t('users')}
           links={[
             { name: t('app'), href: paths.dashboard.root },
             { name: t('user'), href: paths.dashboard.admin.user.root },
@@ -184,11 +164,12 @@ export default function UserListView() {
 
         <Card>
           <Tabs
-            value={filters.status}
+            value={filters.state.status}
             onChange={handleFilterStatus}
             sx={{
               px: 2.5,
-              boxShadow: (theme) => `inset 0 -2px 0 0 ${alpha(theme.palette.grey[500], 0.08)}`,
+              boxShadow: (theme) =>
+                `inset 0 -2px 0 0 ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
             }}
           >
             {STATUS_OPTIONS.map((tab) => (
@@ -209,16 +190,9 @@ export default function UserListView() {
                       'default'
                     }
                   >
-                    {tab.value === 'all' && users.length}
-                    {tab.value === 'confirmed' &&
-                      users.filter((user) => user.confirmationStatus === 'confirmed').length}
-
-                    {tab.value === 'pending' &&
-                      users.filter((user) => user.confirmationStatus === 'pending').length}
-                    {tab.value === 'deleted' &&
-                      users.filter((user) => user.confirmationStatus === 'deleted').length}
-                    {tab.value === 'rejected' &&
-                      users.filter((user) => user.confirmationStatus === 'rejected').length}
+                    {['confirmed', 'pending', 'deleted', 'rejected'].includes(tab.value)
+                      ? users.filter((user) => user.confirmationStatus === tab.value).length
+                      : tableData.length}
                   </Label>
                 }
               />
@@ -227,32 +201,28 @@ export default function UserListView() {
 
           <UserTableToolbar
             filters={filters}
-            onFilters={handleFilters}
-            //
-            groupOptions={GROUP_OPTIONS}
+            onResetPage={table.onResetPage}
+            options={{ groups: GROUP_OPTIONS }}
           />
 
           {canReset && (
             <UserTableFiltersResult
               filters={filters}
-              onFilters={handleFilters}
-              //
-              onResetFilters={handleResetFilters}
-              //
-              results={dataFiltered.length}
+              totalResults={dataFiltered.length}
+              onResetPage={table.onResetPage}
               sx={{ p: 2.5, pt: 0 }}
             />
           )}
 
-          <TableContainer sx={{ position: 'relative', overflow: 'unset' }}>
+          <Box sx={{ position: 'relative' }}>
             <TableSelectedAction
               dense={table.dense}
               numSelected={table.selected.length}
-              rowCount={tableData.length}
+              rowCount={dataFiltered.length}
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  tableData.map((row) => row.id)
+                  dataFiltered.map((row) => row.id)
                 )
               }
               action={
@@ -284,7 +254,7 @@ export default function UserListView() {
                 <TableBody>
                   {usersLoading ? (
                     [...Array(table.rowsPerPage)].map((i, index) => (
-                      <TableSkeleton key={index} sx={{ height: denseHeight }} />
+                      <TableSkeleton key={index} height={table.dense ? 56 : 56 + 20} />
                     ))
                   ) : (
                     <>
@@ -307,7 +277,7 @@ export default function UserListView() {
                   )}
 
                   <TableEmptyRows
-                    height={denseHeight}
+                    height={table.dense ? 56 : 56 + 20}
                     emptyRows={emptyRows(table.page, table.rowsPerPage, tableData.length)}
                   />
 
@@ -315,20 +285,19 @@ export default function UserListView() {
                 </TableBody>
               </Table>
             </Scrollbar>
-          </TableContainer>
+          </Box>
 
           <TablePaginationCustom
-            count={dataFiltered.length}
             page={table.page}
+            dense={table.dense}
+            count={dataFiltered.length}
             rowsPerPage={table.rowsPerPage}
             onPageChange={table.onChangePage}
-            onRowsPerPageChange={table.onChangeRowsPerPage}
-            //
-            dense={table.dense}
             onChangeDense={table.onChangeDense}
+            onRowsPerPageChange={table.onChangeRowsPerPage}
           />
         </Card>
-      </Container>
+      </DashboardContent>
 
       <ConfirmDialog
         open={confirm.value}
@@ -336,7 +305,8 @@ export default function UserListView() {
         title="Delete"
         content={
           <>
-            {t('delete_confirmation')} <strong> {table.selected.length} </strong> {t('delete_confirmation_2')}
+            {t('delete_confirmation')} <strong> {table.selected.length} </strong>{' '}
+            {t('delete_confirmation_2')}
           </>
         }
         action={

@@ -1,9 +1,8 @@
-import * as Yup from 'yup';
+import { z as zod } from 'zod';
 import { useMemo } from 'react';
-import PropTypes from 'prop-types';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { yupResolver } from '@hookform/resolvers/yup';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
@@ -15,27 +14,24 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
-import { updateUserMetrics } from 'src/api/user';
+import { updateUserMetrics } from 'src/actions/user';
 
-import { useSnackbar } from 'src/components/snackbar';
-import FormProvider, { RHFTextField } from 'src/components/hook-form';
+import { toast } from 'src/components/snackbar';
+import { Form, Field } from 'src/components/hook-form';
 
-// ----------------------------------------------------------------------
+export const UserQuickEditSchema = zod.object({
+  asistencia_entrenos: zod.number().min(1, { message: 'Asistencia a entrenos es requerido!' }),
+  asistencia_partidos: zod.number().min(1, { message: 'Asistencia a partidos es requerido!' }),
+  puntualidad_pagos: zod.number().min(1, { message: 'Puntualidad en pagos es requerido!' }),
+  llegadas_tarde: zod.number().min(1, { message: 'Llegadas tarde es requerido!' }),
+  deuda_acumulada: zod.number().min(1, { message: 'Deuda acumulada es requerido!' }),
+  total: zod.number().min(1, { message: 'Total es requerido!' }),
+  puntaje_asistencia: zod.number().max(3, { message: 'Puntaje asistencia es requerido!' }),
+  puntaje_asistencia_description: zod.string(),
+});
 
-export default function UserQuickEditForm({ currentUser, open, onClose }) {
+export function UserQuickEditForm({ currentUser, open, onClose }) {
   const { t } = useTranslation();
-  const { enqueueSnackbar } = useSnackbar();
-
-  const NewMetricsSchema = Yup.object().shape({
-    asistencia_entrenos: Yup.number().required('Asistencia a entrenos is required'),
-    asistencia_partidos: Yup.number().required('Asistencia a partidos is required'),
-    puntualidad_pagos: Yup.number().required('Puntualidad en pagos is required'),
-    llegadas_tarde: Yup.number().required('Llegadas tarde is required'),
-    deuda_acumulada: Yup.number().required('Deuda acumlada is required'),
-    total: Yup.number().required('Total number is required'),
-    puntaje_asistencia: Yup.number().required('Puntaje asistencia is required').max(3),
-    puntaje_asistencia_description: Yup.string(),
-  });
 
   const defaultValues = useMemo(
     () => ({
@@ -52,48 +48,49 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
     }),
     [currentUser]
   );
-
   const methods = useForm({
-    resolver: yupResolver(NewMetricsSchema),
+    mode: 'all',
+    resolver: zodResolver(UserQuickEditSchema),
     defaultValues,
   });
 
   const {
     reset,
+    watch,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
 
-  const onCloseHandle = () => {
-    onClose();
-    reset(defaultValues);
-  };
+  const values = watch();
 
   const onSubmit = handleSubmit(async (data) => {
+    const promise = updateUserMetrics(currentUser.id, data);
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      toast.promise(promise, {
+        loading: 'Loading...',
+        success: t('update_metrics_success'),
+        error: 'Update error!',
+      });
+
+      await promise;
       onClose();
-      enqueueSnackbar(t('update_metrics_success'));
-      updateUserMetrics(currentUser.id, data);
-      currentUser.user_metrics = data;
+      reset(values);
     } catch (error) {
       console.error(error);
     }
   });
-
+  // });
   return (
     <Dialog
       fullWidth
       maxWidth={false}
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: { maxWidth: 720 },
-      }}
+      PaperProps={{ sx: { maxWidth: 720 } }}
     >
-      <FormProvider methods={methods} onSubmit={onSubmit}>
+      <Form methods={methods} onSubmit={onSubmit}>
         <DialogTitle>Quick Metrics Update</DialogTitle>
-
         <DialogContent>
           <Alert variant="outlined" severity="info" sx={{ mb: 3 }}>
             <Typography>
@@ -101,53 +98,34 @@ export default function UserQuickEditForm({ currentUser, open, onClose }) {
               <strong>{currentUser?.group}</strong>
             </Typography>
           </Alert>
-
           <Box
             rowGap={3}
             columnGap={2}
             display="grid"
-            gridTemplateColumns={{
-              xs: 'repeat(1, 1fr)',
-              sm: 'repeat(2, 1fr)',
-            }}
+            gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' }}
           >
-            <RHFTextField name="asistencia_entrenos" label="Asistencia entrenos" />
-
-            <RHFTextField name="asistencia_partidos" label="Asistencia partidos" />
-
-            <RHFTextField name="puntualidad_pagos" label="Puntualidad pagos" />
-
-            <RHFTextField name="llegadas_tarde" label="Llegadas tarde" />
-
-            <RHFTextField name="deuda_acumulada" label="Deuda acumulada" />
-
-            <RHFTextField name="total" label="Total" />
-
-            <RHFTextField name="puntaje_asistencia" label="Puntaje asistencia" />
-
-            <RHFTextField
+            <Field.Text name="asistencia_entrenos" label="Asistencia entrenos" type="number" />
+            <Field.Text name="asistencia_partidos" label="Asistencia partidos" type="number" />
+            <Field.Text name="puntualidad_pagos" label="Puntualidad pagos" type="number" />
+            <Field.Text name="llegadas_tarde" label="Llegadas tarde" type="number" />
+            <Field.Text name="deuda_acumulada" label="Deuda acumulada" type="number" />
+            <Field.Text name="total" label="Total" type="number" />
+            <Field.Text name="puntaje_asistencia" label="Puntaje asistencia" type="number" />
+            <Field.Text
               name="puntaje_asistencia_description"
               label="Descripción puntaje asistencia"
             />
           </Box>
         </DialogContent>
-
         <DialogActions>
-          <Button variant="outlined" onClick={onCloseHandle}>
+          <Button variant="outlined" onClick={onClose}>
             Cancel
           </Button>
-
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
             Update
           </LoadingButton>
         </DialogActions>
-      </FormProvider>
+      </Form>
     </Dialog>
   );
 }
-
-UserQuickEditForm.propTypes = {
-  currentUser: PropTypes.object,
-  onClose: PropTypes.func,
-  open: PropTypes.bool,
-};

@@ -2,11 +2,9 @@ import { useRef, useState, useCallback } from 'react';
 
 import { useResponsive } from 'src/hooks/use-responsive';
 
-import { fTimestamp } from 'src/utils/format-time';
-
 // ----------------------------------------------------------------------
 
-export default function useCalendar() {
+export function useCalendar() {
   const calendarRef = useRef(null);
 
   const calendarEl = calendarRef.current;
@@ -89,11 +87,9 @@ export default function useCalendar() {
 
         calendarApi.unselect();
       }
+
       onOpenForm();
-      setSelectedRange({
-        start: fTimestamp(arg.start),
-        end: fTimestamp(arg.end),
-      });
+      setSelectedRange({ start: arg.startStr, end: arg.endStr });
     },
     [calendarEl, onOpenForm]
   );
@@ -114,8 +110,8 @@ export default function useCalendar() {
     updateEvent({
       id: event.id,
       allDay: event.allDay,
-      start: fTimestamp(event.start),
-      end: fTimestamp(event.end),
+      start: event.startStr,
+      end: event.endStr,
     });
   }, []);
 
@@ -125,8 +121,8 @@ export default function useCalendar() {
     updateEvent({
       id: event.id,
       allDay: event.allDay,
-      start: fTimestamp(event.start),
-      end: fTimestamp(event.end),
+      start: event.startStr,
+      end: event.endStr,
     });
   }, []);
 

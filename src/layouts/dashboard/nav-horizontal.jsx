@@ -1,64 +1,49 @@
-import { memo } from 'react';
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
 
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import { useTheme } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 
-import { bgBlur } from 'src/theme/css';
-import { useAuthContext } from 'src/auth/hooks';
-
-import Scrollbar from 'src/components/scrollbar';
 import { NavSectionHorizontal } from 'src/components/nav-section';
 
-import { HEADER } from '../config-layout';
-import { useNavData } from './config-navigation';
-import HeaderShadow from '../common/header-shadow';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-function NavHorizontal() {
-  const theme = useTheme();
-
+export function NavHorizontal({ data, layoutQuery, sx, ...other }) {
   const { user } = useAuthContext();
-
-  const navData = useNavData();
-
   return (
-    <AppBar
-      component="div"
+    <Box
       sx={{
-        top: HEADER.H_DESKTOP_OFFSET,
+        width: 1,
+        position: 'relative',
+        flexDirection: 'column',
+        display: { xs: 'none', [layoutQuery]: 'flex' },
+        borderBottom: (theme) =>
+          `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
+        ...sx,
       }}
     >
-      <Toolbar
+      <Divider
+        sx={{ top: 0, left: 0, width: 1, zIndex: 9, position: 'absolute', borderStyle: 'dashed' }}
+      />
+
+      <Box
         sx={{
-          ...bgBlur({
-            color: theme.palette.background.default,
-          }),
+          px: 1.5,
+          height: 'var(--layout-nav-horizontal-height)',
+          backgroundColor: 'var(--layout-nav-horizontal-bg)',
+          backdropFilter: `blur(var(--layout-header-blur))`,
+          WebkitBackdropFilter: `blur(var(--layout-header-blur))`,
         }}
       >
-        <Scrollbar
-          sx={{
-            '& .simplebar-content': {
-              display: 'flex',
-            },
+        <NavSectionHorizontal
+          data={data}
+          slotProps={{
+            currentRole: user?.role,
           }}
-        >
-          <NavSectionHorizontal
-            data={navData}
-            slotProps={{
-              currentRole: user?.role,
-            }}
-            sx={{
-              ...theme.mixins.toolbar,
-            }}
-          />
-        </Scrollbar>
-      </Toolbar>
-
-      <HeaderShadow />
-    </AppBar>
+          {...other}
+        />
+      </Box>
+    </Box>
   );
 }
-
-export default memo(NavHorizontal);

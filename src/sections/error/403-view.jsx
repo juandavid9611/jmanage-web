@@ -1,21 +1,22 @@
 import { m } from 'framer-motion';
 
 import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 
 import { RouterLink } from 'src/routes/components';
 
-import CompactLayout from 'src/layouts/compact';
+import { SimpleLayout } from 'src/layouts/simple';
 import { ForbiddenIllustration } from 'src/assets/illustrations';
 
 import { varBounce, MotionContainer } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
 
-export default function View403() {
+export function View403() {
   return (
-    <CompactLayout>
-      <MotionContainer>
+    <SimpleLayout content={{ compact: true }}>
+      <Container component={MotionContainer}>
         <m.div variants={varBounce().in}>
           <Typography variant="h3" sx={{ mb: 2 }}>
             No permission
@@ -24,20 +25,19 @@ export default function View403() {
 
         <m.div variants={varBounce().in}>
           <Typography sx={{ color: 'text.secondary' }}>
-            The page you&apos;re trying access has restricted access.
-            <br />
-            Please refer to your system administrator
+            The page you’re trying to access has restricted access. Please refer to your system
+            administrator.
           </Typography>
         </m.div>
 
         <m.div variants={varBounce().in}>
-          <ForbiddenIllustration sx={{ height: 260, my: { xs: 5, sm: 10 } }} />
+          <ForbiddenIllustration sx={{ my: { xs: 5, sm: 10 } }} />
         </m.div>
 
         <Button component={RouterLink} href="/" size="large" variant="contained">
-          Go to Home
+          Go to home
         </Button>
-      </MotionContainer>
-    </CompactLayout>
+      </Container>
+    </SimpleLayout>
   );
 }

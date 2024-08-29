@@ -1,8 +1,9 @@
-import PropTypes from 'prop-types';
 import { useState, useEffect, useCallback } from 'react';
 
 import { paths } from 'src/routes/paths';
-import { useRouter } from 'src/routes/hooks';
+import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
+
+import { CONFIG } from 'src/config-global';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
@@ -10,59 +11,56 @@ import { useAuthContext } from '../hooks';
 
 // ----------------------------------------------------------------------
 
-const loginPaths = {
-  amplify: paths.auth.amplify.login,
-};
-
-// ----------------------------------------------------------------------
-
-export default function AuthGuard({ children }) {
-  const { loading } = useAuthContext();
-
-  return <>{loading ? <SplashScreen /> : <Container> {children}</Container>}</>;
-}
-
-AuthGuard.propTypes = {
-  children: PropTypes.node,
-};
-
-// ----------------------------------------------------------------------
-
-function Container({ children }) {
+export function AuthGuard({ children }) {
   const router = useRouter();
 
-  const { authenticated, method } = useAuthContext();
+  const pathname = usePathname();
 
-  const [checked, setChecked] = useState(false);
+  const searchParams = useSearchParams();
 
-  const check = useCallback(() => {
+  const { authenticated, loading } = useAuthContext();
+
+  const [isChecking, setIsChecking] = useState(true);
+
+  const createQueryString = useCallback(
+    (name, value) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set(name, value);
+
+      return params.toString();
+    },
+    [searchParams]
+  );
+
+  const checkPermissions = async () => {
+    if (loading) {
+      return;
+    }
+
     if (!authenticated) {
-      const searchParams = new URLSearchParams({
-        returnTo: window.location.pathname,
-      }).toString();
+      const { method } = CONFIG.auth;
 
-      const loginPath = loginPaths[method];
+      const signInPath = {
+        amplify: paths.auth.amplify.signIn,
+      }[method];
 
-      const href = `${loginPath}?${searchParams}`;
+      const href = `${signInPath}?${createQueryString('returnTo', pathname)}`;
 
       router.replace(href);
-    } else {
-      setChecked(true);
+      return;
     }
-  }, [authenticated, method, router]);
+
+    setIsChecking(false);
+  };
 
   useEffect(() => {
-    check();
+    checkPermissions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authenticated, loading]);
 
-  if (!checked) {
-    return null;
+  if (isChecking) {
+    return <SplashScreen />;
   }
 
   return <>{children}</>;
 }
-
-Container.propTypes = {
-  children: PropTypes.node,
-};

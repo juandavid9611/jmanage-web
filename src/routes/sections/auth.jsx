@@ -1,68 +1,84 @@
 import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { GuestGuard } from 'src/auth/guard';
-import CompactLayout from 'src/layouts/compact';
-import AuthClassicLayout from 'src/layouts/auth/classic';
+import { AuthSplitLayout } from 'src/layouts/auth-split';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
-// ----------------------------------------------------------------------
-
-// AMPLIFY
-const AmplifyRegisterPage = lazy(() => import('src/pages/auth/amplify/register'));
-const AmplifyLoginPage = lazy(() => import('src/pages/auth/amplify/login'));
-const AmplifyVerifyPage = lazy(() => import('src/pages/auth/amplify/verify'));
-const AmplifyNewPasswordPage = lazy(() => import('src/pages/auth/amplify/new-password'));
-const AmplifyForgotPasswordPage = lazy(() => import('src/pages/auth/amplify/forgot-password'));
-
+import { GuestGuard } from 'src/auth/guard';
 
 // ----------------------------------------------------------------------
+
+/** **************************************
+ * Amplify
+ *************************************** */
+const Amplify = {
+  SignInPage: lazy(() => import('src/pages/auth/amplify/sign-in')),
+  SignUpPage: lazy(() => import('src/pages/auth/amplify/sign-up')),
+  VerifyPage: lazy(() => import('src/pages/auth/amplify/verify')),
+  UpdatePasswordPage: lazy(() => import('src/pages/auth/amplify/update-password')),
+  ResetPasswordPage: lazy(() => import('src/pages/auth/amplify/reset-password')),
+};
 
 const authAmplify = {
   path: 'amplify',
-  element: (
-    <GuestGuard>
-      <Suspense fallback={<SplashScreen />}>
-        <Outlet />
-      </Suspense>
-    </GuestGuard>
-  ),
   children: [
     {
-      path: 'login',
+      path: 'sign-in',
       element: (
-        <AuthClassicLayout>
-          <AmplifyLoginPage />
-        </AuthClassicLayout>
+        <GuestGuard>
+          <AuthSplitLayout section={{ title: 'Hi, Welcome back' }}>
+            <Amplify.SignInPage />
+          </AuthSplitLayout>
+        </GuestGuard>
       ),
     },
     {
-      path: 'register',
+      path: 'sign-up',
       element: (
-        <AuthClassicLayout title="Manage the job more effectively with Minimal">
-          <AmplifyRegisterPage />
-        </AuthClassicLayout>
+        <GuestGuard>
+          <AuthSplitLayout>
+            <Amplify.SignUpPage />
+          </AuthSplitLayout>
+        </GuestGuard>
       ),
     },
     {
+      path: 'verify',
       element: (
-        <CompactLayout>
-          <Outlet />
-        </CompactLayout>
+        <AuthSplitLayout>
+          <Amplify.VerifyPage />
+        </AuthSplitLayout>
       ),
-      children: [
-        { path: 'verify', element: <AmplifyVerifyPage /> },
-        { path: 'new-password', element: <AmplifyNewPasswordPage /> },
-        { path: 'forgot-password', element: <AmplifyForgotPasswordPage /> },
-      ],
+    },
+    {
+      path: 'reset-password',
+      element: (
+        <AuthSplitLayout>
+          <Amplify.ResetPasswordPage />
+        </AuthSplitLayout>
+      ),
+    },
+    {
+      path: 'update-password',
+      element: (
+        <AuthSplitLayout>
+          <Amplify.UpdatePasswordPage />
+        </AuthSplitLayout>
+      ),
     },
   ],
 };
+// ----------------------------------------------------------------------
 
 export const authRoutes = [
   {
     path: 'auth',
+    element: (
+      <Suspense fallback={<SplashScreen />}>
+        <Outlet />
+      </Suspense>
+    ),
     children: [authAmplify],
   },
 ];
