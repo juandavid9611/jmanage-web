@@ -8,7 +8,7 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function LateArriveAnalytics({ title, subheader, list, ...other }) {
+export function LateArriveAnalytics({ list, ...other }) {
   return (
     <Card {...other}>
       <Box

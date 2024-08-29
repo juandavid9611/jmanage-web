@@ -93,20 +93,22 @@ export function OverviewAppView() {
           <AppFeatured list={_appFeatured} />
         </Grid>
 
-        <Grid xs={12} md={4}>
-          <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-            <MetricsOverview
-              title={t('my_metrics')}
-              subheader={`Última actualización: ${fDateTime(metrics?.last_update)}`}
-              chart={{ series: metrics?.total || 0 }}
-            />
-            <MetricProgress
-              title="Progreso"
-              subheader={`Última actualización: ${fDateTime(metrics?.last_update)}`}
-              data={getMetricsProgress(metrics)}
-            />
-          </Box>
-        </Grid>
+        {metrics?.total > 0 && (
+          <Grid xs={12} md={4}>
+            <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
+              <MetricsOverview
+                title={t('my_metrics')}
+                subheader={`Última actualización: ${fDateTime(metrics?.last_update)}`}
+                chart={{ series: metrics?.total || 0 }}
+              />
+              <MetricProgress
+                title="Progreso"
+                subheader={`Última actualización: ${fDateTime(metrics?.last_update)}`}
+                data={getMetricsProgress(metrics)}
+              />
+            </Box>
+          </Grid>
+        )}
 
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>

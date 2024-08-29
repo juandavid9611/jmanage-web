@@ -32,7 +32,7 @@ export function InvoiceTableRow({
   onViewRow,
   onEditRow,
   onDeleteRow,
-  isAdmin,
+  isAdminView,
 }) {
   const { t } = useTranslation();
   const confirm = useBoolean();
@@ -50,26 +50,44 @@ export function InvoiceTableRow({
           />
         </TableCell>
 
-        <TableCell>
-          <Stack spacing={2} direction="row" alignItems="center">
-            <Avatar alt={row.paymentRequestTo.name}>
-              {row.paymentRequestTo.name.charAt(0).toUpperCase()}
-            </Avatar>
+        {isAdminView && (
+          <TableCell>
+            <Stack spacing={2} direction="row" alignItems="center">
+              <Avatar alt={row.paymentRequestTo.name}>
+                {row.paymentRequestTo.name.charAt(0).toUpperCase()}
+              </Avatar>
 
-            <ListItemText
-              disableTypography
-              primary={
-                <Typography variant="body2" noWrap>
-                  {row.paymentRequestTo.name}
-                </Typography>
-              }
-              secondary={
-                <Typography variant="caption" noWrap>
-                  {row.paymentRequestTo.email}
-                </Typography>
-              }
-            />
-          </Stack>
+              <ListItemText
+                disableTypography
+                primary={
+                  <Typography variant="body2" noWrap>
+                    {row.paymentRequestTo.name}
+                  </Typography>
+                }
+                secondary={
+                  <Typography variant="caption" noWrap>
+                    {row.paymentRequestTo.email}
+                  </Typography>
+                }
+              />
+            </Stack>
+          </TableCell>
+        )}
+
+        <TableCell>{fCurrency(row.totalAmount)}</TableCell>
+
+        <TableCell>
+          <Label
+            variant="soft"
+            color={
+              (row.status === 'paid' && 'success') ||
+              (row.status === 'pending' && 'warning') ||
+              (row.status === 'overdue' && 'error') ||
+              'default'
+            }
+          >
+            {row.status}
+          </Label>
         </TableCell>
 
         <TableCell>
@@ -97,24 +115,8 @@ export function InvoiceTableRow({
           />
         </TableCell>
 
-        <TableCell>{fCurrency(row.totalAmount)}</TableCell>
-
-        <TableCell>
-          <Label
-            variant="soft"
-            color={
-              (row.status === 'paid' && 'success') ||
-              (row.status === 'pending' && 'warning') ||
-              (row.status === 'overdue' && 'error') ||
-              'default'
-            }
-          >
-            {row.status}
-          </Label>
-        </TableCell>
-
         <TableCell align="right" sx={{ px: 1 }}>
-          {isAdmin && (
+          {isAdminView && (
             <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
               <Iconify icon="eva:more-vertical-fill" />
             </IconButton>

@@ -50,7 +50,7 @@ export function NextEvents({ title, list, ...other }) {
 function Item({ item, sx, ...other }) {
   const { participants } = item;
   const participantsCount = Object.entries(participants || {}).length || 0;
-  const percent = (participantsCount / 15) * 100;
+  const percent = (participantsCount / 20) * 100;
 
   const clickPopover = usePopover();
   const { user } = useAuthContext();

@@ -22,9 +22,15 @@ export function AppTopAnalytics({ title, subheader, list, isGoal, ...other }) {
           flexDirection: 'column',
         }}
       >
-        {list.map((item, index) => (
-          <Item key={index} item={item} index={index} isGoal={isGoal} />
-        ))}
+        {list.map(
+          (item, index) =>
+            (isGoal && item.goals > 0 && (
+              <Item key={index} item={item} index={index} isGoal={isGoal} />
+            )) ||
+            (!isGoal && item.assists > 0 && (
+              <Item key={index} item={item} index={index} isGoal={isGoal} />
+            ))
+        )}
       </Box>
     </Card>
   );

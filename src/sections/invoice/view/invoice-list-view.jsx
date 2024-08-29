@@ -56,11 +56,11 @@ import { InvoiceTableFiltersResult } from '../invoice-table-filters-result';
 function get_table_head(t) {
   return [
     { id: 'paymentRequestNumber', label: t('user') },
+    { id: 'price', label: t('amount') },
+    { id: 'status', label: t('status') },
     { id: 'concept', label: t('concept') },
     { id: 'createDate', label: t('creation') },
     { id: 'dueDate', label: t('due') },
-    { id: 'price', label: t('amount') },
-    { id: 'status', label: t('status') },
     { id: '' },
   ];
 }
@@ -291,7 +291,10 @@ export function InvoiceListView() {
             onChange={handleFilterStatus}
             sx={{
               px: 2.5,
-              boxShadow: `inset 0 -2px 0 0 ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
+              boxShadow: `inset 0 -2px 0 0 ${varAlpha(
+                theme.vars.palette.grey['500Channel'],
+                0.08
+              )}`,
             }}
           >
             {TABS.map((tab) => (
@@ -402,7 +405,7 @@ export function InvoiceListView() {
                         onViewRow={() => handleViewRow(row.id)}
                         onEditRow={() => handleEditRow(row.id)}
                         onDeleteRow={() => handleDeleteRow(row.id)}
-                        isAdmin
+                        isAdminView
                       />
                     ))}
 
