@@ -53,12 +53,11 @@ import { InvoiceTableFiltersResult } from '../invoice-table-filters-result';
 
 function get_table_head(t) {
   return [
-    { id: 'paymentRequestNumber', label: t('user') },
+    { id: 'price', label: t('amount') },
+    { id: 'status', label: t('status') },
     { id: 'concept', label: t('concept') },
     { id: 'createDate', label: t('creation') },
     { id: 'dueDate', label: t('due') },
-    { id: 'price', label: t('amount') },
-    { id: 'status', label: t('status') },
     { id: '' },
   ];
 }
@@ -331,7 +330,7 @@ export function UserInvoiceListView() {
               <TableHeadCustom
                 order={table.order}
                 orderBy={table.orderBy}
-                headLabel={get_table_head(t)}
+                headLabel={get_table_head(t, false)}
                 rowCount={dataFiltered.length}
                 numSelected={table.selected.length}
                 onSort={table.onSort}

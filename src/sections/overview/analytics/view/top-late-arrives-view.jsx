@@ -1,6 +1,8 @@
 import Grid from '@mui/material/Unstable_Grid2';
 import { Box, Stack, Typography } from '@mui/material';
 
+import { orderBy } from 'src/utils/helper';
+
 import { useGetLateArrives } from 'src/actions/user';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -32,14 +34,14 @@ export function TopLateArrivesView() {
         <Grid container spacing={3}>
           <Grid xs={12} md={6}>
             <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-              <EcommerceWelcome title="Masculino" />
-              <LateArriveAnalytics title="Goleadores Equipo Masculino" list={mascLateArrives} />
+              <EcommerceWelcome title="Masculino" imgIndex={20} />
+              <LateArriveAnalytics list={orderBy(mascLateArrives, ['rating'], ['desc'])} />
             </Box>
           </Grid>
           <Grid xs={12} md={6}>
             <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-              <EcommerceWelcome title="Femenino" />
-              <LateArriveAnalytics title="Asistidores Equipo Masculino" list={femLateArrives} />
+              <EcommerceWelcome title="Femenino" imgIndex={6} />
+              <LateArriveAnalytics list={orderBy(femLateArrives, ['rating'], ['desc'])} />
             </Box>
           </Grid>
         </Grid>
