@@ -103,7 +103,6 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const handleChangeIsParticipating = useCallback(
     async (event) => {
-      toast.success('Participate success!');
       try {
         setIsParticipating(event.target.checked);
         await participateEvent(`${currentEvent?.id}`, event.target.checked);
