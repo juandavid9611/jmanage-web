@@ -160,6 +160,7 @@ export function CalendarView() {
               select={onSelectRange}
               eventClick={onClickEvent}
               aspectRatio={3}
+              firstDay={1}
               eventDrop={(arg) => {
                 onDropEvent(arg, updateEvent);
               }}
