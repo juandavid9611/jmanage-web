@@ -81,3 +81,20 @@ export async function requestPaymentRequestApproval(id, file_names) {
   mutate(URL);
   return res.data;
 }
+
+export async function generatePresignedUrls(paymentRequestId, files) {
+  try {
+    files = files.reduce((acc, file) => {
+      acc.push({ file_name: file.name, content_type: file.type });
+      return acc;
+    }, []);
+    const res = await axiosInstance.post(
+      `${URL}/${paymentRequestId}/generate-presigned-urls`,
+      files
+    );
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch:', error);
+    throw error;
+  }
+}

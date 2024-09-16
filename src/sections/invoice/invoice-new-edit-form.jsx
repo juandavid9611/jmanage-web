@@ -26,10 +26,11 @@ import { today, fIsAfter, fDateTime } from 'src/utils/format-time';
 
 import { TEAM_GROUPS } from 'src/_mock';
 import { useGetUsers } from 'src/actions/user';
-import { uploadFileToS3, generatePresignedUrls } from 'src/actions/files';
+import { uploadFileToS3 } from 'src/actions/files';
 import {
   updatePaymentRequest,
   createPaymentRequests,
+  generatePresignedUrls,
   requestPaymentRequestApproval,
 } from 'src/actions/paymentRequest';
 
@@ -140,7 +141,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       // Step 4: Wait for all uploads to complete
       try {
         // Step 2: Request pre-signed URLs for each file from the backend
-        const response = await generatePresignedUrls(values.images);
+        const response = await generatePresignedUrls(values.id, values.images);
 
         // Step 3: Upload each file to its respective pre-signed URL
         const uploadPromises = values.images.map((file) => {
