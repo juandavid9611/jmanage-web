@@ -44,7 +44,7 @@ export const navData = [
    * Overview
    */
   {
-    subheader: 'SportsManage 6.0.0',
+    subheader: 'SportsManage 6.1.2',
     items: [
       { title: 'App', path: paths.dashboard.root, icon: ICONS.dashboard, roles: ['admin', 'user'] },
       {

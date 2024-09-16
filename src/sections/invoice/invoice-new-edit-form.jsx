@@ -68,8 +68,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const slides = currentInvoice?.images.map((slide) => ({ src: slide })) || [];
-  console.log(slides);
+  const slides = currentInvoice?.images?.map((slide) => ({ src: slide })) || [];
   const {
     selected: selectedImage,
     open: openLightbox,
@@ -176,7 +175,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
     setValue('images', [], { shouldValidate: true });
   }, [setValue]);
 
-  const renderGallery = (
+  const renderGallery = currentInvoice?.images && (
     <>
       <Box
         gap={1}
