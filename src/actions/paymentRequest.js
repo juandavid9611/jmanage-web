@@ -75,3 +75,9 @@ export async function deletePaymentRequest(id) {
   mutate(URL);
   return res.data;
 }
+
+export async function requestPaymentRequestApproval(id, file_names) {
+  const res = await axiosInstance.post(`${URL}/${id}/request_approval`, file_names);
+  mutate(URL);
+  return res.data;
+}

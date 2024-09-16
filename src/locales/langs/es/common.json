@@ -75,6 +75,7 @@
   "pending": "Pendiente",
   "overdue": "Vencido",
   "cancelled": "Cancelado",
+  "approval_pending": "Aprobando",
   "concept": "Concepto",
   "creation": "Creación",
   "due": "Vencimiento",

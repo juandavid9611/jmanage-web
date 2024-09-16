@@ -81,6 +81,7 @@
   "pending": "Pending",
   "overdue": "Overdue",
   "cancelled": "Cancelled",
+  "approval_pending": "Approval Pending",
   "concept": "Concept",
   "creation": "Creation",
   "due": "Due",

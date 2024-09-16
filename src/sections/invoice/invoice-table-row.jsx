@@ -1,3 +1,4 @@
+import { useTheme } from '@emotion/react';
 import { useTranslation } from 'react-i18next';
 
 import Stack from '@mui/material/Stack';
@@ -36,6 +37,8 @@ export function InvoiceTableRow({
 }) {
   const { t } = useTranslation();
   const confirm = useBoolean();
+
+  const theme = useTheme();
 
   const popover = usePopover();
 
@@ -83,10 +86,11 @@ export function InvoiceTableRow({
               (row.status === 'paid' && 'success') ||
               (row.status === 'pending' && 'warning') ||
               (row.status === 'overdue' && 'error') ||
+              (row.status === 'approval_pending' && 'secondary') ||
               'default'
             }
           >
-            {row.status}
+            {t(row.status)}
           </Label>
         </TableCell>
 
@@ -115,10 +119,14 @@ export function InvoiceTableRow({
           />
         </TableCell>
 
-        <TableCell align="right" sx={{ px: 1 }}>
-          {isAdminView && (
+        <TableCell align="right" sx={{ px: 0 }}>
+          {isAdminView ? (
             <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
               <Iconify icon="eva:more-vertical-fill" />
+            </IconButton>
+          ) : (
+            <IconButton onClick={onEditRow} sx={{ px: 2.5 }}>
+              <Iconify icon="lets-icons:upload-fill" />
             </IconButton>
           )}
         </TableCell>

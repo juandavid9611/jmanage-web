@@ -127,10 +127,10 @@ export function UserInvoiceListView() {
       count: tableData.length,
     },
     {
-      value: 'paid',
-      label: 'Paid',
-      color: 'success',
-      count: getInvoiceLength('paid'),
+      value: 'approval_pending',
+      label: 'Approving',
+      color: 'secondary',
+      count: getInvoiceLength('approval_pending'),
     },
     {
       value: 'pending',
@@ -145,10 +145,10 @@ export function UserInvoiceListView() {
       count: getInvoiceLength('overdue'),
     },
     {
-      value: 'draft',
-      label: 'Draft',
-      color: 'default',
-      count: getInvoiceLength('draft'),
+      value: 'paid',
+      label: 'Paid',
+      color: 'success',
+      count: getInvoiceLength('paid'),
     },
   ];
 
@@ -193,23 +193,13 @@ export function UserInvoiceListView() {
             sx={{ py: 2 }}
           >
             <InvoiceAnalytic
-              title={t('total')}
-              total={tableData.length}
-              percent={100}
-              price={sumBy(tableData, (invoice) => invoice.totalAmount)}
-              icon="solar:bill-list-bold-duotone"
-              color={theme.vars.palette.info.main}
+              title={t('overdue')}
+              total={getInvoiceLength('overdue')}
+              percent={getPercentByStatus('overdue')}
+              price={getTotalAmount('overdue')}
+              icon="solar:bell-bing-bold-duotone"
+              color={theme.vars.palette.error.main}
             />
-
-            <InvoiceAnalytic
-              title={t('paid')}
-              total={getInvoiceLength('paid')}
-              percent={getPercentByStatus('paid')}
-              price={getTotalAmount('paid')}
-              icon="solar:file-check-bold-duotone"
-              color={theme.vars.palette.success.main}
-            />
-
             <InvoiceAnalytic
               title={t('pending')}
               total={getInvoiceLength('pending')}
@@ -220,21 +210,28 @@ export function UserInvoiceListView() {
             />
 
             <InvoiceAnalytic
-              title={t('overdue')}
-              total={getInvoiceLength('overdue')}
-              percent={getPercentByStatus('overdue')}
-              price={getTotalAmount('overdue')}
-              icon="solar:bell-bing-bold-duotone"
-              color={theme.vars.palette.error.main}
-            />
-
-            <InvoiceAnalytic
-              title={t('cancelled')}
-              total={getInvoiceLength('cancelled')}
-              percent={getPercentByStatus('cancelled')}
-              price={getTotalAmount('cancelled')}
+              title={t('approval_pending')}
+              total={getInvoiceLength('approval_pending')}
+              percent={getPercentByStatus('approval_pending')}
+              price={getTotalAmount('approval_pending')}
               icon="solar:file-corrupted-bold-duotone"
-              color={theme.vars.palette.text.secondary}
+              color={theme.palette.secondary.main}
+            />
+            <InvoiceAnalytic
+              title={t('paid')}
+              total={getInvoiceLength('paid')}
+              percent={getPercentByStatus('paid')}
+              price={getTotalAmount('paid')}
+              icon="solar:file-check-bold-duotone"
+              color={theme.vars.palette.success.main}
+            />
+            <InvoiceAnalytic
+              title={t('total')}
+              total={tableData.length}
+              percent={100}
+              price={sumBy(tableData, (invoice) => invoice.totalAmount)}
+              icon="solar:bill-list-bold-duotone"
+              color={theme.vars.palette.info.main}
             />
           </Stack>
         </Scrollbar>
