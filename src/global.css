@@ -40,6 +40,15 @@
 /* scrollbar */
 @import './components/scrollbar/styles.css';
 
+/* lightbox */
+@import './components/lightbox/styles.css';
+
+/* image */
+@import './components/image/styles.css';
+
+/* chart */
+@import './components/chart/styles.css';
+
 /** **************************************
 * Baseline
 *************************************** */

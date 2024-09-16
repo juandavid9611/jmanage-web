@@ -34,4 +34,5 @@ export const endpoints = {
   users: '/users',
   calendar: '/calendar',
   paymentRquests: '/payment_requests',
+  files: '/files',
 };

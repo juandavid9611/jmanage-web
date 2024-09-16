@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Chip from '@mui/material/Chip';
 
@@ -9,6 +10,7 @@ import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-r
 // ----------------------------------------------------------------------
 
 export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, sx }) {
+  const { t } = useTranslation();
   const handleRemoveKeyword = useCallback(() => {
     onResetPage();
     filters.setState({ name: '' });
@@ -45,7 +47,7 @@ export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, 
       <FiltersBlock label="Status:" isShow={filters.state.status !== 'all'}>
         <Chip
           {...chipProps}
-          label={filters.state.status}
+          label={t(filters.state.status)}
           onDelete={handleRemoveStatus}
           sx={{ textTransform: 'capitalize' }}
         />

@@ -127,10 +127,10 @@ export function InvoiceListView() {
       count: tableData.length,
     },
     {
-      value: 'paid',
-      label: 'Paid',
-      color: 'success',
-      count: getInvoiceLength('paid'),
+      value: 'approval_pending',
+      label: 'Approving',
+      color: 'secondary',
+      count: getInvoiceLength('approval_pending'),
     },
     {
       value: 'pending',
@@ -145,10 +145,10 @@ export function InvoiceListView() {
       count: getInvoiceLength('overdue'),
     },
     {
-      value: 'draft',
-      label: 'Draft',
-      color: 'default',
-      count: getInvoiceLength('draft'),
+      value: 'paid',
+      label: 'Paid',
+      color: 'success',
+      count: getInvoiceLength('paid'),
     },
   ];
 
@@ -247,12 +247,12 @@ export function InvoiceListView() {
               />
 
               <InvoiceAnalytic
-                title={t('paid')}
-                total={getInvoiceLength('paid')}
-                percent={getPercentByStatus('paid')}
-                price={getTotalAmount('paid')}
-                icon="solar:file-check-bold-duotone"
-                color={theme.vars.palette.success.main}
+                title={t('approval_pending')}
+                total={getInvoiceLength('approval_pending')}
+                percent={getPercentByStatus('approval_pending')}
+                price={getTotalAmount('approval_pending')}
+                icon="solar:file-corrupted-bold-duotone"
+                color={theme.palette.secondary.main}
               />
 
               <InvoiceAnalytic
@@ -274,12 +274,12 @@ export function InvoiceListView() {
               />
 
               <InvoiceAnalytic
-                title={t('cancelled')}
-                total={getInvoiceLength('cancelled')}
-                percent={getPercentByStatus('cancelled')}
-                price={getTotalAmount('cancelled')}
-                icon="solar:file-corrupted-bold-duotone"
-                color={theme.vars.palette.text.secondary}
+                title={t('paid')}
+                total={getInvoiceLength('paid')}
+                percent={getPercentByStatus('paid')}
+                price={getTotalAmount('paid')}
+                icon="solar:file-check-bold-duotone"
+                color={theme.vars.palette.success.main}
               />
             </Stack>
           </Scrollbar>

@@ -8,7 +8,7 @@ import { Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export function InvoiceNewEditStatusDate() {
+export function InvoiceNewEditStatusDate({ disableFields }) {
   const { t } = useTranslation();
   const { watch } = useFormContext();
 
@@ -27,16 +27,22 @@ export function InvoiceNewEditStatusDate() {
         value={`PR-${values.paymentRequestId?.slice(-6) || '1996JD'}`}
       />
 
-      <Field.Select fullWidth name="status" label={t('status')} InputLabelProps={{ shrink: true }}>
-        {['paid', 'pending', 'overdue', 'draft'].map((option) => (
+      <Field.Select
+        disabled={disableFields}
+        fullWidth
+        name="status"
+        label={t('status')}
+        InputLabelProps={{ shrink: true }}
+      >
+        {['paid', 'pending', 'overdue', 'approval_pending'].map((option) => (
           <MenuItem key={option} value={option} sx={{ textTransform: 'capitalize' }}>
             {t(option)}
           </MenuItem>
         ))}
       </Field.Select>
 
-      <Field.DatePicker name="createDate" label={t('create_date')} />
-      <Field.DatePicker name="dueDate" label={t('due_date')} />
+      <Field.DatePicker name="createDate" label={t('create_date')} disabled={disableFields} />
+      <Field.DatePicker name="dueDate" label={t('due_date')} disabled={disableFields} />
     </Stack>
   );
 }
