@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
+import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -203,11 +204,20 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
               <Field.Text name="city" label={t('city')} />
               <Field.Text name="address" label={t('address')} />
 
-              <Field.Select name="group" label={t('group')}>
-                {TEAM_GROUPS.map((group) => (
-                  <option key={group.label} value={group.value}>
-                    {t(group.label)}
-                  </option>
+              <Field.Select
+                fullWidth
+                name="group"
+                label={t('group')}
+                InputLabelProps={{ shrink: true }}
+              >
+                {TEAM_GROUPS.map((option) => (
+                  <MenuItem
+                    key={option.label}
+                    value={option.value}
+                    sx={{ textTransform: 'capitalize' }}
+                  >
+                    {t(option.label)}
+                  </MenuItem>
                 ))}
               </Field.Select>
 

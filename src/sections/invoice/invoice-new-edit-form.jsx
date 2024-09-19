@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import { LoadingButton } from '@mui/lab';
+import MenuItem from '@mui/material/MenuItem';
 import {
   Box,
   Chip,
@@ -89,7 +90,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       createDate: currentInvoice?.createDate || today(),
       dueDate: currentInvoice?.dueDate || null,
       status: currentInvoice?.status || 'pending',
-      category: currentInvoice?.category || 'yellow_card',
+      category: currentInvoice?.category || 'Mensualidad',
       paymentRequestTo: currentInvoice?.paymentRequestTo ? [currentInvoice.paymentRequestTo] : [],
       group: currentInvoice?.group || 'male',
       userPrice: currentInvoice?.totalAmount || 0,
@@ -243,30 +244,32 @@ export function InvoiceNewEditForm({ currentInvoice }) {
                 <Field.Text name="description" label={t('description')} disabled={isUser} />
 
                 <Field.Select
-                  native
                   name="category"
                   label={t('category')}
                   InputLabelProps={{ shrink: true }}
                   disabled={isUser}
                 >
                   {['Mensualidad', 'Tarjetas'].map((category) => (
-                    <option key={category} value={category}>
+                    <MenuItem key={category} value={category} sx={{ textTransform: 'capitalize' }}>
                       {t(category)}
-                    </option>
+                    </MenuItem>
                   ))}
                 </Field.Select>
 
                 <Field.Select
-                  native
                   name="group"
-                  label="Grupo"
+                  label={t('group')}
                   InputLabelProps={{ shrink: true }}
                   disabled={isUser}
                 >
-                  {TEAM_GROUPS.map((group) => (
-                    <option key={group.label} value={group.value}>
-                      {t(group.label)}
-                    </option>
+                  {TEAM_GROUPS.map((option) => (
+                    <MenuItem
+                      key={option.label}
+                      value={option.value}
+                      sx={{ textTransform: 'capitalize' }}
+                    >
+                      {t(option.label)}
+                    </MenuItem>
                   ))}
                 </Field.Select>
               </Box>
