@@ -67,6 +67,7 @@ export async function updatePaymentRequest(id, paymentRequestData) {
   paymentRequestData.id = id;
   const res = await axiosInstance.put(`${URL}/${id}`, paymentRequestData);
   mutate(URL);
+  mutate(`${URL}/${id}`);
   return res;
 }
 
@@ -79,6 +80,7 @@ export async function deletePaymentRequest(id) {
 export async function requestPaymentRequestApproval(id, file_names) {
   const res = await axiosInstance.post(`${URL}/${id}/request_approval`, file_names);
   mutate(URL);
+  mutate(`${URL}/${id}`);
   return res.data;
 }
 

@@ -19,12 +19,14 @@ export const signInWithPassword = async ({ username, password }) => {
 /** **************************************
  * Sign up
  *************************************** */
-export const signUp = async ({ username, password, firstName, lastName }) => {
-  await _signUp({
+export const signUp = async ({ username, password, fullName }) => {
+  username.toLowerCase();
+  const response = await _signUp({
     username,
     password,
-    options: { userAttributes: { email: username, given_name: firstName, family_name: lastName } },
+    options: { userAttributes: { email: username, name: fullName, 'custom:role': 'user' } },
   });
+  return response;
 };
 
 /** **************************************

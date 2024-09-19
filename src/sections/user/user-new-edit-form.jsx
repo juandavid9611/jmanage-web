@@ -1,6 +1,6 @@
 import { z as zod } from 'zod';
-import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -17,7 +17,8 @@ import { useRouter } from 'src/routes/hooks';
 import { fData } from 'src/utils/format-number';
 
 import { TEAM_GROUPS } from 'src/_mock';
-import { createUser, updateUser } from 'src/actions/user';
+import { uploadFileToS3 } from 'src/actions/files';
+import { updateUser, updateAvatarUrl, generatePresignedUrl } from 'src/actions/user';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -26,47 +27,56 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 // // ----------------------------------------------------------------------
 
 export const NewUserSchema = zod.object({
-  name: zod.string().min(1, { message: 'Name is required!' }),
+  name: zod.string().min(1, { message: 'Nombre requerido!' }),
+  identityCardNumber: zod.string().min(1, { message: 'Número de documento requerido!' }),
   email: zod
     .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
-  phoneNumber: zod.string().min(1, { message: 'Phone Number is required!' }),
-  address: zod.string().min(1, { message: 'Address is required!' }),
-  group: zod.string().min(1, { message: 'Group is required!' }),
-  company: zod
-    .string()
-    .min(2, { message: 'company_too_short' })
-    .max(50, { message: 'company_too_long' }),
-  state: zod.string().min(1, { message: 'State is required!' }),
-  city: zod.string().min(1, { message: 'City is required!' }),
+    .min(1, { message: 'Correo requerido!' })
+    .email({ message: 'Dirección de correo invalida!' }),
+  phoneNumber: zod.string().min(1, { message: 'Número de teléfono requerido!' }),
   country: schemaHelper.objectOrNull({
-    message: { required_error: 'Country is required!' },
+    message: { required_error: 'Pais requerido!' },
   }),
-  role: zod.string().min(1, { message: 'Role is required!' }),
-  zipCode: zod.string().min(1, { message: 'Zip code is required!' }),
+  city: zod.string().min(1, { message: 'Ciudad requerida!' }),
+  address: zod.string().min(1, { message: 'Dirección requerida!' }),
+  group: zod.string().min(1, { message: 'Grupo requerido!' }),
+  rh: zod.string().min(1, { message: 'R.H requerido!' }),
+  emergencyContactName: zod
+    .string()
+    .min(1, { message: 'Nombre de contacto de emergencia requerido!' }),
+  emergencyContactPhoneNumber: zod
+    .string()
+    .min(1, { message: 'Número de teléfono contacto de emergencia requerido!' }),
+  emergencyContactRelationship: zod
+    .string()
+    .min(1, { message: 'Relación contacto de emergencia requerida!' }),
+  eps: zod.string().min(1, { message: 'Eps requerida!' }),
+  avatarUrl: zod.string().nullable(),
 });
 
-export function UserNewEditForm({ currentUser }) {
+export function UserNewEditForm({ currentUser, isAdmin }) {
   const router = useRouter();
   const { t } = useTranslation();
 
   const defaultValues = useMemo(
     () => ({
+      id: currentUser?.id || '',
       name: currentUser?.name || '',
-      role: currentUser?.role || '',
+      identityCardNumber: currentUser?.identityCardNumber || '',
       email: currentUser?.email || '',
-      city: currentUser?.city || 'Bogota',
-      state: currentUser?.state || 'Bogota',
+      phoneNumber: currentUser?.phoneNumber || '',
       country: currentUser?.country || 'Colombia',
-      status: currentUser?.status || '',
+      city: currentUser?.city || 'Bogota',
       address: currentUser?.address || '',
       group: currentUser?.group || 'male',
-      zipCode: currentUser?.zipCode || '111111',
-      company: currentUser?.company || 'Vittoria CD',
+      rh: currentUser?.rh || '',
+      eps: currentUser?.eps || '',
+      emergencyContactName: currentUser?.emergencyContactName || '',
+      emergencyContactPhoneNumber: currentUser?.emergencyContactPhoneNumber || '',
+      emergencyContactRelationship: currentUser?.emergencyContactRelationship || '',
+      status: currentUser?.status || 'pending',
+      confirmationStatus: currentUser?.confirmationStatus || 'pending',
       avatarUrl: currentUser?.avatarUrl || null,
-      phoneNumber: currentUser?.phoneNumber || '',
-      isVerified: currentUser?.isVerified || true,
     }),
     [currentUser]
   );
@@ -80,6 +90,7 @@ export function UserNewEditForm({ currentUser }) {
   const {
     reset,
     watch,
+    setValue,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
@@ -89,20 +100,38 @@ export function UserNewEditForm({ currentUser }) {
   const onSubmit = handleSubmit(async (data) => {
     data.email = data.email.toLowerCase();
     try {
-      if (currentUser) {
-        data.status = currentUser.status;
-        await updateUser(currentUser.id, data);
-        toast.success('Update success!');
+      data.status = currentUser.status;
+      await updateUser(currentUser.id, data);
+      toast.success('Update success!');
+      if (isAdmin) {
+        router.push(paths.dashboard.admin.user.list);
       } else {
-        data.status = 'pending';
-        await createUser(data);
-        toast.success('Create success!');
+        router.push(paths.dashboard.root);
       }
     } catch (error) {
       toast.error(error.message);
     }
-    router.push(paths.dashboard.admin.user.list);
   });
+
+  const handleDropAvatar = useCallback(
+    async (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      const response = await generatePresignedUrl(values.id, file);
+      const getPresignedUrl = response.urls.get_presigned_url;
+      const putPresignedUrl = response.urls.put_presigned_url;
+      const fileKey = response.urls.key;
+      const uploadFilePromise = uploadFileToS3(file, putPresignedUrl);
+      const updateAvatarUrlPromise = await updateAvatarUrl(values.id, fileKey);
+      const allPromises = Promise.all([uploadFilePromise, updateAvatarUrlPromise]);
+      toast.promise(allPromises, {
+        loading: 'Loading...',
+        success: () => 'All files uploaded successfully',
+        error: 'File upload failed',
+      });
+      setValue('avatarUrl', getPresignedUrl);
+    },
+    [setValue, values.id]
+  );
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
@@ -112,13 +141,15 @@ export function UserNewEditForm({ currentUser }) {
             {currentUser && (
               <Label
                 color={
-                  (values.status === 'active' && 'success') ||
-                  (values.status === 'banned' && 'error') ||
+                  (values.confirmationStatus === 'confirmed' && 'success') ||
+                  (values.confirmationStatus === 'inactive' && 'error') ||
                   'warning'
                 }
                 sx={{ position: 'absolute', top: 24, right: 24 }}
               >
-                {values.status}
+                {values.confirmationStatus === 'confirmed' && t('active')}
+                {values.confirmationStatus === 'inactived' && t('inactive')}
+                {values.confirmationStatus === 'pending' && t('pending')}
               </Label>
             )}
 
@@ -126,6 +157,7 @@ export function UserNewEditForm({ currentUser }) {
               <Field.UploadAvatar
                 name="avatarUrl"
                 maxSize={3145728}
+                onDrop={handleDropAvatar}
                 helperText={
                   <Typography
                     variant="caption"
@@ -147,7 +179,7 @@ export function UserNewEditForm({ currentUser }) {
         </Grid>
 
         <Grid xs={12} md={8}>
-          <Card sx={{ p: 3 }}>
+          <Card spacing={3} sx={{ p: 3 }}>
             <Box
               rowGap={3}
               columnGap={2}
@@ -158,8 +190,18 @@ export function UserNewEditForm({ currentUser }) {
               }}
             >
               <Field.Text name="name" label={t('full_name')} />
-              <Field.Text name="email" label={t('email_address')} />
+              <Field.Text name="identityCardNumber" label={t('identity_card')} />
+              <Field.Text name="email" label={t('email_address')} disabled />
               <Field.Text name="phoneNumber" label={t('phone_number')} />
+
+              <Field.CountrySelect
+                fullWidth
+                name="country"
+                label="Country"
+                placeholder="Choose a country"
+              />
+              <Field.Text name="city" label={t('city')} />
+              <Field.Text name="address" label={t('address')} />
 
               <Field.Select name="group" label={t('group')}>
                 {TEAM_GROUPS.map((group) => (
@@ -169,18 +211,26 @@ export function UserNewEditForm({ currentUser }) {
                 ))}
               </Field.Select>
 
-              <Field.CountrySelect
-                fullWidth
-                name="country"
-                label="Country"
-                placeholder="Choose a country"
-              />
-              <Field.Text name="state" label={t('state_region')} />
-              <Field.Text name="city" label={t('city')} />
-              <Field.Text name="address" label={t('address')} />
-              <Field.Text name="zipCode" label={t('zip_code')} />
-              <Field.Text name="company" label={t('company')} />
-              <Field.Text name="role" label={t('role')} />
+              <Field.Text name="rh" label={t('rh')} />
+              <Field.Text name="eps" label={t('eps')} />
+            </Box>
+
+            <Stack spacing={3} px={3} py={3}>
+              <Typography variant="subtitle2">Contacto de emergencia</Typography>
+            </Stack>
+
+            <Box
+              rowGap={3}
+              columnGap={2}
+              display="grid"
+              gridTemplateColumns={{
+                xs: 'repeat(1, 1fr)',
+                sm: 'repeat(2, 1fr)',
+              }}
+            >
+              <Field.Text name="emergencyContactName" label={t('name')} />
+              <Field.Text name="emergencyContactPhoneNumber" label={t('phone_number')} />
+              <Field.Text name="emergencyContactRelationship" label={t('relationship')} />
             </Box>
 
             <Stack alignItems="flex-end" sx={{ mt: 3 }}>

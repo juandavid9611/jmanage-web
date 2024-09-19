@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { paths } from 'src/routes/paths';
 
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -8,20 +10,24 @@ import { UserNewEditForm } from '../user-new-edit-form';
 
 // ----------------------------------------------------------------------
 
-export function UserCreateView() {
+export function OwnUserEditView({ user: currentUser }) {
+  const { t } = useTranslation();
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Create a new user"
+        heading="Tu Perfil"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'User', href: paths.dashboard.admin.user.list },
-          { name: 'New user' },
+          {
+            name: t('app'),
+            href: paths.dashboard.root,
+          },
+          { name: currentUser?.name },
         ]}
-        sx={{ mb: { xs: 3, md: 5 } }}
+        sx={{
+          mb: { xs: 3, md: 5 },
+        }}
       />
-
-      <UserNewEditForm />
+      <UserNewEditForm currentUser={currentUser} />
     </DashboardContent>
   );
 }

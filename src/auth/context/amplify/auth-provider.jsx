@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
           delete axios.defaults.headers.common.Authorization;
           return;
         }
-        setState({ user: { ...authSession, ...userAttributes }, loading: false });
+        setState({ user: { ...authSession, ...userAttributes, ...dbUser }, loading: false });
       } else {
         setState({ user: null, loading: false });
         delete axios.defaults.headers.common.Authorization;
@@ -90,6 +90,7 @@ export function AuthProvider({ children }) {
             displayName: state.user?.name,
             role: state.user?.['custom:role'],
             group: state.user?.group,
+            photoURL: state.user?.avatarUrl,
           }
         : null,
       checkUserSession,

@@ -172,5 +172,11 @@
   "images": "Imágenes",
   "update": "Actualizar",
   "send": "Enviar",
-  "user_invoices": "Cobros del usuario"
+  "user_invoices": "Cobros del usuario",
+  "identity_card": "Número de documento",
+  "rh": "RH",
+  "eps": "EPS",
+  "relationship": "Parentesco",
+  "active": "Activo",
+  "inactive": "Inactivo"
 }
