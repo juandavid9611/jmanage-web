@@ -20,7 +20,7 @@ export const signInWithPassword = async ({ username, password }) => {
  * Sign up
  *************************************** */
 export const signUp = async ({ username, password, fullName }) => {
-  username.toLowerCase();
+  username = username.toLowerCase();
   const response = await _signUp({
     username,
     password,
