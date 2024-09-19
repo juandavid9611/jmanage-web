@@ -31,7 +31,7 @@ export function UserEditView({ user: currentUser }) {
           mb: { xs: 3, md: 5 },
         }}
       />
-      <UserNewEditForm currentUser={currentUser} />
+      <UserNewEditForm currentUser={currentUser} isAdmin />
     </DashboardContent>
   );
 }

@@ -12,6 +12,8 @@ import { varAlpha, stylesMode } from 'src/theme/styles';
 import { bulletColor } from 'src/components/nav-section';
 import { useSettingsContext } from 'src/components/settings';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { Main } from './main';
 import { NavMobile } from './nav-mobile';
 import { layoutClasses } from '../classes';
@@ -44,6 +46,8 @@ export function DashboardLayout({ sx, children, data }) {
 
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
 
+  const { user } = useAuthContext();
+
   return (
     <>
       <NavMobile
@@ -68,7 +72,7 @@ export function DashboardLayout({ sx, children, data }) {
                 { value: 'es', label: 'Spanish', countryCode: 'CO' },
                 { value: 'en', label: 'English', countryCode: 'GB' },
               ],
-              account: _account,
+              account: _account(user.id),
               contacts: _contacts,
               workspaces: _workspaces,
               notifications: _notifications,

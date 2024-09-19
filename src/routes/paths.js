@@ -32,7 +32,6 @@ export const paths = {
     admin: {
       user: {
         list: `${ROOTS.DASHBOARD}/user`,
-        new: `${ROOTS.DASHBOARD}/user/new`,
         edit: (id) => `${ROOTS.DASHBOARD}/user/${id}/edit`,
       },
       invoice: {
@@ -42,6 +41,7 @@ export const paths = {
       },
     },
     user: {
+      ownEdit: (id) => `${ROOTS.DASHBOARD}/user/${id}/own-edit`,
       invoice: {
         invoiceList: `${ROOTS.DASHBOARD}/invoice/user-list`,
       },

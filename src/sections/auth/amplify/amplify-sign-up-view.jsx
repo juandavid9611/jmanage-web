@@ -17,6 +17,8 @@ import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { createUser } from 'src/actions/user';
+
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
@@ -25,16 +27,17 @@ import { signUp } from 'src/auth/context/amplify';
 // ----------------------------------------------------------------------
 
 export const SignUpSchema = zod.object({
-  firstName: zod.string().min(1, { message: 'First name is required!' }),
-  lastName: zod.string().min(1, { message: 'Last name is required!' }),
+  firstName: zod.string().min(1, { message: 'Nombre requeridos!' }),
+  lastName: zod.string().min(1, { message: 'Apellido requeridos!' }),
   email: zod
     .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
+    .min(1, { message: 'Correo requerido!' })
+    .email({ message: 'Dirección de correo no valida!' }),
   password: zod
     .string()
-    .min(1, { message: 'Password is required!' })
-    .min(6, { message: 'Password must be at least 6 characters!' }),
+    .min(1, { message: 'Contraseña requerida!' })
+    .min(6, { message: 'Contraseña debe tener al menos 6 caracteres!' }),
+  teamCode: zod.literal('vittoria2024sm', { message: 'Código de equipo no válido!' }),
 });
 
 // ----------------------------------------------------------------------
@@ -51,6 +54,7 @@ export function AmplifySignUpView() {
     lastName: '',
     email: '',
     password: '',
+    teamCode: '',
   };
 
   const methods = useForm({
@@ -65,12 +69,18 @@ export function AmplifySignUpView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await signUp({
+      const response = await signUp({
         username: data.email,
         password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        fullName: `${data.firstName.trim()} ${data.lastName.trim()}`,
       });
+
+      console.log('response', response);
+
+      data.id = response.userId;
+      data.name = `${data.firstName} ${data.lastName}`;
+
+      await createUser(data);
 
       const searchParams = new URLSearchParams({ email: data.email }).toString();
 
@@ -85,15 +95,15 @@ export function AmplifySignUpView() {
 
   const renderHead = (
     <Stack spacing={1.5} sx={{ mb: 5 }}>
-      <Typography variant="h5">Get started absolutely free</Typography>
+      <Typography variant="h5">Comienza tu camino de la mano de SportsManage</Typography>
 
       <Stack direction="row" spacing={0.5}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Already have an account?
+          Ya tienes una cuenta?
         </Typography>
 
         <Link component={RouterLink} href={paths.auth.amplify.signIn} variant="subtitle2">
-          Sign in
+          Iniciar sesión
         </Link>
       </Stack>
     </Stack>
@@ -102,16 +112,16 @@ export function AmplifySignUpView() {
   const renderForm = (
     <Stack spacing={3}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Field.Text name="firstName" label="First name" InputLabelProps={{ shrink: true }} />
-        <Field.Text name="lastName" label="Last name" InputLabelProps={{ shrink: true }} />
+        <Field.Text name="firstName" label="Nombre" InputLabelProps={{ shrink: true }} />
+        <Field.Text name="lastName" label="Apellido" InputLabelProps={{ shrink: true }} />
       </Stack>
 
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label="Correo" InputLabelProps={{ shrink: true }} />
 
       <Field.Text
         name="password"
-        label="Password"
-        placeholder="6+ characters"
+        label="Contraseña"
+        placeholder="6+ caracteres"
         type={password.value ? 'text' : 'password'}
         InputLabelProps={{ shrink: true }}
         InputProps={{
@@ -125,6 +135,8 @@ export function AmplifySignUpView() {
         }}
       />
 
+      <Field.Text name="teamCode" label="Codigo de equipo" InputLabelProps={{ shrink: true }} />
+
       <LoadingButton
         fullWidth
         color="inherit"
@@ -132,9 +144,9 @@ export function AmplifySignUpView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Create account..."
+        loadingIndicator="Creando cuenta..."
       >
-        Create account
+        Crear cuenta
       </LoadingButton>
     </Stack>
   );
@@ -149,11 +161,11 @@ export function AmplifySignUpView() {
         color: 'text.secondary',
       }}
     >
-      {'By signing up, I agree to '}
+      {'Creando una cuenta, acetas los '}
       <Link underline="always" color="text.primary">
         Terms of service
       </Link>
-      {' and '}
+      {' y '}
       <Link underline="always" color="text.primary">
         Privacy policy
       </Link>

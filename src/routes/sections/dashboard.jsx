@@ -23,8 +23,8 @@ const InvoiceEditPage = lazy(() => import('src/pages/dashboard/invoice/edit'));
 const UserInvoiceListPage = lazy(() => import('src/pages/dashboard/invoice/user-list'));
 // User
 const UserListPage = lazy(() => import('src/pages/dashboard/user/list'));
-const UserCreatePage = lazy(() => import('src/pages/dashboard/user/new'));
 const UserEditPage = lazy(() => import('src/pages/dashboard/user/edit'));
+const OwnUserEditPage = lazy(() => import('src/pages/dashboard/user/own-edit'));
 // ----------------------------------------------------------------------
 
 const layoutContent = (
@@ -65,8 +65,8 @@ export const dashboardRoutes = [
         children: [
           { element: <UserListPage />, index: true },
           { path: 'list', element: <UserListPage /> },
-          { path: 'new', element: <UserCreatePage /> },
           { path: ':id/edit', element: <UserEditPage /> },
+          { path: ':id/own-edit', element: <OwnUserEditPage /> },
         ],
       },
       {},

@@ -13,7 +13,6 @@ import IconButton from '@mui/material/IconButton';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
-import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
@@ -53,8 +52,8 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 const TABLE_HEAD = [
   { id: 'name', label: 'name' },
   { id: 'phoneNumber', label: 'phone_number', width: 180 },
-  { id: 'company', label: 'company', width: 220 },
-  { id: 'role', label: 'role', width: 180 },
+  { id: 'group', label: 'group', width: 220 },
+  { id: 'eps', label: 'eps', width: 180 },
   { id: 'confirmationStatus', label: 'status', width: 100 },
   { id: '', width: 88 },
 ];
@@ -147,16 +146,6 @@ export function UserListView() {
             { name: t('user'), href: paths.dashboard.admin.user.root },
             { name: t('list') },
           ]}
-          action={
-            <Button
-              component={RouterLink}
-              href={paths.dashboard.admin.user.new}
-              variant="contained"
-              startIcon={<Iconify icon="mingcute:add-line" />}
-            >
-              {t('new_user')}
-            </Button>
-          }
           sx={{
             mb: { xs: 3, md: 5 },
           }}

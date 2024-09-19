@@ -54,6 +54,7 @@ export async function updateUser(id, userData) {
   userData.id = id;
   const res = await axiosInstance.put(`${URL}/${id}`, userData);
   mutate(URL);
+  mutate(`${URL}/${id}`);
   return res.data;
 }
 
@@ -97,6 +98,29 @@ export function useGetLateArrives(userId) {
     [data, error, isLoading, isValidating]
   );
   return memoizedValue;
+}
+
+export async function generatePresignedUrl(userId, file) {
+  try {
+    const files = [];
+    files.push({ file_name: file.name, content_type: file.type });
+    console.log('file', file);
+    const res = await axiosInstance.post(`${URL}/${userId}/generate-presigned-url`, files);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch:', error);
+    throw error;
+  }
+}
+
+export async function updateAvatarUrl(id, avatarUrl) {
+  const data = { avatar_url: avatarUrl };
+  const res = await axiosInstance.put(`${URL}/${id}/avatar`, data);
+  mutate(`${URL}/${id}`, { ...data }, false);
+
+  // Optionally, revalidate afterward if you want to fetch fresh data
+  mutate(`${URL}/${id}`);
+  return res.data;
 }
 
 export function get_top_goals_and_assists(group) {
