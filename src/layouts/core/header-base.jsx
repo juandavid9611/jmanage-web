@@ -154,7 +154,7 @@ export function HeaderBase({
                   variant="contained"
                   rel="noopener"
                   target="_blank"
-                  href={paths.minimalStore}
+                  href="#"
                   sx={{
                     display: 'none',
                     [theme.breakpoints.up(layoutQuery)]: {
