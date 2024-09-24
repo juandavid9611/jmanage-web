@@ -177,10 +177,6 @@ export function InvoiceNewEditForm({ currentInvoice }) {
     setValue('images', [], { shouldValidate: true });
   }, [setValue]);
 
-  console.log('currentInvoice', currentInvoice);
-
-  console.log(currentInvoice?.images);
-
   const renderGallery = currentInvoice?.images.length > 0 && (
     <>
       <Box
