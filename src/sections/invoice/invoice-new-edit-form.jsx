@@ -177,7 +177,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
     setValue('images', [], { shouldValidate: true });
   }, [setValue]);
 
-  const renderGallery = currentInvoice?.images && (
+  const renderGallery = currentInvoice?.images.length > 0 && (
     <>
       <Box
         gap={1}
@@ -389,7 +389,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
               <Divider />
               <Stack spacing={3} sx={{ p: 3 }}>
                 <Typography variant="subtitle2">{t('images')}</Typography>
-                {currentInvoice?.images ? (
+                {currentInvoice?.images.length > 0 ? (
                   <Grid container>
                     <Grid sx={{ mx: 'auto' }}>{renderGallery}</Grid>
                   </Grid>
