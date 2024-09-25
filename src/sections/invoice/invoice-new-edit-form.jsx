@@ -90,7 +90,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       createDate: currentInvoice?.createDate || today(),
       dueDate: currentInvoice?.dueDate || null,
       status: currentInvoice?.status || 'pending',
-      category: currentInvoice?.category || 'Mensualidad',
+      category: currentInvoice?.category || 'Entrenos',
       paymentRequestTo: currentInvoice?.paymentRequestTo ? [currentInvoice.paymentRequestTo] : [],
       group: currentInvoice?.group || 'male',
       userPrice: currentInvoice?.totalAmount || 0,
@@ -249,7 +249,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
                   InputLabelProps={{ shrink: true }}
                   disabled={isUser}
                 >
-                  {['Mensualidad', 'Tarjetas'].map((category) => (
+                  {['Entrenos', 'Sansiones', 'Indumentarias', 'Torneos'].map((category) => (
                     <MenuItem key={category} value={category} sx={{ textTransform: 'capitalize' }}>
                       {t(category)}
                     </MenuItem>
