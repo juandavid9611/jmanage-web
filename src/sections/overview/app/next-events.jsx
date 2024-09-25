@@ -42,7 +42,7 @@ export function NextEvents({ title, list, ...other }) {
         )}
       </Box>
       <Divider sx={{ borderStyle: 'dashed' }} />
-      <Box sx={{ p: 2, typography: 'caption', color: 'text.secondary' }}>Quorum de 15 personas</Box>
+      <Box sx={{ p: 2, typography: 'caption', color: 'text.secondary' }}>Quorum de 22 personas</Box>
     </Card>
   );
 }
