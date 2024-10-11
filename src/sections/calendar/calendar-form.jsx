@@ -202,7 +202,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
         <Box sx={{ flexGrow: 1 }} />
 
         <Button variant="outlined" color="inherit" onClick={onClose}>
-          Cancel
+          Close
         </Button>
 
         {isAdmin && (
