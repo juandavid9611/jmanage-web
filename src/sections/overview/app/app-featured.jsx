@@ -5,8 +5,6 @@ import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
 
-import { varAlpha } from 'src/theme/styles';
-
 import { Image } from 'src/components/image';
 import {
   Carousel,
@@ -62,8 +60,8 @@ function CarouselItem({ item, ...other }) {
           flexDirection: 'column',
         }}
       >
-        <Typography variant="overline" sx={{ color: 'primary.light' }}>
-          Featured App
+        <Typography variant="overline" sx={{ color: 'primary' }}>
+          Más que un club, somos una familia
         </Typography>
 
         <Link color="inherit" underline="none" variant="h5" noWrap>
@@ -78,12 +76,6 @@ function CarouselItem({ item, ...other }) {
       <Image
         alt={item.title}
         src={item.coverUrl}
-        slotProps={{
-          overlay: {
-            background: (theme) =>
-              `linear-gradient(to bottom, ${varAlpha(theme.vars.palette.common.blackChannel, 0)} 0%, ${theme.vars.palette.common.black} 75%)`,
-          },
-        }}
         sx={{
           width: 1,
           height: { xs: 288, xl: 320 },

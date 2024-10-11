@@ -6,7 +6,8 @@ import Typography from '@mui/material/Typography';
 
 import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
-import LogoAnimated from 'src/layouts/core/logo-animated';
+
+import { LogoClub } from 'src/components/logo';
 
 // ----------------------------------------------------------------------
 
@@ -63,7 +64,7 @@ export function AppWelcome({ title, description, action, img, sx, ...other }) {
 
       {img && (
         <Box sx={{ maxWidth: 260 }} onClick={() => setCount(count + 1)}>
-          <LogoAnimated key={count} />
+          <LogoClub key={count} />
         </Box>
       )}
     </Box>

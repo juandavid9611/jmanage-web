@@ -133,29 +133,35 @@ export function get_top_goals_and_assists(group) {
 const masc_goals_and_assits = [
   {
     name: 'Santiago Lozano',
-    goals: 3,
-    assists: 0,
+    goals: 7,
+    assists: 1,
     avatarUrl: '/assets/images/avatar/masc_1.jpg',
   },
   {
     name: 'Cristian Medina',
-    goals: 3,
-    assists: 1,
+    goals: 10,
+    assists: 4,
     avatarUrl: '/assets/images/avatar/masc_2.jpg',
   },
   {
     name: 'Daniel Rodriguez',
-    goals: 2,
-    assists: 2,
+    goals: 8,
+    assists: 9,
     avatarUrl: '/assets/images/avatar/masc_3.jpg',
   },
   {
     name: 'Abdulh Daza',
-    goals: 2,
-    assists: 3,
+    goals: 4,
+    assists: 7,
     avatarUrl: '/assets/images/avatar/masc_4.jpg',
   },
   { name: 'Julio Mejia', goals: 2, assists: 1, avatarUrl: '/assets/images/avatar/masc_5.jpg' },
+  {
+    name: 'Juan David Rodriguez',
+    goals: 1,
+    assists: 0,
+    avatarUrl: '/assets/images/avatar/masc_9.jpg',
+  },
   {
     name: 'Julio Rodridrugez',
     goals: 1,
@@ -177,7 +183,7 @@ const masc_goals_and_assits = [
   },
   {
     name: 'Cristian Gomez',
-    goals: 4,
+    goals: 7,
     assists: 0,
     avatarUrl: '/assets/images/avatar/masc_8.jpg',
   },
@@ -195,14 +201,14 @@ const masc_goals_and_assits = [
   },
   {
     name: 'Jonathan Mindiola',
-    goals: 0,
+    goals: 2,
     assists: 1,
     avatarUrl: '/assets/images/avatar/masc_11.jpg',
   },
   {
     name: 'Cristian Lozano',
     goals: 0,
-    assists: 1,
+    assists: 2,
     avatarUrl: '/assets/images/avatar/masc_1.jpg',
   },
   { name: 'Juan Alarcon', goals: 1, assists: 1, avatarUrl: '/assets/images/avatar/masc_2.jpg' },
@@ -218,6 +224,36 @@ const masc_goals_and_assits = [
     assists: 1,
     avatarUrl: '/assets/images/avatar/masc_4.jpg',
   },
+  {
+    name: 'Gabriel Bohorquez',
+    goals: 1,
+    assists: 0,
+    avatarUrl: '/assets/images/avatar/masc_5.jpg',
+  },
+  {
+    name: 'Juan Quilaguy',
+    goals: 2,
+    assists: 1,
+    avatarUrl: '/assets/images/avatar/masc_6.jpg',
+  },
+  {
+    name: 'Wilmis Gonzalez',
+    goals: 1,
+    assists: 0,
+    avatarUrl: '/assets/images/avatar/masc_7.jpg',
+  },
+  {
+    name: 'Jorge Carrasco',
+    goals: 1,
+    assists: 0,
+    avatarUrl: '/assets/images/avatar/masc_8.jpg',
+  },
+  {
+    name: 'Santiago Motta',
+    goals: 1,
+    assists: 0,
+    avatarUrl: '/assets/images/avatar/masc_10.jpg',
+  },
 ];
 
 const fem_goals_and_assits = [
@@ -229,11 +265,10 @@ const fem_goals_and_assits = [
   },
   {
     name: 'Luisa Pineda',
-    goals: 4,
+    goals: 9,
     assists: 0,
     avatarUrl: '/assets/images/avatar/fem_2.jpg',
   },
-  { name: 'Laura Gomez', goals: 2, assists: 0, avatarUrl: '/assets/images/avatar/fem_3.jpg' },
   {
     name: 'Estefania Losada',
     goals: 2,
@@ -242,8 +277,8 @@ const fem_goals_and_assits = [
   },
   {
     name: 'Valentina Bello',
-    goals: 1,
-    assists: 0,
+    goals: 2,
+    assists: 1,
     avatarUrl: '/assets/images/avatar/fem_2.jpg',
   },
   { name: 'Cristina Perez', goals: 0, assists: 2, avatarUrl: '/assets/images/avatar/fem_3.jpg' },
@@ -256,7 +291,7 @@ const fem_goals_and_assits = [
   {
     name: 'Tatiana Montoya',
     goals: 0,
-    assists: 2,
+    assists: 3,
     avatarUrl: '/assets/images/avatar/fem_2.jpg',
   },
   {
@@ -279,8 +314,20 @@ const fem_goals_and_assits = [
   },
   {
     name: 'Monica Pacheco',
-    goals: 0,
+    goals: 1,
     assists: 1,
     avatarUrl: '/assets/images/avatar/fem_3.jpg',
+  },
+  {
+    name: 'Juliana del Castillo',
+    goals: 3,
+    assists: 0,
+    avatarUrl: '/assets/images/avatar/fem_1.jpg',
+  },
+  {
+    name: 'Laura Suarez',
+    goals: 0,
+    assists: 1,
+    avatarUrl: '/assets/images/avatar/fem_1.jpg',
   },
 ];

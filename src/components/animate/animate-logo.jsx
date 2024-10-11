@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 
 import { varAlpha } from 'src/theme/styles';
 
-import { Logo } from '../logo';
+import { LogoSimple } from '../logo';
 
 // ----------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ export function AnimateLogo1({ logo, sx, ...other }) {
         }}
         sx={{ display: 'inline-flex' }}
       >
-        {logo ?? <Logo disableLink width={64} height={64} />}
+        {logo ?? <LogoSimple disableLink width={64} height={64} />}
       </Box>
 
       <Box
@@ -91,7 +91,7 @@ export function AnimateLogo2({ logo, sx, ...other }) {
       }}
       {...other}
     >
-      {logo ?? <Logo sx={{ zIndex: 9 }} />}
+      {logo ?? <LogoSimple sx={{ zIndex: 9 }} />}
 
       <Box
         component={m.div}
