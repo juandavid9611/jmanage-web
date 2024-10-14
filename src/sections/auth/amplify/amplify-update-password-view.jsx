@@ -187,7 +187,7 @@ export function AmplifyUpdatePasswordView() {
 
       <Link
         component={RouterLink}
-        href={paths.authDemo.split.signIn}
+        href={paths.auth.amplify.signIn}
         color="inherit"
         variant="subtitle2"
         sx={{ gap: 0.5, alignSelf: 'center', alignItems: 'center', display: 'inline-flex' }}
