@@ -104,7 +104,6 @@ export async function generatePresignedUrl(userId, file) {
   try {
     const files = [];
     files.push({ file_name: file.name, content_type: file.type });
-    console.log('file', file);
     const res = await axiosInstance.post(`${URL}/${userId}/generate-presigned-url`, files);
     return res.data;
   } catch (error) {
@@ -146,7 +145,7 @@ const masc_goals_and_assits = [
   {
     name: 'Daniel Rodriguez',
     goals: 8,
-    assists: 9,
+    assists: 10,
     avatarUrl: '/assets/images/avatar/masc_3.jpg',
   },
   {
@@ -244,7 +243,7 @@ const masc_goals_and_assits = [
   },
   {
     name: 'Jorge Carrasco',
-    goals: 1,
+    goals: 2,
     assists: 0,
     avatarUrl: '/assets/images/avatar/masc_8.jpg',
   },

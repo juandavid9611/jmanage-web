@@ -75,8 +75,6 @@ export function AmplifySignUpView() {
         fullName: `${data.firstName.trim()} ${data.lastName.trim()}`,
       });
 
-      console.log('response', response);
-
       data.id = response.userId;
       data.name = `${data.firstName} ${data.lastName}`;
 

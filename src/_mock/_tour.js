@@ -20,16 +20,9 @@ export const TOUR_PUBLISH_OPTIONS = [
 ];
 
 export const TOUR_SERVICE_OPTIONS = [
-  { label: 'Audio guide', value: 'Audio guide' },
-  { label: 'Food and drinks', value: 'Food and drinks' },
-  { label: 'Lunch', value: 'Lunch' },
-  { label: 'Private tour', value: 'Private tour' },
-  { label: 'Special activities', value: 'Special activities' },
-  { label: 'Entrance fees', value: 'Entrance fees' },
-  { label: 'Gratuities', value: 'Gratuities' },
-  { label: 'Pick-up and drop off', value: 'Pick-up and drop off' },
-  { label: 'Professional guide', value: 'Professional guide' },
-  { label: 'Transport by air-conditioned', value: 'Transport by air-conditioned' },
+  { label: 'Vittoria Masculino', value: 'Vittoria Masculino' },
+  { label: 'Vittoria Femenino', value: 'Vittoria Femenino' },
+  { label: 'Liga Tradicional', value: 'Liga Tradicional' },
 ];
 
 const CONTENT = `
@@ -74,7 +67,7 @@ const BOOKER = [...Array(12)].map((_, index) => ({
   avatarUrl: _mock.image.avatar(index),
 }));
 
-export const _tourGuides = [...Array(12)].map((_, index) => ({
+export const _tourGuides = [...Array(3)].map((_, index) => ({
   id: _mock.id(index),
   name: _mock.fullName(index),
   avatarUrl: _mock.image.avatar(index),

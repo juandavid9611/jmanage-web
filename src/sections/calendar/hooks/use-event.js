@@ -12,11 +12,15 @@ export function useEvent(events, selectEventId, selectedRange, openForm) {
     () => ({
       id: '',
       title: '',
+      location: '',
       description: '',
       color: CALENDAR_COLOR_OPTIONS[1],
       allDay: false,
+      createTour: false,
       start: selectedRange ? selectedRange.start : dayjs(new Date()).format(),
       end: selectedRange ? selectedRange.end : dayjs(new Date()).format(),
+      category: '',
+      group: '',
     }),
     [selectedRange]
   );

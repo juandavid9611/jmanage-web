@@ -87,6 +87,12 @@ export const navData = [
         icon: ICONS.invoice,
         roles: ['admin'],
       },
+      {
+        title: 'Tour',
+        path: paths.dashboard.admin.tour.root,
+        icon: ICONS.tour,
+        roles: ['admin', 'user'],
+      },
     ],
   },
   {
