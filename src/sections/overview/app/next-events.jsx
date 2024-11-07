@@ -35,9 +35,9 @@ export function NextEvents({ title, list, ...other }) {
 
       <Box sx={{ p: 2, gap: 3, display: 'flex', flexDirection: 'column' }}>
         {list.map(
-          (item, index) =>
-            item.start >= limit_time && (
-              <Item key={item.id} item={item} sx={{ color: item.color }} />
+          (event, index) =>
+            event.start >= limit_time && (
+              <Item key={event.id} item={event} sx={{ color: event.color }} />
             )
         )}
       </Box>
@@ -54,6 +54,10 @@ function Item({ item, sx, ...other }) {
 
   const clickPopover = usePopover();
   const { user } = useAuthContext();
+
+  const userParticipates = Object.entries(participants || {}).find(
+    (entry) => entry[0] === user?.id
+  );
 
   return (
     <Box sx={{ gap: 1.5, display: 'flex', ...sx }} {...other}>
@@ -96,7 +100,9 @@ function Item({ item, sx, ...other }) {
           <Iconify width={16} icon="solar:map-point-wave-linear" />
           {item.description}
           <Iconify
-            sx={{ color: item.color }}
+            sx={{
+              color: userParticipates ? item.color : 'success',
+            }}
             width={16}
             icon="solar:user-check-bold"
             onClick={clickPopover.onOpen}

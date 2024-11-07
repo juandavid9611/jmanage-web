@@ -38,11 +38,43 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
         position: 'absolute',
         p: '2px 6px 2px 4px',
         typography: 'subtitle2',
-        bgcolor: 'success.lighter',
-        color: 'success.dark',
+        bgcolor:
+          tour.scores.home > tour.scores.away
+            ? 'success.lighter'
+            : tour.scores.home === tour.scores.away
+              ? 'warning.lighter'
+              : 'error.lighter',
+        color:
+          tour.scores.home > tour.scores.away
+            ? 'success.dark'
+            : tour.scores.home === tour.scores.away
+              ? 'warning.dark'
+              : 'error.dark',
       }}
     >
-      <Iconify icon="eva:star-fill" sx={{ color: 'success.main', mr: 0.25 }} /> Victoria
+      <Iconify
+        icon={
+          tour.scores.home > tour.scores.away
+            ? 'eva:star-fill'
+            : tour.scores.home === tour.scores.away
+              ? 'eva:minus-fill'
+              : 'eva:close-fill'
+        }
+        sx={{
+          color:
+            tour.scores.home > tour.scores.away
+              ? 'success.main'
+              : tour.scores.home === tour.scores.away
+                ? 'warning.main'
+                : 'error.main',
+          mr: 0.25,
+        }}
+      />
+      {tour.scores.home > tour.scores.away
+        ? 'Victory'
+        : tour.scores.home === tour.scores.away
+          ? 'Draw'
+          : 'Lose'}
     </Stack>
   );
 
