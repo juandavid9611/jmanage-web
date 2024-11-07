@@ -98,11 +98,21 @@ export function TourDetailsContent({ tour }) {
 
       <Stack spacing={3} direction="row" flexWrap="wrap" alignItems="center">
         <Stack direction="row" alignItems="center" spacing={0.5} sx={{ typography: 'body2' }}>
-          <Iconify icon="material-symbols:scoreboard-outline" sx={{ color: 'warning.main' }} />
+          <Iconify
+            icon="material-symbols:scoreboard-outline"
+            sx={{
+              color:
+                tour.scores.home === tour.scores.away
+                  ? 'text.body2'
+                  : tour.scores.home > tour.scores.away
+                    ? 'success.main'
+                    : 'error.main',
+            }}
+          />
           <Box component="span" sx={{ typography: 'subtitle2' }}>
             {tour.scores.home} - {tour.scores.away}
           </Box>
-          <Box sx={{ color: 'text.secondary' }}>
+          <Box sx={{ color: 'text.body2' }}>
             {tour.scores.home === tour.scores.away
               ? 'Empate'
               : tour.scores.home > tour.scores.away
