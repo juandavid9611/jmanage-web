@@ -35,4 +35,5 @@ export const endpoints = {
   calendar: '/calendar',
   paymentRquests: '/payment_requests',
   files: '/files',
+  tours: '/tours',
 };

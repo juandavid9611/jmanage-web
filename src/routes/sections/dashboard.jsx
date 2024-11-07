@@ -25,6 +25,11 @@ const UserInvoiceListPage = lazy(() => import('src/pages/dashboard/invoice/user-
 const UserListPage = lazy(() => import('src/pages/dashboard/user/list'));
 const UserEditPage = lazy(() => import('src/pages/dashboard/user/edit'));
 const OwnUserEditPage = lazy(() => import('src/pages/dashboard/user/own-edit'));
+// Tour
+const TourDetailsPage = lazy(() => import('src/pages/dashboard/tour/details'));
+const TourListPage = lazy(() => import('src/pages/dashboard/tour/list'));
+const TourCreatePage = lazy(() => import('src/pages/dashboard/tour/new'));
+const TourEditPage = lazy(() => import('src/pages/dashboard/tour/edit'));
 // ----------------------------------------------------------------------
 
 const layoutContent = (
@@ -69,7 +74,16 @@ export const dashboardRoutes = [
           { path: ':id/own-edit', element: <OwnUserEditPage /> },
         ],
       },
-      {},
+      {
+        path: 'tour',
+        children: [
+          { element: <TourListPage />, index: true },
+          { path: 'list', element: <TourListPage /> },
+          { path: ':id', element: <TourDetailsPage /> },
+          { path: 'new', element: <TourCreatePage /> },
+          { path: ':id/edit', element: <TourEditPage /> },
+        ],
+      },
     ],
   },
 ];

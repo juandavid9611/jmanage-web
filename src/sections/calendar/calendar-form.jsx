@@ -13,9 +13,13 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
 import { Switch, MenuItem, FormControlLabel } from '@mui/material';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
 import { uuidv4 } from 'src/utils/uuidv4';
 import { fIsAfter, fTimestamp } from 'src/utils/format-time';
 
+import { TEAM_GROUPS } from 'src/_mock';
 import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/actions/calendar';
 
 import { toast } from 'src/components/snackbar';
@@ -33,13 +37,16 @@ export const EventSchema = zod.object({
     .string()
     .min(1, { message: 'Title is required!' })
     .max(100, { message: 'Title must be less than 100 characters' }),
-  description: zod.string().max(5000, { message: 'Description must be less than 5000 characters' }),
+  location: zod.string().max(100, { message: 'Location must be less than 100 characters' }),
+  description: zod.string().max(300, { message: 'Description must be less than 300 characters' }),
   // Not required
   color: zod.string(),
   allDay: zod.boolean(),
+  createTour: zod.boolean(),
   start: zod.union([zod.string(), zod.number()]),
   end: zod.union([zod.string(), zod.number()]),
   category: zod.string().min(1, { message: 'Category is required!' }),
+  group: zod.string().min(1, { message: 'Group is required!' }),
 });
 
 // ----------------------------------------------------------------------
@@ -47,8 +54,8 @@ export const EventSchema = zod.object({
 export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
+  const router = useRouter();
   const isAdmin = user?.role === 'admin';
-  // const isAdmin = false;
   const [isParticipating, setIsParticipating] = useState(
     (currentEvent?.participants && user?.id in currentEvent.participants) || false
   );
@@ -78,10 +85,13 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       color: data?.color,
       title: data?.title,
       allDay: data?.allDay,
+      createTour: data?.createTour || false,
+      location: data?.location,
       description: data?.description,
       end: end_time_stamp,
       start: start_time_stamp,
       category: data?.category,
+      group: data?.group,
     };
 
     try {
@@ -130,23 +140,17 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
         <Stack spacing={3}>
           <Field.Text name="title" label="Title" disabled={!isAdmin} />
 
+          <Field.Text name="location" label="Ubicación" disabled={!isAdmin} />
+
           <Field.Text
             name="description"
             label="Description"
             multiline
-            rows={3}
+            rows={2}
             disabled={!isAdmin}
           />
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-            <Field.Switch name="allDay" label="All day" disabled={!isAdmin} />
-
-            <FormControlLabel
-              disabled={values.category === 'money' || values.category === 'other'}
-              control={<Switch checked={isParticipating} onChange={handleChangeIsParticipating} />}
-              label="Participate"
-            />
-
             <Field.Select
               name="category"
               label="Category"
@@ -155,10 +159,54 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
             >
               {['match', 'training', 'money', 'other'].map((option) => (
                 <MenuItem key={option} value={option} sx={{ textTransform: 'capitalize' }}>
-                  {option}
+                  {t(option)}
                 </MenuItem>
               ))}
             </Field.Select>
+            {currentEvent?.id && (
+              <FormControlLabel
+                disabled={values.category === 'money' || values.category === 'other'}
+                control={
+                  <Switch checked={isParticipating} onChange={handleChangeIsParticipating} />
+                }
+                label="Participate"
+              />
+            )}
+          </Stack>
+
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+            <Field.Select
+              name="group"
+              label={t('group')}
+              InputLabelProps={{ shrink: true }}
+              disabled={!isAdmin}
+            >
+              {TEAM_GROUPS.map((option) => (
+                <MenuItem
+                  key={option.label}
+                  value={option.value}
+                  sx={{ textTransform: 'capitalize' }}
+                >
+                  {t(option.label)}
+                </MenuItem>
+              ))}
+            </Field.Select>
+
+            {!currentEvent?.createTour && isAdmin && (
+              <Field.Switch name="createTour" label="Crear post" disabled={!isAdmin} />
+            )}
+            {currentEvent?.createTour && currentEvent?.tourId && (
+              <Button
+                size="medium"
+                color="inherit"
+                endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
+                onClick={() =>
+                  router.push(paths.dashboard.admin.tour.details(currentEvent?.tourId))
+                }
+              >
+                Ir a post
+              </Button>
+            )}
           </Stack>
 
           <Field.MobileDateTimePicker name="start" label="Start date" disabled={!isAdmin} />

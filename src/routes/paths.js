@@ -38,6 +38,12 @@ export const paths = {
         new: `${ROOTS.DASHBOARD}/invoice/new`,
         edit: (id) => `${ROOTS.DASHBOARD}/invoice/${id}/edit`,
       },
+      tour: {
+        root: `${ROOTS.DASHBOARD}/tour`,
+        new: `${ROOTS.DASHBOARD}/tour/new`,
+        details: (id) => `${ROOTS.DASHBOARD}/tour/${id}`,
+        edit: (id) => `${ROOTS.DASHBOARD}/tour/${id}/edit`,
+      },
     },
     user: {
       ownEdit: (id) => `${ROOTS.DASHBOARD}/user/${id}/own-edit`,

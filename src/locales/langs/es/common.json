@@ -148,6 +148,7 @@
   "description_max": "Descripción debe tener máximo 500 caracteres",
   "title": "Título",
   "all_day": "Todo el día",
+  "match": "Partido",
   "training": "Entrenamiento",
   "money": "Dinero",
   "other": "Otro",
