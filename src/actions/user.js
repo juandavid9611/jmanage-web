@@ -145,7 +145,7 @@ const masc_goals_and_assits = [
   {
     name: 'Daniel Rodriguez',
     goals: 8,
-    assists: 10,
+    assists: 11,
     avatarUrl: '/assets/images/avatar/masc_3.jpg',
   },
   {
