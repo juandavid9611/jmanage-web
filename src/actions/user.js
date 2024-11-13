@@ -133,12 +133,12 @@ const masc_goals_and_assits = [
   {
     name: 'Santiago Lozano',
     goals: 7,
-    assists: 1,
+    assists: 2,
     avatarUrl: '/assets/images/avatar/masc_1.jpg',
   },
   {
     name: 'Cristian Medina',
-    goals: 10,
+    goals: 13,
     assists: 4,
     avatarUrl: '/assets/images/avatar/masc_2.jpg',
   },
@@ -157,7 +157,7 @@ const masc_goals_and_assits = [
   { name: 'Julio Mejia', goals: 2, assists: 1, avatarUrl: '/assets/images/avatar/masc_5.jpg' },
   {
     name: 'Juan David Rodriguez',
-    goals: 1,
+    goals: 2,
     assists: 0,
     avatarUrl: '/assets/images/avatar/masc_9.jpg',
   },
@@ -244,7 +244,7 @@ const masc_goals_and_assits = [
   {
     name: 'Jorge Carrasco',
     goals: 2,
-    assists: 0,
+    assists: 1,
     avatarUrl: '/assets/images/avatar/masc_8.jpg',
   },
   {
@@ -252,6 +252,12 @@ const masc_goals_and_assits = [
     goals: 1,
     assists: 0,
     avatarUrl: '/assets/images/avatar/masc_10.jpg',
+  },
+  {
+    name: 'Sergio Senestrari',
+    goals: 0,
+    assists: 1,
+    avatarUrl: '/assets/images/avatar/masc_11.jpg',
   },
 ];
 
