@@ -154,13 +154,13 @@ const masc_goals_and_assits = [
     assists: 7,
     avatarUrl: '/assets/images/avatar/masc_4.jpg',
   },
-  { name: 'Julio Mejia', goals: 2, assists: 1, avatarUrl: '/assets/images/avatar/masc_5.jpg' },
   {
     name: 'Juan David Rodriguez',
     goals: 2,
     assists: 0,
     avatarUrl: '/assets/images/avatar/masc_9.jpg',
   },
+  { name: 'Julio Mejia', goals: 2, assists: 1, avatarUrl: '/assets/images/avatar/masc_5.jpg' },
   {
     name: 'Julio Rodridrugez',
     goals: 1,
