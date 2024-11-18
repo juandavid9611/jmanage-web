@@ -138,25 +138,25 @@ const masc_goals_and_assits = [
   },
   {
     name: 'Cristian Medina',
-    goals: 13,
+    goals: 14,
     assists: 4,
     avatarUrl: '/assets/images/avatar/masc_2.jpg',
   },
   {
     name: 'Daniel Rodriguez',
     goals: 8,
-    assists: 11,
+    assists: 12,
     avatarUrl: '/assets/images/avatar/masc_3.jpg',
   },
   {
     name: 'Abdulh Daza',
     goals: 4,
-    assists: 7,
+    assists: 9,
     avatarUrl: '/assets/images/avatar/masc_4.jpg',
   },
   {
     name: 'Juan David Rodriguez',
-    goals: 2,
+    goals: 3,
     assists: 0,
     avatarUrl: '/assets/images/avatar/masc_9.jpg',
   },
@@ -258,6 +258,12 @@ const masc_goals_and_assits = [
     goals: 0,
     assists: 1,
     avatarUrl: '/assets/images/avatar/masc_11.jpg',
+  },
+  {
+    name: 'Juan Lozano',
+    goals: 1,
+    assists: 0,
+    avatarUrl: '/assets/images/avatar/masc_1.jpg',
   },
 ];
 
