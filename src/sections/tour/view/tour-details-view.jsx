@@ -66,7 +66,9 @@ export function TourDetailsView({ tour }) {
 
       {tabs.value === 'content' && <TourDetailsContent tour={tour} />}
 
-      {tabs.value === 'bookers' && <TourDetailsBookers bookers={Object.values(tour?.bookers)} />}
+      {tabs.value === 'bookers' && (
+        <TourDetailsBookers tourId={tour?.id} bookers={Object.values(tour?.bookers)} />
+      )}
     </DashboardContent>
   );
 }

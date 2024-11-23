@@ -60,3 +60,30 @@ export async function deleteTour(id) {
   mutate(URL);
   return res.data;
 }
+
+export async function generatePresignedUrls(tourId, files) {
+  try {
+    files = files.reduce((acc, file) => {
+      acc.push({ file_name: file.name, content_type: file.type });
+      return acc;
+    }, []);
+    const res = await axiosInstance.post(`${URL}/${tourId}/generate-presigned-urls`, files);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch:', error);
+    throw error;
+  }
+}
+
+export async function addImages(tourId, file_names) {
+  const res = await axiosInstance.post(`${URL}/${tourId}/add_images`, file_names);
+  mutate(URL);
+  mutate(`${URL}/${tourId}`);
+  return res.data;
+}
+
+export async function patchBooker(tourId, bookerId, bookerData) {
+  const res = await axiosInstance.patch(`${URL}/${tourId}/bookers/${bookerId}`, bookerData);
+  mutate(URL);
+  return res.data;
+}
