@@ -1,7 +1,7 @@
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
-import { useMemo, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo, useEffect, useCallback } from 'react';
 
 import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
@@ -19,8 +19,9 @@ import { useRouter } from 'src/routes/hooks';
 
 import { fIsAfter } from 'src/utils/format-time';
 
-import { createTour, updateTour } from 'src/actions/tours';
+import { uploadFileToS3 } from 'src/actions/files';
 import { _tags, _tourGuides, TOUR_SERVICE_OPTIONS } from 'src/_mock';
+import { addImages, createTour, updateTour, generatePresignedUrls } from 'src/actions/tours';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
@@ -54,7 +55,9 @@ export const NewTourSchema = zod
     }),
     services: zod.string().array().min(1, { message: 'Must have at least 1 items!' }),
     tags: zod.string().array(),
-    images: zod.array(zod.string()),
+    images: schemaHelper.files({
+      message: { required_error: 'Images is required!' },
+    }),
   })
   .refine((data) => !fIsAfter(data.available.startDate, data.available.endDate), {
     message: 'End date cannot be earlier than start date!',
@@ -121,6 +124,45 @@ export function TourNewEditForm({ currentTour }) {
     }
   });
 
+  const handleUploadFiles = useCallback(
+    async (event) => {
+      // Step 4: Wait for all uploads to complete
+      try {
+        // Step 2: Request pre-signed URLs for each file from the backend
+        const response = await generatePresignedUrls(currentTour.id, values.images);
+
+        // Step 3: Upload each file to its respective pre-signed URL
+        const uploadPromises = values.images.map((file) => {
+          const presignedUrl = response.urls[file.name];
+          return uploadFileToS3(file, presignedUrl);
+        });
+        const file_names = values.images.map((file) => file.name);
+        const allPromises = Promise.all(uploadPromises);
+        toast.promise(allPromises, {
+          loading: 'Loading...',
+          success: () => 'All files uploaded successfully',
+          error: 'File upload failed',
+        });
+        await addImages(currentTour.id, file_names);
+      } catch (error) {
+        console.error('File upload failed', error);
+      }
+    },
+    [currentTour.id, values.images]
+  );
+
+  const handleRemoveFile = useCallback(
+    (inputFile) => {
+      const filtered = values.images && values.images?.filter((file) => file !== inputFile);
+      setValue('images', filtered, { shouldValidate: true });
+    },
+    [setValue, values.images]
+  );
+
+  const handleRemoveAllFiles = useCallback(() => {
+    setValue('images', [], { shouldValidate: true });
+  }, [setValue]);
+
   const renderDetails = (
     <Card>
       <CardHeader title="Details" subheader="Title, short description, image..." sx={{ mb: 3 }} />
@@ -139,32 +181,15 @@ export function TourNewEditForm({ currentTour }) {
         </Stack>
 
         <Stack spacing={1.5}>
-          <Typography variant="subtitle2">Images URL</Typography>
-          <Field.Autocomplete
-            name="images"
-            placeholder="+ Images"
+          <Typography variant="subtitle2">Images</Typography>
+          <Field.Upload
             multiple
-            freeSolo
-            disableCloseOnSelect
-            options={[].map((option) => option)}
-            getOptionLabel={(option) => option}
-            renderOption={(props, option) => (
-              <li {...props} key={option}>
-                {option}
-              </li>
-            )}
-            renderTags={(selected, getTagProps) =>
-              selected.map((option, index) => (
-                <Chip
-                  {...getTagProps({ index })}
-                  key={option}
-                  label={option}
-                  size="small"
-                  color="info"
-                  variant="soft"
-                />
-              ))
-            }
+            thumbnail
+            name="images"
+            maxSize={5145728}
+            onRemove={handleRemoveFile}
+            onRemoveAll={handleRemoveAllFiles}
+            onUpload={handleUploadFiles}
           />
         </Stack>
       </Stack>

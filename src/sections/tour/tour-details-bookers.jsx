@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -10,23 +11,36 @@ import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
 
 import { varAlpha } from 'src/theme/styles';
+import { patchBooker } from 'src/actions/tours';
 
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function TourDetailsBookers({ bookers }) {
-  const [approved, setApproved] = useState([]);
+export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
+  const [bookers, setBookers] = useState(initialBookers);
 
   const handleClick = useCallback(
-    (item) => {
-      const selected = approved.includes(item)
-        ? approved.filter((value) => value !== item)
-        : [...approved, item];
-
-      setApproved(selected);
+    async (booker) => {
+      try {
+        const bookerData = {
+          name: 'approved',
+          value: !booker.approved,
+        };
+        await patchBooker(tourId, booker.id, bookerData);
+      } catch (error) {
+        toast.error('Error setting booker data');
+        console.error(error);
+      }
+      setBookers((prevBookers) =>
+        prevBookers.map((bookerItem) =>
+          bookerItem.id === booker.id
+            ? { ...bookerItem, approved: !bookerItem.approved }
+            : bookerItem
+        )
+      );
     },
-    [approved]
+    [tourId]
   );
 
   return (
@@ -36,12 +50,12 @@ export function TourDetailsBookers({ bookers }) {
         display="grid"
         gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
       >
-        {bookers?.map((booker) => (
+        {bookers.map((booker) => (
           <BookerItem
             key={booker.id}
             booker={booker}
-            selected={approved.includes(booker.id)}
-            onSelected={() => handleClick(booker.id)}
+            selected={booker.approved}
+            onSelected={() => handleClick(booker)}
           />
         ))}
       </Box>
