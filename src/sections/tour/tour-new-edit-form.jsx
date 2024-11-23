@@ -186,7 +186,7 @@ export function TourNewEditForm({ currentTour }) {
             multiple
             thumbnail
             name="images"
-            maxSize={5145728}
+            maxSize={10145728}
             onRemove={handleRemoveFile}
             onRemoveAll={handleRemoveAllFiles}
             onUpload={handleUploadFiles}
