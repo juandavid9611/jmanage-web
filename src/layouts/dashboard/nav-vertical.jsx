@@ -3,8 +3,8 @@ import { useTheme } from '@mui/material/styles';
 
 import { varAlpha, hideScrollY } from 'src/theme/styles';
 
-import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Logo, LogoSimple } from 'src/components/logo';
 import { NavSectionMini, NavSectionVertical } from 'src/components/nav-section';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -46,7 +46,7 @@ export function NavVertical({ sx, data, slots, isNavMini, layoutQuery, onToggleN
     <>
       {slots?.topArea ?? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 2.5 }}>
-          <Logo />
+          <LogoSimple />
         </Box>
       )}
 
