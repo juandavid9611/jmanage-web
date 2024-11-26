@@ -19,6 +19,17 @@ import { Lightbox, useLightBox } from 'src/components/lightbox';
 
 export function TourDetailsContent({ tour }) {
   const slides = tour?.images?.map((slide) => ({ src: slide })) || [];
+  const bookersArray = Object.values(tour?.bookers || {});
+  const mvpList = bookersArray.filter((booker) => booker.mvp === true).map((booker) => booker.name);
+  const yellowCardList = bookersArray
+    .filter((booker) => booker.yellowCard === true)
+    .map((booker) => booker.name);
+  const redCardList = bookersArray
+    .filter((booker) => booker.redCard === true)
+    .map((booker) => booker.name);
+  const lateList = bookersArray
+    .filter((booker) => booker.late === true)
+    .map((booker) => booker.name);
 
   const {
     selected: selectedImage,
@@ -151,28 +162,23 @@ export function TourDetailsContent({ tour }) {
         },
         {
           label: 'Jugador del partido',
-          value: tour?.tourGuides?.map((tourGuide) => tourGuide.name).join(', '),
+          value: mvpList.join(', '),
           icon: <Iconify icon="solar:user-rounded-bold" />,
         },
         {
           label: 'Tarjetas Amarillas',
-          value: tour?.tourGuides?.map((tourGuide) => tourGuide.name).join(', '),
+          value: yellowCardList.join(', '),
           icon: <Iconify icon="openmoji:yellow-flag" />,
         },
         {
           label: 'Tarjetas Rojas',
-          value: tour?.tourGuides?.map((tourGuide) => tourGuide.name).join(', '),
+          value: redCardList.join(', '),
           icon: <Iconify icon="openmoji:red-flag" />,
         },
         {
-          label: 'Goles',
-          value: tour?.tourGuides?.map((tourGuide) => tourGuide.name).join(', '),
-          icon: <Iconify icon="solar:phone-bold" />,
-        },
-        {
-          label: 'Asistencias',
-          value: tour?.tourGuides?.map((tourGuide) => tourGuide.name).join(', '),
-          icon: <Iconify icon="solar:phone-bold" />,
+          label: 'Llegadas Tarde',
+          value: lateList.join(', '),
+          icon: <Iconify icon="mdi:clock-alert" />,
         },
       ].map((item) => (
         <Stack key={item.label} spacing={1.5} direction="row">

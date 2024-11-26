@@ -83,8 +83,8 @@ export const LogoSimple = forwardRef(
           ref={ref}
           component={RouterLink}
           href={href}
-          width={width + 100}
-          height={height + 30}
+          width={width + 60}
+          height={height + 60}
           className={logoClasses.root.concat(className ? ` ${className}` : '')}
           aria-label="logo"
           sx={{
@@ -99,7 +99,7 @@ export const LogoSimple = forwardRef(
           <Box
             component="img"
             alt="auth"
-            src="/assets/illustrations/illustration_dashboard.png"
+            src="/assets/illustrations/illustration_dashboard_simple.png"
             sx={{
               maxWidth: {
                 xs: 480,
