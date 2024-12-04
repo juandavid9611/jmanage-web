@@ -112,7 +112,7 @@ function BookerItem({ booker, onSelected }) {
               <IncrementerButton
                 name="booker.goals"
                 quantity={booker.goals}
-                disabledDecrease={booker.goals <= 1}
+                disabledDecrease={booker.goals <= 0}
                 disabledIncrease={booker.goals >= 20}
                 onIncrease={() => onSelected('goals', booker.goals + 1)}
                 onDecrease={() => onSelected('goals', booker.goals - 1)}
@@ -131,7 +131,7 @@ function BookerItem({ booker, onSelected }) {
               <IncrementerButton
                 name="booker.assists"
                 quantity={booker.assists}
-                disabledDecrease={booker.assists <= 1}
+                disabledDecrease={booker.assists <= 0}
                 disabledIncrease={booker.assists >= 20}
                 onIncrease={() => onSelected('assists', booker.assists + 1)}
                 onDecrease={() => onSelected('assists', booker.assists - 1)}
