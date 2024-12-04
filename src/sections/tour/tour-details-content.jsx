@@ -31,6 +31,16 @@ export function TourDetailsContent({ tour }) {
     .filter((booker) => booker.late === true)
     .map((booker) => booker.name);
 
+  const goalsList = bookersArray
+    .sort((a, b) => b.goals - a.goals)
+    .filter((booker) => booker.goals > 0)
+    .map((booker) => `${booker.name} (${booker.goals})`);
+
+  const assistsList = bookersArray
+    .sort((a, b) => b.assists - a.assists)
+    .filter((booker) => booker.assists > 0)
+    .map((booker) => `${booker.name} (${booker.assists})`);
+
   const {
     selected: selectedImage,
     open: openLightbox,
@@ -179,6 +189,16 @@ export function TourDetailsContent({ tour }) {
           label: 'Llegadas Tarde',
           value: lateList.join(', '),
           icon: <Iconify icon="mdi:clock-alert" />,
+        },
+        {
+          label: 'Goles',
+          value: goalsList.join(', '),
+          icon: <Iconify icon="emojione-monotone:goal-net" />,
+        },
+        {
+          label: 'Asistencias',
+          value: assistsList.join(', '),
+          icon: <Iconify icon="emojione:goal-net" />,
         },
       ].map((item) => (
         <Stack key={item.label} spacing={1.5} direction="row">

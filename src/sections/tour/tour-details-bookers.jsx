@@ -14,17 +14,19 @@ import { patchBooker } from 'src/actions/tours';
 
 import { Iconify } from 'src/components/iconify';
 
+import { IncrementerButton } from './components/incrementer-button';
+
 // ----------------------------------------------------------------------
 
 export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
   const [bookers, setBookers] = useState(initialBookers);
 
   const handleClick = useCallback(
-    async (booker, field) => {
+    async (booker, field, newValue) => {
       try {
         const bookerData = {
           name: field,
-          value: !booker[field],
+          value: newValue,
         };
         await patchBooker(tourId, booker.id, bookerData);
       } catch (error) {
@@ -33,7 +35,7 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
       }
       setBookers((prevBookers) =>
         prevBookers.map((bookerItem) =>
-          bookerItem.id === booker.id ? { ...bookerItem, [field]: !bookerItem[field] } : bookerItem
+          bookerItem.id === booker.id ? { ...bookerItem, [field]: newValue } : bookerItem
         )
       );
     },
@@ -52,7 +54,7 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
             key={booker.id}
             booker={booker}
             selected={booker.approved}
-            onSelected={(field) => handleClick(booker, field)}
+            onSelected={(field, newValue) => handleClick(booker, field, newValue)}
           />
         ))}
       </Box>
@@ -64,17 +66,36 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
 
 function BookerItem({ booker, onSelected }) {
   return (
-    <Card key={booker.id} sx={{ p: 3, gap: 2, display: 'flex' }}>
-      <Avatar alt={booker.name} src={booker.avatarUrl} sx={{ width: 48, height: 48 }} />
+    <Card key={booker.id} sx={{ p: 2, gap: 2, display: 'flex' }}>
+      <Stack spacing={2} direction="column">
+        <Avatar alt={booker.name} src={booker.avatarUrl} sx={{ width: 48, height: 48 }} />
+        <Checkbox
+          color="warning"
+          icon={<Iconify icon="solar:star-outline" />}
+          checkedIcon={<Iconify icon="solar:star-bold" />}
+          inputProps={{ id: 'mvp-checkbox', 'aria-label': 'Mvp checkbox' }}
+          checked={booker.mvp}
+          onClick={() => onSelected('mvp', !booker.mvp)}
+        />
+      </Stack>
 
       <Stack spacing={2} flexGrow={1}>
         <ListItemText
           primary={booker.name}
           secondary={
-            <Stack direction="row" alignItems="center" spacing={0.5}>
-              <Iconify icon="solar:users-group-rounded-bold" width={16} />
-              {booker.guests} guests
-            </Stack>
+            <Button
+              size="small"
+              variant={booker.approved ? 'text' : 'outlined'}
+              color={booker.approved ? 'success' : 'inherit'}
+              startIcon={
+                booker.approved ? (
+                  <Iconify width={18} icon="eva:checkmark-fill" sx={{ mr: -0.75 }} />
+                ) : null
+              }
+              onClick={() => onSelected('approved', !booker.approved)}
+            >
+              {booker.approved ? 'Approved' : 'Approve'}
+            </Button>
           }
           secondaryTypographyProps={{
             mt: 0.5,
@@ -85,54 +106,73 @@ function BookerItem({ booker, onSelected }) {
         />
 
         <Stack spacing={1} direction="row">
-          <Checkbox
-            color="info"
-            icon={<Iconify icon="mdi:clock-alert-outline" />}
-            checkedIcon={<Iconify icon="mdi:clock-alert" />}
-            inputProps={{ id: 'late-checkbox', 'aria-label': 'Late checkbox' }}
-            checked={booker.late}
-            onClick={() => onSelected('late')}
+          <ListItemText
+            primary="Goals"
+            secondary={
+              <IncrementerButton
+                name="booker.goals"
+                quantity={booker.goals}
+                disabledDecrease={booker.goals <= 1}
+                disabledIncrease={booker.goals >= 20}
+                onIncrease={() => onSelected('goals', booker.goals + 1)}
+                onDecrease={() => onSelected('goals', booker.goals - 1)}
+              />
+            }
+            secondaryTypographyProps={{
+              mt: 0.5,
+              component: 'span',
+              typography: 'caption',
+              color: 'text.disabled',
+            }}
           />
-          <Checkbox
-            color="warning"
-            icon={<Iconify icon="mdi:card-outline" />}
-            checkedIcon={<Iconify icon="mdi:card" />}
-            inputProps={{ id: 'yellow-card-checkbox', 'aria-label': 'Yellow card checkbox' }}
-            checked={booker.yellowCard}
-            onClick={() => onSelected('yellowCard')}
-          />
-          <Checkbox
-            color="error"
-            icon={<Iconify icon="mdi:card-remove-outline" />}
-            checkedIcon={<Iconify icon="mdi:card-remove" />}
-            inputProps={{ id: 'red-card-checkbox', 'aria-label': 'Red card checkbox' }}
-            checked={booker.redCard}
-            onClick={() => onSelected('redCard')}
-          />
-          <Checkbox
-            color="warning"
-            icon={<Iconify icon="solar:star-outline" />}
-            checkedIcon={<Iconify icon="solar:star-bold" />}
-            inputProps={{ id: 'mvp-checkbox', 'aria-label': 'Mvp checkbox' }}
-            checked={booker.mvp}
-            onClick={() => onSelected('mvp')}
+          <ListItemText
+            primary="Assists"
+            secondary={
+              <IncrementerButton
+                name="booker.assists"
+                quantity={booker.assists}
+                disabledDecrease={booker.assists <= 1}
+                disabledIncrease={booker.assists >= 20}
+                onIncrease={() => onSelected('assists', booker.assists + 1)}
+                onDecrease={() => onSelected('assists', booker.assists - 1)}
+              />
+            }
+            secondaryTypographyProps={{
+              mt: 0.5,
+              component: 'span',
+              typography: 'caption',
+              color: 'text.disabled',
+            }}
           />
         </Stack>
       </Stack>
 
-      <Button
-        size="small"
-        variant={booker.approved ? 'text' : 'outlined'}
-        color={booker.approved ? 'success' : 'inherit'}
-        startIcon={
-          booker.approved ? (
-            <Iconify width={18} icon="eva:checkmark-fill" sx={{ mr: -0.75 }} />
-          ) : null
-        }
-        onClick={() => onSelected('approved')}
-      >
-        {booker.approved ? 'Approved' : 'Approve'}
-      </Button>
+      <Stack spacing={1} direction="column" flexGrow={1}>
+        <Checkbox
+          color="info"
+          icon={<Iconify icon="mdi:clock-alert-outline" />}
+          checkedIcon={<Iconify icon="mdi:clock-alert" />}
+          inputProps={{ id: 'late-checkbox', 'aria-label': 'Late checkbox' }}
+          checked={booker.late}
+          onClick={() => onSelected('late', !booker.late)}
+        />
+        <Checkbox
+          color="warning"
+          icon={<Iconify icon="mdi:card-outline" />}
+          checkedIcon={<Iconify icon="mdi:card" />}
+          inputProps={{ id: 'yellow-card-checkbox', 'aria-label': 'Yellow card checkbox' }}
+          checked={booker.yellowCard}
+          onClick={() => onSelected('yellowCard', !booker.yellowCard)}
+        />
+        <Checkbox
+          color="error"
+          icon={<Iconify icon="mdi:card-remove-outline" />}
+          checkedIcon={<Iconify icon="mdi:card-remove" />}
+          inputProps={{ id: 'red-card-checkbox', 'aria-label': 'Red card checkbox' }}
+          checked={booker.redCard}
+          onClick={() => onSelected('redCard', !booker.redCard)}
+        />
+      </Stack>
     </Card>
   );
 }

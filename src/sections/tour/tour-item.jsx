@@ -10,7 +10,6 @@ import ListItemText from '@mui/material/ListItemText';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
-import { fCurrency } from 'src/utils/format-number';
 import { fDateTime, fDateRangeShortLabel } from 'src/utils/format-time';
 
 import { Image } from 'src/components/image';
@@ -25,6 +24,7 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
   const popover = usePopover();
   const { user } = useAuthContext();
   const isAdmin = user.role === 'admin';
+  const userAssists = Object.keys(tour?.bookers).includes(user.id);
 
   const renderRating = (
     <Stack
@@ -75,31 +75,6 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
         : tour.scores.home === tour.scores.away
           ? 'Draw'
           : 'Lose'}
-    </Stack>
-  );
-
-  const renderPrice = (
-    <Stack
-      direction="row"
-      alignItems="center"
-      sx={{
-        top: 8,
-        left: 8,
-        zIndex: 9,
-        borderRadius: 1,
-        bgcolor: 'grey.800',
-        position: 'absolute',
-        p: '2px 6px 2px 4px',
-        color: 'common.white',
-        typography: 'subtitle2',
-      }}
-    >
-      {!!tour.priceSale && (
-        <Box component="span" sx={{ color: 'grey.500', mr: 0.25, textDecoration: 'line-through' }}>
-          {fCurrency(tour.priceSale)}
-        </Box>
-      )}
-      {fCurrency(tour.price)}
     </Stack>
   );
 
@@ -168,22 +143,37 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
 
       {[
         {
-          icon: <Iconify icon="mingcute:location-fill" sx={{ color: 'error.main' }} />,
-          label: tour.location,
+          icon: (
+            <Iconify
+              icon="material-symbols:scoreboard-outline"
+              sx={{
+                color:
+                  tour.scores.home === tour.scores.away
+                    ? 'text.body2'
+                    : tour.scores.home > tour.scores.away
+                      ? 'success.main'
+                      : 'error.main',
+              }}
+            />
+          ),
+          label: `${tour.scores?.home} - ${tour.scores?.away}`,
+        },
+        {
+          icon: (
+            <Iconify
+              icon="solar:users-group-rounded-bold"
+              sx={{ color: userAssists ? 'success.main' : 'gray' }}
+            />
+          ),
+          label: `${Object.keys(tour?.bookers).length || 0} Booked${userAssists ? ' (You)' : ''}`,
         },
         {
           icon: <Iconify icon="solar:clock-circle-bold" sx={{ color: 'info.main' }} />,
           label: fDateRangeShortLabel(tour.available.startDate, tour.available.endDate),
         },
         {
-          icon: <Iconify icon="solar:users-group-rounded-bold" sx={{ color: 'primary.main' }} />,
-          label: `${Object.keys(tour?.bookers).length || 0} Booked`,
-        },
-        {
-          icon: (
-            <Iconify icon="material-symbols:scoreboard-outline" sx={{ color: 'warning.main' }} />
-          ),
-          label: `${tour.scores?.home} - ${tour.scores?.away}`,
+          icon: <Iconify icon="mingcute:location-fill" sx={{ color: 'error.main' }} />,
+          label: tour.location,
         },
       ].map((item) => (
         <Stack
