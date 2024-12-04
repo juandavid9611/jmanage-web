@@ -26,6 +26,8 @@ import { addImages, createTour, updateTour, generatePresignedUrls } from 'src/ac
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
+import { IncrementerButton } from './components/incrementer-button';
+
 // ----------------------------------------------------------------------
 
 export const NewTourSchema = zod
@@ -58,6 +60,10 @@ export const NewTourSchema = zod
     images: schemaHelper.files({
       message: { required_error: 'Images is required!' },
     }),
+    scores: zod.object({
+      home: zod.number(),
+      away: zod.number(),
+    }),
   })
   .refine((data) => !fIsAfter(data.available.startDate, data.available.endDate), {
     message: 'End date cannot be earlier than start date!',
@@ -81,6 +87,10 @@ export function TourNewEditForm({ currentTour }) {
       location: currentTour?.location || '',
       services: currentTour?.services || [],
       tags: currentTour?.tags || [],
+      scores: {
+        home: currentTour?.scores?.home || 0,
+        away: currentTour?.scores?.away || 0,
+      },
     }),
     [currentTour]
   );
@@ -170,9 +180,41 @@ export function TourNewEditForm({ currentTour }) {
       <Divider />
 
       <Stack spacing={3} sx={{ p: 3 }}>
-        <Stack spacing={1.5}>
-          <Typography variant="subtitle2">Name</Typography>
-          <Field.Text name="name" placeholder="Ex: Adventure Seekers Expedition..." disabled />
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+          <Stack spacing={1.5} sx={{ flex: 1 }}>
+            <Typography variant="subtitle2">Name</Typography>
+            <Field.Text name="name" disabled />
+          </Stack>
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2">Marcador</Typography>
+            <Stack direction="row" spacing={2}>
+              <Stack direction="row" spacing={1.5}>
+                <Typography variant="caption">Equipo Local</Typography>
+                <IncrementerButton
+                  name="scores.home"
+                  quantity={values.scores.home}
+                  disabledDecrease={values.scores.home <= 1}
+                  disabledIncrease={values.scores.home >= 10}
+                  onIncrease={() => {
+                    setValue('scores.home', values.scores.home + 1);
+                    console.log('values.scores.home', values.scores.home);
+                  }}
+                  onDecrease={() => setValue('scores.home', values.scores.home - 1)}
+                />
+              </Stack>
+              <Stack direction="row" spacing={1.5}>
+                <IncrementerButton
+                  name="scores.away"
+                  quantity={values.scores.away}
+                  disabledDecrease={values.scores.away <= 1}
+                  disabledIncrease={values.scores.away >= 20}
+                  onIncrease={() => setValue('scores.away', values.scores.away + 1)}
+                  onDecrease={() => setValue('scores.away', values.scores.away - 1)}
+                />
+                <Typography variant="caption">Equipo Visitante</Typography>
+              </Stack>
+            </Stack>
+          </Stack>
         </Stack>
 
         <Stack spacing={1.5}>
