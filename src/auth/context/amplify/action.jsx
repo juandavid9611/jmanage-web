@@ -33,6 +33,7 @@ export const signUp = async ({ username, password, fullName }) => {
  * Confirm sign up
  *************************************** */
 export const confirmSignUp = async ({ username, confirmationCode }) => {
+  username = username.toLowerCase();
   await _confirmSignUp({ username, confirmationCode });
 };
 
@@ -40,6 +41,7 @@ export const confirmSignUp = async ({ username, confirmationCode }) => {
  * Resend code sign up
  *************************************** */
 export const resendSignUpCode = async ({ username }) => {
+  username = username.toLowerCase();
   await _resendSignUpCode({ username });
 };
 
