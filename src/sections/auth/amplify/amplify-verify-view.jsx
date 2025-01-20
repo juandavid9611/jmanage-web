@@ -99,7 +99,6 @@ export function AmplifyVerifyView() {
         label="Email address"
         placeholder="example@gmail.com"
         InputLabelProps={{ shrink: true }}
-        disabled
       />
 
       <Field.Code name="code" />
