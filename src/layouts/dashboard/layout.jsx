@@ -8,6 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { _contacts, _notifications } from 'src/_mock';
 import { varAlpha, stylesMode } from 'src/theme/styles';
+import { useGetWorkspaces } from 'src/actions/workspaces';
 
 import { bulletColor } from 'src/components/nav-section';
 import { useSettingsContext } from 'src/components/settings';
@@ -21,7 +22,6 @@ import { NavVertical } from './nav-vertical';
 import { NavHorizontal } from './nav-horizontal';
 import { _account } from '../config-nav-account';
 import { HeaderBase } from '../core/header-base';
-import { _workspaces } from '../config-nav-workspace';
 import { LayoutSection } from '../core/layout-section';
 import { navData as dashboardNavData } from '../config-nav-dashboard';
 
@@ -47,6 +47,8 @@ export function DashboardLayout({ sx, children, data }) {
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
 
   const { user } = useAuthContext();
+
+  const { workspaces } = useGetWorkspaces();
 
   return (
     <>
@@ -74,7 +76,7 @@ export function DashboardLayout({ sx, children, data }) {
               ],
               account: _account(user.id),
               contacts: _contacts,
-              workspaces: _workspaces,
+              workspaces,
               notifications: _notifications,
             }}
             slotsDisplay={{

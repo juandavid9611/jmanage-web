@@ -5,8 +5,11 @@ import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.tours;
 
-export function useGetTours() {
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+export function useGetTours(workspaceId) {
+  const { data, isLoading, error, isValidating } = useSWR(
+    workspaceId ? `${URL}?workspace_id=${workspaceId}` : null,
+    fetcher
+  );
 
   const memoizedValue = useMemo(
     () => ({

@@ -11,6 +11,7 @@ import { CONFIG } from 'src/config-global';
 import { useGetEvents } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetLateArrives, useGetUserMetrics, get_top_goals_and_assists } from 'src/actions/user';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -31,9 +32,11 @@ export function OverviewAppView() {
 
   const { metrics } = useGetUserMetrics(user?.id);
 
+  const { selectedWorkspace } = useWorkspace();
+
   const { lateArrives } = useGetLateArrives(user?.id);
 
-  const { events } = useGetEvents();
+  const { events } = useGetEvents(selectedWorkspace);
 
   const isAdmin = user?.role === 'admin';
 
@@ -83,7 +86,7 @@ export function OverviewAppView() {
       <Grid container spacing={3}>
         <Grid xs={12} md={8}>
           <AppWelcome
-            title={`${t('welcome_back')} ${user?.displayName}`}
+            title={`${t('welcome_back')} ${user?.displayName} ${selectedWorkspace?.name}`}
             description={t('we_re_vittoria')}
             img={<SeoIllustration />}
           />

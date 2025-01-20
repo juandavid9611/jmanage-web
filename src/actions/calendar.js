@@ -17,8 +17,17 @@ const swrOptions = {
 
 // ----------------------------------------------------------------------
 
-export function useGetEvents() {
-  const { data, isLoading, error, isValidating } = useSWR(CALENDAR_ENDPOINT, fetcher, swrOptions);
+export function useGetEvents(selectedWorkspace) {
+  // Assuming you send the workspaceId as a query parameter
+  const workspaceId = selectedWorkspace?.id;
+  console.log('workspaceId', workspaceId);
+
+  // Update the SWR fetcher to include the workspaceId as a query parameter
+  const { data, isLoading, error, isValidating } = useSWR(
+    workspaceId ? `${CALENDAR_ENDPOINT}?workspace_id=${workspaceId}` : null, // Construct the URL with the workspaceId
+    fetcher,
+    swrOptions
+  );
 
   const memoizedValue = useMemo(() => {
     const events = data?.map((event) => ({

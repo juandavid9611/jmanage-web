@@ -45,12 +45,7 @@ const rehypePlugins = [rehypeRaw, rehypeHighlight, [remarkGfm, { singleTilde: fa
 
 const components = {
   img: ({ node, ...other }) => (
-    <Image
-      ratio="16/9"
-      className={markdownClasses.content.image}
-      sx={{ borderRadius: 2 }}
-      {...other}
-    />
+    <Image className={markdownClasses.content.image} sx={{ borderRadius: 2 }} {...other} />
   ),
   a: ({ href, children, node, ...other }) => {
     const linkProps = isExternalLink(href)

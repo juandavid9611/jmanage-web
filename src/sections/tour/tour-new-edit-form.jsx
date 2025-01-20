@@ -197,7 +197,6 @@ export function TourNewEditForm({ currentTour }) {
                   disabledIncrease={values.scores.home >= 10}
                   onIncrease={() => {
                     setValue('scores.home', values.scores.home + 1);
-                    console.log('values.scores.home', values.scores.home);
                   }}
                   onDecrease={() => setValue('scores.home', values.scores.home - 1)}
                 />

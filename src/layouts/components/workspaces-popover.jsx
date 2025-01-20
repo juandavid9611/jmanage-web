@@ -1,10 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import ButtonBase from '@mui/material/ButtonBase';
+
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -17,14 +19,14 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
 
   const mediaQuery = 'sm';
 
-  const [workspace, setWorkspace] = useState(data[0]);
+  const { selectedWorkspace, setSelectedWorkspace } = useWorkspace();
 
   const handleChangeWorkspace = useCallback(
     (newValue) => {
-      setWorkspace(newValue);
+      setSelectedWorkspace(newValue);
       popover.onClose();
     },
-    [popover]
+    [popover, setSelectedWorkspace]
   );
 
   return (
@@ -41,8 +43,8 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
       >
         <Box
           component="img"
-          alt={workspace?.name}
-          src={workspace?.logo}
+          alt={selectedWorkspace?.name}
+          src={selectedWorkspace?.logo}
           sx={{ width: 24, height: 24, borderRadius: '50%' }}
         />
 
@@ -53,17 +55,17 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
             display: { xs: 'none', [mediaQuery]: 'inline-flex' },
           }}
         >
-          {workspace?.name}
+          {selectedWorkspace?.name}
         </Box>
 
         <Label
-          color={workspace?.plan === 'Free' ? 'default' : 'info'}
+          color={selectedWorkspace?.plan === 'Free' ? 'default' : 'info'}
           sx={{
             height: 22,
             display: { xs: 'none', [mediaQuery]: 'inline-flex' },
           }}
         >
-          {workspace?.plan}
+          {selectedWorkspace?.plan}
         </Label>
 
         <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
@@ -79,7 +81,7 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
           {data.map((option) => (
             <MenuItem
               key={option.id}
-              selected={option.id === workspace?.id}
+              selected={option.id === selectedWorkspace?.id}
               onClick={() => handleChangeWorkspace(option)}
               sx={{ height: 48 }}
             >

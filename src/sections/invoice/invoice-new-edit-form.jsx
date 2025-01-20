@@ -25,9 +25,9 @@ import { useRouter } from 'src/routes/hooks';
 
 import { today, fIsAfter, fDateTime } from 'src/utils/format-time';
 
-import { TEAM_GROUPS } from 'src/_mock';
 import { useGetUsers } from 'src/actions/user';
 import { uploadFileToS3 } from 'src/actions/files';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
   updatePaymentRequest,
   createPaymentRequests,
@@ -71,6 +71,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
   const router = useRouter();
 
   const slides = currentInvoice?.images?.map((slide) => ({ src: slide })) || [];
+  const { selectedWorkspace } = useWorkspace();
   const {
     selected: selectedImage,
     open: openLightbox,
@@ -82,6 +83,8 @@ export function InvoiceNewEditForm({ currentInvoice }) {
   const isAdmin = user?.role === 'admin';
   const isUser = !isAdmin;
 
+  const group = currentInvoice?.group || selectedWorkspace?.id;
+
   const defaultValues = useMemo(
     () => ({
       concept: currentInvoice?.concept || '',
@@ -92,14 +95,14 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       status: currentInvoice?.status || 'pending',
       category: currentInvoice?.category || 'Entrenos',
       paymentRequestTo: currentInvoice?.paymentRequestTo ? [currentInvoice.paymentRequestTo] : [],
-      group: currentInvoice?.group || 'male',
+      group,
       userPrice: currentInvoice?.totalAmount || 0,
       overduePrice: currentInvoice?.overduePrice || 0,
       sponsorPrice: currentInvoice?.sponsorPrice || 0,
       sponsorPercentage: currentInvoice?.sponsorPercentage || 0,
       images: currentInvoice?.images || [],
     }),
-    [currentInvoice]
+    [currentInvoice, group]
   );
 
   const methods = useForm({
@@ -259,18 +262,13 @@ export function InvoiceNewEditForm({ currentInvoice }) {
                 <Field.Select
                   name="group"
                   label={t('group')}
+                  value={group}
                   InputLabelProps={{ shrink: true }}
-                  disabled={isUser}
+                  disabled
                 >
-                  {TEAM_GROUPS.map((option) => (
-                    <MenuItem
-                      key={option.label}
-                      value={option.value}
-                      sx={{ textTransform: 'capitalize' }}
-                    >
-                      {t(option.label)}
-                    </MenuItem>
-                  ))}
+                  <MenuItem key={group} value={group} sx={{ textTransform: 'capitalize' }}>
+                    {t(group)}
+                  </MenuItem>
                 </Field.Select>
               </Box>
 

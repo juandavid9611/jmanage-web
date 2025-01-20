@@ -7,8 +7,11 @@ import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.paymentRquests;
 
-export function useGetPaymentRequests() {
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+export function useGetPaymentRequests(workspaceId) {
+  const { data, isLoading, error, isValidating } = useSWR(
+    workspaceId ? `${URL}?workspace_id=${workspaceId}` : null,
+    fetcher
+  );
 
   const memoizedValue = useMemo(
     () => ({
