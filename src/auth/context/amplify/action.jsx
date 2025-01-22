@@ -56,6 +56,7 @@ export const signOut = async () => {
  * Reset password
  *************************************** */
 export const resetPassword = async ({ username }) => {
+  username = username.toLowerCase();
   await _resetPassword({ username });
 };
 

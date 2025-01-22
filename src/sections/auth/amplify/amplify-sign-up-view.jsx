@@ -68,6 +68,7 @@ export function AmplifySignUpView() {
   } = methods;
 
   const onSubmit = handleSubmit(async (data) => {
+    data.email = data.email.toLowerCase();
     try {
       const response = await signUp({
         username: data.email,
