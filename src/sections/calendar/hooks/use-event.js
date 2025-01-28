@@ -5,7 +5,7 @@ import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
 
 // ----------------------------------------------------------------------
 
-export function useEvent(events, selectEventId, selectedRange, openForm) {
+export function useEvent(events, selectedWorkspace, selectEventId, selectedRange, openForm) {
   const currentEvent = events.find((event) => event.id === selectEventId);
 
   const defaultValues = useMemo(
@@ -20,9 +20,9 @@ export function useEvent(events, selectEventId, selectedRange, openForm) {
       start: selectedRange ? selectedRange.start : dayjs(new Date()).format(),
       end: selectedRange ? selectedRange.end : dayjs(new Date()).format(),
       category: '',
-      group: '',
+      group: selectedWorkspace,
     }),
-    [selectedRange]
+    [selectedRange, selectedWorkspace]
   );
 
   if (!openForm) {
