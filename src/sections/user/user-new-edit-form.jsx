@@ -89,7 +89,6 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
   });
 
   const {
-    reset,
     watch,
     setValue,
     handleSubmit,

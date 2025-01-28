@@ -5,8 +5,9 @@ import { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.workspaces;
 
-export function useGetWorkspaces() {
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+export function useGetWorkspaces(authenticated) {
+  const url = authenticated ? URL : null;
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
@@ -14,7 +15,7 @@ export function useGetWorkspaces() {
       workspacesLoading: isLoading,
       workspacesError: error,
       workspacesValidating: isValidating,
-      workspacesEmpty: !isLoading && !data.length,
+      workspacesEmpty: !isLoading && !data?.length,
     }),
     [data, error, isLoading, isValidating]
   );

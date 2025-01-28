@@ -62,28 +62,26 @@ export function useGetPaymentRequest(id) {
 
 export async function createPaymentRequests(paymentRequestsData) {
   const res = await axiosInstance.post(URL, paymentRequestsData);
-  mutate(URL);
+  mutate((key) => key.startsWith(URL));
   return res;
 }
 
 export async function updatePaymentRequest(id, paymentRequestData) {
   paymentRequestData.id = id;
   const res = await axiosInstance.put(`${URL}/${id}`, paymentRequestData);
-  mutate(URL);
-  mutate(`${URL}/${id}`);
+  mutate((key) => key.startsWith(URL));
   return res;
 }
 
 export async function deletePaymentRequest(id) {
   const res = await axiosInstance.delete(`${URL}/${id}`);
-  mutate(URL);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
 export async function requestPaymentRequestApproval(id, file_names) {
   const res = await axiosInstance.post(`${URL}/${id}/request_approval`, file_names);
-  mutate(URL);
-  mutate(`${URL}/${id}`);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }
 

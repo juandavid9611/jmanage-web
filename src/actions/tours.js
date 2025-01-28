@@ -42,7 +42,7 @@ export function useGetTour(tourId) {
 export async function createTour(tourData) {
   try {
     const res = await axiosInstance.post(URL, tourData);
-    mutate(URL);
+    mutate((key) => key.startsWith(URL));
     return res.data;
   } catch (error) {
     return { error: error.message };
@@ -53,14 +53,13 @@ export async function updateTour(id, tourData) {
   console.info('tourData', tourData);
   tourData.id = id;
   const res = await axiosInstance.put(`${URL}/${id}`, tourData);
-  mutate(URL);
-  mutate(`${URL}/${id}`);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
 export async function deleteTour(id) {
   const res = await axiosInstance.delete(`${URL}/${id}`);
-  mutate(URL);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
@@ -80,13 +79,12 @@ export async function generatePresignedUrls(tourId, files) {
 
 export async function addImages(tourId, file_names) {
   const res = await axiosInstance.post(`${URL}/${tourId}/add_images`, file_names);
-  mutate(URL);
-  mutate(`${URL}/${tourId}`);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
 export async function patchBooker(tourId, bookerId, bookerData) {
   const res = await axiosInstance.patch(`${URL}/${tourId}/bookers/${bookerId}`, bookerData);
-  mutate(URL);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }

@@ -2,12 +2,15 @@ import React, { useMemo, useState, useEffect, useContext, createContext } from '
 
 import { useGetWorkspaces } from 'src/actions/workspaces';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 // Create the context
 const WorkspaceContext = createContext();
 
 // Create a provider component
 export const WorkspaceProvider = ({ children }) => {
-  const { workspaces, isLoading, error } = useGetWorkspaces(); // Assuming the hook provides loading and error states
+  const { authenticated } = useAuthContext();
+  const { workspaces, isLoading, error } = useGetWorkspaces(authenticated); // Assuming the hook provides loading and error states
   const [selectedWorkspace, setSelectedWorkspace] = useState(null); // Start with null as default
 
   // Set selectedWorkspace after workspaces are fetched

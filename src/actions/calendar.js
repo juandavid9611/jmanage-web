@@ -20,7 +20,6 @@ const swrOptions = {
 export function useGetEvents(selectedWorkspace) {
   // Assuming you send the workspaceId as a query parameter
   const workspaceId = selectedWorkspace?.id;
-  console.log('workspaceId', workspaceId);
 
   // Update the SWR fetcher to include the workspaceId as a query parameter
   const { data, isLoading, error, isValidating } = useSWR(
@@ -53,7 +52,7 @@ export function useGetEvents(selectedWorkspace) {
 
 export async function createEvent(eventData) {
   const res = await axios.post(CALENDAR_ENDPOINT, eventData);
-  mutate(CALENDAR_ENDPOINT);
+  mutate((key) => key.startsWith(CALENDAR_ENDPOINT));
   return res;
 }
 
@@ -61,7 +60,7 @@ export async function createEvent(eventData) {
 
 export async function updateEvent(eventData) {
   const res = await axios.put(CALENDAR_ENDPOINT, eventData);
-  mutate(CALENDAR_ENDPOINT);
+  mutate((key) => key.startsWith(CALENDAR_ENDPOINT));
   return res;
 }
 
@@ -70,11 +69,11 @@ export async function updateEvent(eventData) {
 export async function deleteEvent(eventId) {
   const data = { eventId };
   await axios.delete(`${CALENDAR_ENDPOINT}/${eventId}`, data);
-  mutate(CALENDAR_ENDPOINT);
+  mutate((key) => key.startsWith(CALENDAR_ENDPOINT));
 }
 
 export async function participateEvent(eventId, value) {
   const data = { value };
   await axios.post(`${CALENDAR_ENDPOINT}/${eventId}/participate`, data);
-  mutate(CALENDAR_ENDPOINT);
+  mutate((key) => key.startsWith(CALENDAR_ENDPOINT));
 }

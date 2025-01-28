@@ -57,9 +57,6 @@ export const NewTourSchema = zod
     }),
     services: zod.string().array().min(1, { message: 'Must have at least 1 items!' }),
     tags: zod.string().array(),
-    images: schemaHelper.files({
-      message: { required_error: 'Images is required!' },
-    }),
     scores: zod.object({
       home: zod.number(),
       away: zod.number(),

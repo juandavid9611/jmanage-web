@@ -86,7 +86,7 @@ export function OverviewAppView() {
       <Grid container spacing={3}>
         <Grid xs={12} md={8}>
           <AppWelcome
-            title={`${t('welcome_back')} ${user?.displayName} ${selectedWorkspace?.name}`}
+            title={`${t('welcome_back')} ${user?.displayName}`}
             description={t('we_re_vittoria')}
             img={<SeoIllustration />}
           />
@@ -126,17 +126,24 @@ export function OverviewAppView() {
         </Grid>
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-            <AppTopAuthors
-              title={`${t('goals_and_assits')} Masculino`}
-              list={orderBy(get_top_goals_and_assists('masculino'), ['goals'], ['desc']).slice(
-                0,
-                3
-              )}
-            />
-            <AppTopAuthors
-              title={`${t('goals_and_assits')} Femenino`}
-              list={orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc']).slice(0, 3)}
-            />
+            {selectedWorkspace?.id === 'male' && (
+              <AppTopAuthors
+                title={`${t('goals_and_assits')} Masculino`}
+                list={orderBy(get_top_goals_and_assists('masculino'), ['goals'], ['desc']).slice(
+                  0,
+                  3
+                )}
+              />
+            )}
+            {selectedWorkspace?.id === 'female' && (
+              <AppTopAuthors
+                title={`${t('goals_and_assits')} Femenino`}
+                list={orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc']).slice(
+                  0,
+                  3
+                )}
+              />
+            )}
           </Box>
         </Grid>
       </Grid>

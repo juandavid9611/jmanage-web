@@ -72,6 +72,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
 
   const slides = currentInvoice?.images?.map((slide) => ({ src: slide })) || [];
   const { selectedWorkspace } = useWorkspace();
+
   const {
     selected: selectedImage,
     open: openLightbox,
@@ -83,7 +84,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
   const isAdmin = user?.role === 'admin';
   const isUser = !isAdmin;
 
-  const group = currentInvoice?.group || selectedWorkspace?.id;
+  const group = selectedWorkspace?.id;
 
   const defaultValues = useMemo(
     () => ({
@@ -120,7 +121,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
 
   const values = watch();
 
-  const { users } = useGetUsers();
+  const { users } = useGetUsers(selectedWorkspace);
 
   const onSubmit = handleSubmit(async (data) => {
     data.createDate = fDateTime(data?.createDate, 'YYYY-MM-DDTHH:mm:ss');
@@ -278,7 +279,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
                   name="paymentRequestTo"
                   placeholder={`${t('users')}...`}
                   disableCloseOnSelect
-                  options={users.filter((option) => option.group === values?.group)}
+                  options={users}
                   getOptionLabel={(option) => option.name}
                   isOptionEqualToValue={(option, value) => option?.id === value?.id}
                   renderOption={(props, paymentRequestTo) => (

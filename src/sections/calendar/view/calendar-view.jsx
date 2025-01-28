@@ -88,7 +88,7 @@ export function CalendarView() {
 
   const currentEvent = useEvent(
     events,
-    selectedWorkspace.id,
+    selectedWorkspace?.id,
     selectEventId,
     selectedRange,
     openForm
