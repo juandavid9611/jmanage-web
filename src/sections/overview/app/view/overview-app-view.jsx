@@ -1,3 +1,5 @@
+import MagicBell, { MagicBellProvider } from '@magicbell/magicbell-react';
+
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -11,6 +13,7 @@ import { CONFIG } from 'src/config-global';
 import { useGetEvents } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetLateArrives, useGetUserMetrics, get_top_goals_and_assists } from 'src/actions/user';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -31,9 +34,11 @@ export function OverviewAppView() {
 
   const { metrics } = useGetUserMetrics(user?.id);
 
+  const { selectedWorkspace } = useWorkspace();
+
   const { lateArrives } = useGetLateArrives(user?.id);
 
-  const { events } = useGetEvents();
+  const { events } = useGetEvents(selectedWorkspace);
 
   const isAdmin = user?.role === 'admin';
 
@@ -91,6 +96,18 @@ export function OverviewAppView() {
 
         <Grid xs={12} md={4}>
           <AppFeatured list={_appFeatured} />
+          <MagicBellProvider
+            apiKey="3ee48e4f9e2bea12927faca6abc4a7aff69598dd"
+            userEmail="jd_rodrigueza@javeriana.edu.co" // Replace with the logged-in user's email
+          >
+            <MagicBell
+              theme={{
+                header: { backgroundColor: '#000', textColor: '#fff' },
+                footer: { backgroundColor: '#000' },
+              }}
+              height={400}
+            />
+          </MagicBellProvider>
         </Grid>
 
         {metrics?.total > 0 && (
@@ -123,17 +140,24 @@ export function OverviewAppView() {
         </Grid>
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-            <AppTopAuthors
-              title={`${t('goals_and_assits')} Masculino`}
-              list={orderBy(get_top_goals_and_assists('masculino'), ['goals'], ['desc']).slice(
-                0,
-                3
-              )}
-            />
-            <AppTopAuthors
-              title={`${t('goals_and_assits')} Femenino`}
-              list={orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc']).slice(0, 3)}
-            />
+            {selectedWorkspace?.id === 'male' && (
+              <AppTopAuthors
+                title={`${t('goals_and_assits')} Masculino`}
+                list={orderBy(get_top_goals_and_assists('masculino'), ['goals'], ['desc']).slice(
+                  0,
+                  3
+                )}
+              />
+            )}
+            {selectedWorkspace?.id === 'female' && (
+              <AppTopAuthors
+                title={`${t('goals_and_assits')} Femenino`}
+                list={orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc']).slice(
+                  0,
+                  3
+                )}
+              />
+            )}
           </Box>
         </Grid>
       </Grid>

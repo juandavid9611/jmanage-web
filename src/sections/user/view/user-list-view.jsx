@@ -21,6 +21,7 @@ import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { deleteUser, useGetUsers } from 'src/actions/user';
 import { GROUP_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -69,7 +70,9 @@ export function UserListView() {
 
   const [tableData, setTableData] = useState([]);
 
-  const { users, usersLoading, usersEmpty } = useGetUsers();
+  const { selectedWorkspace } = useWorkspace();
+
+  const { users, usersLoading, usersEmpty } = useGetUsers(selectedWorkspace);
 
   const filters = useSetState({ name: '', group: [], status: 'all' });
 
@@ -131,9 +134,7 @@ export function UserListView() {
   );
 
   useEffect(() => {
-    if (users.length) {
-      setTableData(users);
-    }
+    setTableData(users);
   }, [users]);
 
   return (

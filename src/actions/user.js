@@ -5,8 +5,12 @@ import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.users;
 
-export function useGetUsers() {
-  const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
+export function useGetUsers(selectedWorkspace) {
+  const workspaceId = selectedWorkspace?.id;
+  const { data, isLoading, error, isValidating } = useSWR(
+    workspaceId ? `${URL}?workspace_id=${workspaceId}` : null,
+    fetcher
+  );
 
   const memoizedValue = useMemo(
     () => ({
@@ -43,7 +47,7 @@ export async function getUser(userId) {
 export async function createUser(userData) {
   try {
     const res = await axiosInstance.post(URL, userData);
-    mutate(URL);
+    mutate((key) => key.startsWith(URL));
     return res.data;
   } catch (error) {
     return { error: error.message };
@@ -53,20 +57,20 @@ export async function createUser(userData) {
 export async function updateUser(id, userData) {
   userData.id = id;
   const res = await axiosInstance.put(`${URL}/${id}`, userData);
-  mutate(URL);
-  mutate(`${URL}/${id}`);
+  mutate((key) => key.startsWith(URL));
+  mutate((key) => key.startsWith('/workspaces'));
   return res.data;
 }
 
 export async function updateUserMetrics(id, metricsData) {
   const res = await axiosInstance.put(`${URL}/${id}/metrics`, metricsData);
-  mutate(URL);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
 export async function deleteUser(id) {
   const res = await axiosInstance.delete(`${URL}/${id}`);
-  mutate(URL);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
@@ -115,10 +119,7 @@ export async function generatePresignedUrl(userId, file) {
 export async function updateAvatarUrl(id, avatarUrl) {
   const data = { avatar_url: avatarUrl };
   const res = await axiosInstance.put(`${URL}/${id}/avatar`, data);
-  mutate(`${URL}/${id}`, { ...data }, false);
-
-  // Optionally, revalidate afterward if you want to fetch fresh data
-  mutate(`${URL}/${id}`);
+  mutate((key) => key.startsWith(URL));
   return res.data;
 }
 

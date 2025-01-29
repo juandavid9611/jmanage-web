@@ -16,6 +16,7 @@ import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/component
 import { AuthProvider } from 'src/auth/context/amplify';
 
 import { Snackbar } from './components/snackbar';
+import { WorkspaceProvider } from './workspace/workspace-provider';
 
 // ----------------------------------------------------------------------
 
@@ -26,14 +27,16 @@ export default function App() {
     <LocalizationProvider>
       <AuthProvider>
         <SettingsProvider settings={defaultSettings}>
-          <ThemeProvider>
-            <MotionLazy>
-              <Snackbar />
-              <ProgressBar />
-              <SettingsDrawer />
-              <Router />
-            </MotionLazy>
-          </ThemeProvider>
+          <WorkspaceProvider>
+            <ThemeProvider>
+              <MotionLazy>
+                <Snackbar />
+                <ProgressBar />
+                <SettingsDrawer />
+                <Router />
+              </MotionLazy>
+            </ThemeProvider>
+          </WorkspaceProvider>
         </SettingsProvider>
       </AuthProvider>
     </LocalizationProvider>

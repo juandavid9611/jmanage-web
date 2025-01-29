@@ -1,10 +1,8 @@
 import { useState, useCallback } from 'react';
 
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 
 import { paths } from 'src/routes/paths';
-import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
@@ -14,9 +12,9 @@ import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { useGetTours } from 'src/actions/tours';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import { _tours, _tourGuides, TOUR_SORT_OPTIONS, TOUR_SERVICE_OPTIONS } from 'src/_mock';
 
-import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -33,7 +31,8 @@ import { TourFiltersResult } from '../tour-filters-result';
 export function TourListView() {
   const { user } = useAuthContext();
   const isAdmin = user.role === 'admin';
-  const { tours, eventsLoading } = useGetTours();
+  const { selectedWorkspace } = useWorkspace();
+  const { tours } = useGetTours(selectedWorkspace?.id);
 
   const openFilters = useBoolean();
 
@@ -124,18 +123,6 @@ export function TourListView() {
           { name: 'Tour', href: paths.dashboard.admin.tour.root },
           { name: 'List' },
         ]}
-        action={
-          isAdmin && (
-            <Button
-              component={RouterLink}
-              href={paths.dashboard.admin.tour.new}
-              variant="contained"
-              startIcon={<Iconify icon="mingcute:add-line" />}
-            >
-              New Tour
-            </Button>
-          )
-        }
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 

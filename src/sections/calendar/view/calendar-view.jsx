@@ -23,6 +23,7 @@ import { fDate, fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { CALENDAR_COLOR_OPTIONS } from 'src/_mock/_calendar';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import { updateEvent, useGetEvents } from 'src/actions/calendar';
 
 import { Iconify } from 'src/components/iconify';
@@ -42,13 +43,14 @@ import { CalendarFiltersResult } from '../calendar-filters-result';
 export function CalendarView() {
   const { t } = useTranslation();
   const { user } = useAuthContext();
+  const { selectedWorkspace } = useWorkspace();
   const isAdmin = user?.role === 'admin';
 
   const theme = useTheme();
 
   const openFilters = useBoolean();
 
-  const { events, eventsLoading } = useGetEvents();
+  const { events, eventsLoading } = useGetEvents(selectedWorkspace);
 
   const filters = useSetState({
     colors: [],
@@ -84,7 +86,13 @@ export function CalendarView() {
     onClickEventInFilters,
   } = useCalendar();
 
-  const currentEvent = useEvent(events, selectEventId, selectedRange, openForm);
+  const currentEvent = useEvent(
+    events,
+    selectedWorkspace?.id,
+    selectEventId,
+    selectedRange,
+    openForm
+  );
 
   useEffect(() => {
     onInitialView();

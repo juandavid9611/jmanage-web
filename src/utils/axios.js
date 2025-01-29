@@ -36,4 +36,5 @@ export const endpoints = {
   paymentRquests: '/payment_requests',
   files: '/files',
   tours: '/tours',
+  workspaces: '/workspaces',
 };

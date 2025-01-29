@@ -98,7 +98,7 @@ function Item({ item, sx, ...other }) {
           <Iconify width={16} icon="solar:calendar-date-bold" />
           {fDateTime(item.start)}
           <Iconify width={16} icon="solar:map-point-wave-linear" />
-          {item.description}
+          {item.location} - {item.description}
           <Iconify
             sx={{
               color: userParticipates ? item.color : 'success',

@@ -26,6 +26,7 @@ import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import { deletePaymentRequest, useGetPaymentRequests } from 'src/actions/paymentRequest';
 
 import { Label } from 'src/components/label';
@@ -80,7 +81,9 @@ export function InvoiceListView() {
 
   const [tableData, setTableData] = useState([]);
 
-  const { paymentRequests, paymentRequestsLoading, paymentRequestsEmpty } = useGetPaymentRequests();
+  const { selectedWorkspace } = useWorkspace();
+
+  const { paymentRequests } = useGetPaymentRequests(selectedWorkspace?.id);
 
   const filters = useSetState({
     name: '',
@@ -203,9 +206,11 @@ export function InvoiceListView() {
 
   useEffect(() => {
     if (paymentRequests.length) {
-      setTableData(paymentRequests);
+      setTableData(paymentRequests); // Set table data when payment requests are fetched
+    } else {
+      setTableData([]); // Ensure the table data is set to an empty array if there are no payment requests
     }
-  }, [paymentRequests]);
+  }, [paymentRequests, selectedWorkspace]); // Re-run whenever paymentRequests or selectedWorkspace changes
 
   return (
     <>

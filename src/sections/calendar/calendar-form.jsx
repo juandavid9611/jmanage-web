@@ -19,7 +19,6 @@ import { useRouter } from 'src/routes/hooks';
 import { uuidv4 } from 'src/utils/uuidv4';
 import { fIsAfter, fTimestamp } from 'src/utils/format-time';
 
-import { TEAM_GROUPS } from 'src/_mock';
 import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/actions/calendar';
 
 import { toast } from 'src/components/snackbar';
@@ -179,17 +178,15 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               name="group"
               label={t('group')}
               InputLabelProps={{ shrink: true }}
-              disabled={!isAdmin}
+              disabled
             >
-              {TEAM_GROUPS.map((option) => (
-                <MenuItem
-                  key={option.label}
-                  value={option.value}
-                  sx={{ textTransform: 'capitalize' }}
-                >
-                  {t(option.label)}
-                </MenuItem>
-              ))}
+              <MenuItem
+                key={currentEvent?.group}
+                value={currentEvent?.group}
+                sx={{ textTransform: 'capitalize' }}
+              >
+                {t(currentEvent?.group)}
+              </MenuItem>
             </Field.Select>
 
             {!currentEvent?.createTour && isAdmin && (
