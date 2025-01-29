@@ -38,6 +38,7 @@
     "@hookform/resolvers": "^3.6.0",
     "@iconify/react": "^5.0.1",
     "@magicbell/magicbell-react": "^11.2.0",
+    "@magicbell/webpush": "^2.1.0",
     "@mui/icons-material": "^5.15.12",
     "@mui/lab": "^5.0.0-alpha.170",
     "@mui/material": "^5.15.20",
