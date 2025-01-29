@@ -57,7 +57,7 @@ export function AmplifyResetPasswordView() {
     try {
       await resetPassword({ username: data.email });
 
-      const searchParams = new URLSearchParams({ email: data.email }).toString();
+      const searchParams = new URLSearchParams({ email: data.email }).toString().toLowerCase();
 
       const href = `${paths.auth.amplify.updatePassword}?${searchParams}`;
       router.push(href);
