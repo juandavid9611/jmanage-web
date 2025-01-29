@@ -1,4 +1,4 @@
-import MagicBell, { MagicBellProvider } from '@magicbell/magicbell-react';
+import { isSupported, WebPushClient, registerServiceWorker } from '@magicbell/webpush';
 
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -26,6 +26,8 @@ import { MetricProgress } from '../metric-progress';
 import { MetricsOverview } from '../metrics-overview';
 import { CourseWidgetSummary } from '../course-widget-summary';
 
+registerServiceWorker('/sw.js');
+
 // ----------------------------------------------------------------------
 
 export function OverviewAppView() {
@@ -43,6 +45,21 @@ export function OverviewAppView() {
   const isAdmin = user?.role === 'admin';
 
   const theme = useTheme();
+
+  const client = new WebPushClient({
+    apiKey: '3ee48e4f9e2bea12927faca6abc4a7aff69598dd',
+    userEmail: 'jd_rodrigueza@javeriana.edu.co',
+  });
+
+  console.log('suscribed', client.isSubscribed); // false
+  // subscribe to push notifications
+  client.subscribe();
+
+  console.log('suscribed', client.isSubscribed); // true
+
+  console.log('isSupported', isSupported()); // true
+
+  registerServiceWorker('/sw.js');
 
   function getMetricsProgress(metricsList) {
     return [
@@ -96,7 +113,7 @@ export function OverviewAppView() {
 
         <Grid xs={12} md={4}>
           <AppFeatured list={_appFeatured} />
-          <MagicBellProvider
+          {/* <MagicBellProvider
             apiKey="3ee48e4f9e2bea12927faca6abc4a7aff69598dd"
             userEmail="jd_rodrigueza@javeriana.edu.co" // Replace with the logged-in user's email
           >
@@ -107,7 +124,7 @@ export function OverviewAppView() {
               }}
               height={400}
             />
-          </MagicBellProvider>
+          </MagicBellProvider> */}
         </Grid>
 
         {metrics?.total > 0 && (

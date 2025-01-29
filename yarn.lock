@@ -1265,7 +1265,7 @@
     tslib "^2.6.2"
     zustand "^4.5.2"
 
-"@magicbell/webpush@2.1.0":
+"@magicbell/webpush@2.1.0", "@magicbell/webpush@^2.1.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@magicbell/webpush/-/webpush-2.1.0.tgz#1a43bbab4fb2a02a034cc0a119aaca53770952c3"
   integrity sha512-MOcwKKh3qZ00vzyimM1XPT+4THAoRpfcPrExrwSzrE0ume12vkU8GMA/sBAkEEveubsEicTQPQr4U5E5DOCKlg==
