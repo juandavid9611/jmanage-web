@@ -16,6 +16,7 @@ import { useCountdownSeconds } from 'src/hooks/use-countdown';
 
 import { EmailInboxIcon } from 'src/assets/icons';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
@@ -64,6 +65,7 @@ export function AmplifyVerifyView() {
     try {
       await confirmSignUp({ username: data.email, confirmationCode: data.code });
       router.push(paths.auth.amplify.signIn);
+      toast.success('Your email has been verified!');
     } catch (error) {
       console.error(error);
     }

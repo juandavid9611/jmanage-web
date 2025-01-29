@@ -19,6 +19,7 @@ import { useCountdownSeconds } from 'src/hooks/use-countdown';
 
 import { SentIcon } from 'src/assets/icons';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
@@ -87,6 +88,7 @@ export function AmplifyUpdatePasswordView() {
       });
 
       router.push(paths.auth.amplify.signIn);
+      toast.success('Your password has been updated!');
     } catch (error) {
       console.error(error);
     }
