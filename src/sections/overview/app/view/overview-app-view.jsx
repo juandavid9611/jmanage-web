@@ -1,3 +1,5 @@
+import MagicBell, { MagicBellProvider } from '@magicbell/magicbell-react';
+
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -94,6 +96,18 @@ export function OverviewAppView() {
 
         <Grid xs={12} md={4}>
           <AppFeatured list={_appFeatured} />
+          <MagicBellProvider
+            apiKey="3ee48e4f9e2bea12927faca6abc4a7aff69598dd"
+            userEmail="jd_rodrigueza@javeriana.edu.co" // Replace with the logged-in user's email
+          >
+            <MagicBell
+              theme={{
+                header: { backgroundColor: '#000', textColor: '#fff' },
+                footer: { backgroundColor: '#000' },
+              }}
+              height={400}
+            />
+          </MagicBellProvider>
         </Grid>
 
         {metrics?.total > 0 && (
