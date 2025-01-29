@@ -1,6 +1,7 @@
-import { isSupported, WebPushClient, registerServiceWorker } from '@magicbell/webpush';
+import { useState } from 'react';
+import { WebPushClient, registerServiceWorker } from '@magicbell/webpush';
 
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 
@@ -51,13 +52,7 @@ export function OverviewAppView() {
     userEmail: 'jd_rodrigueza@javeriana.edu.co',
   });
 
-  console.log('suscribed', client.isSubscribed); // false
-  // subscribe to push notifications
-  client.subscribe();
-
-  console.log('suscribed', client.isSubscribed); // true
-
-  console.log('isSupported', isSupported()); // true
+  const [status, setStatus] = useState('not yet');
 
   registerServiceWorker('/sw.js');
 
@@ -113,6 +108,19 @@ export function OverviewAppView() {
 
         <Grid xs={12} md={4}>
           <AppFeatured list={_appFeatured} />
+          <Button
+            variant="contained"
+            text="Subscribe"
+            onClick={async () => {
+              const isSubscribed = await client.isSubscribed();
+              if (!isSubscribed) {
+                await client.subscribe();
+              }
+              setStatus(isSubscribed ? 'subscribed' : 'not yet');
+            }}
+          >
+            {status}
+          </Button>
           {/* <MagicBellProvider
             apiKey="3ee48e4f9e2bea12927faca6abc4a7aff69598dd"
             userEmail="jd_rodrigueza@javeriana.edu.co" // Replace with the logged-in user's email
