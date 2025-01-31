@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WebPushClient, registerServiceWorker } from '@magicbell/webpush';
 
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 
@@ -61,10 +61,8 @@ export function OverviewAppView() {
       if (!isSubscribed) {
         await client.subscribe();
       }
-      setStatus(isSubscribed ? 'subscribed' : 'not yet');
-      console.log('status', status);
     })();
-  }, [user.email, status]);
+  }, [user.email]);
 
   function getMetricsProgress(metricsList) {
     return [
@@ -118,7 +116,6 @@ export function OverviewAppView() {
 
         <Grid xs={12} md={4}>
           <AppFeatured list={_appFeatured} />
-          <Button variant="contained">{status}</Button>
         </Grid>
 
         {metrics?.total > 0 && (

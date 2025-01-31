@@ -16,6 +16,7 @@ import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { WorkspacesPopover } from '../components/workspaces-popover';
+import { NotificationsDrawer } from '../components/notifications-drawer';
 
 // ----------------------------------------------------------------------
 
@@ -138,12 +139,15 @@ export function HeaderBase({
 
               {/* -- Language popover -- */}
               {localization && <LanguagePopover data-slot="localization" data={data?.langs} />}
+
               {/* -- Settings button -- */}
               {settings && <SettingsButton data-slot="settings" />}
 
+              {/* -- Notifications button -- */}
+              {notifications && <NotificationsDrawer />}
+
               {/* -- Account drawer -- */}
               {account && <AccountDrawer data-slot="account" data={data?.account} />}
-
               {/* -- Sign in button -- */}
               {signIn && <SignInButton />}
 
