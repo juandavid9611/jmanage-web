@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { WebPushClient, registerServiceWorker } from '@magicbell/webpush';
+
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -24,6 +27,8 @@ import { MetricProgress } from '../metric-progress';
 import { MetricsOverview } from '../metrics-overview';
 import { CourseWidgetSummary } from '../course-widget-summary';
 
+registerServiceWorker('/sw.js');
+
 // ----------------------------------------------------------------------
 
 export function OverviewAppView() {
@@ -41,6 +46,23 @@ export function OverviewAppView() {
   const isAdmin = user?.role === 'admin';
 
   const theme = useTheme();
+
+  const [status, setStatus] = useState('not yet');
+
+  registerServiceWorker('/sw.js');
+
+  useEffect(() => {
+    (async () => {
+      const client = new WebPushClient({
+        apiKey: CONFIG.site.magicBellApiKey,
+        userEmail: user.email,
+      });
+      const isSubscribed = await client.isSubscribed();
+      if (!isSubscribed) {
+        await client.subscribe();
+      }
+    })();
+  }, [user.email]);
 
   function getMetricsProgress(metricsList) {
     return [
