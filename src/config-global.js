@@ -11,6 +11,7 @@ export const CONFIG = {
     assetURL: import.meta.env.VITE_ASSET_URL ?? '',
     basePath: import.meta.env.VITE_BASE_PATH ?? '',
     version: packageJson.version,
+    magicBellApiKey: import.meta.env.VITE_MAGICBELL_API_KEY ?? '',
   },
   /**
    * Auth

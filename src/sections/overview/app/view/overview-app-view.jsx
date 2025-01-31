@@ -54,16 +54,17 @@ export function OverviewAppView() {
   useEffect(() => {
     (async () => {
       const client = new WebPushClient({
-        apiKey: '3ee48e4f9e2bea12927faca6abc4a7aff69598dd',
-        userEmail: 'juqncho1996@gmail.com',
+        apiKey: CONFIG.site.magicBellApiKey,
+        userEmail: user.email,
       });
       const isSubscribed = await client.isSubscribed();
       if (!isSubscribed) {
         await client.subscribe();
       }
       setStatus(isSubscribed ? 'subscribed' : 'not yet');
+      console.log('status', status);
     })();
-  }, [user.email]);
+  }, [user.email, status]);
 
   function getMetricsProgress(metricsList) {
     return [
@@ -118,18 +119,6 @@ export function OverviewAppView() {
         <Grid xs={12} md={4}>
           <AppFeatured list={_appFeatured} />
           <Button variant="contained">{status}</Button>
-          {/* <MagicBellProvider
-            apiKey="3ee48e4f9e2bea12927faca6abc4a7aff69598dd"
-            userEmail="jd_rodrigueza@javeriana.edu.co" // Replace with the logged-in user's email
-          >
-            <MagicBell
-              theme={{
-                header: { backgroundColor: '#000', textColor: '#fff' },
-                footer: { backgroundColor: '#000' },
-              }}
-              height={400}
-            />
-          </MagicBellProvider> */}
         </Grid>
 
         {metrics?.total > 0 && (
