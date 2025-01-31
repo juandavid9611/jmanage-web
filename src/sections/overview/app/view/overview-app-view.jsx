@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WebPushClient, registerServiceWorker } from '@magicbell/webpush';
 
 import { Box, Button } from '@mui/material';
@@ -47,14 +47,23 @@ export function OverviewAppView() {
 
   const theme = useTheme();
 
-  const client = new WebPushClient({
-    apiKey: '3ee48e4f9e2bea12927faca6abc4a7aff69598dd',
-    userEmail: 'jd_rodrigueza@javeriana.edu.co',
-  });
-
   const [status, setStatus] = useState('not yet');
 
   registerServiceWorker('/sw.js');
+
+  useEffect(() => {
+    (async () => {
+      const client = new WebPushClient({
+        apiKey: '3ee48e4f9e2bea12927faca6abc4a7aff69598dd',
+        userEmail: 'juqncho1996@gmail.com',
+      });
+      const isSubscribed = await client.isSubscribed();
+      if (!isSubscribed) {
+        await client.subscribe();
+      }
+      setStatus(isSubscribed ? 'subscribed' : 'not yet');
+    })();
+  }, [user.email]);
 
   function getMetricsProgress(metricsList) {
     return [
@@ -108,19 +117,7 @@ export function OverviewAppView() {
 
         <Grid xs={12} md={4}>
           <AppFeatured list={_appFeatured} />
-          <Button
-            variant="contained"
-            text="Subscribe"
-            onClick={async () => {
-              const isSubscribed = await client.isSubscribed();
-              if (!isSubscribed) {
-                await client.subscribe();
-              }
-              setStatus(isSubscribed ? 'subscribed' : 'not yet');
-            }}
-          >
-            {status}
-          </Button>
+          <Button variant="contained">{status}</Button>
           {/* <MagicBellProvider
             apiKey="3ee48e4f9e2bea12927faca6abc4a7aff69598dd"
             userEmail="jd_rodrigueza@javeriana.edu.co" // Replace with the logged-in user's email
