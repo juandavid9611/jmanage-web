@@ -5,10 +5,10 @@ import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.users;
 
-export function useGetUsers(selectedWorkspace) {
+export function useGetUsers(selectedWorkspace, includeDisabled = false) {
   const workspaceId = selectedWorkspace?.id;
   const { data, isLoading, error, isValidating } = useSWR(
-    workspaceId ? `${URL}?workspace_id=${workspaceId}` : null,
+    `${URL}?workspace_id=${workspaceId}&include_disabled=${includeDisabled}`,
     fetcher
   );
 
@@ -119,6 +119,18 @@ export async function generatePresignedUrl(userId, file) {
 export async function updateAvatarUrl(id, avatarUrl) {
   const data = { avatar_url: avatarUrl };
   const res = await axiosInstance.put(`${URL}/${id}/avatar`, data);
+  mutate((key) => key.startsWith(URL));
+  return res.data;
+}
+
+export async function disableUser(id) {
+  const res = await axiosInstance.put(`${URL}/${id}/disable`);
+  mutate((key) => key.startsWith(URL));
+  return res.data;
+}
+
+export async function enableUser(id) {
+  const res = await axiosInstance.put(`${URL}/${id}/enable`);
   mutate((key) => key.startsWith(URL));
   return res.data;
 }

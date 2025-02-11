@@ -1,7 +1,7 @@
 import { z as zod } from 'zod';
-import { useForm } from 'react-hook-form';
 import { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
@@ -11,6 +11,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
+import { Switch, FormControlLabel } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
@@ -19,7 +20,13 @@ import { fData } from 'src/utils/format-number';
 
 import { TEAM_GROUPS } from 'src/_mock';
 import { uploadFileToS3 } from 'src/actions/files';
-import { updateUser, updateAvatarUrl, generatePresignedUrl } from 'src/actions/user';
+import {
+  updateUser,
+  enableUser,
+  disableUser,
+  updateAvatarUrl,
+  generatePresignedUrl,
+} from 'src/actions/user';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -91,6 +98,7 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
   const {
     watch,
     setValue,
+    control,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
@@ -141,15 +149,24 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
             {currentUser && (
               <Label
                 color={
-                  (values.confirmationStatus === 'confirmed' && 'success') ||
-                  (values.confirmationStatus === 'inactive' && 'error') ||
+                  (values.confirmationStatus === 'confirmed' &&
+                    values.status === 'active' &&
+                    'success') ||
+                  (values.confirmationStatus === 'pending' &&
+                    values.status === 'active' &&
+                    'warning') ||
+                  (values.status === 'disabled' && 'error') ||
                   'warning'
                 }
                 sx={{ position: 'absolute', top: 24, right: 24 }}
               >
-                {values.confirmationStatus === 'confirmed' && t('active')}
-                {values.confirmationStatus === 'inactived' && t('inactive')}
-                {values.confirmationStatus === 'pending' && t('pending')}
+                {values.confirmationStatus === 'confirmed' &&
+                  values.status === 'active' &&
+                  t('active')}
+                {values.confirmationStatus === 'pending' &&
+                  values.status === 'active' &&
+                  t('pending')}
+                {values.status === 'disabled' && t('disabled')}
               </Label>
             )}
 
@@ -174,6 +191,48 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
                   </Typography>
                 }
               />
+              {currentUser && (
+                <FormControlLabel
+                  labelPlacement="start"
+                  disabled={!isAdmin}
+                  control={
+                    <Controller
+                      name="status"
+                      control={control}
+                      render={({ field }) => (
+                        <Switch
+                          {...field}
+                          checked={field.value === 'disabled'}
+                          onChange={(event) => {
+                            field.onChange(event.target.checked ? 'disabled' : 'active');
+                            if (event.target.checked) {
+                              disableUser(currentUser.id);
+                            } else {
+                              enableUser(currentUser.id);
+                            }
+                          }}
+                        />
+                      )}
+                    />
+                  }
+                  label={
+                    <>
+                      <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                        Deshabilitado
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        El usuario no podra entrar a la plataforma o recibir notificaciones
+                      </Typography>
+                    </>
+                  }
+                  sx={{
+                    mx: 0,
+                    mb: 3,
+                    width: 1,
+                    justifyContent: 'space-between',
+                  }}
+                />
+              )}
             </Box>
           </Card>
         </Grid>
