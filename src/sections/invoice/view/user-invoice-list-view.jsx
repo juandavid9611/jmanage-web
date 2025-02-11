@@ -177,11 +177,7 @@ export function UserInvoiceListView() {
     <DashboardContent>
       <CustomBreadcrumbs
         heading={t('user_invoices')}
-        links={[
-          { name: t('app'), href: paths.dashboard.root },
-          { name: t('invoice'), href: paths.dashboard.admin.invoice.root },
-          { name: t('list') },
-        ]}
+        links={[{ name: t('app'), href: paths.dashboard.root }, { name: t('list') }]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 

@@ -179,5 +179,6 @@
   "eps": "EPS",
   "relationship": "Parentesco",
   "active": "Activo",
-  "inactive": "Inactivo"
+  "inactive": "Inactivo",
+  "disabled": "Deshabilitado"
 }

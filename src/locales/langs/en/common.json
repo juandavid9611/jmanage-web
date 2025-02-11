@@ -157,5 +157,6 @@
   "filters": "Filters",
   "range": "Range",
   "events": "Events",
-  "monthly_players": "Monthly Players"
+  "monthly_players": "Monthly Players",
+  "disabled": "Disabled"
 }

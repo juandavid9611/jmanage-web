@@ -53,7 +53,7 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 const TABLE_HEAD = [
   { id: 'name', label: 'name' },
   { id: 'phoneNumber', label: 'phone_number', width: 180 },
-  { id: 'group', label: 'group', width: 220 },
+  { id: 'identityCardNumber', label: 'identity_card', width: 220 },
   { id: 'eps', label: 'eps', width: 180 },
   { id: 'confirmationStatus', label: 'status', width: 100 },
   { id: '', width: 88 },
@@ -72,7 +72,7 @@ export function UserListView() {
 
   const { selectedWorkspace } = useWorkspace();
 
-  const { users, usersLoading, usersEmpty } = useGetUsers(selectedWorkspace);
+  const { users, usersLoading, usersEmpty } = useGetUsers(selectedWorkspace, true);
 
   const filters = useSetState({ name: '', group: [], status: 'all' });
 
@@ -176,12 +176,16 @@ export function UserListView() {
                     color={
                       (tab.value === 'confirmed' && 'success') ||
                       (tab.value === 'pending' && 'warning') ||
-                      (tab.value === 'deleted' && 'error') ||
+                      (tab.value === 'disabled' && 'error') ||
                       'default'
                     }
                   >
-                    {['confirmed', 'pending', 'deleted', 'rejected'].includes(tab.value)
-                      ? users.filter((user) => user.confirmationStatus === tab.value).length
+                    {['confirmed', 'pending', 'disabled'].includes(tab.value)
+                      ? users.filter((user) =>
+                          user.status === 'active'
+                            ? user.confirmationStatus === tab.value
+                            : user.status === tab.value
+                        ).length
                       : tableData.length}
                   </Label>
                 }
@@ -338,7 +342,9 @@ function applyFilter({ inputData, comparator, filters }) {
   }
 
   if (status !== 'all') {
-    inputData = inputData.filter((user) => user.confirmationStatus === status);
+    inputData = inputData.filter((user) =>
+      user.status === 'active' ? user.confirmationStatus === status : user.status === status
+    );
   }
 
   if (group.length) {

@@ -56,7 +56,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.group)}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.identityCardNumber)}</TableCell>
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.eps}</TableCell>
 
@@ -64,13 +64,13 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
           <Label
             variant="soft"
             color={
+              (row.status === 'disabled' && 'error') ||
               (row.confirmationStatus === 'confirmed' && 'success') ||
               (row.confirmationStatus === 'pending' && 'warning') ||
-              (row.confirmationStatus === 'deleted' && 'error') ||
               'default'
             }
           >
-            {t(row.confirmationStatus)}
+            {t(row.status === 'disabled' ? row.status : row.confirmationStatus)}
           </Label>
         </TableCell>
 
