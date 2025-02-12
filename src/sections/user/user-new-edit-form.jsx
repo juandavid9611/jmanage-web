@@ -60,6 +60,7 @@ export const NewUserSchema = zod.object({
     .min(1, { message: 'Relación contacto de emergencia requerida!' }),
   eps: zod.string().min(1, { message: 'Eps requerida!' }),
   avatarUrl: zod.string().nullable(),
+  shirtNumber: zod.string().min(1, { message: 'Número de camiseta requerido!' }),
 });
 
 export function UserNewEditForm({ currentUser, isAdmin }) {
@@ -85,6 +86,7 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
       status: currentUser?.status || 'pending',
       confirmationStatus: currentUser?.confirmationStatus || 'pending',
       avatarUrl: currentUser?.avatarUrl || null,
+      shirtNumber: currentUser?.shirtNumber || 0,
     }),
     [currentUser]
   );
@@ -146,7 +148,7 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
       <Grid container spacing={3}>
         <Grid xs={12} md={4}>
           <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-            {currentUser && (
+            {currentUser && currentUser?.status && (
               <Label
                 color={
                   (values.confirmationStatus === 'confirmed' &&
@@ -281,6 +283,7 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
 
               <Field.Text name="rh" label={t('rh')} />
               <Field.Text name="eps" label={t('eps')} />
+              <Field.Text name="shirtNumber" label={t('shirt_number')} />
             </Box>
 
             <Stack spacing={3} px={3} py={3}>

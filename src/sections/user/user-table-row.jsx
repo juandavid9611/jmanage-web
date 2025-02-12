@@ -58,6 +58,8 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.identityCardNumber)}</TableCell>
 
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.shirtNumber)}</TableCell>
+
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.eps}</TableCell>
 
         <TableCell>

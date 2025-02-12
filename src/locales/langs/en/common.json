@@ -158,5 +158,6 @@
   "range": "Range",
   "events": "Events",
   "monthly_players": "Monthly Players",
-  "disabled": "Disabled"
+  "disabled": "Disabled",
+  "shirt_number": "Shirt Number"
 }

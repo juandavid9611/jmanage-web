@@ -6,7 +6,6 @@ import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 
 import { orderBy } from 'src/utils/helper';
-import { fDateTime } from 'src/utils/format-time';
 
 import { _appFeatured } from 'src/_mock';
 import { useTranslate } from 'src/locales';
@@ -22,9 +21,8 @@ import { useAuthContext } from 'src/auth/hooks';
 import { AppWelcome } from '../app-welcome';
 import { NextEvents } from '../next-events';
 import { AppFeatured } from '../app-featured';
+import { FileUpgrade } from '../file-upgrade';
 import { AppTopAuthors } from '../app-top-authors';
-import { MetricProgress } from '../metric-progress';
-import { MetricsOverview } from '../metrics-overview';
 import { CourseWidgetSummary } from '../course-widget-summary';
 
 registerServiceWorker('/sw.js');
@@ -118,9 +116,14 @@ export function OverviewAppView() {
           <AppFeatured list={_appFeatured} />
         </Grid>
 
-        {metrics?.total > 0 && (
+        <Grid xs={12} md={4}>
+          <FileUpgrade userId={user.id} />
+        </Grid>
+
+        {/* {metrics?.total > 0 && (
           <Grid xs={12} md={4}>
             <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
+              <FileUpgrade userId={user.id} />
               <MetricsOverview
                 title={t('my_metrics')}
                 subheader={`Última actualización: ${fDateTime(metrics?.last_update)}`}
@@ -133,7 +136,7 @@ export function OverviewAppView() {
               />
             </Box>
           </Grid>
-        )}
+        )} */}
 
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
