@@ -180,5 +180,6 @@
   "relationship": "Parentesco",
   "active": "Activo",
   "inactive": "Inactivo",
-  "disabled": "Deshabilitado"
+  "disabled": "Deshabilitado",
+  "shirt_number": "Número en la camiseta"
 }

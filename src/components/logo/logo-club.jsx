@@ -10,7 +10,7 @@ import { logoClasses } from './classes';
 // ----------------------------------------------------------------------
 
 export const LogoClub = forwardRef(
-  ({ width = 40, height = 40, disableLink = false, className, href = '/', sx, ...other }, ref) => (
+  ({ width = 100, height = 40, disableLink = false, className, href = '/', sx, ...other }, ref) => (
     <NoSsr
       fallback={
         <Box
@@ -30,7 +30,7 @@ export const LogoClub = forwardRef(
         ref={ref}
         component={RouterLink}
         href={href}
-        width={width + 130}
+        width={width + 70}
         height={height + 130}
         className={logoClasses.root.concat(className ? ` ${className}` : '')}
         aria-label="logo"
