@@ -56,8 +56,6 @@ export const NewInvoiceSchema = zod
     paymentRequestTo: zod.any().array().min(1, { message: 'Payment request to is required!' }),
     userPrice: zod.number().min(1, { message: 'User price must be more than 0' }),
     overduePrice: zod.number(),
-    sponsorPrice: zod.number(),
-    sponsorPercentage: zod.number(),
   })
   .refine((data) => !fIsAfter(data.createDate, data.dueDate), {
     message: 'Due date cannot be earlier than create date!',
@@ -96,11 +94,9 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       status: currentInvoice?.status || 'pending',
       category: currentInvoice?.category || 'Entrenos',
       paymentRequestTo: currentInvoice?.paymentRequestTo ? [currentInvoice.paymentRequestTo] : [],
-      group,
+      group: currentInvoice?.group || group,
       userPrice: currentInvoice?.totalAmount || 0,
       overduePrice: currentInvoice?.overduePrice || 0,
-      sponsorPrice: currentInvoice?.sponsorPrice || 0,
-      sponsorPercentage: currentInvoice?.sponsorPercentage || 0,
       images: currentInvoice?.images || [],
     }),
     [currentInvoice, group]
