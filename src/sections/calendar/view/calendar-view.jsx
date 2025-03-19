@@ -167,6 +167,8 @@ export function CalendarView() {
               headerToolbar={false}
               select={onSelectRange}
               eventClick={onClickEvent}
+              // slotMinTime="08:00:00" // Start at 8 AM
+              // slotMaxTime="18:00:00" // End at 6 PM
               aspectRatio={3}
               firstDay={1}
               eventDrop={(arg) => {
