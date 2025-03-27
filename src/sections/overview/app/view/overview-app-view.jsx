@@ -83,20 +83,34 @@ export function OverviewAppView() {
         </Grid>
 
         <Grid xs={12} md={4}>
-          <FileUpgrade userId={user.id} />
+          <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
+            <NextEvents title={t('next_events')} list={events} />
+            <FileUpgrade userId={user.id} />
+          </Box>
+        </Grid>
+        <Grid xs={12} lg={8}>
+          <AppNewInvoice
+            title="Pagos pendientes o vencidos"
+            tableData={pendingOrOverduePaymentRequests?.slice(0, 5)}
+            headLabel={[
+              { id: 'id', label: 'ID Pago' },
+              { id: 'concept', label: 'Concepto' },
+              { id: 'totalAmount', label: 'Monto' },
+              { id: 'status', label: 'Estado' },
+              { id: 'dueDate', label: 'Vencimiento' },
+            ]}
+          />
         </Grid>
 
         <Grid xs={12} md={4}>
-          <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-            <NextEvents title={t('next_events')} list={events} />
-            <CourseWidgetSummary
-              title="Puntos llegadas tarde"
-              total={lateArrives[0]?.rating || 0}
-              color="secondary"
-              icon={`${CONFIG.site.basePath}/assets/icons/courses/ic-courses-completed.svg`}
-            />
-          </Box>
+          <CourseWidgetSummary
+            title="Puntos llegadas tarde"
+            total={lateArrives[0]?.rating || 0}
+            color="secondary"
+            icon={`${CONFIG.site.basePath}/assets/icons/courses/ic-courses-completed.svg`}
+          />
         </Grid>
+
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
             {selectedWorkspace?.id === 'male' && (
@@ -118,19 +132,6 @@ export function OverviewAppView() {
               />
             )}
           </Box>
-        </Grid>
-        <Grid xs={12} lg={8}>
-          <AppNewInvoice
-            title="Pagos pendientes o vencidos"
-            tableData={pendingOrOverduePaymentRequests?.slice(0, 5)}
-            headLabel={[
-              { id: 'id', label: 'ID Pago' },
-              { id: 'concept', label: 'Concepto' },
-              { id: 'totalAmount', label: 'Monto' },
-              { id: 'status', label: 'Estado' },
-              { id: 'dueDate', label: 'Vencimiento' },
-            ]}
-          />
         </Grid>
       </Grid>
     </DashboardContent>
