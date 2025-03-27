@@ -124,11 +124,11 @@ export function OverviewAppView() {
             title="Pagos pendientes o vencidos"
             tableData={pendingOrOverduePaymentRequests?.slice(0, 5)}
             headLabel={[
-              { id: 'id', label: 'Invoice ID' },
+              { id: 'id', label: 'ID Pago' },
               { id: 'concept', label: 'Concepto' },
-              { id: 'price', label: 'Monto' },
-              { id: 'status', label: 'Status' },
-              { id: 'vencimiento', label: 'Vencimiento' },
+              { id: 'totalAmount', label: 'Monto' },
+              { id: 'status', label: 'Estado' },
+              { id: 'dueDate', label: 'Vencimiento' },
             ]}
           />
         </Grid>
