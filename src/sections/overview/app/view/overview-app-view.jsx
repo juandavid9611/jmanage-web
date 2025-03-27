@@ -42,9 +42,6 @@ export function OverviewAppView() {
   const pendingOrOverduePaymentRequests = paymentRequests?.filter(
     (request) => request.status === 'pending' || request.status === 'overdue'
   );
-
-  console.log('pendingOrOverduePaymentRequests', pendingOrOverduePaymentRequests);
-
   const { selectedWorkspace } = useWorkspace();
 
   const { lateArrives } = useGetLateArrives(user?.id);
