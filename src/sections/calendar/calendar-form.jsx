@@ -115,7 +115,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       try {
         setIsParticipating(event.target.checked);
         await participateEvent(`${currentEvent?.id}`, event.target.checked);
-        toast.success('Participate success!');
+        toast.success('Inscrito satisfactoriamente!');
       } catch (error) {
         console.error(error);
       }
@@ -168,7 +168,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
                 control={
                   <Switch checked={isParticipating} onChange={handleChangeIsParticipating} />
                 }
-                label="Participate"
+                label="Inscribirme"
               />
             )}
           </Stack>
