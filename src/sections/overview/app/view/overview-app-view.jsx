@@ -14,6 +14,7 @@ import { useGetEvents } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
 import { useWorkspace } from 'src/workspace/workspace-provider';
+import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
 import { useGetLateArrives, useGetUserMetrics, get_top_goals_and_assists } from 'src/actions/user';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -23,6 +24,7 @@ import { NextEvents } from '../next-events';
 import { AppFeatured } from '../app-featured';
 import { FileUpgrade } from '../file-upgrade';
 import { AppTopAuthors } from '../app-top-authors';
+import { AppNewInvoice } from '../app-new-invoice';
 import { CourseWidgetSummary } from '../course-widget-summary';
 
 registerServiceWorker('/sw.js');
@@ -35,6 +37,11 @@ export function OverviewAppView() {
 
   const { metrics } = useGetUserMetrics(user?.id);
 
+  const { paymentRequests } = useGetPaymentRequestsByUser(user.id);
+
+  const pendingOrOverduePaymentRequests = paymentRequests?.filter(
+    (request) => request.status === 'pending' || request.status === 'overdue'
+  );
   const { selectedWorkspace } = useWorkspace();
 
   const { lateArrives } = useGetLateArrives(user?.id);
@@ -111,6 +118,19 @@ export function OverviewAppView() {
               />
             )}
           </Box>
+        </Grid>
+        <Grid xs={12} lg={8}>
+          <AppNewInvoice
+            title="Pagos pendientes o vencidos"
+            tableData={pendingOrOverduePaymentRequests?.slice(0, 5)}
+            headLabel={[
+              { id: 'id', label: 'ID Pago' },
+              { id: 'concept', label: 'Concepto' },
+              { id: 'totalAmount', label: 'Monto' },
+              { id: 'status', label: 'Estado' },
+              { id: 'dueDate', label: 'Vencimiento' },
+            ]}
+          />
         </Grid>
       </Grid>
     </DashboardContent>
