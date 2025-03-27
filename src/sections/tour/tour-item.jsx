@@ -192,7 +192,17 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
 
   return (
     <>
-      <Card>
+      <Card
+        sx={{
+          border: 2,
+          borderColor:
+            tour.scores.home > tour.scores.away
+              ? 'success.main'
+              : tour.scores.home === tour.scores.away
+                ? 'warning.main'
+                : 'error.main',
+        }}
+      >
         {tour?.images?.length > 0 && renderImages}
 
         {renderTexts}
