@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { paths } from 'src/routes/paths';
 
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -9,14 +11,15 @@ import { InvoiceNewEditForm } from '../invoice-new-edit-form';
 // ----------------------------------------------------------------------
 
 export function InvoiceCreateView() {
+  const { t } = useTranslation();
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Create a new invoice"
+        heading="Crear nuevo pago"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Invoice', href: paths.dashboard.admin.invoice.root },
-          { name: 'New invoice' },
+          { name: t('app'), href: paths.dashboard.root },
+          { name: t('invoice'), href: paths.dashboard.admin.invoice.root },
+          { name: 'Nuevo Cobro' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />

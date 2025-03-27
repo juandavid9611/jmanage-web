@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { WebPushClient, registerServiceWorker } from '@magicbell/webpush';
 
 import { Box } from '@mui/material';
@@ -45,8 +45,6 @@ export function OverviewAppView() {
 
   const theme = useTheme();
 
-  const [status, setStatus] = useState('not yet');
-
   registerServiceWorker('/sw.js');
 
   useEffect(() => {
@@ -61,45 +59,6 @@ export function OverviewAppView() {
       }
     })();
   }, [user.email]);
-
-  function getMetricsProgress(metricsList) {
-    return [
-      {
-        label: 'Puntualidad en pagos',
-        percent: metricsList?.puntualidad_pagos || 0,
-        total: 40,
-        helpText:
-          'Si el pago se realiza del 1-5 de cada mes 100%, del 6-10: 75%, del 11-28: 50%, >28: 25%, No pago: 0%',
-      },
-      {
-        label: 'Asistencia Entrenos',
-        percent: metricsList?.asistencia_entrenos || 0,
-        total: 25,
-        helpText:
-          'Asistencias / Total de Entrenos Válidos. Los fallos se clasifican por lesión, trabajo o no asistencia',
-      },
-      {
-        label: 'Deuda Acumulada',
-        percent: metricsList?.deuda_acumulada || 0,
-        total: 20,
-        helpText:
-          'Resultado de comparativo de deuda vs cobros totales por mes. Promedio semestral de calificaciones mensuales',
-      },
-      {
-        label: 'Llegadas tarde',
-        percent: metricsList?.llegadas_tarde || 0,
-        total: 10,
-        helpText: 'Se compara por jugador vs total de asistencia. 1 - Llegadas Tarde/Asistencias',
-      },
-      {
-        label: 'Asistencias a partidos',
-        percent: metricsList?.asistencia_partidos || 0,
-        total: 5,
-        helpText:
-          'Los fallos se clasifican por lesión, trabajo o no asistencia. Se calcula como el #Asistencias / # Total de Partidos Válidos',
-      },
-    ];
-  }
 
   return (
     <DashboardContent maxWidth="xl">
@@ -119,24 +78,6 @@ export function OverviewAppView() {
         <Grid xs={12} md={4}>
           <FileUpgrade userId={user.id} />
         </Grid>
-
-        {/* {metrics?.total > 0 && (
-          <Grid xs={12} md={4}>
-            <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-              <FileUpgrade userId={user.id} />
-              <MetricsOverview
-                title={t('my_metrics')}
-                subheader={`Última actualización: ${fDateTime(metrics?.last_update)}`}
-                chart={{ series: metrics?.total || 0 }}
-              />
-              <MetricProgress
-                title="Progreso"
-                subheader={`Última actualización: ${fDateTime(metrics?.last_update)}`}
-                data={getMetricsProgress(metrics)}
-              />
-            </Box>
-          </Grid>
-        )} */}
 
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>

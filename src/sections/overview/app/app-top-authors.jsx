@@ -40,7 +40,7 @@ export function AppTopAuthors({ title, subheader, list, ...other }) {
           endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
           onClick={() => router.push(paths.dashboard.analytics.top)}
         >
-          View all
+          Ver todos
         </Button>
       </Box>
     </Card>
@@ -73,9 +73,9 @@ function Item({ item, index, sx, ...other }) {
           }}
         >
           <Iconify icon="emojione-monotone:goal-net" width={14} />
-          {item.goals} Goals
+          {item.goals} Goles
           <Iconify icon="fluent:sport-soccer-20-filled" width={14} />
-          {item.assists} Assists
+          {item.assists} Asistencias
         </Box>
       </Box>
 
