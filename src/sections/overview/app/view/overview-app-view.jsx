@@ -88,49 +88,52 @@ export function OverviewAppView() {
             <FileUpgrade userId={user.id} />
           </Box>
         </Grid>
-        <Grid xs={12} lg={8}>
-          <AppNewInvoice
-            title="Pagos pendientes o vencidos"
-            tableData={pendingOrOverduePaymentRequests?.slice(0, 5)}
-            headLabel={[
-              { id: 'id', label: 'ID Pago' },
-              { id: 'concept', label: 'Concepto' },
-              { id: 'totalAmount', label: 'Monto' },
-              { id: 'status', label: 'Estado' },
-              { id: 'dueDate', label: 'Vencimiento' },
-            ]}
-          />
-        </Grid>
 
-        <Grid xs={12} md={4}>
-          <CourseWidgetSummary
-            title="Puntos llegadas tarde"
-            total={lateArrives[0]?.rating || 0}
-            color="secondary"
-            icon={`${CONFIG.site.basePath}/assets/icons/courses/ic-courses-completed.svg`}
-          />
-        </Grid>
+        <Grid xs={12} md={8}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <AppNewInvoice
+              title="Pagos pendientes o vencidos"
+              tableData={pendingOrOverduePaymentRequests?.slice(0, 5)}
+              headLabel={[
+                { id: 'id', label: 'ID Pago' },
+                { id: 'concept', label: 'Concepto' },
+                { id: 'totalAmount', label: 'Monto' },
+                { id: 'status', label: 'Estado' },
+                { id: 'dueDate', label: 'Vencimiento' },
+              ]}
+            />
+            <Grid container spacing={3}>
+              <Grid xs={12} md={6}>
+                <CourseWidgetSummary
+                  title="Puntos llegadas tarde"
+                  total={lateArrives?.[0]?.rating ?? 0}
+                  color="secondary"
+                  icon={`${CONFIG.site.basePath}/assets/icons/courses/ic-courses-completed.svg`}
+                />
+              </Grid>
 
-        <Grid xs={12} md={4}>
-          <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-            {selectedWorkspace?.id === 'male' && (
-              <AppTopAuthors
-                title={`${t('goals_and_assits')} Masculino`}
-                list={orderBy(get_top_goals_and_assists('masculino'), ['goals'], ['desc']).slice(
-                  0,
-                  3
+              <Grid xs={12} md={6}>
+                {selectedWorkspace?.id === 'male' && (
+                  <AppTopAuthors
+                    title={`${t('goals_and_assits')} Masculino`}
+                    list={orderBy(
+                      get_top_goals_and_assists('masculino'),
+                      ['goals'],
+                      ['desc']
+                    ).slice(0, 3)}
+                  />
                 )}
-              />
-            )}
-            {selectedWorkspace?.id === 'female' && (
-              <AppTopAuthors
-                title={`${t('goals_and_assits')} Femenino`}
-                list={orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc']).slice(
-                  0,
-                  3
+                {selectedWorkspace?.id === 'female' && (
+                  <AppTopAuthors
+                    title={`${t('goals_and_assits')} Femenino`}
+                    list={orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc']).slice(
+                      0,
+                      3
+                    )}
+                  />
                 )}
-              />
-            )}
+              </Grid>
+            </Grid>
           </Box>
         </Grid>
       </Grid>
