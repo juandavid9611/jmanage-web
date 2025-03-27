@@ -2,8 +2,11 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
-import { Divider, CardHeader, Typography } from '@mui/material';
+import { Button, Divider, CardHeader, Typography } from '@mui/material';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
+
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
 
 import { fDateTime } from 'src/utils/format-time';
 import { fPercent } from 'src/utils/format-number';
@@ -19,15 +22,9 @@ import { useAuthContext } from 'src/auth/hooks';
 
 export function NextEvents({ title, list, ...other }) {
   const theme = useTheme();
+  const router = useRouter();
   const limit_time = new Date();
   limit_time.setHours(0, 0, 0, 0);
-
-  const colors = [
-    theme.vars.palette.info.main,
-    theme.vars.palette.error.main,
-    theme.vars.palette.secondary.main,
-    theme.vars.palette.success.main,
-  ];
 
   return (
     <Card {...other}>
@@ -42,7 +39,18 @@ export function NextEvents({ title, list, ...other }) {
         )}
       </Box>
       <Divider sx={{ borderStyle: 'dashed' }} />
-      <Box sx={{ p: 2, typography: 'caption', color: 'text.secondary' }}>Quorum de 22 personas</Box>
+
+      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ typography: 'caption', color: 'text.secondary' }}>Quorum de 22 personas</Box>
+        <Button
+          size="medium"
+          color="inherit"
+          endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
+          onClick={() => router.push(paths.dashboard.calendar)}
+        >
+          Inscribirme
+        </Button>
+      </Box>
     </Card>
   );
 }

@@ -44,19 +44,43 @@ export const navData = [
    * Overview
    */
   {
-    subheader: 'SportsManage 8.0.1',
+    subheader: 'SportsManage 9.0.1',
     items: [
-      { title: 'App', path: paths.dashboard.root, icon: ICONS.dashboard, roles: ['admin', 'user'] },
       {
-        title: 'Analytics',
+        title: 'Inicio',
+        path: paths.dashboard.root,
+        icon: ICONS.dashboard,
+        roles: ['admin', 'user'],
+      },
+      {
+        title: 'Calendario',
+        path: paths.dashboard.calendar,
+        icon: ICONS.calendar,
+        roles: ['admin', 'user'],
+      },
+      {
+        title: 'Pagos',
+        path: paths.dashboard.user.invoice.invoiceList,
+        icon: ICONS.invoice,
+        roles: ['admin', 'user'],
+      },
+      {
+        title: 'Partidos',
+        path: paths.dashboard.admin.tour.root,
+        icon: ICONS.tour,
+        roles: ['admin', 'user'],
+      },
+
+      {
+        title: 'Analitica',
         path: paths.dashboard.analytics.overview,
         icon: ICONS.analytics,
         roles: ['admin', 'user'],
         children: [
-          { title: 'Overview', path: paths.dashboard.analytics.overview },
-          { title: 'Top', path: paths.dashboard.analytics.top },
+          { title: 'Rendimiento', path: paths.dashboard.analytics.overview },
+          { title: 'Goleadores y asistencias', path: paths.dashboard.analytics.top },
           {
-            title: 'Late Arrives',
+            title: 'Llegadas Tarde',
             path: paths.dashboard.analytics.lateArrives,
           },
         ],
@@ -67,42 +91,19 @@ export const navData = [
    * Management
    */
   {
-    subheader: 'Management',
+    subheader: 'Administración',
     items: [
       {
-        title: 'Calendar',
-        path: paths.dashboard.calendar,
-        icon: ICONS.calendar,
-        roles: ['admin', 'user'],
-      },
-      {
-        title: 'User',
+        title: 'Usuarios',
         path: paths.dashboard.admin.user.list,
         icon: ICONS.user,
         roles: ['admin'],
       },
       {
-        title: 'Invoice',
+        title: 'Pagos Totales',
         path: paths.dashboard.admin.invoice.root,
         icon: ICONS.invoice,
         roles: ['admin'],
-      },
-      {
-        title: 'Tour',
-        path: paths.dashboard.admin.tour.root,
-        icon: ICONS.tour,
-        roles: ['admin', 'user'],
-      },
-    ],
-  },
-  {
-    subheader: 'User Management',
-    items: [
-      {
-        title: 'User Invoice',
-        path: paths.dashboard.user.invoice.invoiceList,
-        icon: ICONS.invoice,
-        roles: ['admin', 'user'],
       },
     ],
   },

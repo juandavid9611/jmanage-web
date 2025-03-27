@@ -1,8 +1,8 @@
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
-import { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -82,7 +82,8 @@ export function InvoiceNewEditForm({ currentInvoice }) {
   const isAdmin = user?.role === 'admin';
   const isUser = !isAdmin;
 
-  const group = selectedWorkspace?.id;
+  const workspaceGroup = selectedWorkspace?.id;
+  const { users } = useGetUsers(selectedWorkspace);
 
   const defaultValues = useMemo(
     () => ({
@@ -94,12 +95,12 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       status: currentInvoice?.status || 'pending',
       category: currentInvoice?.category || 'Entrenos',
       paymentRequestTo: currentInvoice?.paymentRequestTo ? [currentInvoice.paymentRequestTo] : [],
-      group: currentInvoice?.group || group,
+      group: currentInvoice?.group || workspaceGroup,
       userPrice: currentInvoice?.totalAmount || 0,
       overduePrice: currentInvoice?.overduePrice || 0,
       images: currentInvoice?.images || [],
     }),
-    [currentInvoice, group]
+    [currentInvoice, workspaceGroup]
   );
 
   const methods = useForm({
@@ -117,7 +118,14 @@ export function InvoiceNewEditForm({ currentInvoice }) {
 
   const values = watch();
 
-  const { users } = useGetUsers(selectedWorkspace);
+  useEffect(() => {
+    if (!currentInvoice) {
+      setValue('paymentRequestTo', []);
+      if (workspaceGroup) {
+        setValue('group', workspaceGroup);
+      }
+    }
+  }, [currentInvoice, setValue, workspaceGroup]);
 
   const onSubmit = handleSubmit(async (data) => {
     data.createDate = fDateTime(data?.createDate, 'YYYY-MM-DDTHH:mm:ss');
@@ -256,17 +264,11 @@ export function InvoiceNewEditForm({ currentInvoice }) {
                   ))}
                 </Field.Select>
 
-                <Field.Select
-                  name="group"
-                  label={t('group')}
-                  value={group}
-                  InputLabelProps={{ shrink: true }}
-                  disabled
-                >
-                  <MenuItem key={group} value={group} sx={{ textTransform: 'capitalize' }}>
-                    {t(group)}
-                  </MenuItem>
-                </Field.Select>
+                {currentInvoice ? (
+                  <Field.Text disabled name="group" value={t(currentInvoice?.group)} />
+                ) : (
+                  <Field.Text disabled name="group" value={t(workspaceGroup)} />
+                )}
               </Box>
 
               {!currentInvoice ? (
@@ -314,12 +316,10 @@ export function InvoiceNewEditForm({ currentInvoice }) {
                 />
               )}
 
+              <Divider sx={{ borderStyle: 'dashed' }} />
               <Stack spacing={1}>
                 <Typography variant="subtitle2">{t('price')}</Typography>
-                <Field.MultiCheckbox row name="gender" options={[]} sx={{ gap: 2 }} />
               </Stack>
-
-              <Divider sx={{ borderStyle: 'dashed' }} />
 
               <Field.Text
                 name="userPrice"

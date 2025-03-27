@@ -63,7 +63,7 @@ export function CourseWidgetSummary({ sx, icon, title, total, color = 'warning',
           endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
           onClick={() => router.push(paths.dashboard.analytics.lateArrives)}
         >
-          View all
+          Ver todos
         </Button>
       </Box>
     </Card>
