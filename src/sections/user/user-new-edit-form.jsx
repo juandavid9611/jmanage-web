@@ -60,7 +60,7 @@ export const NewUserSchema = zod.object({
     .min(1, { message: 'Relación contacto de emergencia requerida!' }),
   eps: zod.string().min(1, { message: 'Eps requerida!' }),
   avatarUrl: zod.string().nullable(),
-  shirtNumber: zod.string().min(1, { message: 'Número de camiseta requerido!' }),
+  shirtNumber: zod.number().min(1, { message: 'Número de camiseta requerido!' }),
 });
 
 export function UserNewEditForm({ currentUser, isAdmin }) {
