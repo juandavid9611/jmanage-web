@@ -5,6 +5,14 @@ import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.users;
 
+const enableServer = true;
+
+const swrOptions = {
+  revalidateIfStale: enableServer,
+  revalidateOnFocus: enableServer,
+  revalidateOnReconnect: enableServer,
+};
+
 export function useGetUsers(selectedWorkspace, includeDisabled = false) {
   const workspaceId = selectedWorkspace?.id;
   const { data, isLoading, error, isValidating } = useSWR(
@@ -135,7 +143,26 @@ export async function enableUser(id) {
   return res.data;
 }
 
-export function get_top_goals_and_assists(group) {
+export function useGetTopGoalsAndAssists(selectedWorkspace) {
+  const workspaceId = selectedWorkspace?.id;
+  const { data, isLoading, error, isValidating } = useSWR(
+    workspaceId ? `/top_goals_and_assists?workspace_id=${workspaceId}` : null, // Construct the URL with the workspaceId
+    fetcher,
+    swrOptions
+  );
+
+  const topGoalsAndAssists = useMemo(() => data || [], [data]);
+  return {
+    topGoalsAndAssists,
+    isLoading,
+    error,
+    isValidating,
+  };
+}
+
+export function useGetTopGoalsAndAssistsByGroup(group) {
+  const { topGoalsAndAssists } = useGetTopGoalsAndAssists(group);
+  console.log(topGoalsAndAssists);
   if (group === 'masculino') {
     return masc_goals_and_assits;
   }

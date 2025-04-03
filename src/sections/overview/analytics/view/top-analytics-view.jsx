@@ -4,7 +4,8 @@ import { Box, Stack, Typography } from '@mui/material';
 import { orderBy } from 'src/utils/helper';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { get_top_goals_and_assists } from 'src/actions/user';
+import { useGetTopGoalsAndAssists } from 'src/actions/user';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { AppTopAnalytics } from '../app-top-analytics';
 import { EcommerceWelcome } from '../ecommerce-welcome';
@@ -12,6 +13,8 @@ import { EcommerceWelcome } from '../ecommerce-welcome';
 // ----------------------------------------------------------------------
 
 export function TopAnalyticsView() {
+  const { selectedWorkspace } = useWorkspace();
+  const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace);
   return (
     <DashboardContent maxWidth="xl">
       <Stack
@@ -26,12 +29,12 @@ export function TopAnalyticsView() {
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
             <EcommerceWelcome
-              title={`Goleador 🥇\n ${orderBy(get_top_goals_and_assists('masculino'), ['goals'], ['desc'])[0].name}`}
+              title={`Goleador 🥇\n ${orderBy(topGoalsAndAssists, ['goals'], ['desc'])[0]?.name}`}
               imgIndex={9}
             />
             <AppTopAnalytics
-              title="Goleadores Equipo Masculino"
-              list={orderBy(get_top_goals_and_assists('masculino'), ['goals'], ['desc'])}
+              title={`Goleadores ${selectedWorkspace.name} 🏆`}
+              list={orderBy(topGoalsAndAssists, ['goals'], ['desc'])}
               isGoal
             />
           </Box>
@@ -39,38 +42,12 @@ export function TopAnalyticsView() {
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
             <EcommerceWelcome
-              title={`Goleadora 🥇\n ${orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc'])[0].name}`}
-              imgIndex={2}
-            />
-            <AppTopAnalytics
-              title="Goleadoras Equipo Femenino"
-              list={orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc'])}
-              isGoal
-            />
-          </Box>
-        </Grid>
-        <Grid xs={12} md={4}>
-          <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-            <EcommerceWelcome
-              title={`Asistidor 🏅\n ${orderBy(get_top_goals_and_assists('masculino'), ['assists'], ['desc'])[0].name}`}
+              title={`Asistidor 🏅\n ${orderBy(topGoalsAndAssists, ['assists'], ['desc'])[0]?.name}`}
               imgIndex={7}
             />
             <AppTopAnalytics
-              title="Asistidores Equipo Masculino"
-              list={orderBy(get_top_goals_and_assists('masculino'), ['assists'], ['desc'])}
-              isGoal={false}
-            />
-          </Box>
-        </Grid>
-        <Grid xs={12} md={4}>
-          <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
-            <EcommerceWelcome
-              title={`Asistidora 🏅\n ${orderBy(get_top_goals_and_assists('femenino'), ['assists'], ['desc'])[0].name}`}
-              imgIndex={0}
-            />
-            <AppTopAnalytics
-              title="Asistidoras Equipo Femenino"
-              list={orderBy(get_top_goals_and_assists('femenino'), ['assists'], ['desc'])}
+              title={`Asistidores ${selectedWorkspace.name} 🏆`}
+              list={orderBy(topGoalsAndAssists, ['assists'], ['desc'])}
               isGoal={false}
             />
           </Box>
