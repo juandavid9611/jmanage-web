@@ -15,7 +15,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
-import { useGetLateArrives, useGetUserMetrics, get_top_goals_and_assists } from 'src/actions/user';
+import { useGetLateArrives, useGetUserMetrics, useGetTopGoalsAndAssists } from 'src/actions/user';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -47,6 +47,7 @@ export function OverviewAppView() {
   const { lateArrives } = useGetLateArrives(user?.id);
 
   const { events } = useGetEvents(selectedWorkspace);
+  const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace);
 
   const isAdmin = user?.role === 'admin';
 
@@ -113,25 +114,10 @@ export function OverviewAppView() {
               </Grid>
 
               <Grid xs={12} md={6}>
-                {selectedWorkspace?.id === 'male' && (
-                  <AppTopAuthors
-                    title={`${t('goals_and_assits')} Masculino`}
-                    list={orderBy(
-                      get_top_goals_and_assists('masculino'),
-                      ['goals'],
-                      ['desc']
-                    ).slice(0, 3)}
-                  />
-                )}
-                {selectedWorkspace?.id === 'female' && (
-                  <AppTopAuthors
-                    title={`${t('goals_and_assits')} Femenino`}
-                    list={orderBy(get_top_goals_and_assists('femenino'), ['goals'], ['desc']).slice(
-                      0,
-                      3
-                    )}
-                  />
-                )}
+                <AppTopAuthors
+                  title={`${t('goals_and_assits')} Masculino`}
+                  list={orderBy(topGoalsAndAssists, ['goals'], ['desc']).slice(0, 3)}
+                />
               </Grid>
             </Grid>
           </Box>
