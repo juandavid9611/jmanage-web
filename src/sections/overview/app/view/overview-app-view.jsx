@@ -115,7 +115,7 @@ export function OverviewAppView() {
 
               <Grid xs={12} md={6}>
                 <AppTopAuthors
-                  title={`${t('goals_and_assits')} Masculino`}
+                  title={`${t('goals_and_assits')} ${selectedWorkspace?.name}`}
                   list={orderBy(topGoalsAndAssists, ['goals'], ['desc']).slice(0, 3)}
                 />
               </Grid>
