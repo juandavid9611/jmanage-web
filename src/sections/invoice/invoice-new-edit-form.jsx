@@ -157,13 +157,15 @@ export function InvoiceNewEditForm({ currentInvoice }) {
           const presignedUrl = response.urls[file.name];
           return uploadFileToS3(file, presignedUrl);
         });
-        const file_names = values.images.map((file) => file.name);
+
         const allPromises = Promise.all(uploadPromises);
-        toast.promise(allPromises, {
+        await toast.promise(allPromises, {
           loading: 'Loading...',
           success: () => 'All files uploaded successfully',
           error: 'File upload failed',
         });
+        await allPromises;
+        const file_names = values.images.map((file) => file.name);
         await requestPaymentRequestApproval(values.id, file_names);
         router.push(paths.dashboard.user.invoice.invoiceList);
       } catch (error) {
