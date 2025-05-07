@@ -24,6 +24,7 @@ export const TOUR_SERVICE_OPTIONS = [
   { label: 'Vittoria Femenino', value: 'Vittoria Femenino' },
   { label: 'Liga Tradicional', value: 'Liga Tradicional' },
   { label: 'training', value: 'training' },
+  { label: 'match', value: 'match' },
 ];
 
 const CONTENT = `
