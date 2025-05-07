@@ -1,71 +1,88 @@
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import { Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
+import { Avatar, CardHeader, LinearProgress, linearProgressClasses } from '@mui/material';
 
-import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { fNumber } from 'src/utils/format-number';
+import { fPercent } from 'src/utils/format-number';
 
 import { varAlpha } from 'src/theme/styles';
 
-import { Iconify } from 'src/components/iconify';
-import { SvgColor } from 'src/components/svg-color';
-
 // ----------------------------------------------------------------------
 
-export function CourseWidgetSummary({ sx, icon, title, total, color = 'warning', ...other }) {
+export function CourseWidgetSummary({ title, subheader, list, ...other }) {
   const theme = useTheme();
 
   const router = useRouter();
 
   return (
-    <Card sx={{ py: 3, pl: 3, pr: 2.5, ...sx }} {...other}>
-      <Box sx={{ flexGrow: 1 }}>
-        <Box sx={{ typography: 'h3' }}>{fNumber(total)}</Box>
-        <Typography noWrap variant="subtitle2" component="div" sx={{ color: 'text.secondary' }}>
-          {title}
-        </Typography>
-      </Box>
+    <Card {...other}>
+      <CardHeader title={title} subheader={subheader} />
 
-      <SvgColor
-        src={icon}
-        sx={{
-          top: 24,
-          right: 20,
-          width: 36,
-          height: 36,
-          position: 'absolute',
-          background: `linear-gradient(135deg, ${theme.vars.palette[color].main} 0%, ${theme.vars.palette[color].dark} 100%)`,
-        }}
-      />
-
-      <Box
-        sx={{
-          top: -44,
-          width: 160,
-          zIndex: -1,
-          height: 160,
-          right: -104,
-          opacity: 0.12,
-          borderRadius: 3,
-          position: 'absolute',
-          transform: 'rotate(40deg)',
-          background: `linear-gradient(to right, ${theme.vars.palette[color].main} 0%, ${varAlpha(theme.vars.palette[color].mainChannel, 0)} 100%)`,
-        }}
-      />
-      <Box sx={{ p: 2, textAlign: 'right' }}>
-        <Button
-          size="medium"
-          color="inherit"
-          endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
-          onClick={() => router.push(paths.dashboard.analytics.lateArrives)}
-        >
-          Ver todos
-        </Button>
+      <Box sx={{ p: 3, gap: 3, display: 'flex', flexDirection: 'column' }}>
+        {list.map((item) => (
+          <Item key={item.id} item={item} />
+        ))}
       </Box>
     </Card>
+  );
+}
+
+function Item({ item, sx, ...other }) {
+  const percent = (item.current / item.total) * 100;
+
+  return (
+    <Box sx={{ gap: 2, display: 'flex', alignItems: 'center', ...sx }} {...other}>
+      <Avatar
+        alt={item.title}
+        src={item.coverUrl}
+        variant="rounded"
+        sx={{ width: 56, height: 56 }}
+      />
+
+      <Box sx={{ minWidth: 0, display: 'flex', flex: '1 1 auto', flexDirection: 'column' }}>
+        <Box sx={{ mb: 0.5, typography: 'subtitle2' }}>{item.title}</Box>
+
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            typography: 'caption',
+            color: 'text.secondary',
+          }}
+        >
+          <Box component="span">
+            Conteo: {item.current}/{item.total}
+          </Box>
+          <Box component="span">Llegadas Tarde: {item.late_arrives}</Box>
+        </Box>
+
+        <Box sx={{ width: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <LinearProgress
+            color="warning"
+            variant="determinate"
+            value={percent}
+            sx={{
+              width: 1,
+              height: 6,
+              bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
+              [` .${linearProgressClasses.bar}`]: { opacity: 0.8 },
+            }}
+          />
+          <Box
+            component="span"
+            sx={{
+              width: 40,
+              typography: 'caption',
+              color: 'text.secondary',
+              fontWeight: 'fontWeightMedium',
+            }}
+          >
+            {fPercent(percent)}
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

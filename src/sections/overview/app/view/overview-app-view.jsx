@@ -15,7 +15,12 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
-import { useGetLateArrives, useGetUserMetrics, useGetTopGoalsAndAssists } from 'src/actions/user';
+import {
+  useGetLateArrives,
+  useGetUserMetrics,
+  useGetUserAssistsStats,
+  useGetTopGoalsAndAssists,
+} from 'src/actions/user';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -45,6 +50,9 @@ export function OverviewAppView() {
   const { selectedWorkspace } = useWorkspace();
 
   const { lateArrives } = useGetLateArrives(user?.id);
+  const { stadistics } = useGetUserAssistsStats() || [];
+
+  console.log('stadistics', stadistics);
 
   const { events } = useGetEvents(selectedWorkspace);
   const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace);
@@ -105,12 +113,7 @@ export function OverviewAppView() {
             />
             <Grid container spacing={3}>
               <Grid xs={12} md={6}>
-                <CourseWidgetSummary
-                  title="Puntos llegadas tarde"
-                  total={lateArrives?.[0]?.rating ?? 0}
-                  color="secondary"
-                  icon={`${CONFIG.site.basePath}/assets/icons/courses/ic-courses-completed.svg`}
-                />
+                <CourseWidgetSummary title="Puntos llegadas tarde" list={stadistics} />
               </Grid>
 
               <Grid xs={12} md={6}>

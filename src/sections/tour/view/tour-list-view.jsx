@@ -146,11 +146,11 @@ const applyFilter = ({ inputData, filters, sortBy, dateError }) => {
 
   // Sort by
   if (sortBy === 'latest') {
-    inputData = orderBy(inputData, ['createdAt'], ['desc']);
+    inputData = orderBy(inputData, ['available.startDate'], ['desc']);
   }
 
   if (sortBy === 'oldest') {
-    inputData = orderBy(inputData, ['createdAt'], ['asc']);
+    inputData = orderBy(inputData, ['available.startDate'], ['asc']);
   }
 
   if (sortBy === 'popular') {

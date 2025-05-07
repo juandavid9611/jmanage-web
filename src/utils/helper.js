@@ -31,14 +31,18 @@ export function flattenDeep(array) {
 
 // ----------------------------------------------------------------------
 
+function getValueByPath(obj, path) {
+  return path.split('.').reduce((acc, key) => acc?.[key], obj);
+}
+
 export function orderBy(array, properties, orders) {
   return array.slice().sort((a, b) => {
     for (let i = 0; i < properties.length; i += 1) {
       const property = properties[i];
       const order = orders && orders[i] === 'desc' ? -1 : 1;
 
-      const aValue = a[property];
-      const bValue = b[property];
+      const aValue = getValueByPath(a, property);
+      const bValue = getValueByPath(b, property);
 
       if (aValue < bValue) return -1 * order;
       if (aValue > bValue) return 1 * order;

@@ -112,6 +112,21 @@ export function useGetLateArrives(userId) {
   return memoizedValue;
 }
 
+export function useGetUserAssistsStats() {
+  const { data, isLoading, error, isValidating } = useSWR(`/assists_stats`, fetcher);
+
+  const memoizedValue = useMemo(
+    () => ({
+      stadistics: data || [],
+      stadisticsLoading: isLoading,
+      stadisticsError: error,
+      stadisticsValidating: isValidating,
+    }),
+    [data, error, isLoading, isValidating]
+  );
+  return memoizedValue;
+}
+
 export async function generatePresignedUrl(userId, file) {
   try {
     const files = [];
