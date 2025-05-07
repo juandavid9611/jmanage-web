@@ -159,12 +159,11 @@ export function InvoiceNewEditForm({ currentInvoice }) {
         });
 
         const allPromises = Promise.all(uploadPromises);
-        await toast.promise(allPromises, {
+        toast.promise(allPromises, {
           loading: 'Loading...',
           success: () => 'All files uploaded successfully',
           error: 'File upload failed',
         });
-        await allPromises;
         const file_names = values.images.map((file) => file.name);
         await requestPaymentRequestApproval(values.id, file_names);
         router.push(paths.dashboard.user.invoice.invoiceList);
