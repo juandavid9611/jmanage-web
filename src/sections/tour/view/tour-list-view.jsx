@@ -144,19 +144,6 @@ const applyFilter = ({ inputData, filters, sortBy, dateError }) => {
 
   const tourGuideIds = tourGuides.map((tourGuide) => tourGuide.id);
 
-  // Sort by
-  if (sortBy === 'latest') {
-    inputData = orderBy(inputData, ['available.startDate'], ['desc']);
-  }
-
-  if (sortBy === 'oldest') {
-    inputData = orderBy(inputData, ['available.startDate'], ['asc']);
-  }
-
-  if (sortBy === 'popular') {
-    inputData = orderBy(inputData, ['totalViews'], ['desc']);
-  }
-
   // Filters
   if (destination.length) {
     inputData = inputData.filter((tour) => destination.includes(tour.destination));
@@ -178,6 +165,19 @@ const applyFilter = ({ inputData, filters, sortBy, dateError }) => {
         fIsBetween(startDate, tour.available.startDate, tour.available.endDate)
       );
     }
+  }
+
+  // Sort by
+  if (sortBy === 'latest') {
+    inputData = orderBy(inputData, ['available.startDate'], ['desc']);
+  }
+
+  if (sortBy === 'oldest') {
+    inputData = orderBy(inputData, ['available.startDate'], ['asc']);
+  }
+
+  if (sortBy === 'popular') {
+    inputData = orderBy(inputData, ['totalViews'], ['desc']);
   }
 
   return inputData;
