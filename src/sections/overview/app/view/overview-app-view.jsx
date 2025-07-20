@@ -52,8 +52,6 @@ export function OverviewAppView() {
   const { lateArrives } = useGetLateArrives(user?.id);
   const { stadistics } = useGetUserAssistsStats() || [];
 
-  console.log('stadistics', stadistics);
-
   const { events } = useGetEvents(selectedWorkspace);
   const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace);
 
@@ -64,16 +62,21 @@ export function OverviewAppView() {
   registerServiceWorker('/sw.js');
 
   useEffect(() => {
-    (async () => {
-      const client = new WebPushClient({
-        apiKey: CONFIG.site.magicBellApiKey,
-        userEmail: user.email,
+    const client = new WebPushClient({
+      apiKey: CONFIG.site.magicBellApiKey,
+      userEmail: user.email,
+    });
+
+    client
+      .isSubscribed()
+      .then((subscribed) => {
+        if (!subscribed) {
+          client.subscribe();
+        }
+      })
+      .catch((error) => {
+        console.error('Error checking subscription:', error);
       });
-      const isSubscribed = await client.isSubscribed();
-      if (!isSubscribed) {
-        await client.subscribe();
-      }
-    })();
   }, [user.email]);
 
   return (

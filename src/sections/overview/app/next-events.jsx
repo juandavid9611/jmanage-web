@@ -14,6 +14,7 @@ import { fPercent } from 'src/utils/format-number';
 import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -57,6 +58,7 @@ export function NextEvents({ title, list, ...other }) {
 
 function Item({ item, sx, ...other }) {
   const { participants } = item;
+  console.log('participants', participants);
   const participantsCount = Object.entries(participants || {}).length || 0;
   const percent = (participantsCount / 20) * 100;
 
@@ -156,21 +158,23 @@ function Item({ item, sx, ...other }) {
           horizontal: 'center',
         }}
       >
-        <Box sx={{ p: 2, maxWidth: 280 }}>
+        <Box sx={{ p: 2, width: 280 }}>
           <Typography variant="subtitle1" gutterBottom>
             Participantes
           </Typography>
-          {Object.entries(participants || {}).map((entry, index) =>
-            entry[0] === user?.id ? (
-              <Typography key={entry[0]} variant="body2" sx={{ color: 'text.primary' }}>
-                {index + 1}. {entry[1]}
-              </Typography>
-            ) : (
-              <Typography key={entry[0]} variant="body2" sx={{ color: 'text.secondary' }}>
-                {index + 1}. {entry[1]}
-              </Typography>
-            )
-          )}
+          <Scrollbar sx={{ px: 2, pb: 3, pt: 0, height: 200 }}>
+            {Object.entries(participants || {}).map((entry, index) =>
+              entry[0] === user?.id ? (
+                <Typography key={entry[0]} variant="body2" sx={{ color: 'text.primary' }}>
+                  {index + 1}. {entry[1]}
+                </Typography>
+              ) : (
+                <Typography key={entry[0]} variant="body2" sx={{ color: 'text.secondary' }}>
+                  {index + 1}. {entry[1]}
+                </Typography>
+              )
+            )}
+          </Scrollbar>
         </Box>
       </CustomPopover>
     </Box>
