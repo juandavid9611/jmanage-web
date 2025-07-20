@@ -2,17 +2,20 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
-import { Button, Divider, CardHeader, Typography } from '@mui/material';
+import { Button, Divider, CardHeader, Typography, IconButton } from '@mui/material';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
+
+import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
 
 import { fDateTime } from 'src/utils/format-time';
 import { fPercent } from 'src/utils/format-number';
 
 import { varAlpha } from 'src/theme/styles';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
@@ -57,17 +60,36 @@ export function NextEvents({ title, list, ...other }) {
 }
 
 function Item({ item, sx, ...other }) {
-  const { participants } = item;
-  console.log('participants', participants);
-  const participantsCount = Object.entries(participants || {}).length || 0;
+  const participantsCount = Object.entries(item.participants || {}).length || 0;
   const percent = (participantsCount / 20) * 100;
 
   const clickPopover = usePopover();
   const { user } = useAuthContext();
 
-  const userParticipates = Object.entries(participants || {}).find(
+  const userParticipates = Object.entries(item.participants || {}).find(
     (entry) => entry[0] === user?.id
   );
+  const { copy } = useCopyToClipboard();
+
+  const onCopyParticipants = () => {
+    if (!item.participants || Object.keys(item.participants).length === 0) {
+      toast.error('No hay participantes para copiar.');
+      return;
+    }
+
+    const formattedParticipants = Object.entries(item.participants)
+      .map(([_, name], index) => `${index + 1}. ${name}`)
+      .join('\n');
+
+    const textToCopy = ` *${item.title}*
+📅 ${fDateTime(item.start)}
+📌 ${item.location} - ${item.description}
+
+${formattedParticipants}`;
+
+    copy(textToCopy);
+    toast.success('Participantes copiados!');
+  };
 
   return (
     <Box sx={{ gap: 1.5, display: 'flex', ...sx }} {...other}>
@@ -159,11 +181,16 @@ function Item({ item, sx, ...other }) {
         }}
       >
         <Box sx={{ p: 2, width: 280 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            Participantes
-          </Typography>
-          <Scrollbar sx={{ px: 2, pb: 3, pt: 0, height: 400 }}>
-            {Object.entries(participants || {}).map((entry, index) =>
+          <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ width: 1 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Participantes
+            </Typography>
+            <IconButton onClick={() => onCopyParticipants()}>
+              <Iconify icon="eva:copy-fill" width={24} />
+            </IconButton>
+          </Box>
+          <Scrollbar sx={{ px: 2, pb: 3, pt: 0, maxHeight: '50vh' }}>
+            {Object.entries(item.participants || {}).map((entry, index) =>
               entry[0] === user?.id ? (
                 <Typography key={entry[0]} variant="body2" sx={{ color: 'text.primary' }}>
                   {index + 1}. {entry[1]}
