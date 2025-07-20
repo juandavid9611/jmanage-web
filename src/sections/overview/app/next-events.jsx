@@ -81,7 +81,7 @@ function Item({ item, sx, ...other }) {
       .map(([_, name], index) => `${index + 1}. ${name}`)
       .join('\n');
 
-    const textToCopy = ` *${item.title}*
+    const textToCopy = ` *${item.title.trim()}*
 📅 ${fDateTime(item.start)}
 📌 ${item.location} - ${item.description}
 
