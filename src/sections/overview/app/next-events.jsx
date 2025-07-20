@@ -162,7 +162,7 @@ function Item({ item, sx, ...other }) {
           <Typography variant="subtitle1" gutterBottom>
             Participantes
           </Typography>
-          <Scrollbar sx={{ px: 2, pb: 3, pt: 0, height: 400 }}>
+          <Scrollbar sx={{ px: 2, pb: 3, pt: 0, maxHeight: '50vh' }}>
             {Object.entries(participants || {}).map((entry, index) =>
               entry[0] === user?.id ? (
                 <Typography key={entry[0]} variant="body2" sx={{ color: 'text.primary' }}>
