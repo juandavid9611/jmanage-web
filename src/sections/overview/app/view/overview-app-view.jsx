@@ -71,7 +71,10 @@ export function OverviewAppView() {
       .isSubscribed()
       .then((subscribed) => {
         if (!subscribed) {
-          client.subscribe();
+          client.subscribe()
+            .catch((error) => {
+              console.error('Error during subscription:', error);
+            });
         }
       })
       .catch((error) => {
