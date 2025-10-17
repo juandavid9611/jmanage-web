@@ -55,10 +55,6 @@ export function AppWelcome({ title, description, action, img, sx, ...other }) {
           {title}
         </Typography>
 
-        <Typography variant="body2" sx={{ opacity: 0.64, maxWidth: 360, ...(action && { mb: 3 }) }}>
-          {description}
-        </Typography>
-
         {action && action}
       </Box>
 
