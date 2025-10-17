@@ -71,10 +71,9 @@ export function OverviewAppView() {
       .isSubscribed()
       .then((subscribed) => {
         if (!subscribed) {
-          client.subscribe()
-            .catch((error) => {
-              console.error('Error during subscription:', error);
-            });
+          client.subscribe().catch((error) => {
+            console.error('Error during subscription:', error);
+          });
         }
       })
       .catch((error) => {
@@ -85,7 +84,7 @@ export function OverviewAppView() {
   return (
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid xs={12} md={6}>
           <AppWelcome
             title={`${t('welcome_back')} ${user?.displayName}`}
             description={t('we_re_vittoria')}
@@ -93,8 +92,18 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
-          <AppFeatured list={_appFeatured} />
+        <Grid xs={12} md={6}>
+          <AppNewInvoice
+            title="Pagos pendientes o vencidos"
+            tableData={pendingOrOverduePaymentRequests}
+            headLabel={[
+              { id: 'status', label: 'Estado' },
+              { id: 'totalAmount', label: 'Monto' },
+              { id: 'concept', label: 'Concepto' },
+              { id: 'dueDate', label: 'Vencimiento' },
+              { id: 'id', label: 'ID Pago' },
+            ]}
+          />
         </Grid>
 
         <Grid xs={12} md={4}>
@@ -106,17 +115,7 @@ export function OverviewAppView() {
 
         <Grid xs={12} md={8}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <AppNewInvoice
-              title="Pagos pendientes o vencidos"
-              tableData={pendingOrOverduePaymentRequests?.slice(0, 5)}
-              headLabel={[
-                { id: 'id', label: 'ID Pago' },
-                { id: 'concept', label: 'Concepto' },
-                { id: 'totalAmount', label: 'Monto' },
-                { id: 'status', label: 'Estado' },
-                { id: 'dueDate', label: 'Vencimiento' },
-              ]}
-            />
+            <AppFeatured list={_appFeatured} />
             <Grid container spacing={3}>
               <Grid xs={12} md={6}>
                 <CourseWidgetSummary title="Puntos llegadas tarde" list={stadistics} />

@@ -62,12 +62,6 @@ function RowItem({ row }) {
 
   return (
     <TableRow>
-      <TableCell>INV-{row.id.slice(-4)}</TableCell>
-
-      <TableCell>{row.concept}</TableCell>
-
-      <TableCell>{fCurrency(row.totalAmount)}</TableCell>
-
       <TableCell>
         <Label
           variant="soft"
@@ -82,8 +76,10 @@ function RowItem({ row }) {
           {t(row.status)}
         </Label>
       </TableCell>
-
+      <TableCell>{fCurrency(row.totalAmount)}</TableCell>
+      <TableCell>{row.concept}</TableCell>
       <TableCell>{fDate(row.dueDate)}</TableCell>
+      <TableCell>INV-{row.id.slice(-4)}</TableCell>
     </TableRow>
   );
 }

@@ -49,6 +49,8 @@ export function AuthProvider({ children }) {
         const userAttributes = await fetchUserAttributes();
 
         const accessToken = authSession.idToken.toString();
+        console.log('Access Token:', authSession.accessToken.toString());
+        console.log('Id Token:', authSession.idToken.toString());
         axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
         const dbUser = await getUser(userAttributes.sub);
