@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { WebPushClient, registerServiceWorker } from '@magicbell/webpush';
+import OneSignal from 'react-onesignal';
+import { useRef, useState, useEffect } from 'react';
 
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -9,7 +9,6 @@ import { orderBy } from 'src/utils/helper';
 
 import { _appFeatured } from 'src/_mock';
 import { useTranslate } from 'src/locales';
-import { CONFIG } from 'src/config-global';
 import { useGetEvents } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
@@ -31,8 +30,6 @@ import { FileUpgrade } from '../file-upgrade';
 import { AppTopAuthors } from '../app-top-authors';
 import { AppNewInvoice } from '../app-new-invoice';
 import { CourseWidgetSummary } from '../course-widget-summary';
-
-registerServiceWorker('/sw.js');
 
 // ----------------------------------------------------------------------
 
@@ -58,28 +55,40 @@ export function OverviewAppView() {
   const isAdmin = user?.role === 'admin';
 
   const theme = useTheme();
-
-  registerServiceWorker('/sw.js');
+  const onesignalInited = useRef(false);
+  const [isOneSignalReady, setOneSignalReady] = useState(false);
 
   useEffect(() => {
-    const client = new WebPushClient({
-      apiKey: CONFIG.site.magicBellApiKey,
-      userEmail: user.email,
-    });
+    if (onesignalInited.current) return;
+    onesignalInited.current = true;
 
-    client
-      .isSubscribed()
-      .then((subscribed) => {
-        if (!subscribed) {
-          client.subscribe().catch((error) => {
-            console.error('Error during subscription:', error);
-          });
-        }
+    OneSignal.init({
+      appId: 'b25d699b-e3dc-4977-9ac2-c261eafd928d',
+      safari_web_id: 'web.onesignal.auto.5d035d80-811e-4f05-a17d-f7e13950e2b6',
+      allowLocalhostAsSecureOrigin: true,
+      serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
+      serviceWorkerParam: { scope: '/onesignal/' },
+      notifyButton: { enable: true },
+    })
+      .then(() => {
+        console.log('✅ OneSignal initialized');
+        setOneSignalReady(true);
       })
-      .catch((error) => {
-        console.error('Error checking subscription:', error);
-      });
-  }, [user.email]);
+      .catch((e) => console.error('❌ OneSignal init failed', e));
+  }, []);
+
+  // Link logged user to OneSignal (use email or your user.id)
+  useEffect(() => {
+    if (!isOneSignalReady || !user?.email) return undefined;
+
+    OneSignal.login(user.email)
+      .then(async () => console.log('User logged into OneSignal', await OneSignal.User.onesignalId))
+      .catch((err) => console.error('Login error', err));
+
+    return () => {
+      OneSignal.logout();
+    };
+  }, [isOneSignalReady, user?.email]);
 
   return (
     <DashboardContent maxWidth="xl">
