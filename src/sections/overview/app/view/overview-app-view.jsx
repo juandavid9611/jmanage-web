@@ -195,13 +195,6 @@ export function OverviewAppView() {
     const cleanupPromise = linkUser();
 
     // run returned cleanup if linkUser resolved with one
-    return () => {
-      cleanupPromise?.then?.((cleanupFn) => {
-        if (typeof cleanupFn === 'function') {
-          cleanupFn();
-        }
-      });
-    };
   }, [isOneSignalReady, user?.email, askForNotificationPermission]);
 
   // You will call OneSignal.logout() yourself when the real app user logs out.
