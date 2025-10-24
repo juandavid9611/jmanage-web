@@ -1,5 +1,5 @@
 import OneSignal from 'react-onesignal';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -35,39 +35,96 @@ import { CourseWidgetSummary } from '../course-widget-summary';
 
 export function OverviewAppView() {
   const { t } = useTranslate();
+  const theme = useTheme();
+
   const { user } = useAuthContext();
+  const isAdmin = user?.role === 'admin';
+
+  const { selectedWorkspace } = useWorkspace();
 
   const { metrics } = useGetUserMetrics(user?.id);
-
   const { paymentRequests } = useGetPaymentRequestsByUser(user.id);
+  const { lateArrives } = useGetLateArrives(user?.id);
+  const { stadistics } = useGetUserAssistsStats() || [];
+  const { events } = useGetEvents(selectedWorkspace);
+  const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace);
 
   const pendingOrOverduePaymentRequests = paymentRequests?.filter(
     (request) => request.status === 'pending' || request.status === 'overdue'
   );
-  const { selectedWorkspace } = useWorkspace();
 
-  const { lateArrives } = useGetLateArrives(user?.id);
-  const { stadistics } = useGetUserAssistsStats() || [];
+  // ---- OneSignal state/refs -------------------------------------------------
 
-  const { events } = useGetEvents(selectedWorkspace);
-  const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace);
-
-  const isAdmin = user?.role === 'admin';
-
-  const theme = useTheme();
   const onesignalInited = useRef(false);
   const [isOneSignalReady, setOneSignalReady] = useState(false);
 
+  // Ask browser for push permission with a user action or soft prompt
+  const askForNotificationPermission = useCallback(async () => {
+    try {
+      const hasPermission = OneSignal.Notifications.permission;
+
+      // Case 1: already allowed
+      if (hasPermission) {
+        console.log('✅ Already allowed, nothing to do');
+        return;
+      }
+
+      // Case 2: blocked
+      // We can't recover from "blocked" in code. We need to instruct the user.
+      const blocked = !hasPermission && Notification.permission === 'denied';
+      // Browser's native state: "default" | "granted" | "denied"
+      // If it's "denied", it's hard blocked by the browser.
+
+      if (blocked) {
+        alert(
+          'Las notificaciones están bloqueadas para este sitio.\n\n' +
+            'Por favor habilítalas manualmente en los permisos del navegador:\n' +
+            '🔒 Icono de candado -> Permisos -> Notificaciones -> Permitir'
+        );
+        return;
+      }
+
+      // Case 3: not decided yet ("default")
+      // Now we can try to prompt
+      const wantsNotifications = window.confirm(
+        '¿Quieres recibir notificaciones? (cambios de horario, pagos pendientes, etc.)'
+      );
+
+      if (wantsNotifications) {
+        await OneSignal.Notifications.requestPermission();
+        console.log(
+          '📲 After requestPermission, permission =',
+          OneSignal.Notifications.permission,
+          'native =',
+          Notification.permission
+        );
+      }
+    } catch (err) {
+      console.error('⚠️ requestPermission error:', err);
+    }
+  }, []);
+
+  // Init OneSignal once
   useEffect(() => {
     if (onesignalInited.current) return;
     onesignalInited.current = true;
 
+    // Only run on client
+    if (typeof window === 'undefined') return;
+
     OneSignal.init({
-      appId: 'b25d699b-e3dc-4977-9ac2-c261eafd928d',
-      safari_web_id: 'web.onesignal.auto.5d035d80-811e-4f05-a17d-f7e13950e2b6',
+      appId: 'eeffeafb-7f76-4691-a447-9e3565549a69',
+
+      // allow localhost HTTP during dev
       allowLocalhostAsSecureOrigin: true,
+
+      // SERVICE WORKER SETUP:
+      // Make sure this file actually exists at /onesignal/OneSignalSDKWorker.js
+      // and imports the v16 sw code.
       serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
       serviceWorkerParam: { scope: '/onesignal/' },
+
+      // Built-in bell/subscribe button from OneSignal
       notifyButton: { enable: true },
     })
       .then(() => {
@@ -77,22 +134,85 @@ export function OverviewAppView() {
       .catch((e) => console.error('❌ OneSignal init failed', e));
   }, []);
 
-  // Link logged user to OneSignal (use email or your user.id)
+  // Login user in OneSignal and listen for subscription changes
   useEffect(() => {
-    if (!isOneSignalReady || !user?.email) return undefined;
+    if (!isOneSignalReady) return;
+    if (!user?.email) return;
+    if (typeof window === 'undefined') return;
 
-    OneSignal.login(user.email)
-      .then(async () => console.log('User logged into OneSignal', await OneSignal.User.onesignalId))
-      .catch((err) => console.error('Login error', err));
+    let cancelled = false;
 
+    async function linkUser() {
+      try {
+        // Associate this browser session with your platform user
+        await OneSignal.login(user.email);
+        console.log('🔐 login() resolved for', user.email);
+
+        // Handler that fires whenever OneSignal finalizes/mutates the user object
+        const handleUserChange = () => {
+          if (cancelled) return;
+
+          const osId = OneSignal.User.onesignalId;
+          const { externalId } = OneSignal.User;
+          const sub = OneSignal.User.PushSubscription;
+          const subscriptionId = sub?.id;
+          const optedIn = sub?.optedIn;
+
+          console.log('📣 OneSignal User change');
+          console.log('   onesignalId:', osId); // internal OneSignal user ID
+          console.log('   externalId:', externalId); // should match user.email
+          console.log('   push sub id:', subscriptionId); // use this with include_subscription_ids
+          console.log('   optedIn:', optedIn); // true if we can actually send push
+
+          // Optional: if not opted in yet, we can nudge for permission.
+          if (!optedIn) {
+            // We don't auto spam them, but we *could* ask here.
+            // comment/uncomment to taste:
+            askForNotificationPermission();
+          }
+
+          // TODO: you can POST { osId, subscriptionId } to your backend here
+          // so your backend can later send targeted notifications.
+        };
+
+        // Attach listener
+        OneSignal.User.addEventListener('change', handleUserChange);
+
+        // Call once immediately in case the user is already "ready"
+        handleUserChange();
+
+        // Cleanup: remove listener on unmount or deps change
+        return () => {
+          cancelled = true;
+          OneSignal.User.removeEventListener('change', handleUserChange);
+        };
+      } catch (err) {
+        console.error('Login error', err);
+        return undefined;
+      }
+    }
+
+    const cleanupPromise = linkUser();
+
+    // run returned cleanup if linkUser resolved with one
     return () => {
-      OneSignal.logout();
+      cleanupPromise?.then?.((cleanupFn) => {
+        if (typeof cleanupFn === 'function') {
+          cleanupFn();
+        }
+      });
     };
-  }, [isOneSignalReady, user?.email]);
+  }, [isOneSignalReady, user?.email, askForNotificationPermission]);
+
+  // You will call OneSignal.logout() yourself when the real app user logs out.
+  // NOT in an effect cleanup, otherwise dev hot reload and route changes kill the session.
+
+  // ----------------------------------------------------------------------
 
   return (
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
+        {/* Welcome / hero */}
         <Grid xs={12} md={6}>
           <AppWelcome
             title={`${t('welcome_back')} ${user?.displayName}`}
@@ -101,6 +221,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
+        {/* Pending / overdue payments */}
         <Grid xs={12} md={6}>
           <AppNewInvoice
             title="Pagos pendientes o vencidos"
@@ -115,6 +236,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
+        {/* Next events + upload voucher */}
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
             <NextEvents title={t('next_events')} list={events} />
@@ -122,9 +244,11 @@ export function OverviewAppView() {
           </Box>
         </Grid>
 
+        {/* Featured content + stats */}
         <Grid xs={12} md={8}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <AppFeatured list={_appFeatured} />
+
             <Grid container spacing={3}>
               <Grid xs={12} md={6}>
                 <CourseWidgetSummary title="Puntos llegadas tarde" list={stadistics} />
