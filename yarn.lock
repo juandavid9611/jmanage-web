@@ -6077,6 +6077,11 @@ react-markdown@^9.0.1:
     unist-util-visit "^5.0.0"
     vfile "^6.0.0"
 
+react-onesignal@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/react-onesignal/-/react-onesignal-3.4.0.tgz#23d9d523afeea529b6c8af7861c816ae7968b146"
+  integrity sha512-iUAUZVw4lCtQbT4FPxpTDYPrfdYJPDFZERnYSd2ho6aNf/76vBG1v6HLMhTCjtNkQ2ufAW9L97N/pZuNvjEEUw==
+
 react-phone-number-input@^3.4.3:
   version "3.4.4"
   resolved "https://registry.yarnpkg.com/react-phone-number-input/-/react-phone-number-input-3.4.4.tgz#b3f2f039543605e0a7b8139fedea29bfbea585a3"
