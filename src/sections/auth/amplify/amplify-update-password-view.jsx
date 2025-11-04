@@ -28,20 +28,20 @@ export const UpdatePasswordSchema = zod
   .object({
     code: zod
       .string()
-      .min(1, { message: 'Code is required!' })
-      .min(6, { message: 'Code must be at least 6 characters!' }),
+      .min(1, { message: 'El código es requerido!' })
+      .min(6, { message: 'El código debe tener al menos 6 caracteres!' }),
     email: zod
       .string()
-      .min(1, { message: 'Email is required!' })
-      .email({ message: 'Email must be a valid email address!' }),
+      .min(1, { message: 'El correo es requerido!' })
+      .email({ message: 'El correo debe ser una dirección de correo electrónico válida!' }),
     password: zod
       .string()
-      .min(1, { message: 'Password is required!' })
-      .min(6, { message: 'Password must be at least 6 characters!' }),
-    confirmPassword: zod.string().min(1, { message: 'Confirm password is required!' }),
+      .min(1, { message: 'La contraseña es requerida!' })
+      .min(6, { message: 'La contraseña debe tener al menos 6 caracteres!' }),
+    confirmPassword: zod.string().min(1, { message: 'Confirmar contraseña es requerida!' }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match!',
+    message: 'Las contraseñas no coinciden!',
     path: ['confirmPassword'],
   });
 
@@ -119,8 +119,8 @@ export function AmplifyUpdatePasswordView() {
     <Stack spacing={3}>
       <Field.Text
         name="email"
-        label="Email address"
-        placeholder="example@gmail.com"
+        label="Correo"
+        placeholder="ejemplo@gmail.com"
         InputLabelProps={{ shrink: true }}
         disabled
       />
@@ -129,8 +129,8 @@ export function AmplifyUpdatePasswordView() {
 
       <Field.Text
         name="password"
-        label="Password"
-        placeholder="6+ characters"
+        label="Contraseña"
+        placeholder="6+ caracteres"
         type={password.value ? 'text' : 'password'}
         InputLabelProps={{ shrink: true }}
         InputProps={{
@@ -146,7 +146,7 @@ export function AmplifyUpdatePasswordView() {
 
       <Field.Text
         name="confirmPassword"
-        label="Confirm new password"
+        label="Confirmar nueva contraseña"
         type={password.value ? 'text' : 'password'}
         InputLabelProps={{ shrink: true }}
         InputProps={{
@@ -166,13 +166,13 @@ export function AmplifyUpdatePasswordView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Update password..."
+        loadingIndicator="Actualizar contraseña..."
       >
-        Update password
+        Actualizar contraseña
       </LoadingButton>
 
       <Typography variant="body2" sx={{ mx: 'auto' }}>
-        {`Don’t have a code? `}
+        {`¿No tienes un código? `}
         <Link
           variant="subtitle2"
           onClick={handleResendCode}
@@ -181,7 +181,7 @@ export function AmplifyUpdatePasswordView() {
             ...(counting && { color: 'text.disabled', pointerEvents: 'none' }),
           }}
         >
-          Resend code {counting && `(${countdown}s)`}
+          Reenviar código {counting && `(${countdown}s)`}
         </Link>
       </Typography>
 
@@ -193,7 +193,7 @@ export function AmplifyUpdatePasswordView() {
         sx={{ gap: 0.5, alignSelf: 'center', alignItems: 'center', display: 'inline-flex' }}
       >
         <Iconify width={16} icon="eva:arrow-ios-back-fill" />
-        Return to sign in
+        Regresar a iniciar sesión
       </Link>
     </Stack>
   );
