@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 
-import { AuthSplitLayout } from 'src/layouts/auth-split';
+import { AuthCenteredLayout } from 'src/layouts/auth-centered';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
@@ -27,9 +27,9 @@ const authAmplify = {
       path: 'sign-in',
       element: (
         <GuestGuard>
-          <AuthSplitLayout section={{ title: 'Hi, Welcome back' }}>
+          <AuthCenteredLayout section={{ title: 'Hi, Welcome back' }}>
             <Amplify.SignInPage />
-          </AuthSplitLayout>
+          </AuthCenteredLayout>
         </GuestGuard>
       ),
     },
@@ -37,34 +37,34 @@ const authAmplify = {
       path: 'sign-up',
       element: (
         <GuestGuard>
-          <AuthSplitLayout>
+          <AuthCenteredLayout>
             <Amplify.SignUpPage />
-          </AuthSplitLayout>
+          </AuthCenteredLayout>
         </GuestGuard>
       ),
     },
     {
       path: 'verify',
       element: (
-        <AuthSplitLayout>
+        <AuthCenteredLayout>
           <Amplify.VerifyPage />
-        </AuthSplitLayout>
+        </AuthCenteredLayout>
       ),
     },
     {
       path: 'reset-password',
       element: (
-        <AuthSplitLayout>
+        <AuthCenteredLayout>
           <Amplify.ResetPasswordPage />
-        </AuthSplitLayout>
+        </AuthCenteredLayout>
       ),
     },
     {
       path: 'update-password',
       element: (
-        <AuthSplitLayout>
+        <AuthCenteredLayout>
           <Amplify.UpdatePasswordPage />
-        </AuthSplitLayout>
+        </AuthCenteredLayout>
       ),
     },
   ],

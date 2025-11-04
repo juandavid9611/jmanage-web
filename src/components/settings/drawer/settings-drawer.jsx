@@ -122,7 +122,7 @@ export function SettingsDrawer({
         { name: 'default', value: COLORS.primary.main },
         { name: 'cyan', value: PRIMARY_COLOR.cyan.main },
         { name: 'purple', value: PRIMARY_COLOR.purple.main },
-        { name: 'blue', value: PRIMARY_COLOR.blue.main },
+        { name: 'green', value: PRIMARY_COLOR.green.main },
         { name: 'orange', value: PRIMARY_COLOR.orange.main },
         { name: 'red', value: PRIMARY_COLOR.red.main },
       ]}

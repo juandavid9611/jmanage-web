@@ -64,10 +64,11 @@ export function AmplifyResetPasswordView() {
       <PasswordIcon sx={{ mx: 'auto' }} />
 
       <Stack spacing={1} sx={{ mt: 3, mb: 5, textAlign: 'center', whiteSpace: 'pre-line' }}>
-        <Typography variant="h5">Forgot your password?</Typography>
+        <Typography variant="h5">Olvidaste tu contraseña?</Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {`Please enter the email address associated with your account and we'll email you a link to reset your password.`}
+          Ingresa la dirección de correo electrónico asociada a tu cuenta y te enviaremos un enlace
+          para restablecer tu contraseña.
         </Typography>
       </Stack>
     </>
@@ -78,8 +79,8 @@ export function AmplifyResetPasswordView() {
       <Field.Text
         autoFocus
         name="email"
-        label="Email address"
-        placeholder="example@gmail.com"
+        label="Correo"
+        placeholder="ejemplo@gmail.com"
         InputLabelProps={{ shrink: true }}
       />
 
@@ -89,9 +90,9 @@ export function AmplifyResetPasswordView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Send request..."
+        loadingIndicator="Enviando solicitud..."
       >
-        Send request
+        Enviar solicitud
       </LoadingButton>
 
       <Link
@@ -102,7 +103,7 @@ export function AmplifyResetPasswordView() {
         sx={{ gap: 0.5, alignSelf: 'center', alignItems: 'center', display: 'inline-flex' }}
       >
         <Iconify width={16} icon="eva:arrow-ios-back-fill" />
-        Return to sign in
+        Regresar a iniciar sesión
       </Link>
     </Stack>
   );
