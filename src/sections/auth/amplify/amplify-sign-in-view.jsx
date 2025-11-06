@@ -18,6 +18,7 @@ import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
+import { AnimateLogo1 } from 'src/components/animate';
 import { Form, Field } from 'src/components/hook-form';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -74,17 +75,19 @@ export function AmplifySignInView() {
     }
   });
 
+  const renderLogo = <AnimateLogo1 sx={{ mb: 3, mx: 'auto' }} />;
+
   const renderHead = (
-    <Stack spacing={1.5} sx={{ mb: 5 }}>
-      <Typography variant="h5">Sign in to your account</Typography>
+    <Stack alignItems="center" spacing={1.5} sx={{ mb: 5 }}>
+      <Typography variant="h5">Ingresa a tu cuenta</Typography>
 
       <Stack direction="row" spacing={0.5}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {`Don't have an account?`}
+          Aún no tienes una cuenta?
         </Typography>
 
         <Link component={RouterLink} href={paths.auth.amplify.signUp} variant="subtitle2">
-          Get started
+          Registrate
         </Link>
       </Stack>
     </Stack>
@@ -92,7 +95,7 @@ export function AmplifySignInView() {
 
   const renderForm = (
     <Stack spacing={3}>
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label="Correo" InputLabelProps={{ shrink: true }} />
 
       <Stack spacing={1.5}>
         <Link
@@ -102,13 +105,13 @@ export function AmplifySignInView() {
           color="inherit"
           sx={{ alignSelf: 'flex-end' }}
         >
-          Forgot password?
+          ¿Olvidaste tu contraseña?
         </Link>
 
         <Field.Text
           name="password"
-          label="Password"
-          placeholder="6+ characters"
+          label="Contraseña"
+          placeholder="6+ caracteres"
           type={password.value ? 'text' : 'password'}
           InputLabelProps={{ shrink: true }}
           InputProps={{
@@ -130,15 +133,17 @@ export function AmplifySignInView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Sign in..."
+        loadingIndicator="Iniciar sesión..."
       >
-        Sign in
+        Iniciar sesión
       </LoadingButton>
     </Stack>
   );
 
   return (
     <>
+      {renderLogo}
+
       {renderHead}
 
       {!!errorMsg && (

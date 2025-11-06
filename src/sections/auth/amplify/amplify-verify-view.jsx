@@ -27,12 +27,12 @@ import { confirmSignUp, resendSignUpCode } from 'src/auth/context/amplify';
 export const VerifySchema = zod.object({
   code: zod
     .string()
-    .min(1, { message: 'Code is required!' })
-    .min(6, { message: 'Code must be at least 6 characters!' }),
+    .min(1, { message: 'El código es requerido!' })
+    .min(6, { message: 'El código debe tener al menos 6 caracteres!' }),
   email: zod
     .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
+    .min(1, { message: 'El correo es requerido!' })
+    .email({ message: 'El correo debe ser una dirección de correo electrónico válida!' }),
 });
 
 // ----------------------------------------------------------------------
@@ -85,10 +85,10 @@ export function AmplifyVerifyView() {
       <EmailInboxIcon sx={{ mx: 'auto' }} />
 
       <Stack spacing={1} sx={{ mt: 3, mb: 5, textAlign: 'center', whiteSpace: 'pre-line' }}>
-        <Typography variant="h5">Please check your email!</Typography>
+        <Typography variant="h5">¡Por favor verifica tu correo!</Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {`We've emailed a 6-digit confirmation code. \nPlease enter the code in the box below to verify your email.`}
+          {`Hemos enviado un código de confirmación de 6 dígitos a tu correo. \nPor favor ingresa el código en el cuadro de abajo para verificar tu correo.`}
         </Typography>
       </Stack>
     </>
@@ -98,8 +98,8 @@ export function AmplifyVerifyView() {
     <Stack spacing={3}>
       <Field.Text
         name="email"
-        label="Email address"
-        placeholder="example@gmail.com"
+        label="Dirección de correo electrónico"
+        placeholder="ejemplo@gmail.com"
         InputLabelProps={{ shrink: true }}
       />
 
@@ -111,13 +111,13 @@ export function AmplifyVerifyView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Verify..."
+        loadingIndicator="Verificando..."
       >
-        Verify
+        Verificar
       </LoadingButton>
 
       <Typography variant="body2" sx={{ mx: 'auto' }}>
-        {`Don’t have a code? `}
+        {`¿No tienes un código? `}
         <Link
           variant="subtitle2"
           onClick={handleResendCode}
@@ -126,7 +126,7 @@ export function AmplifyVerifyView() {
             ...(counting && { color: 'text.disabled', pointerEvents: 'none' }),
           }}
         >
-          Resend code {counting && `(${countdown}s)`}
+          Reenviar código {counting && `(${countdown}s)`}
         </Link>
       </Typography>
 
@@ -138,7 +138,7 @@ export function AmplifyVerifyView() {
         sx={{ gap: 0.5, alignSelf: 'center', alignItems: 'center', display: 'inline-flex' }}
       >
         <Iconify width={16} icon="eva:arrow-ios-back-fill" />
-        Return to sign in
+        Regresar a iniciar sesión
       </Link>
     </Stack>
   );
