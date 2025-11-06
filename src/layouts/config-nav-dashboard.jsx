@@ -70,7 +70,6 @@ export const navData = [
         icon: ICONS.tour,
         roles: ['admin', 'user'],
       },
-
       {
         title: 'Analitica',
         path: paths.dashboard.analytics.overview,
@@ -84,6 +83,12 @@ export const navData = [
             path: paths.dashboard.analytics.lateArrives,
           },
         ],
+      },
+      {
+        title: 'Tienda',
+        path: paths.dashboard.shop.root,
+        icon: ICONS.product,
+        roles: ['admin', 'user'],
       },
     ],
   },
@@ -103,6 +108,12 @@ export const navData = [
         title: 'Pagos Totales',
         path: paths.dashboard.admin.invoice.root,
         icon: ICONS.invoice,
+        roles: ['admin'],
+      },
+      {
+        title: 'Productos',
+        path: paths.dashboard.product.root,
+        icon: ICONS.product,
         roles: ['admin'],
       },
     ],

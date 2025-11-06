@@ -37,4 +37,5 @@ export const endpoints = {
   files: '/files',
   tours: '/tours',
   workspaces: '/workspaces',
+  products: '/products',
 };

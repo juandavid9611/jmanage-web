@@ -51,5 +51,16 @@ export const paths = {
         invoiceList: `${ROOTS.DASHBOARD}/invoice/user-list`,
       },
     },
+    product: {
+      root: `${ROOTS.DASHBOARD}/product`,
+      checkout: `${ROOTS.DASHBOARD}/product/checkout`,
+      details: (id) => `${ROOTS.DASHBOARD}/product/${id}`,
+      edit: (id) => `${ROOTS.DASHBOARD}/product/${id}/edit`,
+    },
+    shop: {
+      root: `${ROOTS.DASHBOARD}/shop`,
+      checkout: `${ROOTS.DASHBOARD}/shop/checkout`,
+      details: (id) => `${ROOTS.DASHBOARD}/shop/${id}`,
+    },
   },
 };
