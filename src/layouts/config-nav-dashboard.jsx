@@ -116,6 +116,12 @@ export const navData = [
         icon: ICONS.product,
         roles: ['admin'],
       },
+      {
+        title: 'Ordenes',
+        path: paths.dashboard.order.root,
+        icon: ICONS.order,
+        roles: ['admin'],
+      },
     ],
   },
 ];

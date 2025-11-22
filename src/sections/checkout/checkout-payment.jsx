@@ -6,6 +6,8 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Unstable_Grid2';
 import LoadingButton from '@mui/lab/LoadingButton';
 
+import { createOrder } from 'src/actions/order';
+
 import { Form } from 'src/components/hook-form';
 import { Iconify } from 'src/components/iconify';
 
@@ -72,11 +74,41 @@ export function CheckoutPayment() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      console.info('CHECKOUT', checkout);
+      const orderData = {
+        items: checkout.items.map((item) => ({
+          ...item,
+          sku: item.sku || item.id, // Ensure sku is present
+        })),
+        subtotal: checkout.subtotal,
+        shipping: checkout.shipping,
+        discount: checkout.discount,
+        totalAmount: checkout.total,
+        totalQuantity: checkout.totalItems,
+        customer: {
+          id: checkout.billing?.id,
+          name: checkout.billing?.name,
+          email: checkout.billing?.email,
+          phoneNumber: checkout.billing?.phoneNumber,
+        },
+        shippingAddress: {
+          fullAddress: checkout.billing?.fullAddress,
+          addressType: checkout.billing?.addressType,
+          company: checkout.billing?.company,
+        },
+        delivery: {
+          shipment_amount: checkout.shipping,
+          delivery_type: DELIVERY_OPTIONS.find((option) => option.value === data.delivery)?.label || 'Standard',
+        },
+        payment: {
+          payment: data.payment,
+          cardType: 'visa', // Dummy value to satisfy validation
+          cardNumber: '**** **** **** 1234', // Dummy value to satisfy validation
+        },
+      };
+      console.info('Creating order with data:', orderData);
+      await createOrder(orderData);
       checkout.onNextStep();
-      console.info('DATA', data);
       checkout.onReset();
-      console.info('DATA', data);
     } catch (error) {
       console.error(error);
     }

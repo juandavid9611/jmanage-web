@@ -38,4 +38,5 @@ export const endpoints = {
   tours: '/tours',
   workspaces: '/workspaces',
   products: '/products',
+  orders: '/orders',
 };

@@ -18,6 +18,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { createProduct, updateProduct } from 'src/actions/product';
 import {
   _tags,
   PRODUCT_SIZE_OPTIONS,
@@ -58,6 +59,7 @@ export function ProductNewEditForm({ currentProduct }) {
   const router = useRouter();
 
   const [includeTaxes, setIncludeTaxes] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const defaultValues = useMemo(
     () => ({
@@ -114,14 +116,19 @@ export function ProductNewEditForm({ currentProduct }) {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      reset();
-      toast.success(currentProduct ? 'Update success!' : 'Create success!');
-      router.push(paths.dashboard.product.root);
-      console.info('DATA', data);
+      if (currentProduct) {
+        await updateProduct(currentProduct.id, data);
+        toast.success('Update success!');
+      } else {
+        await createProduct(data);
+        toast.success('Create success!');
+      }
     } catch (error) {
-      console.error(error);
+      toast.error(error.message);
     }
+    reset();
+    router.push(paths.dashboard.product.root);
+    console.info('DATA', data);
   });
 
   const handleRemoveFile = useCallback(
@@ -138,6 +145,13 @@ export function ProductNewEditForm({ currentProduct }) {
 
   const handleChangeIncludeTaxes = useCallback((event) => {
     setIncludeTaxes(event.target.checked);
+  }, []);
+
+  const handleUpload = useCallback(() => {
+    setUploadingImages(true);
+    toast.info('Images will be uploaded when you save the product');
+    // Images are uploaded during form submission in onSubmit
+    setUploadingImages(false);
   }, []);
 
   const renderDetails = (
@@ -165,7 +179,7 @@ export function ProductNewEditForm({ currentProduct }) {
             maxSize={3145728}
             onRemove={handleRemoveFile}
             onRemoveAll={handleRemoveAllFiles}
-            onUpload={() => console.info('ON UPLOAD')}
+            onUpload={handleUpload}
           />
         </Stack>
       </Stack>

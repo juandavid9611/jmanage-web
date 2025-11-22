@@ -37,6 +37,7 @@ export function ProductDetailsSummary({
 
   const {
     id,
+    sku,
     name,
     sizes,
     price,
@@ -60,6 +61,7 @@ export function ProductDetailsSummary({
 
   const defaultValues = {
     id,
+    sku,
     name,
     coverUrl,
     available,

@@ -22,8 +22,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 
 import { PRODUCT_STOCK_OPTIONS } from 'src/_mock';
-import { useGetProducts } from 'src/actions/product';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { deleteProduct, useGetProducts } from 'src/actions/product';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -82,22 +82,29 @@ export function ProductListView() {
   const dataFiltered = applyFilter({ inputData: tableData, filters: filters.state });
 
   const handleDeleteRow = useCallback(
-    (id) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
-
-      toast.success('Delete success!');
-
-      setTableData(deleteRow);
+    async (id) => {
+      try {
+        await deleteProduct(id);
+        const deleteRow = tableData.filter((row) => row.id !== id);
+        toast.success('Delete success!');
+        setTableData(deleteRow);
+      } catch (error) {
+        toast.error(error.message || 'Failed to delete product');
+      }
     },
     [tableData]
   );
 
-  const handleDeleteRows = useCallback(() => {
-    const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
-
-    toast.success('Delete success!');
-
-    setTableData(deleteRows);
+  const handleDeleteRows = useCallback(async () => {
+    try {
+      await Promise.all(selectedRowIds.map((id) => deleteProduct(id)));
+      const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
+      toast.success('Delete success!');
+      setTableData(deleteRows);
+      setSelectedRowIds([]);
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete products');
+    }
   }, [selectedRowIds, tableData]);
 
   const handleEditRow = useCallback(
