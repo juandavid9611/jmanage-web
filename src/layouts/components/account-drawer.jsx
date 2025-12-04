@@ -13,7 +13,6 @@ import IconButton from '@mui/material/IconButton';
 import { paths } from 'src/routes/paths';
 import { useRouter, usePathname } from 'src/routes/hooks';
 
-import { _mock } from 'src/_mock';
 import { varAlpha } from 'src/theme/styles';
 
 import { Label } from 'src/components/label';
@@ -36,7 +35,7 @@ export function AccountDrawer({ data = [], sx, ...other }) {
 
   const pathname = usePathname();
 
-  const { user } = useAuthContext();
+  const { user, switchAccount } = useAuthContext();
 
   const [open, setOpen] = useState(false);
 
@@ -111,29 +110,67 @@ export function AccountDrawer({ data = [], sx, ...other }) {
           </Stack>
 
           <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center" sx={{ p: 3 }}>
-            {[...Array(3)].map((_, index) => (
-              <Tooltip
-                key={_mock.fullName(index + 1)}
-                title={`Switch to: ${_mock.fullName(index + 1)}`}
-              >
-                <Avatar
-                  alt={_mock.fullName(index + 1)}
-                  src={_mock.image.avatar(index + 1)}
-                  onClick={() => {}}
-                />
-              </Tooltip>
-            ))}
+            {user?.accountIds?.map((accountId) => {
+              const isActive = accountId === user?.activeAccountId;
+              const account = user?.accounts?.[accountId];
+              const role = user?.accountsRoles?.[accountId];
+              const logoUrl = account?.branding?.logo_url;
+              const accountName = account?.name || accountId;
 
-            <Tooltip title="Add account">
-              <IconButton
-                sx={{
-                  bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-                  border: `dashed 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.32)}`,
-                }}
-              >
-                <Iconify icon="mingcute:add-line" />
-              </IconButton>
-            </Tooltip>
+              return (
+                <Tooltip
+                  key={accountId}
+                  title={
+                    isActive
+                      ? `Active account: ${accountName} (${role})`
+                      : `Switch to: ${accountName} (${role})`
+                  }
+                >
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      cursor: isActive ? 'default' : 'pointer',
+                    }}
+                    onClick={() => {
+                      if (!isActive && switchAccount) {
+                        switchAccount(accountId);
+                      }
+                    }}
+                  >
+                    <Avatar
+                      src={logoUrl}
+                      alt={accountName}
+                      sx={{
+                        bgcolor: isActive ? 'primary.main' : 'grey.500',
+                        border: isActive ? `2px solid ${theme.vars.palette.primary.main}` : 'none',
+                        fontWeight: isActive ? 'bold' : 'normal',
+                      }}
+                    >
+                      {accountId.charAt(0).toUpperCase()}
+                    </Avatar>
+                    {isActive && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          bottom: -2,
+                          right: -2,
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          bgcolor: 'success.main',
+                          border: `2px solid ${theme.vars.palette.background.paper}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Iconify icon="eva:checkmark-fill" width={10} sx={{ color: 'white' }} />
+                      </Box>
+                    )}
+                  </Box>
+                </Tooltip>
+              );
+            })}
           </Stack>
 
           <Stack
