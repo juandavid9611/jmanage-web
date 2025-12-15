@@ -16,6 +16,7 @@ import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/component
 import { AuthProvider } from 'src/auth/context/amplify';
 
 import { Snackbar } from './components/snackbar';
+import { CheckoutProvider } from './sections/checkout/context';
 import { WorkspaceProvider } from './workspace/workspace-provider';
 
 // ----------------------------------------------------------------------
@@ -30,10 +31,12 @@ export default function App() {
           <WorkspaceProvider>
             <ThemeProvider>
               <MotionLazy>
-                <Snackbar />
-                <ProgressBar />
-                <SettingsDrawer />
-                <Router />
+                <CheckoutProvider>
+                  <Snackbar />
+                  <ProgressBar />
+                  <SettingsDrawer />
+                  <Router />
+                </CheckoutProvider>
               </MotionLazy>
             </ThemeProvider>
           </WorkspaceProvider>

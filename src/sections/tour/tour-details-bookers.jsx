@@ -26,7 +26,7 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
       try {
         const bookerData = {
           name: field,
-          value: newValue,
+          value: String(newValue),
         };
         await patchBooker(tourId, booker.id, bookerData);
       } catch (error) {

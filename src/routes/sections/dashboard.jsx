@@ -30,6 +30,18 @@ const TourDetailsPage = lazy(() => import('src/pages/dashboard/tour/details'));
 const TourListPage = lazy(() => import('src/pages/dashboard/tour/list'));
 const TourCreatePage = lazy(() => import('src/pages/dashboard/tour/new'));
 const TourEditPage = lazy(() => import('src/pages/dashboard/tour/edit'));
+// Product
+const ProductDetailsPage = lazy(() => import('src/pages/dashboard/product/details'));
+const ProductListPage = lazy(() => import('src/pages/dashboard/product/list'));
+const ProductCreatePage = lazy(() => import('src/pages/dashboard/product/new'));
+const ProductEditPage = lazy(() => import('src/pages/dashboard/product/edit'));
+// Shop
+const ProductShopListPage = lazy(() => import('src/pages/dashboard/shop/list'));
+const ProductShopDetailsPage = lazy(() => import('src/pages/dashboard/shop/details'));
+const ProductShopCheckoutPage = lazy(() => import('src/pages/dashboard/shop/checkout'));
+// Order
+const OrderListPage = lazy(() => import('src/pages/dashboard/order/list'));
+const OrderDetailsPage = lazy(() => import('src/pages/dashboard/order/details'));
 // ----------------------------------------------------------------------
 
 const layoutContent = (
@@ -82,6 +94,33 @@ export const dashboardRoutes = [
           { path: ':id', element: <TourDetailsPage /> },
           { path: 'new', element: <TourCreatePage /> },
           { path: ':id/edit', element: <TourEditPage /> },
+        ],
+      },
+      {
+        path: 'product',
+        children: [
+          { element: <ProductListPage />, index: true },
+          { path: 'list', element: <ProductListPage /> },
+          { path: ':id', element: <ProductDetailsPage /> },
+          { path: 'new', element: <ProductCreatePage /> },
+          { path: ':id/edit', element: <ProductEditPage /> },
+        ],
+      },
+      {
+        path: 'shop',
+        children: [
+          { element: <ProductShopListPage />, index: true },
+          { path: 'list', element: <ProductShopListPage /> },
+          { path: ':id', element: <ProductShopDetailsPage /> },
+          { path: 'checkout', element: <ProductShopCheckoutPage /> },
+        ],
+      },
+      {
+        path: 'order',
+        children: [
+          { element: <OrderListPage />, index: true },
+          { path: 'list', element: <OrderListPage /> },
+          { path: ':id', element: <OrderDetailsPage /> },
         ],
       },
     ],

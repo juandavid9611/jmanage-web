@@ -74,6 +74,7 @@ export function AmplifySignUpView() {
         username: data.email,
         password: data.password,
         fullName: `${data.firstName.trim()} ${data.lastName.trim()}`,
+        accountId: 'vittoriacd',
       });
 
       data.id = response.userId;

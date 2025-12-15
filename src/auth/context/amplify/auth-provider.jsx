@@ -4,10 +4,11 @@ import { fetchAuthSession, fetchUserAttributes } from 'aws-amplify/auth';
 
 import { useSetState } from 'src/hooks/use-set-state';
 
-import axios from 'src/utils/axios';
+import axiosInstance from 'src/utils/axios';
 
 import { CONFIG } from 'src/config-global';
 import { getUser } from 'src/actions/user';
+import { getMyAccounts } from 'src/actions/accounts';
 
 import { AuthContext } from '../auth-context';
 
@@ -51,19 +52,60 @@ export function AuthProvider({ children }) {
         const accessToken = authSession.idToken.toString();
         // console.log('Access Token:', authSession.accessToken.toString());
         // console.log('Id Token:', authSession.idToken.toString());
-        axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+        axiosInstance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
         const dbUser = await getUser(userAttributes.sub);
 
         if (!dbUser) {
           setState({ user: null, loading: false });
-          delete axios.defaults.headers.common.Authorization;
+          delete axiosInstance.defaults.headers.common.Authorization;
+          delete axiosInstance.defaults.headers.common['x-account-id'];
           return;
         }
-        setState({ user: { ...authSession, ...userAttributes, ...dbUser }, loading: false });
+
+        // Fetch memberships from the dedicated endpoint
+        const membershipsResponse = await axiosInstance.get('/memberships/my-memberships');
+        const membershipsData = membershipsResponse.data || {};
+        const accountIds = membershipsData.account_ids || [];
+        const accountsRoles = membershipsData.accounts_roles || {};
+        
+        // Fetch account details (including logos)
+        const accountsData = await getMyAccounts();
+        const accountsMap = accountsData.reduce((acc, account) => {
+          acc[account.id] = account;
+          return acc;
+        }, {});
+        
+        const storedAccountId = localStorage.getItem('activeAccountId');
+        const defaultAccountId = accountIds[0];
+        
+        // Validate stored account ID against current memberships
+        const isValidStoredAccount = accountIds.includes(storedAccountId);
+        const activeAccountId = isValidStoredAccount ? storedAccountId : defaultAccountId;
+
+        if (activeAccountId) {
+          axiosInstance.defaults.headers.common['x-account-id'] = activeAccountId;
+          localStorage.setItem('activeAccountId', activeAccountId);
+        } else {
+          delete axiosInstance.defaults.headers.common['x-account-id'];
+        }
+
+        setState({ 
+          user: { 
+            ...authSession, 
+            ...userAttributes, 
+            ...dbUser,
+            accountIds,
+            accountsRoles,
+            accounts: accountsMap,
+            activeAccountId 
+          }, 
+          loading: false 
+        });
       } else {
         setState({ user: null, loading: false });
-        delete axios.defaults.headers.common.Authorization;
+        delete axiosInstance.defaults.headers.common.Authorization;
+        delete axiosInstance.defaults.headers.common['x-account-id'];
       }
     } catch (error) {
       console.error(error);
@@ -77,6 +119,29 @@ export function AuthProvider({ children }) {
   }, []);
 
   // ----------------------------------------------------------------------
+
+  const switchAccount = useCallback((accountId) => {
+    const accountIds = state.user?.accountIds || [];
+    const isValidAccount = accountIds.includes(accountId);
+
+    if (isValidAccount) {
+      axiosInstance.defaults.headers.common['x-account-id'] = accountId;
+      localStorage.setItem('activeAccountId', accountId);
+      
+      setState(prev => ({
+        ...prev,
+        user: {
+          ...prev.user,
+          activeAccountId: accountId
+        }
+      }));
+      
+      // Optional: Reload to refresh all data with new account context
+      window.location.reload();
+    } else {
+      console.error(`Cannot switch to account ${accountId}: User is not a member.`);
+    }
+  }, [state.user?.accountIds, setState]);
 
   const checkAuthenticated = state.user ? 'authenticated' : 'unauthenticated';
 
@@ -96,11 +161,12 @@ export function AuthProvider({ children }) {
           }
         : null,
       checkUserSession,
+      switchAccount,
       loading: status === 'loading',
       authenticated: status === 'authenticated',
       unauthenticated: status === 'unauthenticated',
     }),
-    [checkUserSession, state.user, status]
+    [checkUserSession, switchAccount, state.user, status]
   );
 
   return <AuthContext.Provider value={memoizedValue}>{children}</AuthContext.Provider>;
