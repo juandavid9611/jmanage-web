@@ -63,14 +63,16 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        // Fetch memberships from the dedicated endpoint
-        const membershipsResponse = await axiosInstance.get('/memberships/my-memberships');
-        const membershipsData = membershipsResponse.data || {};
-        const accountIds = membershipsData.account_ids || [];
-        const accountsRoles = membershipsData.accounts_roles || {};
-        
         // Fetch account details (including logos)
         const accountsData = await getMyAccounts();
+        
+        const accountIds = accountsData.map((account) => account.id);
+        
+        const accountsRoles = accountsData.reduce((acc, account) => {
+          acc[account.id] = account.membership?.role;
+          return acc;
+        }, {});
+
         const accountsMap = accountsData.reduce((acc, account) => {
           acc[account.id] = account;
           return acc;
