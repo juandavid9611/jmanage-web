@@ -29,11 +29,11 @@ export function TopAnalyticsView() {
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
             <EcommerceWelcome
-              title={`Goleador 🥇\n ${orderBy(topGoalsAndAssists, ['goals'], ['desc'])[0]?.name}`}
+              title={`Goleador 🥇\n ${orderBy(topGoalsAndAssists, ['goals'], ['desc'])[0]?.name || '...'}`}
               imgIndex={9}
             />
             <AppTopAnalytics
-              title={`Goleadores ${selectedWorkspace.name} 🏆`}
+              title={`Goleadores ${selectedWorkspace?.name || ''} 🏆`}
               list={orderBy(topGoalsAndAssists, ['goals'], ['desc'])}
               isGoal
             />
@@ -42,11 +42,11 @@ export function TopAnalyticsView() {
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
             <EcommerceWelcome
-              title={`Asistidor 🏅\n ${orderBy(topGoalsAndAssists, ['assists'], ['desc'])[0]?.name}`}
+              title={`Asistidor 🏅\n ${orderBy(topGoalsAndAssists, ['assists'], ['desc'])[0]?.name || '...'}`}
               imgIndex={7}
             />
             <AppTopAnalytics
-              title={`Asistidores ${selectedWorkspace.name} 🏆`}
+              title={`Asistidores ${selectedWorkspace?.name || ''} 🏆`}
               list={orderBy(topGoalsAndAssists, ['assists'], ['desc'])}
               isGoal={false}
             />
