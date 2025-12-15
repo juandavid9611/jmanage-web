@@ -11,7 +11,7 @@ import { LogoClub } from 'src/components/logo';
 
 // ----------------------------------------------------------------------
 
-export function AppWelcome({ title, description, action, img, sx, ...other }) {
+export function AppWelcome({ title, description, action, sx, ...other }) {
   const theme = useTheme();
   const [count, setCount] = useState(0);
 
@@ -58,11 +58,9 @@ export function AppWelcome({ title, description, action, img, sx, ...other }) {
         {action && action}
       </Box>
 
-      {img && (
-        <Box sx={{ maxWidth: 260 }} onClick={() => setCount(count + 1)}>
-          <LogoClub key={count} />
-        </Box>
-      )}
+      <Box sx={{ maxWidth: 260 }} onClick={() => setCount(count + 1)}>
+        <LogoClub key={count} />
+      </Box>
     </Box>
   );
 }

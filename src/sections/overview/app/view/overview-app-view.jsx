@@ -11,7 +11,6 @@ import { _appFeatured } from 'src/_mock';
 import { useTranslate } from 'src/locales';
 import { useGetEvents } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { SeoIllustration } from 'src/assets/illustrations';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
 import {
@@ -210,7 +209,6 @@ export function OverviewAppView() {
           <AppWelcome
             title={`${t('welcome_back')} ${user?.displayName}`}
             description={t('we_re_vittoria')}
-            img={<SeoIllustration />}
           />
         </Grid>
 
