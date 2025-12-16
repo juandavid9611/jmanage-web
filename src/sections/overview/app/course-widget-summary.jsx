@@ -1,6 +1,5 @@
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import { useTheme } from '@mui/material/styles';
 import { Avatar, CardHeader, LinearProgress, linearProgressClasses } from '@mui/material';
 
 import { useRouter } from 'src/routes/hooks';
@@ -9,11 +8,10 @@ import { fPercent } from 'src/utils/format-number';
 
 import { varAlpha } from 'src/theme/styles';
 
+
 // ----------------------------------------------------------------------
 
 export function CourseWidgetSummary({ title, subheader, list, ...other }) {
-  const theme = useTheme();
-
   const router = useRouter();
 
   return (
