@@ -5,8 +5,6 @@ import Card from '@mui/material/Card';
 import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
 
-import { fNumber } from 'src/utils/format-number';
-
 import { Iconify } from 'src/components/iconify';
 
 import { Wrap2025Dialog } from './wrap-2025-dialog';
@@ -24,6 +22,8 @@ export function Wrap2025Widget({ list, user, ...other }) {
     }
     return acc;
   }, 0);
+
+  const fNumber = (num) => new Intl.NumberFormat('en-US').format(Math.round(num));
 
   let message = '';
   if (totalMinutes <= 2280) {
