@@ -38,6 +38,7 @@ export const SignUpSchema = zod.object({
     .min(1, { message: 'Contraseña requerida!' })
     .min(6, { message: 'Contraseña debe tener al menos 6 caracteres!' }),
   teamCode: zod.literal('vittoria2024sm', { message: 'Código de equipo no válido!' }),
+  accountId: zod.string().default('vittoriacd'),
 });
 
 // ----------------------------------------------------------------------
@@ -68,19 +69,21 @@ export function AmplifySignUpView() {
   } = methods;
 
   const onSubmit = handleSubmit(async (data) => {
-    data.email = data.email.toLowerCase();
     try {
       const response = await signUp({
-        username: data.email,
+        username: data.email.toLowerCase(),
         password: data.password,
         fullName: `${data.firstName.trim()} ${data.lastName.trim()}`,
-        accountId: 'vittoriacd',
       });
 
-      data.id = response.userId;
-      data.name = `${data.firstName} ${data.lastName}`;
+      const userData = {
+        ...data,
+        id: response.userId,
+        name: `${data.firstName} ${data.lastName}`,
+        email: data.email.toLowerCase(),
+      };
 
-      await createUser(data);
+      await createUser(userData);
 
       const searchParams = new URLSearchParams({ email: data.email }).toString();
 
