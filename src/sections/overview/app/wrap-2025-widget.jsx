@@ -76,9 +76,9 @@ export function Wrap2025Widget({ list, user, ...other }) {
         </Box>
       </Card>
 
-      <Wrap2025Dialog 
-        open={openWrap} 
-        onClose={() => setOpenWrap(false)} 
+      <Wrap2025Dialog
+        open={openWrap}
+        onClose={() => setOpenWrap(false)}
         list={list}
         user={user}
       />
