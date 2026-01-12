@@ -23,6 +23,7 @@ import {
 import { useAuthContext } from 'src/auth/hooks';
 
 import { AppWelcome } from '../app-welcome';
+import { NextEvents } from '../next-events';
 import { AppFeatured } from '../app-featured';
 import { FileUpgrade } from '../file-upgrade';
 import { AppTopAuthors } from '../app-top-authors';
@@ -231,7 +232,7 @@ export function OverviewAppView() {
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
             <Wrap2025Widget list={stadistics} user={user} />
-            {/* <NextEvents title={t('next_events')} list={events} /> */}
+            <NextEvents title={t('next_events')} list={events} />
             <FileUpgrade userId={user.id} />
           </Box>
         </Grid>
