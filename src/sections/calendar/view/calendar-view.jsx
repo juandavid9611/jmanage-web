@@ -1,7 +1,7 @@
 import Calendar from '@fullcalendar/react'; // => request placed at the top
 
-import { useEffect } from 'react';
 import listPlugin from '@fullcalendar/list';
+import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -43,8 +43,8 @@ import { CalendarFiltersResult } from '../calendar-filters-result';
 export function CalendarView() {
   const { t } = useTranslation();
   const { user } = useAuthContext();
-  const { selectedWorkspace } = useWorkspace();
-  const isAdmin = user?.role === 'admin';
+  const { selectedWorkspace, workspaceRole } = useWorkspace();
+  const isAdminOrCoach = workspaceRole === 'admin' || workspaceRole === 'coach';
 
   const theme = useTheme();
 
@@ -94,6 +94,14 @@ export function CalendarView() {
     openForm
   );
 
+  // Wrapper to include workspace_id when updating events via drag/resize
+  const updateEventWithWorkspace = useCallback(
+    async (eventData) => {
+      await updateEvent(eventData, selectedWorkspace?.id);
+    },
+    [selectedWorkspace?.id]
+  );
+
   useEffect(() => {
     onInitialView();
   }, [onInitialView]);
@@ -122,8 +130,8 @@ export function CalendarView() {
           justifyContent="space-between"
           sx={{ mb: { xs: 3, md: 5 } }}
         >
-          <Typography variant="h4">Calendar</Typography>
-          {isAdmin && (
+          <Typography variant="h4">{t('calendar')}</Typography>
+          {isAdminOrCoach && (
             <Button
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
@@ -172,10 +180,10 @@ export function CalendarView() {
               aspectRatio={3}
               firstDay={1}
               eventDrop={(arg) => {
-                onDropEvent(arg, updateEvent);
+                onDropEvent(arg, updateEventWithWorkspace);
               }}
               eventResize={(arg) => {
-                onResizeEvent(arg, updateEvent);
+                onResizeEvent(arg, updateEventWithWorkspace);
               }}
               plugins={[
                 listPlugin,

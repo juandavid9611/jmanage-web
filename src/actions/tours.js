@@ -5,9 +5,9 @@ import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.tours;
 
-export function useGetTours(workspaceId) {
+export function useGetTours(workspaceId, tourType) {
   const { data, isLoading, error, isValidating } = useSWR(
-    workspaceId ? `${URL}?workspace_id=${workspaceId}` : null,
+    workspaceId ? `${URL}?workspace_id=${workspaceId}&tour_type=${tourType}` : null,
     fetcher
   );
 
@@ -39,9 +39,10 @@ export function useGetTour(tourId) {
   return memoizedValue;
 }
 
-export async function createTour(tourData) {
+export async function createTour(tourData, workspaceId) {
   try {
-    const res = await axiosInstance.post(URL, tourData);
+    const url = workspaceId ? `${URL}?workspace_id=${workspaceId}` : URL;
+    const res = await axiosInstance.post(url, tourData);
     mutate((key) => key.startsWith(URL));
     return res.data;
   } catch (error) {
@@ -49,27 +50,30 @@ export async function createTour(tourData) {
   }
 }
 
-export async function updateTour(id, tourData) {
+export async function updateTour(id, tourData, workspaceId) {
   console.info('tourData', tourData);
   tourData.id = id;
-  const res = await axiosInstance.put(`${URL}/${id}`, tourData);
+  const url = workspaceId ? `${URL}/${id}?workspace_id=${workspaceId}` : `${URL}/${id}`;
+  const res = await axiosInstance.put(url, tourData);
   mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
-export async function deleteTour(id) {
-  const res = await axiosInstance.delete(`${URL}/${id}`);
+export async function deleteTour(id, workspaceId) {
+  const url = workspaceId ? `${URL}/${id}?workspace_id=${workspaceId}` : `${URL}/${id}`;
+  const res = await axiosInstance.delete(url);
   mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
-export async function generatePresignedUrls(tourId, files) {
+export async function generatePresignedUrls(tourId, files, workspaceId) {
   try {
     files = files.reduce((acc, file) => {
       acc.push({ file_name: file.name, content_type: file.type });
       return acc;
     }, []);
-    const res = await axiosInstance.post(`${URL}/${tourId}/generate-presigned-urls`, files);
+    const url = workspaceId ? `${URL}/${tourId}/generate-presigned-urls?workspace_id=${workspaceId}` : `${URL}/${tourId}/generate-presigned-urls`;
+    const res = await axiosInstance.post(url, files);
     return res.data;
   } catch (error) {
     console.error('Failed to fetch:', error);
@@ -77,14 +81,16 @@ export async function generatePresignedUrls(tourId, files) {
   }
 }
 
-export async function addImages(tourId, file_names) {
-  const res = await axiosInstance.post(`${URL}/${tourId}/add_images`, file_names);
+export async function addImages(tourId, file_names, workspaceId) {
+  const url = workspaceId ? `${URL}/${tourId}/add_images?workspace_id=${workspaceId}` : `${URL}/${tourId}/add_images`;
+  const res = await axiosInstance.post(url, file_names);
   mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
-export async function patchBooker(tourId, bookerId, bookerData) {
-  const res = await axiosInstance.patch(`${URL}/${tourId}/bookers/${bookerId}`, bookerData);
+export async function patchBooker(tourId, bookerId, bookerData, workspaceId) {
+  const url = workspaceId ? `${URL}/${tourId}/bookers/${bookerId}?workspace_id=${workspaceId}` : `${URL}/${tourId}/bookers/${bookerId}`;
+  const res = await axiosInstance.patch(url, bookerData);
   mutate((key) => key.startsWith(URL));
   return res.data;
 }

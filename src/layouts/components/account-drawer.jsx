@@ -110,7 +110,7 @@ export function AccountDrawer({ data = [], sx, ...other }) {
           </Stack>
 
           <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center" sx={{ p: 3 }}>
-            {user?.accountIds?.map((accountId) => {
+            {[...new Set(user?.accountIds || [])].map((accountId) => {
               const isActive = accountId === user?.activeAccountId;
               const account = user?.accounts?.[accountId];
               const role = user?.accountsRoles?.[accountId];

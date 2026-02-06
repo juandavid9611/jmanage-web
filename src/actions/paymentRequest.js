@@ -8,10 +8,15 @@ import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 const URL = endpoints.paymentRquests;
 
 export function useGetPaymentRequests(workspaceId) {
-  const { data, isLoading, error, isValidating } = useSWR(
-    workspaceId ? `${URL}?workspace_id=${workspaceId}` : null,
-    fetcher
-  );
+  const url = workspaceId ? `${URL}?workspace_id=${workspaceId}` : null;
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
+
+  console.log('[useGetPaymentRequests] Hook called', {
+    workspaceId,
+    url,
+    dataLength: data?.length,
+    isLoading,
+  });
 
   const memoizedValue = useMemo(
     () => ({
@@ -27,8 +32,9 @@ export function useGetPaymentRequests(workspaceId) {
   return memoizedValue;
 }
 
-export function useGetPaymentRequestsByUser(userId) {
-  const { data, isLoading, error, isValidating } = useSWR(`${URL}?user_id=${userId}`, fetcher);
+export function useGetPaymentRequestsByUser(userId, workspaceId) {
+  const url = workspaceId ? `${URL}?user_id=${userId}&workspace_id=${workspaceId}` : `${URL}?user_id=${userId}`;
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
@@ -60,39 +66,44 @@ export function useGetPaymentRequest(id) {
   return memoizedValue;
 }
 
-export async function createPaymentRequests(paymentRequestsData) {
-  const res = await axiosInstance.post(URL, paymentRequestsData);
+export async function createPaymentRequests(paymentRequestsData, workspaceId) {
+  const url = workspaceId ? `${URL}?workspace_id=${workspaceId}` : URL;
+  const res = await axiosInstance.post(url, paymentRequestsData);
   mutate((key) => key.startsWith(URL));
   return res;
 }
 
-export async function updatePaymentRequest(id, paymentRequestData) {
+export async function updatePaymentRequest(id, paymentRequestData, workspaceId) {
   paymentRequestData.id = id;
-  const res = await axiosInstance.put(`${URL}/${id}`, paymentRequestData);
+  const url = workspaceId ? `${URL}/${id}?workspace_id=${workspaceId}` : `${URL}/${id}`;
+  const res = await axiosInstance.put(url, paymentRequestData);
   mutate((key) => key.startsWith(URL));
   return res;
 }
 
-export async function deletePaymentRequest(id) {
-  const res = await axiosInstance.delete(`${URL}/${id}`);
+export async function deletePaymentRequest(id, workspaceId) {
+  const url = workspaceId ? `${URL}/${id}?workspace_id=${workspaceId}` : `${URL}/${id}`;
+  const res = await axiosInstance.delete(url);
   mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
-export async function requestPaymentRequestApproval(id, file_names) {
-  const res = await axiosInstance.post(`${URL}/${id}/request_approval`, file_names);
+export async function requestPaymentRequestApproval(id, file_names, workspaceId) {
+  const url = workspaceId ? `${URL}/${id}/request_approval?workspace_id=${workspaceId}` : `${URL}/${id}/request_approval`;
+  const res = await axiosInstance.post(url, file_names);
   mutate((key) => key.startsWith(URL));
   return res.data;
 }
 
-export async function generatePresignedUrls(paymentRequestId, files) {
+export async function generatePresignedUrls(paymentRequestId, files, workspaceId) {
   try {
     files = files.reduce((acc, file) => {
       acc.push({ file_name: file.name, content_type: file.type });
       return acc;
     }, []);
+    const url = workspaceId ? `${URL}/${paymentRequestId}/generate-presigned-urls?workspace_id=${workspaceId}` : `${URL}/${paymentRequestId}/generate-presigned-urls`;
     const res = await axiosInstance.post(
-      `${URL}/${paymentRequestId}/generate-presigned-urls`,
+      url,
       files
     );
     return res.data;

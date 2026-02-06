@@ -20,6 +20,7 @@ import { useRouter } from 'src/routes/hooks';
 import { fIsAfter } from 'src/utils/format-time';
 
 import { uploadFileToS3 } from 'src/actions/files';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import { _tags, _tourGuides, TOUR_SERVICE_OPTIONS } from 'src/_mock';
 import { addImages, createTour, updateTour, generatePresignedUrls } from 'src/actions/tours';
 
@@ -70,6 +71,7 @@ export const NewTourSchema = zod
 export function TourNewEditForm({ currentTour }) {
   console.info('currentTour', currentTour);
   const router = useRouter();
+  const { selectedWorkspace } = useWorkspace();
 
   const defaultValues = useMemo(
     () => ({
@@ -117,10 +119,10 @@ export function TourNewEditForm({ currentTour }) {
   const onSubmit = handleSubmit(async (data) => {
     try {
       if (currentTour?.id) {
-        await updateTour(currentTour.id, data);
+        await updateTour(currentTour.id, data, selectedWorkspace?.id);
         toast.success('Update success!');
       } else {
-        await createTour(data);
+        await createTour(data, selectedWorkspace?.id);
         toast.success('Create success!');
       }
       reset();
@@ -136,7 +138,7 @@ export function TourNewEditForm({ currentTour }) {
       // Step 4: Wait for all uploads to complete
       try {
         // Step 2: Request pre-signed URLs for each file from the backend
-        const response = await generatePresignedUrls(currentTour.id, values.images);
+        const response = await generatePresignedUrls(currentTour.id, values.images, selectedWorkspace?.id);
 
         // Step 3: Upload each file to its respective pre-signed URL
         const uploadPromises = values.images.map((file) => {
@@ -150,12 +152,12 @@ export function TourNewEditForm({ currentTour }) {
           success: () => 'All files uploaded successfully',
           error: 'File upload failed',
         });
-        await addImages(currentTour.id, file_names);
+        await addImages(currentTour.id, file_names, selectedWorkspace?.id);
       } catch (error) {
         console.error('File upload failed', error);
       }
     },
-    [currentTour.id, values.images]
+    [currentTour.id, values.images, selectedWorkspace?.id]
   );
 
   const handleRemoveFile = useCallback(

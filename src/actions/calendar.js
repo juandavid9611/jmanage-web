@@ -50,30 +50,34 @@ export function useGetEvents(selectedWorkspace) {
 
 // ----------------------------------------------------------------------
 
-export async function createEvent(eventData) {
-  const res = await axios.post(CALENDAR_ENDPOINT, eventData);
+export async function createEvent(eventData, workspaceId) {
+  const url = workspaceId ? `${CALENDAR_ENDPOINT}?workspace_id=${workspaceId}` : CALENDAR_ENDPOINT;
+  const res = await axios.post(url, eventData);
   mutate((key) => key.startsWith(CALENDAR_ENDPOINT));
   return res;
 }
 
 // ----------------------------------------------------------------------
 
-export async function updateEvent(eventData) {
-  const res = await axios.put(CALENDAR_ENDPOINT, eventData);
+export async function updateEvent(eventData, workspaceId) {
+  const url = workspaceId ? `${CALENDAR_ENDPOINT}?workspace_id=${workspaceId}` : CALENDAR_ENDPOINT;
+  const res = await axios.put(url, eventData);
   mutate((key) => key.startsWith(CALENDAR_ENDPOINT));
   return res;
 }
 
 // ----------------------------------------------------------------------
 
-export async function deleteEvent(eventId) {
+export async function deleteEvent(eventId, workspaceId) {
   const data = { eventId };
-  await axios.delete(`${CALENDAR_ENDPOINT}/${eventId}`, data);
+  const url = workspaceId ? `${CALENDAR_ENDPOINT}/${eventId}?workspace_id=${workspaceId}` : `${CALENDAR_ENDPOINT}/${eventId}`;
+  await axios.delete(url, data);
   mutate((key) => key.startsWith(CALENDAR_ENDPOINT));
 }
 
-export async function participateEvent(eventId, value) {
+export async function participateEvent(eventId, value, workspaceId) {
   const data = { value };
-  await axios.post(`${CALENDAR_ENDPOINT}/${eventId}/participate`, data);
+  const url = workspaceId ? `${CALENDAR_ENDPOINT}/${eventId}/participate?workspace_id=${workspaceId}` : `${CALENDAR_ENDPOINT}/${eventId}/participate`;
+  await axios.post(url, data);
   mutate((key) => key.startsWith(CALENDAR_ENDPOINT));
 }

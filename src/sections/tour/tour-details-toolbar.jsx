@@ -9,10 +9,10 @@ import LoadingButton from '@mui/lab/LoadingButton';
 
 import { RouterLink } from 'src/routes/components';
 
+import { useWorkspace } from 'src/workspace/workspace-provider';
+
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-
-import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -28,9 +28,8 @@ export function TourDetailsToolbar({
 }) {
   const popover = usePopover();
 
-  const { user } = useAuthContext();
-
-  const isAdmin = user.role === 'admin';
+  const { workspaceRole } = useWorkspace();
+  const isAdmin = workspaceRole === 'admin';
 
   return (
     <>

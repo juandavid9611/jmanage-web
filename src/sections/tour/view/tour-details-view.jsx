@@ -6,11 +6,13 @@ import Tabs from '@mui/material/Tabs';
 import { paths } from 'src/routes/paths';
 
 import { useTabs } from 'src/hooks/use-tabs';
+import { useWorkspaceChangeRedirect } from 'src/hooks/use-workspace-change-redirect';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { TOUR_DETAILS_TABS, TOUR_PUBLISH_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
+import { SplashScreen } from 'src/components/loading-screen';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -28,9 +30,17 @@ export function TourDetailsView({ tour }) {
 
   const tabs = useTabs('content');
 
+  // Redirect to tour list when workspace changes
+  const { isRedirecting } = useWorkspaceChangeRedirect(paths.dashboard.admin.tour.root);
+
   const handleChangePublish = useCallback((newValue) => {
     setPublish(newValue);
   }, []);
+
+  // Show splash screen during redirect (after all hooks are called)
+  if (isRedirecting) {
+    return <SplashScreen />;
+  }
 
   const renderTabs = (
     <Tabs value={tabs.value} onChange={tabs.onChange} sx={{ mb: { xs: 3, md: 5 } }}>

@@ -11,6 +11,7 @@ import Pagination from '@mui/material/Pagination';
 import ListItemText from '@mui/material/ListItemText';
 
 import { patchBooker } from 'src/actions/tours';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -20,6 +21,7 @@ import { IncrementerButton } from './components/incrementer-button';
 
 export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
   const [bookers, setBookers] = useState(initialBookers);
+  const { selectedWorkspace } = useWorkspace();
 
   const handleClick = useCallback(
     async (booker, field, newValue) => {
@@ -28,7 +30,7 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
           name: field,
           value: String(newValue),
         };
-        await patchBooker(tourId, booker.id, bookerData);
+        await patchBooker(tourId, booker.id, bookerData, selectedWorkspace?.id);
       } catch (error) {
         toast.error('Error setting booker data');
         console.error(error);
@@ -39,7 +41,7 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
         )
       );
     },
-    [tourId]
+    [tourId, selectedWorkspace?.id]
   );
 
   return (

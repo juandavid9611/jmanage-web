@@ -24,6 +24,7 @@ import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
 
 import { Label } from 'src/components/label';
@@ -78,9 +79,10 @@ export function UserInvoiceListView() {
   const [tableData, setTableData] = useState([]);
 
   const { user } = useAuthContext();
+  const { selectedWorkspace } = useWorkspace();
 
   const { paymentRequests, paymentRequestsLoading, paymentRequestsEmpty } =
-    useGetPaymentRequestsByUser(user.id);
+    useGetPaymentRequestsByUser(user.id, selectedWorkspace?.id);
 
   const filters = useSetState({
     name: '',
@@ -168,9 +170,7 @@ export function UserInvoiceListView() {
   );
 
   useEffect(() => {
-    if (paymentRequests.length) {
-      setTableData(paymentRequests);
-    }
+    setTableData(paymentRequests);
   }, [paymentRequests]);
 
   return (

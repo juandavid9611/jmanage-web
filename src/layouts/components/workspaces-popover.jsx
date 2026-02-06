@@ -65,7 +65,7 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
             display: { xs: 'none', [mediaQuery]: 'inline-flex' },
           }}
         >
-          {selectedWorkspace?.plan}
+          {selectedWorkspace?.role}
         </Label>
 
         <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
@@ -91,7 +91,7 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
                 {option.name}
               </Box>
 
-              <Label color={option.plan === 'Free' ? 'default' : 'info'}>{option.plan}</Label>
+              <Label color={option.role === 'admin' ? 'info' : 'default'}>{option.role}</Label>
             </MenuItem>
           ))}
         </MenuList>

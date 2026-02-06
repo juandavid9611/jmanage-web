@@ -18,8 +18,6 @@ import { _tours, _tourGuides, TOUR_SORT_OPTIONS, TOUR_SERVICE_OPTIONS } from 'sr
 import { EmptyContent } from 'src/components/empty-content';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { useAuthContext } from 'src/auth/hooks';
-
 import { TourList } from '../tour-list';
 import { TourSort } from '../tour-sort';
 import { TourSearch } from '../tour-search';
@@ -29,10 +27,9 @@ import { TourFiltersResult } from '../tour-filters-result';
 // ----------------------------------------------------------------------
 
 export function TourListView() {
-  const { user } = useAuthContext();
-  const isAdmin = user.role === 'admin';
-  const { selectedWorkspace } = useWorkspace();
-  const { tours } = useGetTours(selectedWorkspace?.id);
+  const { selectedWorkspace, workspaceRole } = useWorkspace();
+  const isAdmin = workspaceRole === 'admin';
+  const { tours } = useGetTours(selectedWorkspace?.id, 'match');
 
   const openFilters = useBoolean();
 

@@ -14,8 +14,6 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
 import {
-  useGetLateArrives,
-  useGetUserMetrics,
   useGetUserAssistsStats,
   useGetTopGoalsAndAssists,
 } from 'src/actions/user';
@@ -38,13 +36,9 @@ export function OverviewAppView() {
   const theme = useTheme();
 
   const { user } = useAuthContext();
-  const isAdmin = user?.role === 'admin';
-
   const { selectedWorkspace } = useWorkspace();
 
-  const { metrics } = useGetUserMetrics(user?.id);
   const { paymentRequests } = useGetPaymentRequestsByUser(user.id);
-  const { lateArrives } = useGetLateArrives(user?.id);
   const { stadistics } = useGetUserAssistsStats() || [];
   const { events } = useGetEvents(selectedWorkspace);
   const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace);
