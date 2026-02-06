@@ -19,6 +19,7 @@ import { useRouter } from 'src/routes/hooks';
 import { uuidv4 } from 'src/utils/uuidv4';
 import { fIsAfter, fTimestamp } from 'src/utils/format-time';
 
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/actions/calendar';
 
 import { toast } from 'src/components/snackbar';
@@ -53,8 +54,9 @@ export const EventSchema = zod.object({
 export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
+  const { workspaceRole, selectedWorkspace } = useWorkspace();
   const router = useRouter();
-  const isAdmin = user?.role === 'admin';
+  const isAdminOrCoach = workspaceRole === 'admin' || workspaceRole === 'coach';
   const [isParticipating, setIsParticipating] = useState(
     (currentEvent?.participants && user?.id in currentEvent.participants) || false
   );
@@ -96,10 +98,10 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     try {
       if (!dateError) {
         if (currentEvent?.id) {
-          await updateEvent(eventData);
+          await updateEvent(eventData, selectedWorkspace?.id);
           toast.success('Update success!');
         } else {
-          await createEvent(eventData);
+          await createEvent(eventData, selectedWorkspace?.id);
           toast.success('Create success!');
         }
         onClose();
@@ -114,39 +116,39 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     async (event) => {
       try {
         setIsParticipating(event.target.checked);
-        await participateEvent(`${currentEvent?.id}`, event.target.checked);
+        await participateEvent(`${currentEvent?.id}`, event.target.checked, selectedWorkspace?.id);
         toast.success('Inscrito satisfactoriamente!');
       } catch (error) {
         console.error(error);
       }
     },
-    [currentEvent?.id, setIsParticipating]
+    [currentEvent?.id, setIsParticipating, selectedWorkspace?.id]
   );
 
   const onDelete = useCallback(async () => {
     try {
-      await deleteEvent(`${currentEvent?.id}`);
+      await deleteEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
       toast.success('Delete success!');
       onClose();
     } catch (error) {
       console.error(error);
     }
-  }, [currentEvent?.id, onClose]);
+  }, [currentEvent?.id, onClose, selectedWorkspace?.id]);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
         <Stack spacing={3}>
-          <Field.Text name="title" label="Title" disabled={!isAdmin} />
+          <Field.Text name="title" label="Title" disabled={!isAdminOrCoach} />
 
-          <Field.Text name="location" label="Ubicación" disabled={!isAdmin} />
+          <Field.Text name="location" label="Ubicación" disabled={!isAdminOrCoach} />
 
           <Field.Text
             name="description"
             label="Description"
             multiline
             rows={2}
-            disabled={!isAdmin}
+            disabled={!isAdminOrCoach}
           />
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
@@ -154,7 +156,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               name="category"
               label="Category"
               InputLabelProps={{ shrink: true }}
-              disabled={!isAdmin}
+              disabled={!isAdminOrCoach}
             >
               {['match', 'training', 'money', 'other'].map((option) => (
                 <MenuItem key={option} value={option} sx={{ textTransform: 'capitalize' }}>
@@ -178,7 +180,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               name="group"
               label={t('group')}
               InputLabelProps={{ shrink: true }}
-              disabled
+              disabled={!isAdminOrCoach}
             >
               <MenuItem
                 key={currentEvent?.group}
@@ -189,8 +191,8 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               </MenuItem>
             </Field.Select>
 
-            {!currentEvent?.createTour && isAdmin && (
-              <Field.Switch name="createTour" label="Crear post" disabled={!isAdmin} />
+            {!currentEvent?.createTour && isAdminOrCoach && (
+               <Field.Switch name="createTour" label="Crear post" disabled={!isAdminOrCoach} />
             )}
             {currentEvent?.createTour && currentEvent?.tourId && (
               <Button
@@ -206,7 +208,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
             )}
           </Stack>
 
-          <Field.MobileDateTimePicker name="start" label="Start date" disabled={!isAdmin} />
+          <Field.MobileDateTimePicker name="start" label="Start date" disabled={!isAdminOrCoach} />
 
           <Field.MobileDateTimePicker
             name="end"
@@ -217,7 +219,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
                 helperText: dateError ? 'End date must be later than start date' : null,
               },
             }}
-            disabled={!isAdmin}
+            disabled={!isAdminOrCoach}
           />
 
           <Controller
@@ -230,13 +232,13 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
                 colors={colorOptions}
               />
             )}
-            disabled={!isAdmin}
+            disabled={!isAdminOrCoach}
           />
         </Stack>
       </Scrollbar>
 
       <DialogActions sx={{ flexShrink: 0 }}>
-        {!!currentEvent?.id && isAdmin && (
+        {!!currentEvent?.id && isAdminOrCoach && (
           <Tooltip title="Delete event">
             <IconButton onClick={onDelete}>
               <Iconify icon="solar:trash-bin-trash-bold" />
@@ -250,7 +252,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           Close
         </Button>
 
-        {isAdmin && (
+        {isAdminOrCoach && (
           <LoadingButton
             type="submit"
             variant="contained"

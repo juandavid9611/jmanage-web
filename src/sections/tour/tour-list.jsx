@@ -8,6 +8,7 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { deleteTour } from 'src/actions/tours';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { TourItem } from './tour-item';
 
@@ -15,6 +16,7 @@ import { TourItem } from './tour-item';
 
 export function TourList({ tours }) {
   const router = useRouter();
+  const { selectedWorkspace } = useWorkspace();
 
   const handleView = useCallback(
     (id) => {
@@ -31,10 +33,10 @@ export function TourList({ tours }) {
   );
 
   const handleDelete = useCallback((id) => {
-    deleteTour(id);
+    deleteTour(id, selectedWorkspace?.id);
     toast.success('Delete success!');
     console.info('DELETE', id);
-  }, []);
+  }, [selectedWorkspace?.id]);
 
   return (
     <>

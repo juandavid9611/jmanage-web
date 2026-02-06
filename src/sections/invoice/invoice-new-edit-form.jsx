@@ -40,8 +40,6 @@ import { toast } from 'src/components/snackbar';
 import { Lightbox, useLightBox } from 'src/components/lightbox';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
-import { useAuthContext } from 'src/auth/hooks';
-
 import { InvoiceNewEditStatusDate } from './invoice-new-edit-status-date';
 
 export const NewInvoiceSchema = zod
@@ -69,7 +67,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
   const router = useRouter();
 
   const slides = currentInvoice?.images?.map((slide) => ({ src: slide })) || [];
-  const { selectedWorkspace } = useWorkspace();
+  const { selectedWorkspace, workspaceRole } = useWorkspace();
 
   const {
     selected: selectedImage,
@@ -78,8 +76,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
     onClose: handleCloseLightbox,
   } = useLightBox(slides);
 
-  const { user } = useAuthContext();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = workspaceRole === 'admin';
   const isUser = !isAdmin;
 
   const workspaceGroup = selectedWorkspace?.id;
@@ -133,10 +130,10 @@ export function InvoiceNewEditForm({ currentInvoice }) {
 
     try {
       if (currentInvoice) {
-        await updatePaymentRequest(currentInvoice.id, data);
+        await updatePaymentRequest(currentInvoice.id, data, selectedWorkspace?.id);
         toast.success('Update success!');
       } else {
-        await createPaymentRequests(data);
+        await createPaymentRequests(data, selectedWorkspace?.id);
         toast.success('Create success!');
       }
     } catch (error) {
@@ -150,7 +147,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       // Step 4: Wait for all uploads to complete
       try {
         // Step 2: Request pre-signed URLs for each file from the backend
-        const response = await generatePresignedUrls(values.id, values.images);
+        const response = await generatePresignedUrls(values.id, values.images, selectedWorkspace?.id);
 
         // Step 3: Upload each file to its respective pre-signed URL
         const uploadPromises = values.images.map((file) => {
@@ -165,13 +162,13 @@ export function InvoiceNewEditForm({ currentInvoice }) {
           error: 'File upload failed',
         });
         const file_names = values.images.map((file) => file.name);
-        await requestPaymentRequestApproval(values.id, file_names);
+        await requestPaymentRequestApproval(values.id, file_names, selectedWorkspace?.id);
         router.push(paths.dashboard.user.invoice.invoiceList);
       } catch (error) {
         console.error('File upload failed', error);
       }
     },
-    [values.images, values.id, router]
+    [values.images, values.id, router, selectedWorkspace?.id]
   );
 
   const handleRemoveFile = useCallback(

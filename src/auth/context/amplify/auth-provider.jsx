@@ -73,6 +73,8 @@ export function AuthProvider({ children }) {
           return acc;
         }, {});
 
+        console.log('accountsRoles', accountsRoles);
+
         const accountsMap = accountsData.reduce((acc, account) => {
           acc[account.id] = account;
           return acc;
@@ -87,7 +89,8 @@ export function AuthProvider({ children }) {
 
         if (activeAccountId) {
           axiosInstance.defaults.headers.common['x-account-id'] = activeAccountId;
-          localStorage.setItem('activeAccountId', activeAccountId);
+          localStorage.setItem('activeAccountId', activeAccountId); 
+          localStorage.setItem('activeAccountRole', accountsRoles[activeAccountId]);
         } else {
           delete axiosInstance.defaults.headers.common['x-account-id'];
         }
@@ -117,6 +120,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     checkUserSession();
+    console.log('user', state.user);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

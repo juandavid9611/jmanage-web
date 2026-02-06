@@ -157,7 +157,7 @@ export function InvoiceListView() {
 
   const handleDeleteRow = useCallback(
     (id) => {
-      deletePaymentRequest(id);
+      deletePaymentRequest(id, selectedWorkspace?.id);
       const deleteRow = tableData.filter((row) => row.id !== id);
 
       toast.success('Delete success!');
@@ -166,7 +166,7 @@ export function InvoiceListView() {
 
       table.onUpdatePageDeleteRow(dataInPage.length);
     },
-    [dataInPage.length, table, tableData]
+    [dataInPage.length, table, tableData, selectedWorkspace?.id]
   );
 
   const handleDeleteRows = useCallback(() => {
@@ -205,12 +205,13 @@ export function InvoiceListView() {
   );
 
   useEffect(() => {
-    if (paymentRequests.length) {
-      setTableData(paymentRequests); // Set table data when payment requests are fetched
-    } else {
-      setTableData([]); // Ensure the table data is set to an empty array if there are no payment requests
-    }
-  }, [paymentRequests, selectedWorkspace]); // Re-run whenever paymentRequests or selectedWorkspace changes
+    console.log('[InvoiceListView] useEffect triggered', {
+      paymentRequestsLength: paymentRequests.length,
+      paymentRequests,
+      workspaceId: selectedWorkspace?.id,
+    });
+    setTableData(paymentRequests);
+  }, [paymentRequests, selectedWorkspace?.id]);
 
   return (
     <>

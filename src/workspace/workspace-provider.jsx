@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useContext, createContext } from 'react';
+import React, { useMemo, useState, useEffect, useContext, useCallback, createContext } from 'react';
 
 import { useGetWorkspaces } from 'src/actions/workspaces';
 
@@ -13,20 +13,37 @@ export const WorkspaceProvider = ({ children }) => {
   const { workspaces, isLoading, error } = useGetWorkspaces(authenticated); // Assuming the hook provides loading and error states
   const [selectedWorkspace, setSelectedWorkspace] = useState(null); // Start with null as default
 
-  // Set selectedWorkspace after workspaces are fetched
+  // Set selectedWorkspace based on localStorage or default to first workspace
   useEffect(() => {
     if (!isLoading && workspaces.length > 0) {
-      setSelectedWorkspace(workspaces[0]); // Set the first workspace as the default
+      const storedWorkspaceId = localStorage.getItem('selectedWorkspaceId');
+      const storedWorkspace = workspaces.find((w) => w.id === storedWorkspaceId);
+      
+      if (storedWorkspace) {
+        setSelectedWorkspace(storedWorkspace);
+      } else {
+        setSelectedWorkspace(workspaces[0]);
+      }
     }
-  }, [workspaces, isLoading]); // Only run when workspaces change or when loading is done
+  }, [workspaces, isLoading]);
+
+  const handleSetSelectedWorkspace = useCallback((workspace) => {
+    setSelectedWorkspace(workspace);
+    if (workspace?.id) {
+      localStorage.setItem('selectedWorkspaceId', workspace.id);
+    } else {
+      localStorage.removeItem('selectedWorkspaceId');
+    }
+  }, []);
 
   const value = useMemo(
     () => ({
       selectedWorkspace,
-      setSelectedWorkspace,
+      setSelectedWorkspace: handleSetSelectedWorkspace,
       workspaces, // Optionally pass workspaces to components if needed
+      workspaceRole: selectedWorkspace?.role,
     }),
-    [selectedWorkspace, setSelectedWorkspace, workspaces]
+    [selectedWorkspace, workspaces, handleSetSelectedWorkspace]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
