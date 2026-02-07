@@ -26,7 +26,6 @@ import { AppFeatured } from '../app-featured';
 import { FileUpgrade } from '../file-upgrade';
 import { AppTopAuthors } from '../app-top-authors';
 import { AppNewInvoice } from '../app-new-invoice';
-import { Wrap2025Widget } from '../wrap-2025-widget';
 import { CourseWidgetSummary } from '../course-widget-summary';
 
 // ----------------------------------------------------------------------
@@ -225,7 +224,6 @@ export function OverviewAppView() {
         {/* Next events + upload voucher */}
         <Grid xs={12} md={4}>
           <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-            <Wrap2025Widget list={stadistics} user={user} />
             <NextEvents title={t('next_events')} list={events} />
             <FileUpgrade userId={user.id} />
           </Box>
