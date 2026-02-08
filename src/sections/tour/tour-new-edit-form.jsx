@@ -19,7 +19,7 @@ import { useRouter } from 'src/routes/hooks';
 
 import { fIsAfter } from 'src/utils/format-time';
 
-import { uploadFileToS3 } from 'src/actions/files';
+import { uploadFileToS3 } from 'src/actions/filesS3';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { _tags, _tourGuides, TOUR_SERVICE_OPTIONS } from 'src/_mock';
 import { addImages, createTour, updateTour, generatePresignedUrls } from 'src/actions/tours';

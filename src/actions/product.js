@@ -3,7 +3,7 @@ import useSWR, { mutate } from 'swr';
 
 import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
-import { uploadFileToS3 } from 'src/actions/files';
+import { uploadFileToS3 } from 'src/actions/filesS3';
 
 // ----------------------------------------------------------------------
 

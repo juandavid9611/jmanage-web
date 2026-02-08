@@ -42,6 +42,8 @@ const ProductShopCheckoutPage = lazy(() => import('src/pages/dashboard/shop/chec
 // Order
 const OrderListPage = lazy(() => import('src/pages/dashboard/order/list'));
 const OrderDetailsPage = lazy(() => import('src/pages/dashboard/order/details'));
+// File manager
+const FileManagerPage = lazy(() => import('src/pages/dashboard/file-manager'));
 // ----------------------------------------------------------------------
 
 const layoutContent = (
@@ -123,6 +125,7 @@ export const dashboardRoutes = [
           { path: ':id', element: <OrderDetailsPage /> },
         ],
       },
+      { path: 'file-manager', element: <FileManagerPage /> },
     ],
   },
 ];

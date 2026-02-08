@@ -1,0 +1,9 @@
+export async function uploadFileToS3(file, presignedUrl) {
+  return fetch(presignedUrl, {
+    method: 'PUT',
+    body: file,
+    headers: {
+      'Content-Type': file.type,
+    },
+  });
+}

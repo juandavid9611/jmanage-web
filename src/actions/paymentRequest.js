@@ -11,13 +11,6 @@ export function useGetPaymentRequests(workspaceId) {
   const url = workspaceId ? `${URL}?workspace_id=${workspaceId}` : null;
   const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
 
-  console.log('[useGetPaymentRequests] Hook called', {
-    workspaceId,
-    url,
-    dataLength: data?.length,
-    isLoading,
-  });
-
   const memoizedValue = useMemo(
     () => ({
       paymentRequests: data || [],

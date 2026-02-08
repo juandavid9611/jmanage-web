@@ -65,6 +65,12 @@ export const navData = [
         roles: ['admin', 'user'],
       },
       {
+        title: 'Documentos',
+        path: paths.dashboard.fileManager,
+        icon: ICONS.folder,
+        roles: ['admin', 'user'],
+      },
+      {
         title: 'Partidos',
         path: paths.dashboard.admin.tour.root,
         icon: ICONS.tour,

@@ -19,7 +19,7 @@ import { useRouter } from 'src/routes/hooks';
 import { fData } from 'src/utils/format-number';
 
 import { TEAM_GROUPS } from 'src/_mock';
-import { uploadFileToS3 } from 'src/actions/files';
+import { uploadFileToS3 } from 'src/actions/filesS3';
 import {
   updateUser,
   enableUser,

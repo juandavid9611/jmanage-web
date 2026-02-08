@@ -1,4 +1,4 @@
-import { uploadFileToS3 } from 'src/actions/files';
+import { uploadFileToS3 } from 'src/actions/filesS3';
 
 import axiosInstance, { endpoints } from './axios';
 
@@ -28,8 +28,6 @@ export async function uploadMultipleProductImages(files, productId) {
 
     // Response format: [{ fileName: presignedUrl }, { fileName: presignedUrl }, ...]
     const presignedUrlMappings = response.data;
-
-    console.log('Presigned URLs response:', presignedUrlMappings);
 
     // Step 2: Upload all files to S3 concurrently
     const uploadPromises = files.map(async (file, index) => {
