@@ -72,5 +72,6 @@ export const paths = {
         details: `${ROOTS.DASHBOARD}/order/${MOCK_ID}`,
       },
     },
+    fileManager: `${ROOTS.DASHBOARD}/file-manager`,
   },
 };

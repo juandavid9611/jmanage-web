@@ -53,8 +53,6 @@ export function ProductShopDetailsView({ product, error, loading }) {
 
   const tabs = useTabs('description');
 
-  console.log({ product, error, loading });
-
   if (loading) {
     return (
       <Container sx={{ mt: 5, mb: 10 }}>

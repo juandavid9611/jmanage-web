@@ -205,11 +205,6 @@ export function InvoiceListView() {
   );
 
   useEffect(() => {
-    console.log('[InvoiceListView] useEffect triggered', {
-      paymentRequestsLength: paymentRequests.length,
-      paymentRequests,
-      workspaceId: selectedWorkspace?.id,
-    });
     setTableData(paymentRequests);
   }, [paymentRequests, selectedWorkspace?.id]);
 

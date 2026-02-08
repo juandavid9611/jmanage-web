@@ -26,7 +26,7 @@ import { useRouter } from 'src/routes/hooks';
 import { today, fIsAfter, fDateTime } from 'src/utils/format-time';
 
 import { useGetUsers } from 'src/actions/user';
-import { uploadFileToS3 } from 'src/actions/files';
+import { uploadFileToS3 } from 'src/actions/filesS3';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
   updatePaymentRequest,

@@ -50,8 +50,6 @@ export function AuthProvider({ children }) {
         const userAttributes = await fetchUserAttributes();
 
         const accessToken = authSession.idToken.toString();
-        // console.log('Access Token:', authSession.accessToken.toString());
-        // console.log('Id Token:', authSession.idToken.toString());
         axiosInstance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
         const dbUser = await getUser(userAttributes.sub);
@@ -72,8 +70,6 @@ export function AuthProvider({ children }) {
           acc[account.id] = account.membership?.role;
           return acc;
         }, {});
-
-        console.log('accountsRoles', accountsRoles);
 
         const accountsMap = accountsData.reduce((acc, account) => {
           acc[account.id] = account;
@@ -120,9 +116,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     checkUserSession();
-    console.log('user', state.user);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [checkUserSession]);
 
   // ----------------------------------------------------------------------
 
