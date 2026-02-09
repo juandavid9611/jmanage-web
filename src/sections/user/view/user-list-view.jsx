@@ -51,13 +51,13 @@ import { UserTableFiltersResult } from '../user-table-filters-result';
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
+  { id: '', width: 88 },
   { id: 'name', label: 'name' },
   { id: 'phoneNumber', label: 'phone_number', width: 180 },
   { id: 'identityCardNumber', label: 'identity_card', width: 220 },
   { id: 'shirtNumber', label: 'shirt_number', width: 180 },
   { id: 'eps', label: 'eps', width: 180 },
   { id: 'confirmationStatus', label: 'status', width: 100 },
-  { id: '', width: 88 },
 ];
 
 // ----------------------------------------------------------------------
