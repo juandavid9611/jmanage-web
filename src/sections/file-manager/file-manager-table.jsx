@@ -20,6 +20,8 @@ import { FileManagerTableRow } from './file-manager-table-row';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
+
+  { id: '', width: 88 },
   { id: 'name', label: 'Nombre' },
   { id: 'size', label: 'Tamaño', width: 120 },
   { id: 'type', label: 'Tipo', width: 120 },

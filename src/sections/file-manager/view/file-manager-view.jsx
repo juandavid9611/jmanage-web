@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
@@ -157,7 +159,17 @@ export function FileManagerView() {
           {canReset && renderResults}
         </Stack>
 
-        {notFound ? (
+        {filesLoading ? (
+          <Box
+            gap={3}
+            display="grid"
+            gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }}
+          >
+            {[...Array(8)].map((_, index) => (
+              <Skeleton key={index} variant="rounded" height={200} />
+            ))}
+          </Box>
+        ) : notFound ? (
           <EmptyContent filled sx={{ py: 10 }} />
         ) : (
           <>

@@ -30,6 +30,7 @@ import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Walktour, useWalktour } from 'src/components/walktour';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useTable,
@@ -54,6 +55,7 @@ import { InvoiceTableFiltersResult } from '../invoice-table-filters-result';
 
 function get_table_head(t) {
   return [
+    { id: '', width: 88 },
     { id: 'price', label: t('amount') },
     { id: 'status', label: t('status') },
     { id: 'concept', label: t('concept') },
@@ -91,6 +93,102 @@ export function UserInvoiceListView() {
     startDate: null,
     endDate: null,
   });
+
+  // Walktour state
+  const [hasSeenInvoiceTour, setHasSeenInvoiceTour] = useState(() => {
+    const seen = localStorage.getItem('invoice-payment-tour-seen');
+    return !!seen;
+  });
+
+  const [tourHelpers, setTourHelpers] = useState(null);
+
+  const walktour = useWalktour({
+    defaultRun: !hasSeenInvoiceTour,
+    steps: [
+      {
+        target: '#invoice-analytics-summary',
+        title: '💰 Gestiona tus Pagos',
+        placement: 'bottom',
+        disableBeacon: true,
+        hideCloseButton: true,
+        content: (
+          <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
+            Aquí puedes ver todas tus solicitudes de pago del club. Revisa el estado de tus pagos
+            y sube comprobantes fácilmente.
+          </Box>
+        ),
+      },
+      {
+        target: '#invoice-analytics-summary',
+        title: '📊 Resumen de Pagos',
+        placement: 'bottom',
+        disableBeacon: true,
+        content: (
+          <Stack spacing={1} sx={{ typography: 'body2', color: 'text.secondary' }}>
+            <Box>
+              En la parte superior puedes ver un resumen de tus pagos:
+            </Box>
+            <Box component="ul" sx={{ pl: 2, m: 0 }}>
+              <li><strong style={{ color: theme.vars.palette.error.main }}>Vencidos:</strong> Pagos que ya pasaron su fecha límite</li>
+              <li><strong style={{ color: theme.vars.palette.warning.main }}>Pendientes:</strong> Pagos por realizar</li>
+              <li><strong style={{ color: theme.palette.secondary.main }}>En Aprobación:</strong> Comprobantes enviados esperando validación</li>
+              <li><strong style={{ color: theme.vars.palette.success.main }}>Pagados:</strong> Pagos completados y aprobados</li>
+            </Box>
+          </Stack>
+        ),
+      },
+      {
+        target: '#invoice-table-container',
+        title: '📤 Cómo Subir un Comprobante',
+        placement: 'top',
+        disableBeacon: true,
+        content: (
+          <Stack spacing={1.5} sx={{ typography: 'body2', color: 'text.secondary' }}>
+            <Box>
+              Para realizar un pago, sube tu comprobante haciendo clic en el botón de
+              <strong> subir </strong>
+              <Iconify 
+                icon="lets-icons:upload-fill" 
+                sx={{ ml: 0.5, verticalAlign: 'middle', color: 'primary.main' }} 
+              />
+              que aparece en cada fila de la tabla.
+            </Box>
+            <Box sx={{ fontSize: '0.875rem', opacity: 0.8, bgcolor: 'action.hover', p: 1.5, borderRadius: 1 }}>
+              💡 <strong>Tip:</strong> Busca el ícono de subir al inicio de cada fila de pago
+            </Box>
+          </Stack>
+        ),
+      },
+      {
+        target: '#invoice-status-tabs',
+        title: '🔍 Filtra y Busca',
+        placement: 'bottom',
+        disableBeacon: true,
+        content: (
+          <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
+            Usa las pestañas y la barra de búsqueda para filtrar tus pagos por estado,
+            concepto o rango de fechas. ¡Encuentra rápidamente lo que necesitas!
+          </Box>
+        ),
+      },
+    ],
+  });
+
+  const handleTourCallback = (data) => {
+    const { action } = data;
+    
+    if (action === 'reset') {
+      localStorage.setItem('invoice-payment-tour-seen', 'true');
+      setHasSeenInvoiceTour(true);
+    }
+    
+    walktour.onCallback(data);
+  };
+
+  const handleSetHelpers = (helpers) => {
+    setTourHelpers(helpers);
+    walktour.setHelpers(helpers);
+  };
 
   const dateError = fIsAfter(filters.state.startDate, filters.state.endDate);
 
@@ -174,14 +272,41 @@ export function UserInvoiceListView() {
   }, [paymentRequests]);
 
   return (
-    <DashboardContent>
-      <CustomBreadcrumbs
-        heading={t('user_invoices')}
-        links={[{ name: t('app'), href: paths.dashboard.root }, { name: t('list') }]}
-        sx={{ mb: { xs: 3, md: 5 } }}
+    <>
+      <Walktour
+        run={walktour.run}
+        steps={walktour.steps}
+        callback={handleTourCallback}
+        getHelpers={handleSetHelpers}
+        scrollToFirstStep
+        disableBeacon
+        disableOverlayClose
       />
+      <DashboardContent>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: { xs: 3, md: 5 } }}>
+        <CustomBreadcrumbs
+          heading={t('user_invoices')}
+          links={[{ name: t('app'), href: paths.dashboard.root }, { name: t('list') }]}
+          sx={{ mb: 0, flexGrow: 1 }}
+        />
+        <Tooltip title="Ver tutorial de pagos">
+          <IconButton 
+            onClick={() => {
+              setHasSeenInvoiceTour(false);
+              walktour.setRun(true);
+            }}
+            color="primary"
+            sx={{ 
+              bgcolor: 'action.hover',
+              '&:hover': { bgcolor: 'action.selected' }
+            }}
+          >
+            <Iconify icon="eva:question-mark-circle-fill" width={24} />
+          </IconButton>
+        </Tooltip>
+      </Stack>
 
-      <Card sx={{ mb: { xs: 3, md: 5 } }}>
+      <Card id="invoice-analytics-summary" sx={{ mb: { xs: 3, md: 5 } }}>
         <Scrollbar sx={{ minHeight: 108 }}>
           <Stack
             direction="row"
@@ -235,6 +360,7 @@ export function UserInvoiceListView() {
 
       <Card>
         <Tabs
+          id="invoice-status-tabs"
           value={filters.state.status}
           onChange={handleFilterStatus}
           sx={{
@@ -278,7 +404,7 @@ export function UserInvoiceListView() {
           />
         )}
 
-        <Box sx={{ position: 'relative' }}>
+        <Box id="invoice-table-container" sx={{ position: 'relative' }}>
           <TableSelectedAction
             dense={table.dense}
             numSelected={table.selected.length}
@@ -374,6 +500,7 @@ export function UserInvoiceListView() {
         />
       </Card>
     </DashboardContent>
+    </>
   );
 }
 

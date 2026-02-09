@@ -1,9 +1,12 @@
 import OneSignal from 'react-onesignal';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
+
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
 
 import { orderBy } from 'src/utils/helper';
 
@@ -17,6 +20,8 @@ import {
   useGetUserAssistsStats,
   useGetTopGoalsAndAssists,
 } from 'src/actions/user';
+
+import { Walktour, useWalktour } from 'src/components/walktour';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -33,6 +38,7 @@ import { CourseWidgetSummary } from '../course-widget-summary';
 export function OverviewAppView() {
   const { t } = useTranslate();
   const theme = useTheme();
+  const router = useRouter();
 
   const { user } = useAuthContext();
   const { selectedWorkspace } = useWorkspace();
@@ -195,7 +201,103 @@ export function OverviewAppView() {
 
   // ----------------------------------------------------------------------
 
+  // Check localStorage immediately on component creation
+  const [hasSeenTour, setHasSeenTour] = useState(() => {
+    const seen = localStorage.getItem('documents-feature-seen');
+    return !!seen;
+  });
+
+  const [tourHelpers, setTourHelpers] = useState(null);
+
+  const walktour = useWalktour({
+    defaultRun: !hasSeenTour,
+    steps: [
+      {
+        target: 'body',
+        title: '🎉 Nueva Característica: Documentos!',
+        placement: 'center',
+        hideCloseButton: true,
+        content: (
+          <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
+            ¡Hemos agregado una potente función de Documentos! Ahora puedes ver todos los documentos 
+            de tu Club al instante.
+          </Box>
+        ),
+      },
+      {
+        target: 'body',
+        title: 'Encuéntralo en la Barra Lateral 📁',
+        placement: 'center',
+        content: (
+          <Stack spacing={1.5} sx={{ typography: 'body2', color: 'text.secondary' }}>
+            <Box>
+              Busca <strong>&quot;Documentos&quot;</strong> en la barra lateral izquierda bajo la
+              sección de Gestión principal.
+            </Box>
+            <Box sx={{ fontSize: '0.875rem', opacity: 0.8 }}>
+              👈 Está en la barra lateral a la izquierda
+            </Box>
+          </Stack>
+        ),
+      },
+      {
+        target: 'body',
+        title: 'Ver y Descargar ⚡',
+        placement: 'center',
+        content: (
+          <Stack spacing={1} sx={{ typography: 'body2', color: 'text.secondary' }}>
+            <Box>
+              <strong>Ver:</strong> Previsualiza PDFs, imágenes y videos en tu navegador
+            </Box>
+            <Box>
+              <strong>Descargar:</strong> Guarda cualquier archivo directamente en tu dispositivo
+            </Box>
+          </Stack>
+        ),
+      },
+      {
+        target: 'body',
+        title: '¿Listo para Explorar? 🚀',
+        placement: 'center',
+        content: (
+          <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
+            Haz clic en &quot;Documentos&quot; en la barra lateral para comenzar a gestionar tus archivos. ¡Prueba
+            ver un PDF o descargar un archivo!
+          </Box>
+        ),
+      },
+    ],
+  });
+
+  const handleTourCallback = (data) => {
+    const { action, index, lifecycle } = data;
+    
+    // When tour completes, 'reset' action fires (before 'stop')
+    if (action === 'reset') {
+      localStorage.setItem('documents-feature-seen', 'true');
+      setHasSeenTour(true);
+      router.push(paths.dashboard.fileManager);
+    }
+    
+    walktour.onCallback(data);
+  };
+
+  const handleSetHelpers = (helpers) => {
+    setTourHelpers(helpers);
+    walktour.setHelpers(helpers);
+  };
+
   return (
+    <>
+      <Walktour
+        run={walktour.run}
+        steps={walktour.steps}
+        callback={handleTourCallback}
+        getHelpers={handleSetHelpers}
+        scrollToFirstStep
+        disableBeacon
+        disableOverlayClose
+      />
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
         {/* Welcome / hero */}
@@ -250,5 +352,6 @@ export function OverviewAppView() {
         </Grid>
       </Grid>
     </DashboardContent>
+    </>
   );
 }

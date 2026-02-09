@@ -9,11 +9,11 @@ import { CheckoutCartProduct } from './checkout-cart-product';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
+  { id: '', width: 88 },
   { id: 'product', label: 'Product' },
   { id: 'price', label: 'Price' },
   { id: 'quantity', label: 'Quantity' },
   { id: 'totalAmount', label: 'Total Price', align: 'right' },
-  { id: '' },
 ];
 
 // ----------------------------------------------------------------------

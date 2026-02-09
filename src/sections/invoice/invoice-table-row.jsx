@@ -2,13 +2,13 @@ import { useTheme } from '@emotion/react';
 import { useTranslation } from 'react-i18next';
 
 import Stack from '@mui/material/Stack';
+import { Checkbox } from '@mui/material';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
-import Checkbox from '@mui/material/Checkbox';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -45,12 +45,16 @@ export function InvoiceTableRow({
   return (
     <>
       <TableRow hover selected={selected}>
-        <TableCell padding="checkbox">
-          <Checkbox
-            checked={selected}
-            onClick={onSelectRow}
-            inputProps={{ id: `row-checkbox-${row.id}`, 'aria-label': `Row checkbox` }}
-          />
+        <TableCell align="right" sx={{ px: 0 }}>
+          {isAdminView ? (
+            <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
+              <Iconify icon="eva:more-vertical-fill" />
+            </IconButton>
+          ) : (
+            <IconButton onClick={onEditRow} sx={{ px: 2.5 }}>
+              <Iconify icon="lets-icons:upload-fill" />
+            </IconButton>
+          )}
         </TableCell>
 
         {isAdminView && (
@@ -118,17 +122,12 @@ export function InvoiceTableRow({
             secondaryTypographyProps={{ mt: 0.5, component: 'span', typography: 'caption' }}
           />
         </TableCell>
-
-        <TableCell align="right" sx={{ px: 0 }}>
-          {isAdminView ? (
-            <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
-              <Iconify icon="eva:more-vertical-fill" />
-            </IconButton>
-          ) : (
-            <IconButton onClick={onEditRow} sx={{ px: 2.5 }}>
-              <Iconify icon="lets-icons:upload-fill" />
-            </IconButton>
-          )}
+        <TableCell padding="checkbox">
+          <Checkbox
+            checked={selected}
+            onClick={onSelectRow}
+            inputProps={{ id: `row-checkbox-${row.id}`, 'aria-label': `Row checkbox` }}
+          />
         </TableCell>
       </TableRow>
 
