@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -18,7 +17,6 @@ import { useRouter } from 'src/routes/hooks';
 
 import { fData } from 'src/utils/format-number';
 
-import { TEAM_GROUPS } from 'src/_mock';
 import { uploadFileToS3 } from 'src/actions/filesS3';
 import {
   updateUser,
@@ -28,9 +26,10 @@ import {
   generatePresignedUrl,
 } from 'src/actions/user';
 
-import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
+
+import { UserWorkspaceCard } from './user-workspace-card';
 
 // // ----------------------------------------------------------------------
 
@@ -47,7 +46,6 @@ export const NewUserSchema = zod.object({
   }),
   city: zod.string().min(1, { message: 'Ciudad requerida!' }),
   address: zod.string().min(1, { message: 'Dirección requerida!' }),
-  group: zod.string().min(1, { message: 'Grupo requerido!' }),
   rh: zod.string().min(1, { message: 'R.H requerido!' }),
   emergencyContactName: zod
     .string()
@@ -77,7 +75,6 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
       country: currentUser?.country || 'Colombia',
       city: currentUser?.city || 'Bogota',
       address: currentUser?.address || '',
-      group: currentUser?.group || 'male',
       rh: currentUser?.rh || '',
       eps: currentUser?.eps || '',
       emergencyContactName: currentUser?.emergencyContactName || '',
@@ -147,31 +144,8 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Grid container spacing={3}>
         <Grid xs={12} md={4}>
+          <UserWorkspaceCard />
           <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-            {currentUser && currentUser?.status && (
-              <Label
-                color={
-                  (values.confirmationStatus === 'confirmed' &&
-                    values.status === 'active' &&
-                    'success') ||
-                  (values.confirmationStatus === 'pending' &&
-                    values.status === 'active' &&
-                    'warning') ||
-                  (values.status === 'disabled' && 'error') ||
-                  'warning'
-                }
-                sx={{ position: 'absolute', top: 24, right: 24 }}
-              >
-                {values.confirmationStatus === 'confirmed' &&
-                  values.status === 'active' &&
-                  t('active')}
-                {values.confirmationStatus === 'pending' &&
-                  values.status === 'active' &&
-                  t('pending')}
-                {values.status === 'disabled' && t('disabled')}
-              </Label>
-            )}
-
             <Box sx={{ mb: 5 }}>
               <Field.UploadAvatar
                 name="avatarUrl"
@@ -263,24 +237,6 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
               />
               <Field.Text name="city" label={t('city')} />
               <Field.Text name="address" label={t('address')} />
-
-              <Field.Select
-                fullWidth
-                name="group"
-                label={t('group')}
-                InputLabelProps={{ shrink: true }}
-              >
-                {TEAM_GROUPS.map((option) => (
-                  <MenuItem
-                    key={option.label}
-                    value={option.value}
-                    sx={{ textTransform: 'capitalize' }}
-                  >
-                    {t(option.label)}
-                  </MenuItem>
-                ))}
-              </Field.Select>
-
               <Field.Text name="rh" label={t('rh')} />
               <Field.Text name="eps" label={t('eps')} />
               <Field.Text name="shirtNumber" label={t('shirt_number')} />

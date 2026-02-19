@@ -56,7 +56,7 @@ export function WalktourTooltip({
       color={isLastStep ? 'primary' : 'inherit'}
       {...slotProps?.nextBtn}
     >
-      {primaryProps.title}
+      {step.nextButtonText || primaryProps.title}
     </Button>
   );
 
