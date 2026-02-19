@@ -112,8 +112,12 @@ export function useGetLateArrives(userId) {
   return memoizedValue;
 }
 
-export function useGetUserAssistsStats() {
-  const { data, isLoading, error, isValidating } = useSWR(`/assists_stats`, fetcher);
+export function useGetUserAssistsStats(selectedWorkspace) {
+  const workspaceId = selectedWorkspace?.id;
+  const { data, isLoading, error, isValidating } = useSWR(
+    workspaceId ? `/assists_stats?workspace_id=${workspaceId}` : null,
+    fetcher
+  );
 
   const memoizedValue = useMemo(
     () => ({

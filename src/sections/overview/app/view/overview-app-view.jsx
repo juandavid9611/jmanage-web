@@ -22,6 +22,7 @@ import {
 } from 'src/actions/user';
 
 import { Walktour, useWalktour } from 'src/components/walktour';
+import { WalktourWorkspaceSelector } from 'src/components/walktour/walktour-workspace-selector';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -41,12 +42,12 @@ export function OverviewAppView() {
   const router = useRouter();
 
   const { user } = useAuthContext();
-  const { selectedWorkspace } = useWorkspace();
+  const { selectedWorkspace, changeWorkspaceMembership, allWorkspaces } = useWorkspace();
 
   const { paymentRequests } = useGetPaymentRequestsByUser(user.id);
-  const { stadistics } = useGetUserAssistsStats() || [];
+  const { stadistics } = useGetUserAssistsStats(selectedWorkspace) || [];
   const { events } = useGetEvents(selectedWorkspace);
-  const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace);
+  const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace) || [];
 
   const pendingOrOverduePaymentRequests = paymentRequests?.filter(
     (request) => request.status === 'pending' || request.status === 'overdue'
@@ -208,69 +209,105 @@ export function OverviewAppView() {
   });
 
   const [tourHelpers, setTourHelpers] = useState(null);
+  const [pendingWorkspace, setPendingWorkspace] = useState(null);
+
+  const handlePendingSelect = (workspace) => {
+    setPendingWorkspace(workspace);
+  };
+
+  const workspaceChanged = pendingWorkspace && pendingWorkspace.id !== selectedWorkspace?.id;
+
+  const walktourSteps = [
+    {
+      target: 'body',
+      title: '🏟️ Selecciona tu Workspace',
+      placement: 'center',
+      hideCloseButton: true,
+      nextButtonText: workspaceChanged ? 'Guardar' : undefined,
+      content: (
+        <Stack spacing={1.5}>
+          <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
+            Selecciona la categoría a la que perteneces. Puedes cambiarlo después desde tu perfil.
+          </Box>
+          <WalktourWorkspaceSelector
+            workspaces={allWorkspaces}
+            selectedWorkspace={selectedWorkspace}
+            pendingWorkspace={pendingWorkspace}
+            onSelect={handlePendingSelect}
+          />
+        </Stack>
+      ),
+    },
+    {
+      target: 'body',
+      title: '🎉 Nueva Característica: Documentos!',
+      placement: 'center',
+      hideCloseButton: true,
+      content: (
+        <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
+          ¡Hemos agregado una potente función de Documentos! Ahora puedes ver todos los documentos 
+          de tu Club al instante.
+        </Box>
+      ),
+    },
+    {
+      target: 'body',
+      title: 'Encuéntralo en la Barra Lateral 📁',
+      placement: 'center',
+      content: (
+        <Stack spacing={1.5} sx={{ typography: 'body2', color: 'text.secondary' }}>
+          <Box>
+            Busca <strong>&quot;Documentos&quot;</strong> en la barra lateral izquierda bajo la
+            sección de Gestión principal.
+          </Box>
+          <Box sx={{ fontSize: '0.875rem', opacity: 0.8 }}>
+            👈 Está en la barra lateral a la izquierda
+          </Box>
+        </Stack>
+      ),
+    },
+    {
+      target: 'body',
+      title: 'Ver y Descargar ⚡',
+      placement: 'center',
+      content: (
+        <Stack spacing={1} sx={{ typography: 'body2', color: 'text.secondary' }}>
+          <Box>
+            <strong>Ver:</strong> Previsualiza PDFs, imágenes y videos en tu navegador
+          </Box>
+          <Box>
+            <strong>Descargar:</strong> Guarda cualquier archivo directamente en tu dispositivo
+          </Box>
+        </Stack>
+      ),
+    },
+    {
+      target: 'body',
+      title: '¿Listo para Explorar? 🚀',
+      placement: 'center',
+      content: (
+        <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
+          Haz clic en &quot;Documentos&quot; en la barra lateral para comenzar a gestionar tus archivos. ¡Prueba
+          ver un PDF o descargar un archivo!
+        </Box>
+      ),
+    },
+  ];
 
   const walktour = useWalktour({
     defaultRun: !hasSeenTour,
-    steps: [
-      {
-        target: 'body',
-        title: '🎉 Nueva Característica: Documentos!',
-        placement: 'center',
-        hideCloseButton: true,
-        content: (
-          <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-            ¡Hemos agregado una potente función de Documentos! Ahora puedes ver todos los documentos 
-            de tu Club al instante.
-          </Box>
-        ),
-      },
-      {
-        target: 'body',
-        title: 'Encuéntralo en la Barra Lateral 📁',
-        placement: 'center',
-        content: (
-          <Stack spacing={1.5} sx={{ typography: 'body2', color: 'text.secondary' }}>
-            <Box>
-              Busca <strong>&quot;Documentos&quot;</strong> en la barra lateral izquierda bajo la
-              sección de Gestión principal.
-            </Box>
-            <Box sx={{ fontSize: '0.875rem', opacity: 0.8 }}>
-              👈 Está en la barra lateral a la izquierda
-            </Box>
-          </Stack>
-        ),
-      },
-      {
-        target: 'body',
-        title: 'Ver y Descargar ⚡',
-        placement: 'center',
-        content: (
-          <Stack spacing={1} sx={{ typography: 'body2', color: 'text.secondary' }}>
-            <Box>
-              <strong>Ver:</strong> Previsualiza PDFs, imágenes y videos en tu navegador
-            </Box>
-            <Box>
-              <strong>Descargar:</strong> Guarda cualquier archivo directamente en tu dispositivo
-            </Box>
-          </Stack>
-        ),
-      },
-      {
-        target: 'body',
-        title: '¿Listo para Explorar? 🚀',
-        placement: 'center',
-        content: (
-          <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-            Haz clic en &quot;Documentos&quot; en la barra lateral para comenzar a gestionar tus archivos. ¡Prueba
-            ver un PDF o descargar un archivo!
-          </Box>
-        ),
-      },
-    ],
+    steps: walktourSteps,
   });
 
   const handleTourCallback = (data) => {
     const { action, index, lifecycle } = data;
+
+    // When leaving the workspace step (step 0), commit the pending workspace change
+    if (index === 0 && action === 'next' && lifecycle === 'complete' && pendingWorkspace) {
+      if (pendingWorkspace.id !== selectedWorkspace?.id) {
+        changeWorkspaceMembership(pendingWorkspace);
+      }
+    }
     
     // When tour completes, 'reset' action fires (before 'stop')
     if (action === 'reset') {
