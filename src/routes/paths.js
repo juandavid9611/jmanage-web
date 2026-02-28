@@ -73,5 +73,14 @@ export const paths = {
       },
     },
     fileManager: `${ROOTS.DASHBOARD}/file-manager`,
+    tournament: {
+      root: `${ROOTS.DASHBOARD}/tournament`,
+      new: `${ROOTS.DASHBOARD}/tournament/new`,
+      details: (id) => `${ROOTS.DASHBOARD}/tournament/${id}`,
+      edit: (id) => `${ROOTS.DASHBOARD}/tournament/${id}/edit`,
+      matches: (id) => `${ROOTS.DASHBOARD}/tournament/${id}/matches`,
+      matchDetail: (tournamentId, matchId) =>
+        `${ROOTS.DASHBOARD}/tournament/${tournamentId}/matches/${matchId}`,
+    },
   },
 };

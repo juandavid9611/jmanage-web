@@ -44,6 +44,13 @@ const OrderListPage = lazy(() => import('src/pages/dashboard/order/list'));
 const OrderDetailsPage = lazy(() => import('src/pages/dashboard/order/details'));
 // File manager
 const FileManagerPage = lazy(() => import('src/pages/dashboard/file-manager'));
+// Tournament
+const TournamentListPage = lazy(() => import('src/pages/dashboard/tournament/list'));
+const TournamentCreatePage = lazy(() => import('src/pages/dashboard/tournament/new'));
+const TournamentDetailsPage = lazy(() => import('src/pages/dashboard/tournament/details'));
+const TournamentEditPage = lazy(() => import('src/pages/dashboard/tournament/edit'));
+const TournamentMatchesPage = lazy(() => import('src/pages/dashboard/tournament/matches'));
+const TournamentMatchDetailPage = lazy(() => import('src/pages/dashboard/tournament/match-detail'));
 // ----------------------------------------------------------------------
 
 const layoutContent = (
@@ -126,6 +133,18 @@ export const dashboardRoutes = [
         ],
       },
       { path: 'file-manager', element: <FileManagerPage /> },
+      {
+        path: 'tournament',
+        children: [
+          { element: <TournamentListPage />, index: true },
+          { path: 'list', element: <TournamentListPage /> },
+          { path: 'new', element: <TournamentCreatePage /> },
+          { path: ':id', element: <TournamentDetailsPage /> },
+          { path: ':id/edit', element: <TournamentEditPage /> },
+          { path: ':id/matches', element: <TournamentMatchesPage /> },
+          { path: ':id/matches/:matchId', element: <TournamentMatchDetailPage /> },
+        ],
+      },
     ],
   },
 ];
