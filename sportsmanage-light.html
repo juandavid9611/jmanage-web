@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SportsManage · Prototipo Completo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ══════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════ */
+:root {
+  /* Light (Organizador) */
+  --bg-d: #F5F4F0;
+  --surface-d: #FFFFFF;
+  --surface-2d: #F0EEE9;
+  --surface-3d: #E5E3DC;
+  --border-d: rgba(0,0,0,0.08);
+  --border-hid: rgba(0,0,0,0.16);
+  --ink-d: #18181A;
+  --ink-2d: #6B6860;
+  --ink-3d: #A8A59F;
+  --accent-d: #1A1A1C;
+  --accent-dimd: rgba(26,26,28,0.07);
+
+  /* Light (Manager) */
+  --bg-l: #F7F6F2;
+  --surface-l: #FFFFFF;
+  --surface-2l: #F0EEE9;
+  --surface-3l: #E5E3DC;
+  --border-l: rgba(0,0,0,0.08);
+  --border-hil: rgba(0,0,0,0.15);
+  --ink-l: #18181A;
+  --ink-2l: #6B6860;
+  --ink-3l: #A8A59F;
+  --team-color: #1D4ED8;
+
+  /* Shared */
+  --green: #1A7F4B;
+  --green-d: rgba(26,127,75,0.09);
+  --red: #DC2626;
+  --red-d: rgba(220,38,38,0.08);
+  --amber: #D97706;
+  --amber-d: rgba(217,119,6,0.08);
+  --gold: #B45309;
+  --r: 14px;
+  --r-sm: 9px;
+  --r-xs: 6px;
+  --t: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 2px; }
+
+/* ══════════════════════════════════════
+   PROTOTYPE CHROME
+══════════════════════════════════════ */
+.proto-chrome {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10,10,12,0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 9999;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.chrome-label {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+.chrome-btn {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  transition: all var(--t);
+  white-space: nowrap;
+}
+.chrome-btn:hover { color: white; background: rgba(255,255,255,0.08); }
+.chrome-btn.active { background: var(--ink-d); color: white; font-weight: 700; }
+.chrome-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 2px; }
+
+/* ══════════════════════════════════════
+   VIEWS CONTAINER
+══════════════════════════════════════ */
+.view {
+  display: none;
+  height: 100vh;
+  overflow: hidden;
+  flex-direction: column;
+}
+.view.active { display: flex; }
+
+.view-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════════════
+   SHARED TOPBAR
+══════════════════════════════════════ */
+.topbar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+}
+.topbar.dark {
+  background: var(--surface-d);
+  border-bottom: 1px solid var(--border-d);
+}
+.topbar.light {
+  background: var(--surface-l);
+  border-bottom: 1px solid var(--border-l);
+}
+.logo {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  margin-right: 28px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.logo.dark { color: var(--ink-d); }
+.logo.light { color: var(--ink-l); }
+.logo-mark-dark {
+  width: 24px; height: 24px;
+  background: var(--ink-d);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-mark-dark svg { color: white; }
+.logo-mark-light {
+  width: 24px; height: 24px;
+  background: var(--ink-l);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-mark-light svg { color: white; }
+
+.nav-pills { display: flex; gap: 2px; }
+.nav-pill {
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all var(--t);
+  font-family: 'DM Sans', sans-serif;
+}
+.dark .nav-pill { color: var(--ink-3d); }
+.dark .nav-pill:hover { color: var(--ink-2d); background: var(--surface-2d); }
+.dark .nav-pill.active { color: var(--ink-d); background: var(--surface-2d); }
+.light .nav-pill { color: var(--ink-3l); }
+.light .nav-pill:hover { color: var(--ink-2l); background: var(--surface-2l); }
+.light .nav-pill.active { color: var(--ink-l); background: var(--surface-2l); }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.tb-clock { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-3d); }
+.tb-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+}
+.tb-avatar.dark { background: var(--surface-2d); color: var(--ink-2d); border: 1px solid var(--border-d); }
+.tb-avatar.manager { background: var(--team-color); color: white; }
+.tb-notif {
+  width: 30px; height: 30px;
+  border-radius: var(--r-xs);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--t);
+}
+.tb-notif.light { background: var(--surface-2l); border: 1px solid var(--border-l); }
+.tb-notif.light:hover { border-color: var(--border-hil); }
+.tb-notif .dot {
+  position: absolute; top: 5px; right: 5px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 1.5px solid var(--surface-l);
+}
+.manager-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 10px 3px 3px;
+  background: var(--surface-2l);
+  border: 1px solid var(--border-l);
+  border-radius: 100px;
+  cursor: pointer;
+  font-size: 12px; font-weight: 500;
+  color: var(--ink-l);
+}
+
+/* ══════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════ */
+.btn {
+  padding: 7px 15px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  border: none;
+  transition: all var(--t);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-accent-d { background: var(--ink-d); color: #FFFFFF; }
+.btn-accent-d:hover { background: #2E2C27; transform: translateY(-1px); }
+.btn-ghost-d { background: transparent; color: var(--ink-2d); border: 1px solid var(--border-d); }
+.btn-ghost-d:hover { border-color: var(--border-hid); color: var(--ink-d); }
+.btn-solid-l { background: var(--ink-l); color: white; }
+.btn-solid-l:hover { background: #2E2C27; transform: translateY(-1px); }
+.btn-ghost-l { background: transparent; color: var(--ink-2l); border: 1px solid var(--border-l); }
+.btn-ghost-l:hover { border-color: var(--border-hil); color: var(--ink-l); }
+
+/* ══════════════════════════════════════
+   BADGES
+══════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  padding: 3px 9px;
+  border-radius: 100px;
+  letter---spacing: 0.04em;
+  font-weight: 500;
+}
+.badge-live-d { background: var(--red-d); color: var(--red); }
+.badge-green-d { background: var(--green-d); color: var(--green); }
+.badge-accent-d { background: var(--accent-dimd); color: var(--ink-d); }
+.badge-neutral-d { background: var(--surface-3d); color: var(--ink-2d); }
+.badge-green-l { background: rgba(26,127,75,0.09); color: #1A7F4B; }
+.badge-blue-l { background: rgba(29,78,216,0.08); color: var(--team-color); }
+.badge-amber-l { background: rgba(217,119,6,0.08); color: #D97706; }
+
+/* ══════════════════════════════════════
+   LIVE DOT
+══════════════════════════════════════ */
+.live-dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+/* ══════════════════════════════════════
+   PAGE TRANSITIONS
+══════════════════════════════════════ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: fadeIn 0.3s cubic-bezier(0.4,0,0.2,1) both; }
+
+/* ══════════════════════════════════════
+   VIEW 1: OVERVIEW (ORGANIZADOR)
+══════════════════════════════════════ */
+#v-overview .view-body { background: var(--bg-d); }
+
+.tournament-banner {
+  background: var(--surface-d);
+  border-bottom: 1px solid var(--border-d);
+  padding: 22px 28px 0;
+}
+.tb-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.tb-eyebrow {
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  color: var(--ink-3d); text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 5px;
+}
+.tb-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px; font-weight: 800; letter-spacing: -0.04em;
+  color: var(--ink-d); display: flex; align-items: center; gap: 10px;
+  margin-bottom: 5px;
+}
+.tb-meta { font-size: 12px; color: var(--ink-2d); display: flex; gap: 14px; }
+.tb-right { text-align: right; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+.tb-stats { display: flex; gap: 20px; }
+.tbs-val { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; letter-spacing: -0.03em; color: var(--ink-d); }
+.tbs-val.accent { color: var(--accent-d); }
+.tbs-val.green { color: var(--green); }
+.tbs-label { font-size: 10px; color: var(--ink-3d); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+/* Phase tabs */
+.phase-bar { display: flex; }
+.phase-item {
+  padding: 10px 16px 13px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.phase-item:hover { border-bottom-color: var(--border-hid); }
+.phase-item.done { border-bottom-color: rgba(26,127,75,0.4); }
+.phase-item.active { border-bottom-color: var(--ink-d); }
+.phase-label { font-size: 11px; font-weight: 500; color: var(--ink-3d); }
+.phase-item.active .phase-label { color: var(--ink-d); }
+.phase-item.done .phase-label { color: var(--green); }
+.phase-sub { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--ink-3d); margin-top: 2px; }
+
+/* Timeline */
+.timeline-strip {
+  background: var(--surface-d);
+  border-bottom: 1px solid var(--border-d);
+}
+.tl-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 28px 8px;
+}
+.tl-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--ink-3d); text-transform: uppercase; letter-spacing: 0.1em; }
+.tl-scroll {
+  display: flex; gap: 10px;
+  overflow-x: auto;
+  padding: 0 28px 16px;
+}
+.jcard {
+  flex-shrink: 0; width: 172px;
+  background: var(--surface-2d);
+  border: 1.5px solid var(--border-d);
+  border-radius: var(--r);
+  padding: 14px 15px;
+  cursor: pointer;
+  transition: all var(--t);
+  position: relative;
+  overflow: hidden;
+}
+.jcard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.jcard.done::before { background: var(--green); }
+.jcard.current::before { background: var(--accent-d); }
+.jcard.pending::before { background: var(--surface-3d); }
+.jcard.current { border-color: rgba(26,26,28,0.2); background: rgba(26,26,28,0.03); }
+.jcard:hover { border-color: var(--border-hid); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+.jcard-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.jcard-num { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink-d); }
+.jcard-badge { font-size: 9px; font-family: 'DM Mono', monospace; padding: 2px 7px; border-radius: 100px; }
+.jb-done { background: var(--green-d); color: var(--green); }
+.jb-active { background: var(--accent-dimd); color: var(--ink-d); }
+.jb-pending { background: var(--surface-3d); color: var(--ink-3d); }
+.jcard-date { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--ink-3d); margin-bottom: 8px; }
+.jcard-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.jcard-track { flex:1; height:3px; background: var(--surface-3d); border-radius:2px; overflow:hidden; }
+.jcard-fill { height:100%; border-radius:2px; }
+.jcard-count { font-size:9px; font-family:'DM Mono',monospace; color:var(--ink-3d); }
+.jcard-feat { font-size:11px; font-family:'Syne',sans-serif; font-weight:600; color:var(--ink-2d); }
+
+/* Main grid */
+.ov-grid { display: grid; grid-template-columns: 1fr 296px; }
+.ov-main { padding: 22px 28px; }
+.ov-sidebar {
+  background: var(--surface-d);
+  border-left: 1px solid var(--border-d);
+  display: flex; flex-direction: column;
+}
+
+/* Section header */
+.sec-h {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.sec-l { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.1em; }
+.sec-line { flex:1; height:1px; background:var(--border-d); }
+.sec-tag { font-size:9px; font-family:'DM Mono',monospace; padding:2px 8px; border-radius:100px; }
+.st-amber { background:var(--amber-d); color:var(--amber); }
+.st-red { background:var(--red-d); color:var(--red); }
+
+/* Match rows */
+.match-list { display:flex; flex-direction:column; gap:6px; margin-bottom:22px; }
+.mrow {
+  display: grid; grid-template-columns: 52px 1fr auto;
+  align-items: center; gap: 12px;
+  background: var(--surface-d);
+  border: 1px solid var(--border-d);
+  border-left: 2.5px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 12px 16px 12px 14px;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.mrow:hover { border-color: var(--border-hid); transform: translateX(2px); box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.mrow.live { border-left-color: var(--red); }
+.mrow.done { border-left-color: var(--green); }
+.mrow.pending { border-left-color: var(--amber); }
+.mrow.next { border-left-color: rgba(96,165,250,0.8); }
+.mr-time { text-align:center; }
+.mr-tv { font-family:'DM Mono',monospace; font-size:12px; color:var(--ink-2d); }
+.mr-court { font-size:9px; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; }
+.mr-live-t { display:flex; align-items:center; justify-content:center; gap:3px; font-family:'DM Mono',monospace; font-size:11px; color:var(--red); }
+.mr-teams { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; letter-spacing:-0.02em; color:var(--ink-d); display:flex; align-items:center; gap:8px; }
+.mr-score { font-family:'DM Mono',monospace; font-size:14px; padding:1px 6px; border-radius:4px; }
+.mr-score.live { color:var(--red); }
+.mr-score.green { color:var(--green); background:var(--green-d); }
+.mr-meta { font-size:10px; color:var(--ink-3d); margin-top:3px; }
+.mr-act { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+.mr-badge { font-size:9px; font-family:'DM Mono',monospace; padding:2px 8px; border-radius:100px; }
+.mrb-live { background:var(--red-d); color:var(--red); }
+.mrb-done { background:var(--green-d); color:var(--green); }
+.mrb-pending { background:var(--amber-d); color:var(--amber); }
+.mrb-next { background:rgba(96,165,250,0.1); color:#60A5FA; }
+.mr-btn { padding:5px 10px; border-radius:5px; font-size:10px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; transition:all var(--t); }
+.mrb-acc { background:var(--ink-d); color:white; }
+.mrb-ghost { background:var(--surface-2d); color:var(--ink-2d); }
+
+/* Sidebar standings */
+.sid-head { padding:16px 18px 12px; border-bottom:1px solid var(--border-d); display:flex; align-items:center; justify-content:space-between; }
+.sid-title { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; letter-spacing:-0.01em; color:var(--ink-d); }
+.sid-body { padding:12px 18px; overflow-y:auto; flex:1; }
+.group-lbl { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:5px; margin-top:10px; }
+.group-lbl:first-child { margin-top:0; }
+.stand-r {
+  display:grid; grid-template-columns:16px 1fr 20px 26px;
+  gap:4px; align-items:center;
+  padding:6px 6px; border-radius:5px; cursor:pointer;
+  transition:background var(--t);
+}
+.stand-r:hover { background:var(--surface-2d); }
+.stand-r.promo { background:rgba(52,211,153,0.06); }
+.s-p { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink-3d); text-align:center; }
+.s-p.top { color:var(--green); }
+.s-n { font-size:11px; font-weight:500; color:var(--ink-d); display:flex; align-items:center; gap:4px; }
+.s-g { width:4px; height:4px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.s-d { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink-3d); text-align:center; }
+.s-pt { font-family:'DM Mono',monospace; font-size:12px; font-weight:500; text-align:center; color:var(--ink-d); }
+.stand-div { height:1px; background:var(--surface-3d); margin:2px 6px; }
+
+/* Sidebar footer */
+.sid-foot {
+  padding:14px 18px;
+  border-top:1px solid var(--border-d);
+}
+.next-act {
+  background:var(--accent-dimd);
+  border:1px solid var(--border-d);
+  border-radius:var(--r-sm);
+  padding:10px 14px;
+  cursor:pointer;
+  transition:all var(--t);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.next-act:hover { background:rgba(26,26,28,0.08); }
+.na-text { font-size:12px; font-weight:500; color:var(--ink-d); }
+.na-sub { font-size:10px; color:var(--ink-3d); margin-top:1px; }
+
+/* ══════════════════════════════════════
+   VIEW 2: JORNADA
+══════════════════════════════════════ */
+#v-jornada .view-body { background: var(--bg-d); }
+
+.jorn-header {
+  background: var(--surface-d);
+  border-bottom: 1px solid var(--border-d);
+  padding: 20px 28px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.jh-left {}
+.jh-ey { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:5px; }
+.jh-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.04em; color:var(--ink-d); display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+.jh-sub { font-size:12px; color:var(--ink-2d); }
+
+/* Stats bar */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 8px; padding: 16px 28px;
+  background: var(--surface-d);
+  border-bottom: 1px solid var(--border-d);
+}
+.sbar-item { background:var(--surface-2d); border:1px solid var(--border-d); border-radius:var(--r-sm); padding:12px 14px; text-align:center; }
+.sbar-val { font-family:'DM Mono',monospace; font-size:22px; font-weight:500; letter-spacing:-0.03em; line-height:1; margin-bottom:3px; }
+.sbar-lbl { font-size:10px; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.06em; }
+.c-red { color:var(--red); } .c-amber { color:var(--amber); } .c-green { color:var(--green); }
+
+/* Jornada grid */
+.jorn-grid { display:grid; grid-template-columns:1fr 296px; }
+.jorn-main { padding:20px 28px; }
+.jorn-sidebar {
+  background:var(--surface-d);
+  border-left:1px solid var(--border-d);
+  display:flex; flex-direction:column;
+}
+
+/* ══════════════════════════════════════
+   VIEW 3: BRACKET
+══════════════════════════════════════ */
+#v-bracket .view-body { background: var(--bg-d); }
+
+.bracket-h {
+  background: var(--surface-d);
+  border-bottom: 1px solid var(--border-d);
+  padding: 18px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bh-left {}
+.bh-ey { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+.bh-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.04em; color:var(--ink-d); display:flex; align-items:center; gap:10px; }
+
+.round-tabs-bar {
+  display:flex; gap:0;
+  background:var(--surface-d);
+  border-bottom:1px solid var(--border-d);
+  padding:0 28px;
+}
+.rt {
+  padding:10px 18px;
+  font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif;
+  color:var(--ink-3d); cursor:pointer;
+  border-bottom:2px solid transparent; border:none; background:transparent;
+  transition:all var(--t); white-space:nowrap;
+  display:flex; align-items:center; gap:7px;
+}
+.rt:hover { color:var(--ink-2d); }
+.rt.active { color:var(--ink-d); border-bottom:2px solid var(--accent-d); }
+.rt.done { color:var(--green); }
+.rt-count { font-size:9px; font-family:'DM Mono',monospace; padding:2px 6px; border-radius:100px; background:var(--surface-2d); color:var(--ink-3d); }
+.rt.active .rt-count { background:var(--surface-3d); color:var(--ink-d); }
+
+.bracket-grid { display:grid; grid-template-columns:1fr 276px; }
+.bracket-main { padding:22px 28px; overflow-y:auto; }
+.bracket-sidebar {
+  background:var(--surface-d);
+  border-left:1px solid var(--border-d);
+  overflow-y:auto;
+  padding:16px 18px;
+}
+
+/* Bracket round */
+.br-section { margin-bottom:32px; }
+.br-label { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.br-lbl-text { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.1em; }
+.br-lbl-line { flex:1; height:1px; background:var(--border-d); }
+.br-lbl-badge { font-size:9px; font-family:'DM Mono',monospace; padding:2px 8px; border-radius:100px; }
+.blb-done { background:var(--green-d); color:var(--green); }
+.blb-active { background:var(--accent-dimd); color:var(--ink-d); }
+.blb-pending { background:var(--surface-3d); color:var(--ink-3d); }
+
+.br-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.br-grid-1 { display:grid; grid-template-columns:1fr; max-width:460px; margin:0 auto; }
+
+/* Match card bracket */
+.bcard {
+  background:var(--surface-2d);
+  border:1.5px solid var(--border-d);
+  border-radius:var(--r);
+  overflow:hidden;
+  cursor:pointer;
+  transition:all var(--t);
+  position:relative;
+}
+.bcard::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.bcard.bc-done::before { background:var(--green); }
+.bcard.bc-live::before { background:var(--red); }
+.bcard.bc-pending::before { background:var(--surface-3d); }
+..bcard.champ-path { border-color:rgba(0,0,0,0.18); }
+.bcard:hover { border-color:var(--border-hid); transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+.bc-head { display:flex; align-items:center; justify-content:space-between; padding:7px 13px; border-bottom:1px solid var(--border-d); }
+.bc-id { font-size:9px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.06em; }
+.bc-status { font-size:9px; font-family:'DM Mono',monospace; padding:2px 7px; border-radius:100px; }
+.bcs-done { background:var(--green-d); color:var(--green); }
+.bcs-live { background:var(--red-d); color:var(--red); }
+.bcs-pending { background:var(--surface-3d); color:var(--ink-3d); }
+.bc-teams { padding:4px 0; }
+.bc-team { display:flex; align-items:center; gap:9px; padding:8px 13px; transition:background var(--t); }
+.bc-team.winner { background:rgba(52,211,153,0.06); }
+.bc-team.loser { opacity:0.4; }
+.bc-seed { font-size:9px; font-family:'DM Mono',monospace; color:var(--ink-3d); min-width:14px; text-align:center; }
+.bc-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; letter-spacing:-0.02em; color:var(--ink-d); flex:1; }
+.bc-sc { font-family:'DM Mono',monospace; font-size:15px; font-weight:500; }
+.bc-team.winner .bc-sc { color:var(--green); }
+.bc-team.loser .bc-sc { color:var(--ink-3d); }
+.bc-div { height:1px; background:var(--border-d); margin:0 13px; }
+.bc-foot { display:flex; align-items:center; justify-content:space-between; padding:7px 13px; border-top:1px solid var(--border-d); }
+.bc-meta { font-size:10px; color:var(--ink-3d); font-family:'DM Mono',monospace; }
+.bc-btn { padding:4px 10px; border-radius:5px; font-size:10px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; transition:all var(--t); }
+.bc-btn-acc { background:var(--ink-d); color:white; }
+.bc-btn-ghost { background:var(--surface-3d); color:var(--ink-2d); }
+
+.connector { display:flex; flex-direction:column; align-items:center; padding:6px 0; }
+.conn-line { width:2px; height:14px; }
+.conn-merge { border-left:2px solid; border-right:2px solid; border-bottom:2px solid; border-radius:0 0 5px 5px; height:14px; margin:0 auto; width:calc(50% - 10px); }
+
+.champion-wrap { margin-top:14px; }
+.champion-card {
+  max-width:360px; margin:0 auto;
+  background:rgba(245,158,11,0.08);
+  border:1.5px solid rgba(245,158,11,0.25);
+  border-radius:var(--r);
+  padding:22px;
+  text-align:center;
+}
+.champ-icon { font-size:28px; margin-bottom:8px; }
+.champ-lbl { font-size:10px; font-family:'DM Mono',monospace; color:var(--gold); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:5px; }
+.champ-name { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.04em; color:var(--gold); margin-bottom:3px; }
+.champ-sub { font-size:12px; color:var(--ink-2d); }
+
+/* bracket sidebar */
+.bsid-lbl { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px; }
+.path-card { background:var(--surface-2d); border:1px solid var(--border-d); border-radius:var(--r-sm); padding:10px 13px; margin-bottom:5px; display:flex; align-items:center; justify-content:space-between; }
+.pc-name { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; letter-spacing:-0.02em; color:var(--ink-d); }
+.pc-res { font-size:10px; font-family:'DM Mono',monospace; color:var(--green); }
+.path-arrow { text-align:center; font-size:10px; color:var(--ink-3d); padding:2px 0; }
+.path-pending { background:var(--surface-2d); border:1px solid var(--border-d); border-radius:var(--r-sm); padding:10px 13px; margin-bottom:5px; display:flex; align-items:center; justify-content:space-between; }
+.pp-name { font-size:11px; color:var(--ink-3d); }
+.pp-status { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); }
+
+/* ══════════════════════════════════════
+   VIEW 4: MANAGER
+══════════════════════════════════════ */
+#v-manager .view-body { background: var(--bg-l); }
+
+.team-hero {
+  background:var(--surface-l);
+  border-bottom:1px solid var(--border-l);
+  padding:22px 28px 18px;
+}
+.th-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; }
+.th-left { display:flex; align-items:center; gap:14px; }
+.team-crest { width:50px; height:50px; background:rgba(29,78,216,0.08); border:2px solid rgba(29,78,216,0.2); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.th-ey { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3l); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+.th-name { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.04em; color:var(--ink-l); margin-bottom:5px; }
+.th-badges { display:flex; gap:6px; }
+.th-stats { display:flex; gap:6px; }
+.ths { flex:1; background:var(--surface-2l); border-radius:var(--r-sm); padding:11px 13px; text-align:center; }
+.ths-val { font-family:'DM Mono',monospace; font-size:18px; font-weight:500; letter-spacing:-0.03em; line-height:1; margin-bottom:3px; color:var(--ink-l); }
+.ths-lbl { font-size:10px; color:var(--ink-3l); text-transform:uppercase; letter-spacing:0.06em; }
+.form-row { display:flex; gap:3px; justify-content:center; margin-bottom:3px; }
+.fd { width:17px; height:17px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:700; font-family:'DM Mono',monospace; }
+.fd-w { background:rgba(26,127,75,0.1); color:#1A7F4B; }
+.fd-d { background:rgba(217,119,6,0.1); color:#D97706; }
+.fd-l { background:rgba(220,38,38,0.08); color:#DC2626; }
+
+/* Manager main grid */
+.mgr-grid { display:grid; grid-template-columns:1fr 288px; }
+.mgr-main { padding:20px 28px; }
+.mgr-sidebar { padding:20px 20px; }
+
+/* Next match */
+.next-match-card {
+  background:var(--ink-l);
+  border-radius:var(--r);
+  padding:18px 20px;
+  margin-bottom:10px;
+  position:relative; overflow:hidden; cursor:pointer;
+  transition:transform var(--t);
+}
+.next-match-card:hover { transform:translateY(-2px); }
+.nmc-ey { font-size:10px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px; }
+.nmc-matchup { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.nmc-team { flex:1; }
+.nmc-name { font-family:'Syne',sans-serif; font-size:17px; font-weight:800; letter-spacing:-0.04em; color:white; margin-bottom:2px; }
+.nmc-name.mine { color:white; font-weight:800; }
+.nmc-sub { font-size:10px; color:rgba(255,255,255,0.35); }
+.nmc-vs { font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,255,255,0.25); }
+.nmc-details { display:flex; gap:14px; }
+.nmc-d { font-size:11px; color:rgba(255,255,255,0.4); display:flex; align-items:center; gap:5px; }
+.nmc-countdown { position:absolute; top:18px; right:20px; text-align:right; }
+.nmc-cv { font-family:'DM Mono',monospace; font-size:13px; font-weight:500; color:white; font-weight:800; }
+.nmc-cl { font-size:9px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.06em; }
+
+/* Fixture rows */
+.fix-list { display:flex; flex-direction:column; gap:5px; margin-bottom:22px; }
+.fix-row {
+  display:flex; align-items:center; gap:11px;
+  background:var(--surface-l);
+  border:1px solid var(--border-l);
+  border-left:2.5px solid transparent;
+  border-radius:var(--r-sm);
+  padding:11px 14px 11px 12px;
+  cursor:pointer; transition:all var(--t);
+}
+.fix-row:hover { border-color:var(--border-hil); box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+.fix-row.fw { border-left-color:#1A7F4B; }
+.fix-row.fd-row { border-left-color:#D97706; }
+.fix-row.fl { border-left-color:#DC2626; }
+.fix-row.fn { border-left-color:var(--team-color); }
+.fix-row.fp { border-left-color:var(--surface-3l); }
+.fix-rnd { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3l); min-width:24px; text-align:center; }
+.fix-matchup { flex:1; display:flex; align-items:center; gap:7px; }
+.fix-t { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; letter-spacing:-0.02em; color:var(--ink-l); }
+.fix-t.mine { color:var(--team-color); }
+.fix-t.win { color:#1A7F4B; }
+.fix-t.lose { color:var(--ink-3l); }
+.fix-sc { font-family:'DM Mono',monospace; font-size:12px; font-weight:500; padding:2px 7px; border-radius:4px; }
+.fix-sc.win { background:rgba(26,127,75,0.09); color:#1A7F4B; }
+.fix-sc.draw { background:rgba(217,119,6,0.08); color:#D97706; }
+.fix-sc.loss { background:rgba(220,38,38,0.08); color:#DC2626; }
+.fix-sc.vs { background:var(--surface-2l); color:var(--ink-3l); }
+.fix-right { display:flex; align-items:center; gap:8px; }
+.fix-meta { font-size:11px; color:var(--ink-3l); text-align:right; }
+.fix-rb { font-size:9px; font-family:'DM Mono',monospace; padding:3px 8px; border-radius:100px; font-weight:600; }
+.frb-w { background:rgba(26,127,75,0.09); color:#1A7F4B; }
+.frb-d { background:rgba(217,119,6,0.08); color:#D97706; }
+.frb-l { background:rgba(220,38,38,0.08); color:#DC2626; }
+.frb-n { background:rgba(29,78,216,0.08); color:var(--team-color); }
+.frb-p { background:var(--surface-2l); color:var(--ink-3l); }
+
+/* Roster */
+.roster-alert { background:rgba(217,119,6,0.07); border:1px solid rgba(217,119,6,0.18); border-radius:var(--r-sm); padding:11px 14px; display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.ra-text { font-size:12px; font-weight:500; color:#D97706; }
+.ra-sub { font-size:11px; color:var(--ink-3l); margin-top:1px; }
+.ra-btn { padding:6px 12px; border-radius:var(--r-xs); background:#D97706; color:white; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; border:none; cursor:pointer; transition:opacity var(--t); }
+.ra-btn:hover { opacity:0.85; }
+.roster-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:7px; }
+.player-card {
+  background:var(--surface-l); border:1px solid var(--border-l);
+  border-radius:var(--r-sm); padding:12px 14px;
+  display:flex; align-items:center; gap:11px;
+  cursor:pointer; transition:all var(--t); position:relative;
+}
+.player-card:hover { border-color:var(--border-hil); box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+.player-num { width:30px; height:30px; background:rgba(29,78,216,0.08); border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:500; color:var(--team-color); flex-shrink:0; }
+.player-name { font-size:13px; font-weight:500; color:var(--ink-l); line-height:1.2; }
+.player-pos { font-size:10px; color:var(--ink-3l); font-family:'DM Mono',monospace; margin-top:2px; }
+.player-dot { position:absolute; top:9px; right:9px; width:7px; height:7px; border-radius:50%; }
+.pd-ok { background:#22C55E; } .pd-warn { background:#FBBF24; } .pd-miss { background:var(--surface-3l); }
+
+/* Sidebar light */
+.l-card { background:var(--surface-l); border:1px solid var(--border-l); border-radius:var(--r); overflow:hidden; margin-bottom:10px; }
+.l-card-head { padding:12px 14px 10px; border-bottom:1px solid var(--border-l); display:flex; align-items:center; justify-content:space-between; }
+.l-card-title { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; letter-spacing:-0.01em; color:var(--ink-l); }
+.l-card-act { font-size:11px; color:var(--team-color); cursor:pointer; border:none; background:transparent; font-family:'DM Sans',sans-serif; }
+.l-card-body { padding:10px 14px; }
+.l-stand-r { display:grid; grid-template-columns:14px 1fr 20px 26px; gap:4px; align-items:center; padding:6px 4px; border-radius:4px; cursor:pointer; transition:background var(--t); }
+.l-stand-r:hover { background:var(--surface-2l); }
+.l-stand-r.mine { background:rgba(29,78,216,0.07); border-radius:6px; }
+.l-sp { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink-3l); text-align:center; }
+.l-sp.top { color:#1A7F4B; }
+.l-sn { font-size:11px; font-weight:500; color:var(--ink-l); display:flex; align-items:center; gap:4px; }
+.l-sg { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink-3l); text-align:center; }
+.l-spt { font-family:'DM Mono',monospace; font-size:12px; font-weight:500; text-align:center; color:var(--ink-l); }
+.notif-item { display:flex; gap:9px; padding:9px 0; border-bottom:1px solid var(--border-l); }
+.notif-item:last-child { border-bottom:none; }
+.ni-dot { width:7px; height:7px; border-radius:50%; background:var(--surface-3l); margin-top:4px; flex-shrink:0; }
+.ni-dot.unread { background:var(--team-color); }
+.ni-text { font-size:12px; line-height:1.5; color:var(--ink-l); }
+.ni-time { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3l); margin-top:2px; }
+
+/* ══════════════════════════════════════
+   SECTION HELPERS (shared)
+══════════════════════════════════════ */
+.sec-title-d { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.sec-title-d::after { content:''; flex:1; height:1px; background:var(--border-d); }
+.sec-title-l { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3l); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.sec-title-l::after { content:''; flex:1; height:1px; background:var(--border-l); }
+.sec-action-d { font-size:12px; color:var(--ink-2d); font-weight:500; border:none; background:transparent; cursor:pointer; font-family:'DM Sans',sans-serif; transition:opacity var(--t); }
+.sec-action-d:hover { opacity:0.7; color:var(--ink-d); }
+.sec-action-l { font-size:12px; color:var(--team-color); font-weight:500; border:none; background:transparent; cursor:pointer; font-family:'DM Sans',sans-serif; }
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+.modal-ov {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+  z-index:500;
+  opacity:0; pointer-events:none; transition:opacity 0.2s;
+}
+.modal-ov.open { opacity:1; pointer-events:all; }
+.modal-box {
+  background:var(--surface-d);
+  border:1px solid var(--border-hid);
+  border-radius:18px;
+  padding:28px;
+  width:360px;
+  max-width:90vw;
+  transform:translateY(12px) scale(0.98);
+  transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.modal-ov.open .modal-box { transform:translateY(0) scale(1); }
+.m-ey { font-size:10px; font-family:'DM Mono',monospace; color:var(--ink-3d); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:5px; }
+.m-ttl { font-family:'Syne',sans-serif; font-size:17px; font-weight:800; letter-spacing:-0.03em; color:var(--ink-d); margin-bottom:22px; }
+.score-r { display:grid; grid-template-columns:1fr 24px 1fr; gap:10px; align-items:center; margin-bottom:20px; }
+.sc-t { text-align:center; }
+.sc-tn { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; letter-spacing:-0.03em; color:var(--ink-d); margin-bottom:8px; }
+.sc-inp { width:100%; background:var(--surface-2d); border:1.5px solid var(--border-hid); border-radius:10px; padding:12px 8px; text-align:center; font-family:'DM Mono',monospace; font-size:28px; font-weight:500; color:var(--ink-d); outline:none; transition:border-color var(--t); -moz-appearance:textfield; }
+.sc-inp::-webkit-inner-spin-button, .sc-inp::-webkit-outer-spin-button { -webkit-appearance:none; }
+.sc-inp:focus { border-color:var(--ink-d); }
+.sc-sep { font-family:'DM Mono',monospace; font-size:14px; color:var(--ink-3d); text-align:center; }
+.m-btns { display:flex; gap:8px; }
+.m-btn { flex:1; padding:11px; border-radius:var(--r-sm); font-size:12px; font-weight:700; font-family:'Syne',sans-serif; cursor:pointer; border:none; transition:all var(--t); }
+.mb-confirm { background:var(--ink-d); color:white; }
+.mb-confirm:hover { background:#2E2C27; }
+.mb-cancel { background:var(--surface-2d); color:var(--ink-2d); }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:72px; left:50%;
+  transform:translateX(-50%) translateY(20px);
+  padding:10px 20px; border-radius:8px;
+  font-family:'Syne',sans-serif; font-weight:700; font-size:12px;
+  z-index:600; opacity:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+  pointer-events:none; white-space:nowrap;
+}
+.toast.dark-toast { background:var(--ink-d); color:white; }
+.toast.light-toast { background:var(--ink-l); color:white; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ANIM */
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.anim { animation:fadeUp 0.35s cubic-bezier(0.4,0,0.2,1) both; }
+.d1{animation-delay:.04s} .d2{animation-delay:.08s} .d3{animation-delay:.12s} .d4{animation-delay:.16s}
+
+/* RESPONSIVE */
+@media (max-width:800px) {
+  .ov-grid,.jorn-grid,.bracket-grid,.mgr-grid { grid-template-columns:1fr; }
+  .ov-sidebar,.jorn-sidebar,.bracket-sidebar,.mgr-sidebar { border-left:none; border-top:1px solid; }
+  .ov-sidebar,.jorn-sidebar { border-top-color:var(--border-d); }
+  .mgr-sidebar { border-top-color:var(--border-l); }
+  .proto-chrome { padding:6px 8px; gap:2px; }
+  .chrome-label { display:none; }
+  .stats-bar { grid-template-columns:1fr 1fr; }
+  .br-grid-2 { grid-template-columns:1fr; }
+  .nav-pills { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     VIEW 1: OVERVIEW
+══════════════════════════════════════ -->
+<div class="view active" id="v-overview">
+  <div class="topbar dark">
+    <a class="logo dark" href="#"><div class="logo-mark-dark"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></div>SportsManage</a>
+    <nav class="nav-pills">
+      <button class="nav-pill active" onclick="nav('overview')">General</button>
+      <button class="nav-pill" onclick="nav('jornada')">Jornada</button>
+      <button class="nav-pill" onclick="nav('bracket')">Bracket</button>
+      <button class="nav-pill" onclick="nav('manager')">Vista Manager</button>
+    </nav>
+    <div class="topbar-right">
+      <span class="tb-clock" id="clock">—</span>
+      <div class="tb-avatar dark">JR</div>
+    </div>
+  </div>
+  <div class="view-body">
+    <!-- Banner -->
+    <div class="tournament-banner anim d1">
+      <div class="tb-top">
+        <div>
+          <div class="tb-eyebrow">Torneo activo</div>
+          <div class="tb-title">Copa Verano 2025 <span class="badge badge-accent-d">● En curso</span></div>
+          <div class="tb-meta"><span>⚽ Fútbol</span><span>📍 Bogotá</span><span>16 equipos</span><span>Grupos + Knockout</span></div>
+        </div>
+        <div class="tb-right">
+          <div class="tb-stats">
+            <div><div class="tbs-val accent">J3</div><div class="tbs-label">Activa</div></div>
+            <div><div class="tbs-val">6/6</div><div class="tbs-label">Jornadas</div></div>
+            <div><div class="tbs-val green">68%</div><div class="tbs-label">Completado</div></div>
+          </div>
+          <button class="btn btn-accent-d" onclick="nav('jornada')">Ir a Jornada 3 →</button>
+        </div>
+      </div>
+      <div class="phase-bar">
+        <div class="phase-item done"><div class="phase-label">Configuración</div><div class="phase-sub">Completo</div></div>
+        <div class="phase-item done"><div class="phase-label">Inscripción</div><div class="phase-sub">16/16</div></div>
+        <div class="phase-item active"><div class="phase-label">Fase grupos</div><div class="phase-sub">J3 de 6</div></div>
+        <div class="phase-item"><div class="phase-label">Cuartos</div><div class="phase-sub">Bloqueado</div></div>
+        <div class="phase-item"><div class="phase-label">Semis</div><div class="phase-sub">Bloqueado</div></div>
+        <div class="phase-item"><div class="phase-label">Final</div><div class="phase-sub">Bloqueado</div></div>
+      </div>
+    </div>
+    <!-- Timeline -->
+    <div class="timeline-strip anim d2">
+      <div class="tl-head">
+        <span class="tl-label">Jornadas · Fase de grupos</span>
+        <button class="btn btn-ghost-d" style="font-size:11px;padding:5px 10px;">Ver todas</button>
+      </div>
+      <div class="tl-scroll">
+        <div class="jcard done" onclick="nav('jornada')"><div class="jcard-top"><span class="jcard-num">Jornada 1</span><span class="jcard-badge jb-done">Completa</span></div><div class="jcard-date">Lun 10 feb</div><div class="jcard-bar"><div class="jcard-track"><div class="jcard-fill" style="width:100%;background:var(--green)"></div></div><span class="jcard-count">8/8</span></div><div class="jcard-feat">REY <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-3d)">3·0</span> MON</div></div>
+        <div class="jcard done" onclick="nav('jornada')"><div class="jcard-top"><span class="jcard-num">Jornada 2</span><span class="jcard-badge jb-done">Completa</span></div><div class="jcard-date">Vie 14 feb</div><div class="jcard-bar"><div class="jcard-track"><div class="jcard-fill" style="width:100%;background:var(--green)"></div></div><span class="jcard-count">8/8</span></div><div class="jcard-feat">CLA <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-3d)">2·1</span> SOL</div></div>
+        <div class="jcard current" onclick="nav('jornada')"><div class="jcard-top"><span class="jcard-num">Jornada 3</span><span class="jcard-badge jb-active">● Activa</span></div><div class="jcard-date">Lun 24 feb</div><div class="jcard-bar"><div class="jcard-track"><div class="jcard-fill" style="width:44%;background:var(--ink-d)"></div></div><span class="jcard-count">4/9</span></div><div class="jcard-feat" style="color:var(--red)">CLA <span style="font-family:'DM Mono',monospace;font-size:10px">2·1</span> MIL</div></div>
+        <div class="jcard pending"><div class="jcard-top"><span class="jcard-num">Jornada 4</span><span class="jcard-badge jb-pending">Pendiente</span></div><div class="jcard-date">Vie 28 feb</div><div class="jcard-bar"><div class="jcard-track"><div class="jcard-fill" style="width:0%;background:var(--surface-3d)"></div></div><span class="jcard-count">0/8</span></div><div class="jcard-feat" style="color:var(--ink-3d)">Sin jugar</div></div>
+        <div class="jcard pending"><div class="jcard-top"><span class="jcard-num">Jornada 5</span><span class="jcard-badge jb-pending">Pendiente</span></div><div class="jcard-date">Lun 3 mar</div><div class="jcard-bar"><div class="jcard-track"><div class="jcard-fill" style="width:0%"></div></div><span class="jcard-count">0/8</span></div><div class="jcard-feat" style="color:var(--ink-3d)">Sin jugar</div></div>
+        <div class="jcard pending"><div class="jcard-top"><span class="jcard-num">Jornada 6</span><span class="jcard-badge jb-pending">Pendiente</span></div><div class="jcard-date">Vie 7 mar</div><div class="jcard-bar"><div class="jcard-track"><div class="jcard-fill" style="width:0%"></div></div><span class="jcard-count">0/8</span></div><div class="jcard-feat" style="color:var(--ink-3d)">Sin jugar</div></div>
+      </div>
+    </div>
+    <!-- Grid -->
+    <div class="ov-grid">
+      <div class="ov-main anim d3">
+        <div class="sec-h" style="margin-bottom:12px"><span class="sec-l">Hoy · Jornada 3</span><div style="flex:1;height:1px;background:var(--border-d)"></div><span class="sec-tag st-red">2 en vivo</span><span class="sec-tag st-amber" style="margin-left:4px">3 pendientes</span></div>
+        <div class="match-list">
+          <div class="mrow live" onclick="openModal('CLA','MIL')"><div class="mr-time"><div class="mr-live-t"><span class="live-dot"></span>63'</div><div class="mr-court">C-3</div></div><div><div class="mr-teams">CLA <span class="mr-score live">2·1</span> MIL</div><div class="mr-meta">2° tiempo · Grupo A</div></div><div class="mr-act"><span class="mr-badge mrb-live">En vivo</span><button class="mr-btn mrb-ghost" onclick="event.stopPropagation()">Ver</button></div></div>
+          <div class="mrow live" onclick="openModal('VIT','NAR')"><div class="mr-time"><div class="mr-live-t"><span class="live-dot"></span>41'</div><div class="mr-court">C-1</div></div><div><div class="mr-teams">VIT <span class="mr-score live">0·0</span> NAR</div><div class="mr-meta">1° tiempo · Grupo B</div></div><div class="mr-act"><span class="mr-badge mrb-live">En vivo</span><button class="mr-btn mrb-ghost" onclick="event.stopPropagation()">Ver</button></div></div>
+          <div class="mrow pending" onclick="openModal('CAL','SOL')"><div class="mr-time"><div class="mr-tv">21:00</div><div class="mr-court">C-4</div></div><div><div class="mr-teams">CAL <span class="mr-score" style="color:var(--ink-3d)">vs</span> SOL</div><div class="mr-meta">Grupo A</div></div><div class="mr-act"><span class="mr-badge mrb-pending">Pendiente</span><button class="mr-btn mrb-acc" onclick="event.stopPropagation();openModal('CAL','SOL')">Registrar</button></div></div>
+          <div class="mrow done"><div class="mr-time"><div class="mr-tv" style="color:var(--ink-3d)">16:00</div><div class="mr-court">C-1</div></div><div><div class="mr-teams" style="color:var(--ink-d)">REY <span class="mr-score green">3·1</span> MON</div><div class="mr-meta">Final · Grupo B</div></div><div class="mr-act"><span class="mr-badge mrb-done">Final</span></div></div>
+        </div>
+      </div>
+      <div class="ov-sidebar">
+        <div class="sid-head"><span class="sid-title">Tabla de posiciones</span><button class="sec-action-d">Ver todo</button></div>
+        <div class="sid-body anim d4">
+          <div class="group-lbl">Grupo A</div>
+          <div class="stand-r promo"><div class="s-p top">1</div><div class="s-n"><div class="s-g"></div>CLA</div><div class="s-d">+3</div><div class="s-pt" style="color:var(--green)">6</div></div>
+          <div class="stand-r promo"><div class="s-p top">2</div><div class="s-n"><div class="s-g"></div>FUE</div><div class="s-d">+1</div><div class="s-pt" style="color:var(--green)">3</div></div>
+          <div class="stand-div"></div>
+          <div class="stand-r"><div class="s-p">3</div><div class="s-n">CAL</div><div class="s-d">-1</div><div class="s-pt">3</div></div>
+          <div class="stand-r"><div class="s-p">4</div><div class="s-n">SOL</div><div class="s-d">-3</div><div class="s-pt">0</div></div>
+          <div class="group-lbl">Grupo B</div>
+          <div class="stand-r promo"><div class="s-p top">1</div><div class="s-n"><div class="s-g"></div>REY</div><div class="s-d">+4</div><div class="s-pt" style="color:var(--green)">6</div></div>
+          <div class="stand-r promo"><div class="s-p top">2</div><div class="s-n"><div class="s-g"></div>VIT</div><div class="s-d">+1</div><div class="s-pt" style="color:var(--green)">4</div></div>
+          <div class="stand-div"></div>
+          <div class="stand-r"><div class="s-p">3</div><div class="s-n">NAR</div><div class="s-d">-2</div><div class="s-pt">1</div></div>
+          <div class="stand-r"><div class="s-p">4</div><div class="s-n">MON</div><div class="s-d">-3</div><div class="s-pt">0</div></div>
+        </div>
+        <div class="sid-foot">
+          <div class="next-act" onclick="openModal('CAL','SOL')">
+            <div><div class="na-text">Registrar CAL vs SOL</div><div class="na-sub">Resultado pendiente · Cancha 4</div></div>
+            <span style="color:var(--ink-3d);font-size:14px">→</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW 2: JORNADA
+══════════════════════════════════════ -->
+<div class="view" id="v-jornada">
+  <div class="topbar dark">
+    <a class="logo dark" href="#"><div class="logo-mark-dark"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></div>SportsManage</a>
+    <nav class="nav-pills">
+      <button class="nav-pill" onclick="nav('overview')">General</button>
+      <button class="nav-pill active" onclick="nav('jornada')">Jornada</button>
+      <button class="nav-pill" onclick="nav('bracket')">Bracket</button>
+      <button class="nav-pill" onclick="nav('manager')">Vista Manager</button>
+    </nav>
+    <div class="topbar-right"><span class="tb-clock" id="clock2">—</span><div class="tb-avatar dark">JR</div></div>
+  </div>
+  <div class="view-body">
+    <div class="jorn-header anim d1">
+      <div class="jh-left"><div class="jh-ey">Copa Verano 2025 · Fase de grupos</div><div class="jh-title">Jornada 3 <span class="badge badge-live-d"><span class="live-dot"></span>En curso</span></div><div class="jh-sub">Lunes 24 feb · 4 canchas · 9 partidos</div></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost-d">Calendario</button><button class="btn btn-accent-d" onclick="openModal('CAL','SOL')">+ Resultado</button></div>
+    </div>
+    <div class="stats-bar anim d2">
+      <div class="sbar-item"><div class="sbar-val c-red">2</div><div class="sbar-lbl">En vivo</div></div>
+      <div class="sbar-item"><div class="sbar-val c-amber">3</div><div class="sbar-lbl">Pendientes</div></div>
+      <div class="sbar-item"><div class="sbar-val c-green">4</div><div class="sbar-lbl">Finalizados</div></div>
+      <div class="sbar-item"><div class="sbar-val">9</div><div class="sbar-lbl">Total</div></div>
+    </div>
+    <div class="jorn-grid">
+      <div class="jorn-main anim d3">
+        <div class="sec-title-d">En vivo</div>
+        <div class="match-list">
+          <div class="mrow live" onclick="openModal('CLA','MIL')"><div class="mr-time"><div class="mr-live-t"><span class="live-dot"></span>63'</div><div class="mr-court">C-3</div></div><div><div class="mr-teams">CLA <span class="mr-score live">2·1</span> MIL</div><div class="mr-meta">2° tiempo · Grupo A</div></div><div class="mr-act"><span class="mr-badge mrb-live">En vivo</span><button class="mr-btn mrb-ghost" onclick="event.stopPropagation()">Ver</button></div></div>
+          <div class="mrow live" onclick="openModal('VIT','NAR')"><div class="mr-time"><div class="mr-live-t"><span class="live-dot"></span>41'</div><div class="mr-court">C-1</div></div><div><div class="mr-teams">VIT <span class="mr-score live">0·0</span> NAR</div><div class="mr-meta">1° tiempo · Grupo B</div></div><div class="mr-act"><span class="mr-badge mrb-live">En vivo</span><button class="mr-btn mrb-ghost" onclick="event.stopPropagation()">Ver</button></div></div>
+        </div>
+        <div class="sec-title-d">Pendientes</div>
+        <div class="match-list">
+          <div class="mrow pending" onclick="openModal('CAL','SOL')"><div class="mr-time"><div class="mr-tv">21:00</div><div class="mr-court">C-4</div></div><div><div class="mr-teams">CAL <span class="mr-score" style="color:var(--ink-3d)">vs</span> SOL</div><div class="mr-meta">Grupo A</div></div><div class="mr-act"><span class="mr-badge mrb-pending">Pendiente</span><button class="mr-btn mrb-acc" onclick="event.stopPropagation();openModal('CAL','SOL')">Registrar</button></div></div>
+          <div class="mrow pending" onclick="openModal('MED','PER')"><div class="mr-time"><div class="mr-tv">20:00</div><div class="mr-court">C-2</div></div><div><div class="mr-teams">MED <span class="mr-score" style="color:var(--ink-3d)">vs</span> PER</div><div class="mr-meta">Grupo C</div></div><div class="mr-act"><span class="mr-badge mrb-pending">Pendiente</span><button class="mr-btn mrb-acc" onclick="event.stopPropagation();openModal('MED','PER')">Registrar</button></div></div>
+          <div class="mrow next"><div class="mr-time"><div class="mr-tv">20:00</div><div class="mr-court">C-2</div></div><div><div class="mr-teams">ALT <span class="mr-score" style="color:var(--ink-3d)">vs</span> RIO</div><div class="mr-meta">Próximo · Grupo D</div></div><div class="mr-act"><span class="mr-badge mrb-next">20:00</span><button class="mr-btn mrb-ghost" onclick="event.stopPropagation()">Editar</button></div></div>
+        </div>
+        <div class="sec-title-d">Finalizados</div>
+        <div class="match-list">
+          <div class="mrow done"><div class="mr-time"><div class="mr-tv" style="color:var(--ink-3d)">16:00</div><div class="mr-court">C-1</div></div><div><div class="mr-teams">REY <span class="mr-score green">3·1</span> MON</div><div class="mr-meta">Final · Grupo B</div></div><div class="mr-act"><span class="mr-badge mrb-done">Final</span></div></div>
+          <div class="mrow done"><div class="mr-time"><div class="mr-tv" style="color:var(--ink-3d)">17:00</div><div class="mr-court">C-2</div></div><div><div class="mr-teams">BOR <span class="mr-score green">2·2</span> EST</div><div class="mr-meta">Final · Grupo C</div></div><div class="mr-act"><span class="mr-badge mrb-done">Final</span></div></div>
+          <div class="mrow done"><div class="mr-time"><div class="mr-tv" style="color:var(--ink-3d)">18:00</div><div class="mr-court">C-3</div></div><div><div class="mr-teams">PAL <span class="mr-score green">0·2</span> FUE</div><div class="mr-meta">Final · Grupo A</div></div><div class="mr-act"><span class="mr-badge mrb-done">Final</span></div></div>
+        </div>
+      </div>
+      <div class="jorn-sidebar">
+        <div class="sid-head"><span class="sid-title">Tabla · Grupo A</span></div>
+        <div class="sid-body anim d4">
+          <div class="stand-r promo"><div class="s-p top">1</div><div class="s-n"><div class="s-g"></div>CLA</div><div class="s-d">+3</div><div class="s-pt" style="color:var(--green)">6</div></div>
+          <div class="stand-r promo"><div class="s-p top">2</div><div class="s-n"><div class="s-g"></div>FUE</div><div class="s-d">+1</div><div class="s-pt" style="color:var(--green)">3</div></div>
+          <div class="stand-div"></div>
+          <div class="stand-r"><div class="s-p">3</div><div class="s-n">CAL</div><div class="s-d">-1</div><div class="s-pt">3</div></div>
+          <div class="stand-r"><div class="s-p">4</div><div class="s-n">SOL</div><div class="s-d">-3</div><div class="s-pt">0</div></div>
+          <div class="group-lbl" style="margin-top:14px">Grupo B</div>
+          <div class="stand-r promo"><div class="s-p top">1</div><div class="s-n"><div class="s-g"></div>REY</div><div class="s-d">+4</div><div class="s-pt" style="color:var(--green)">6</div></div>
+          <div class="stand-r promo"><div class="s-p top">2</div><div class="s-n"><div class="s-g"></div>VIT</div><div class="s-d">+1</div><div class="s-pt" style="color:var(--green)">4</div></div>
+          <div class="stand-div"></div>
+          <div class="stand-r"><div class="s-p">3</div><div class="s-n">NAR</div><div class="s-d">-2</div><div class="s-pt">1</div></div>
+          <div class="stand-r"><div class="s-p">4</div><div class="s-n">MON</div><div class="s-d">-3</div><div class="s-pt">0</div></div>
+        </div>
+        <div class="sid-foot">
+          <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-3d);margin-bottom:6px;display:flex;justify-content:space-between"><span>Progreso J3</span><span style="color:var(--ink-d)"></span></div>
+          <div style="height:3px;background:var(--surface-3d);border-radius:2px;overflow:hidden;margin-bottom:10px"><div style="width:44%;height:100%;background:var(--ink-d);border-radius:2px"></div></div>
+          <div class="next-act" onclick="openModal('CAL','SOL')"><div><div class="na-text">Registrar CAL vs SOL</div><div class="na-sub">Pendiente · C-4</div></div><span style="color:var(--ink-d)">→</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW 3: BRACKET
+══════════════════════════════════════ -->
+<div class="view" id="v-bracket">
+  <div class="topbar dark">
+    <a class="logo dark" href="#"><div class="logo-mark-dark"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></div>SportsManage</a>
+    <nav class="nav-pills">
+      <button class="nav-pill" onclick="nav('overview')">General</button>
+      <button class="nav-pill" onclick="nav('jornada')">Jornada</button>
+      <button class="nav-pill active" onclick="nav('bracket')">Bracket</button>
+      <button class="nav-pill" onclick="nav('manager')">Vista Manager</button>
+    </nav>
+    <div class="topbar-right"><div class="tb-avatar dark">JR</div></div>
+  </div>
+  <div class="view-body">
+    <div class="bracket-h anim d1">
+      <div class="bh-left"><div class="bh-ey">Copa Verano 2025 · Fase eliminatoria</div><div class="bh-title">Bracket <span class="badge badge-live-d"><span class="live-dot"></span>1 en vivo</span></div></div>
+      <button class="btn btn-accent-d" onclick="openModal('CEL','ALT')">+ Resultado</button>
+    </div>
+    <div class="round-tabs-bar">
+      <button class="rt done">Cuartos <span class="rt-count">4/4 ✓</span></button>
+      <button class="rt active">Semifinales <span class="rt-count">1/2</span></button>
+      <button class="rt">Final <span class="rt-count">0/1</span></button>
+    </div>
+    <div class="bracket-grid">
+      <div class="bracket-main anim d2">
+        <!-- Cuartos -->
+        <div class="br-section">
+          <div class="br-label"><span class="br-lbl-text">Cuartos de final</span><div style="flex:1;height:1px;background:var(--border-d)"></div><span class="br-lbl-badge blb-done">Completo</span></div>
+          <div class="br-grid-2">
+            <div class="bcard bc-done champ-path" onclick="openModal('REY','VIT')"><div class="bc-head"><span class="bc-id">QF·1</span><span class="bc-status bcs-done">Final</span></div><div class="bc-teams"><div class="bc-team winner"><span class="bc-seed">A1</span><span class="bc-name">REY</span><span class="bc-sc">3</span></div><div class="bc-div"></div><div class="bc-team loser"><span class="bc-seed">D2</span><span class="bc-name">RIO</span><span class="bc-sc">1</span></div></div><div class="bc-foot"><span class="bc-meta">Mar 10 · C-1</span><button class="bc-btn bc-btn-ghost" onclick="event.stopPropagation()">Editar</button></div></div>
+            <div class="bcard bc-done" onclick="openModal('CLA','EST')"><div class="bc-head"><span class="bc-id">QF·2</span><span class="bc-status bcs-done">Final</span></div><div class="bc-teams"><div class="bc-team winner"><span class="bc-seed">B1</span><span class="bc-name">CLA</span><span class="bc-sc">2</span></div><div class="bc-div"></div><div class="bc-team loser"><span class="bc-seed">C2</span><span class="bc-name">EST</span><span class="bc-sc">0</span></div></div><div class="bc-foot"><span class="bc-meta">Mar 10 · C-2</span><button class="bc-btn bc-btn-ghost" onclick="event.stopPropagation()">Editar</button></div></div>
+            <div class="bcard bc-done" onclick="openModal('CEL','BOR')"><div class="bc-head"><span class="bc-id">QF·3</span><span class="bc-status bcs-done">Final · Pen.</span></div><div class="bc-teams"><div class="bc-team winner"><span class="bc-seed">C1</span><span class="bc-name">CEL</span><span class="bc-sc">2</span></div><div class="bc-div"></div><div class="bc-team loser"><span class="bc-seed">B2</span><span class="bc-name">BOR</span><span class="bc-sc">2</span></div></div><div class="bc-foot"><span class="bc-meta">Mar 10 · C-3</span><button class="bc-btn bc-btn-ghost" onclick="event.stopPropagation()">Editar</button></div></div>
+            <div class="bcard bc-done" onclick="openModal('ALT','FUE')"><div class="bc-head"><span class="bc-id">QF·4</span><span class="bc-status bcs-done">Final</span></div><div class="bc-teams"><div class="bc-team loser"><span class="bc-seed">A2</span><span class="bc-name">FUE</span><span class="bc-sc">1</span></div><div class="bc-div"></div><div class="bc-team winner"><span class="bc-seed">D1</span><span class="bc-name">ALT</span><span class="bc-sc">2</span></div></div><div class="bc-foot"><span class="bc-meta">Mar 10 · C-4</span><button class="bc-btn bc-btn-ghost" onclick="event.stopPropagation()">Editar</button></div></div>
+          </div>
+        </div>
+        <!-- connector -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0">
+          <div style="display:flex;flex-direction:column;align-items:center"><div style="width:2px;height:12px;background:rgba(0,0,0,0.15)"></div></div>
+          <div style="display:flex;flex-direction:column;align-items:center"><div style="width:2px;height:12px;background:var(--surface-3d)"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0">
+          <div style="height:14px;border-left:2px solid rgba(0,0,0,0.12);border-right:2px solid rgba(0,0,0,0.12);border-bottom:2px solid rgba(0,0,0,0.12);border-radius:0 0 5px 5px;margin:0 56px"></div>
+          <div style="height:14px;border-left:2px solid var(--surface-3d);border-right:2px solid var(--surface-3d);border-bottom:2px solid var(--surface-3d);border-radius:0 0 5px 5px;margin:0 56px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="display:flex;flex-direction:column;align-items:center"><div style="width:2px;height:12px;background:rgba(0,0,0,0.15)"></div></div>
+          <div style="display:flex;flex-direction:column;align-items:center"><div style="width:2px;height:12px;background:var(--surface-3d)"></div></div>
+        </div>
+        <!-- Semis -->
+        <div class="br-section">
+          <div class="br-label"><span class="br-lbl-text">Semifinales</span><div style="flex:1;height:1px;background:var(--border-d)"></div><span class="br-lbl-badge blb-active">1 en vivo</span></div>
+          <div class="br-grid-2">
+            <div class="bcard bc-done champ-path" onclick="openModal('REY','CLA')"><div class="bc-head"><span class="bc-id">SF·A</span><span class="bc-status bcs-done">Final</span></div><div class="bc-teams"><div class="bc-team winner"><span class="bc-seed">1</span><span class="bc-name">REY</span><span class="bc-sc">2</span></div><div class="bc-div"></div><div class="bc-team loser"><span class="bc-seed">2</span><span class="bc-name">CLA</span><span class="bc-sc">1</span></div></div><div class="bc-foot"><span class="bc-meta">Mar 12 · C-1</span><button class="bc-btn bc-btn-ghost" onclick="event.stopPropagation()">Editar</button></div></div>
+            <div class="bcard bc-live" onclick="openModal('CEL','ALT')"><div class="bc-head"><span class="bc-id">SF·B</span><span class="bc-status bcs-live"><span class="live-dot"></span>74'</span></div><div class="bc-teams"><div class="bc-team"><span class="bc-seed">3</span><span class="bc-name">CEL</span><span class="bc-sc" style="color:var(--red)">1</span></div><div class="bc-div"></div><div class="bc-team"><span class="bc-seed">4</span><span class="bc-name">ALT</span><span class="bc-sc" style="color:var(--red)">1</span></div></div><div class="bc-foot"><span class="bc-meta">Mar 12 · C-2</span><button class="bc-btn bc-btn-acc" onclick="event.stopPropagation();openModal('CEL','ALT')">Registrar</button></div></div>
+          </div>
+        </div>
+        <!-- connector final -->
+        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:14px">
+          <div style="width:2px;height:12px;background:rgba(0,0,0,0.12)"></div>
+        </div>
+        <!-- Final -->
+        <div class="br-section">
+          <div class="br-label"><span class="br-lbl-text">Gran Final</span><div style="flex:1;height:1px;background:var(--border-d)"></div><span class="br-lbl-badge blb-pending">Pendiente</span></div>
+          <div class="br-grid-1">
+            <div class="bcard bc-pending champ-path" onclick="openModal('REY','?')"><div class="bc-head"><span class="bc-id">Gran Final</span><span class="bc-status bcs-pending">Pendiente</span></div><div class="bc-teams"><div class="bc-team"><span class="bc-seed">🏆</span><span class="bc-name">REY</span><span class="bc-sc" style="color:var(--ink-3d)">—</span></div><div class="bc-div"></div><div class="bc-team" style="opacity:0.4"><span class="bc-seed"></span><span class="bc-name" style="font-family:'DM Sans',sans-serif;font-weight:400;font-size:12px;color:var(--ink-3d)">Ganador SF-B</span><span class="bc-sc" style="color:var(--ink-3d)">—</span></div></div><div class="bc-foot"><span class="bc-meta">Mar 14 · 18:00 · Cancha Principal</span><button class="bc-btn bc-btn-acc" onclick="event.stopPropagation();openModal('REY','?')">Registrar</button></div></div>
+          </div>
+          <div style="margin-top:14px">
+            <div style="width:2px;height:14px;background:rgba(0,0,0,0.12);margin:0 auto"></div>
+            <div class="champion-card"><div class="champ-icon">🏆</div><div class="champ-lbl">Campeón</div><div class="champ-name" style="color:var(--ink-3d);font-size:18px">Por definir</div><div class="champ-sub">Gran Final · 14 de marzo</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bracket-sidebar anim d3">
+        <div class="bsid-lbl">Ruta del campeón · REY</div>
+        <div class="path-card"><div><div class="pc-name">REY</div><div style="font-size:10px;color:var(--ink-3d);font-family:'DM Mono',monospace;margin-top:2px">2V · 0D</div></div><div class="pc-res" style="font-size:11px">5 GF · 1 GC</div></div>
+        <div class="path-arrow">↓ Cuartos</div>
+        <div class="path-card" style="background:var(--green-d);border-color:rgba(52,211,153,0.15)"><div style="font-size:11px;font-weight:500;color:var(--ink-d)">vs VIT</div><div class="pc-res">3-1 ✓</div></div>
+        <div class="path-arrow">↓ Semis</div>
+        <div class="path-card" style="background:var(--green-d);border-color:rgba(52,211,153,0.15)"><div style="font-size:11px;font-weight:500;color:var(--ink-d)">vs CLA</div><div class="pc-res">2-1 ✓</div></div>
+        <div class="path-arrow">↓ Final</div>
+        <div class="path-pending"><div class="pp-name">vs ???</div><div class="pp-status">Pendiente</div></div>
+        <div style="margin-top:16px">
+          <div class="bsid-lbl">Partidos activos</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="background:var(--surface-2d);border:1px solid var(--border-d);border-radius:var(--r-sm);padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="openModal('CEL','ALT')">
+              <div><div style="font-size:12px;font-weight:500;color:var(--ink-d)">CEL vs ALT</div><div style="font-size:10px;color:var(--ink-3d)">Semifinal B</div></div>
+              <span class="badge badge-live-d"><span class="live-dot"></span>74'</span>
+            </div>
+            <div style="background:var(--surface-2d);border:1px solid var(--border-d);border-radius:var(--r-sm);padding:9px 12px;display:flex;align-items:center;justify-content:space-between">
+              <div><div style="font-size:12px;font-weight:500;color:var(--ink-d)">REY vs ???</div><div style="font-size:10px;color:var(--ink-3d)">Gran Final</div></div>
+              <span style="font-size:9px;font-family:'DM Mono',monospace;color:var(--amber);background:var(--amber-d);padding:2px 8px;border-radius:100px">Mar 14</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     VIEW 4: MANAGER
+══════════════════════════════════════ -->
+<div class="view" id="v-manager">
+  <div class="topbar light">
+    <a class="logo light" href="#"><div class="logo-mark-light"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></div>SportsManage</a>
+    <nav class="nav-pills">
+      <button class="nav-pill active">Mi equipo</button>
+      <button class="nav-pill">Fixture</button>
+      <button class="nav-pill">Tabla</button>
+      <button class="nav-pill" onclick="nav('bracket')">Bracket</button>
+    </nav>
+    <div class="topbar-right">
+      <div class="tb-notif light"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="dot"></div></div>
+      <div class="manager-chip"><div class="tb-avatar manager">CP</div>Carlos P.</div>
+    </div>
+  </div>
+  <div class="view-body">
+    <div class="team-hero anim d1">
+      <div class="th-top">
+        <div class="th-left">
+          <div class="team-crest">⚡</div>
+          <div>
+            <div class="th-ey">Copa Verano 2025 · Grupo A</div>
+            <div class="th-name">Rayos FC</div>
+            <div class="th-badges"><span class="badge badge-blue-l">2° lugar</span><span class="badge badge-green-l">Clasificando</span><span style="font-size:11px;color:var(--ink-3l)">15 jugadores</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost-l">Compartir</button>
+          <button class="btn btn-solid-l">+ Jugador</button>
+        </div>
+      </div>
+      <div class="th-stats">
+        <div class="ths"><div class="ths-val" style="color:#1A7F4B">6</div><div class="ths-lbl">Puntos</div></div>
+        <div class="ths"><div class="ths-val">3</div><div class="ths-lbl">Jugados</div></div>
+        <div class="ths"><div class="ths-val">+3</div><div class="ths-lbl">Dif. goles</div></div>
+        <div class="ths"><div><div class="form-row"><div class="fd fd-w">V</div><div class="fd fd-w">V</div><div class="fd fd-d">E</div><div class="fd fd-w">V</div><div class="fd fd-l">D</div></div><div class="ths-lbl">Forma</div></div></div>
+        <div class="ths"><div class="ths-val">12</div><div class="ths-lbl">GF</div></div>
+        <div class="ths"><div class="ths-val">9</div><div class="ths-lbl">GC</div></div>
+      </div>
+    </div>
+    <div class="mgr-grid">
+      <div class="mgr-main anim d2">
+        <!-- Next match -->
+        <div style="margin-bottom:18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span class="sec-title-l">Próximo partido</span></div>
+          <div class="next-match-card">
+            <div class="nmc-ey">Jornada 4 · Grupo A · Cancha 2</div>
+            <div class="nmc-matchup">
+              <div class="nmc-team"><div class="nmc-name mine">Rayos FC</div><div class="nmc-sub">Local</div></div>
+              <div class="nmc-vs">vs</div>
+              <div class="nmc-team" style="text-align:right"><div class="nmc-name">Tigres SC</div><div class="nmc-sub" style="text-align:right">Visitante</div></div>
+            </div>
+            <div class="nmc-details">
+              <div class="nmc-d">📅 Vie 28 feb · 7:00 pm</div>
+              <div class="nmc-d">📍 Cancha 2 · Estadio Norte</div>
+            </div>
+            <div class="nmc-countdown"><div class="nmc-cv">4d 12h</div><div class="nmc-cl">Faltan</div></div>
+          </div>
+        </div>
+        <!-- Fixture -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span class="sec-title-l">Todos los partidos</span><button class="sec-action-l">Ver calendario →</button></div>
+        <div class="fix-list">
+          <div class="fix-row fw"><div class="fix-rnd">J1</div><div class="fix-matchup"><span class="fix-t mine win">Rayos</span><span class="fix-sc win">3·1</span><span class="fix-t lose">Cóndores</span></div><div class="fix-right"><div class="fix-meta">10 feb</div><span class="fix-rb frb-w">Victoria</span></div></div>
+          <div class="fix-row fw"><div class="fix-rnd">J2</div><div class="fix-matchup"><span class="fix-t lose">Leones</span><span class="fix-sc win">0·2</span><span class="fix-t mine win">Rayos</span></div><div class="fix-right"><div class="fix-meta">14 feb</div><span class="fix-rb frb-w">Victoria</span></div></div>
+          <div class="fix-row fd-row"><div class="fix-rnd">J3</div><div class="fix-matchup"><span class="fix-t mine">Rayos</span><span class="fix-sc draw">1·1</span><span class="fix-t">Halcones</span></div><div class="fix-right"><div class="fix-meta">24 feb</div><span class="fix-rb frb-d">Empate</span></div></div>
+          <div class="fix-row fn"><div class="fix-rnd">J4</div><div class="fix-matchup"><span class="fix-t mine" style="color:var(--team-color)">Rayos</span><span class="fix-sc vs">vs</span><span class="fix-t">Tigres</span></div><div class="fix-right"><div class="fix-meta">28 feb</div><span class="fix-rb frb-n">Próximo</span></div></div>
+          <div class="fix-row fp"><div class="fix-rnd">J5</div><div class="fix-matchup"><span class="fix-t" style="color:var(--ink-3l)">Panteras</span><span class="fix-sc vs">vs</span><span class="fix-t mine" style="color:var(--ink-3l)">Rayos</span></div><div class="fix-right"><div class="fix-meta">3 mar</div><span class="fix-rb frb-p">Pendiente</span></div></div>
+        </div>
+        <!-- Roster -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;margin-top:4px"><span class="sec-title-l">Plantilla · 15/18</span><button class="sec-action-l">+ Agregar</button></div>
+        <div class="roster-alert"><div><div class="ra-text">Faltan 3 jugadores</div><div class="ra-sub">Mínimo cubierto · puedes agregar hasta 18</div></div><button class="ra-btn">Completar</button></div>
+        <div class="roster-grid">
+          <div class="player-card"><div class="player-num">1</div><div><div class="player-name">Carlos Pérez</div><div class="player-pos">Portero · Cap.</div></div><div class="player-dot pd-ok"></div></div>
+          <div class="player-card"><div class="player-num">4</div><div><div class="player-name">Miguel Torres</div><div class="player-pos">Defensa</div></div><div class="player-dot pd-ok"></div></div>
+          <div class="player-card"><div class="player-num">9</div><div><div class="player-name">Felipe Castro</div><div class="player-pos">Delantero</div></div><div class="player-dot pd-ok"></div></div>
+          <div class="player-card"><div class="player-num">10</div><div><div class="player-name">Sebastián Gil</div><div class="player-pos">Mediocampista</div></div><div class="player-dot pd-warn"></div></div>
+          <div class="player-card"><div class="player-num">11</div><div><div class="player-name">Luis Herrera</div><div class="player-pos">Delantero</div></div><div class="player-dot pd-ok"></div></div>
+          <div class="player-card" style="border-style:dashed;border-color:var(--surface-3l)"><div class="player-num" style="background:var(--surface-2l);color:var(--ink-3l)">—</div><div><div class="player-name" style="color:var(--ink-3l)">Sin asignar</div><div class="player-pos">Libre</div></div><div class="player-dot pd-miss"></div></div>
+        </div>
+      </div>
+      <div class="mgr-sidebar anim d3">
+        <!-- Tabla -->
+        <div class="l-card">
+          <div class="l-card-head"><span class="l-card-title">Grupo A</span><button class="l-card-act">Ver completa</button></div>
+          <div class="l-card-body">
+            <div class="l-stand-r"><div class="l-sp top">1</div><div class="l-sn">REY</div><div class="l-sg">+4</div><div class="l-spt" style="color:#1A7F4B">9</div></div>
+            <div class="l-stand-r mine"><div class="l-sp top">2</div><div class="l-sn" style="color:var(--team-color)">⚡ Rayos</div><div class="l-sg">+3</div><div class="l-spt" style="color:var(--team-color)">6</div></div>
+            <div class="l-stand-r"><div class="l-sp">3</div><div class="l-sn">Tigres</div><div class="l-sg">-1</div><div class="l-spt">4</div></div>
+            <div class="l-stand-r"><div class="l-sp">4</div><div class="l-sn">Cóndores</div><div class="l-sg">-6</div><div class="l-spt">0</div></div>
+          </div>
+        </div>
+        <!-- Goleadores -->
+        <div class="l-card">
+          <div class="l-card-head"><span class="l-card-title">Goleadores</span></div>
+          <div class="l-card-body">
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--border-l)"><div style="width:24px;height:24px;background:rgba(29,78,216,0.08);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--team-color)">11</div><div style="flex:1;font-size:12px;font-weight:500">Luis Herrera</div><div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--team-color)">5 ⚽</div></div>
+              <div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--border-l)"><div style="width:24px;height:24px;background:rgba(29,78,216,0.08);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--team-color)">9</div><div style="flex:1;font-size:12px;font-weight:500">Felipe Castro</div><div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--team-color)">4 ⚽</div></div>
+              <div style="display:flex;align-items:center;gap:9px;padding:6px 0"><div style="width:24px;height:24px;background:rgba(29,78,216,0.08);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--team-color)">10</div><div style="flex:1;font-size:12px;font-weight:500">Sebastián Gil</div><div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--team-color)">2 ⚽</div></div>
+            </div>
+          </div>
+        </div>
+        <!-- Notificaciones -->
+        <div class="l-card">
+          <div class="l-card-head"><span class="l-card-title">Notificaciones</span><button class="l-card-act">Leer todas</button></div>
+          <div class="l-card-body">
+            <div class="notif-item"><div class="ni-dot unread"></div><div><div class="ni-text">Próximo partido <strong>28 feb · 7pm</strong> vs Tigres SC · C-2</div><div class="ni-time">Hace 2h</div></div></div>
+            <div class="notif-item"><div class="ni-dot unread"></div><div><div class="ni-text">Resultado confirmado: <strong>Rayos 1·1 Halcones</strong></div><div class="ni-time">Hace 6h</div></div></div>
+            <div class="notif-item"><div class="ni-dot"></div><div><div class="ni-text">Faltan <strong>3 jugadores</strong> por registrar en tu roster</div><div class="ni-time">Ayer</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROTOTYPE CHROME -->
+<div class="proto-chrome">
+  <span class="chrome-label">Vista</span>
+  <button class="chrome-btn active" id="cb-overview" onclick="nav('overview')">General</button>
+  <button class="chrome-btn" id="cb-jornada" onclick="nav('jornada')">Jornada</button>
+  <button class="chrome-btn" id="cb-bracket" onclick="nav('bracket')">Bracket</button>
+  <div class="chrome-sep"></div>
+  <button class="chrome-btn" id="cb-manager" onclick="nav('manager')">👤 Manager</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-ov" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="m-ey">Registrar resultado</div>
+    <div class="m-ttl" id="m-title">—</div>
+    <div class="score-r">
+      <div class="sc-t"><div class="sc-tn" id="m-a">—</div><input type="number" class="sc-inp" id="sc-a" value="0" min="0"></div>
+      <div class="sc-sep">—</div>
+      <div class="sc-t"><div class="sc-tn" id="m-b">—</div><input type="number" class="sc-inp" id="sc-b" value="0" min="0"></div>
+    </div>
+    <div class="m-btns">
+      <button class="m-btn mb-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="m-btn mb-confirm" onclick="confirmScore()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── NAVIGATION ──
+const views = ['overview','jornada','bracket','manager'];
+let currentView = 'overview';
+
+function nav(id) {
+  views.forEach(v => {
+    document.getElementById('v-'+v).classList.remove('active');
+    const cb = document.getElementById('cb-'+v);
+    if (cb) cb.classList.remove('active');
+  });
+  document.getElementById('v-'+id).classList.add('active');
+  const cb = document.getElementById('cb-'+id);
+  if (cb) cb.classList.add('active');
+  currentView = id;
+  // Scroll to top
+  const vb = document.querySelector('#v-'+id+' .view-body');
+  if (vb) vb.scrollTop = 0;
+}
+
+// ── CLOCK ──
+function tick() {
+  const n = new Date();
+  const t = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  document.querySelectorAll('.tb-clock').forEach(el => el.textContent = t);
+}
+tick(); setInterval(tick, 10000);
+
+// ── MODAL ──
+function openModal(a, b) {
+  document.getElementById('m-a').textContent = a;
+  document.getElementById('m-b').textContent = b;
+  document.getElementById('m-title').textContent = a + ' vs ' + b;
+  document.getElementById('sc-a').value = 0;
+  document.getElementById('sc-b').value = 0;
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('sc-a').focus(), 150);
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+function confirmScore() {
+  const a = document.getElementById('sc-a').value;
+  const b = document.getElementById('sc-b').value;
+  const ta = document.getElementById('m-a').textContent;
+  const tb = document.getElementById('m-b').textContent;
+  closeModal();
+  const isManager = currentView === 'manager';
+  showToast('✓ '+ta+' '+a+' · '+b+' '+tb+' registrado', isManager ? 'light' : 'dark');
+}
+
+// ── TOAST ──
+function showToast(msg, theme='dark') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (theme==='dark' ? 'dark-toast' : 'light-toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === '1') nav('overview');
+  if (e.key === '2') nav('jornada');
+  if (e.key === '3') nav('bracket');
+  if (e.key === '4') nav('manager');
+});
+
+// Live timer
+let liveMin = 63;
+setInterval(() => {
+  liveMin++;
+  document.querySelectorAll('.mr-live-t').forEach((el, i) => {
+    const min = i === 0 ? liveMin : liveMin - 22;
+    el.innerHTML = `<span class="live-dot"></span>${min}'`;
+  });
+}, 60000);
+</script>
+</body>
+</html>
