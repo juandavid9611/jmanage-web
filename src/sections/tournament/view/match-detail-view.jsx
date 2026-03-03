@@ -211,7 +211,7 @@ export function MatchDetailView() {
             {statusAction.label}
           </LoadingButton>
         )}
-        {match.status === 'live' && (
+        {(match.status === 'live' || match.status === 'finished') && (
           <Button
             variant="outlined"
             startIcon={<Iconify icon="mdi:plus" />}
@@ -259,7 +259,7 @@ export function MatchDetailView() {
           events={events}
           players={players}
           teams={teams}
-          editable={match.status === 'live'}
+          editable={match.status === 'live' || match.status === 'finished'}
           onDeleteEvent={handleDeleteEvent}
         />
       </Card>

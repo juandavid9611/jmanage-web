@@ -1,4 +1,5 @@
 import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
 import Table from '@mui/material/Table';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
@@ -6,7 +7,6 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
-import Chip from '@mui/material/Chip';
 
 import { useGetTopScorers } from 'src/actions/tournament';
 

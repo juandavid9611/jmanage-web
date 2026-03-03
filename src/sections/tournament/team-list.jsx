@@ -7,6 +7,7 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Select from '@mui/material/Select';
+import Tooltip from '@mui/material/Tooltip';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
@@ -32,15 +33,19 @@ import { Iconify } from 'src/components/iconify';
 
 import { TeamFormDialog } from './team-form-dialog';
 import { PlayerDataGrid } from './player-data-grid';
+import { PlayerFormDialog } from './player-form-dialog';
 
 // ----------------------------------------------------------------------
 
-export function TeamList({ tournamentId, teams, groups }) {
+export function TeamList({ tournamentId, tournament, teams, groups }) {
   const [teamDialog, setTeamDialog] = useState({ open: false, team: null });
+  const [playerDialog, setPlayerDialog] = useState({ open: false, teamId: null });
   const [expandedTeam, setExpandedTeam] = useState(null);
   const [groupDialog, setGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupSlots, setGroupSlots] = useState(2);
+
+  const isLocked = tournament?.status === 'active' || tournament?.status === 'finished';
 
   const handleDeleteTeam = useCallback(
     async (teamId) => {
@@ -77,12 +82,13 @@ export function TeamList({ tournamentId, teams, groups }) {
 
   const handleAssignTeam = async (teamId, newGroupId) => {
     try {
-      // Remove from current group first, then assign to new
       const removeOps = (groups || [])
         .filter((g) => g.teams?.some((gt) => gt.team_id === teamId))
         .map((g) => removeTeamFromGroup(tournamentId, g.id, teamId));
       await Promise.all(removeOps);
-      await assignTeamToGroup(tournamentId, newGroupId, teamId);
+      if (newGroupId) {
+        await assignTeamToGroup(tournamentId, newGroupId, teamId);
+      }
       toast.success('Equipo asignado');
     } catch (error) {
       toast.error(error.message || 'Error');
@@ -95,12 +101,10 @@ export function TeamList({ tournamentId, teams, groups }) {
       return;
     }
     try {
-      // Clear all groups first
       const removeOps = groups.flatMap((g) =>
         (g.teams || []).map((gt) => removeTeamFromGroup(tournamentId, g.id, gt.team_id))
       );
       await Promise.all(removeOps);
-      // Shuffle and distribute evenly
       const shuffled = [...teams].sort(() => Math.random() - 0.5);
       const assignOps = shuffled.map((team, idx) => {
         const group = groups[idx % groups.length];
@@ -114,117 +118,167 @@ export function TeamList({ tournamentId, teams, groups }) {
   };
 
   const hasGroups = groups?.length > 0;
+  const showGroups = tournament?.type === 'hybrid' || tournament?.type === 'knockout';
 
   return (
     <>
-      {/* Group Management */}
-      <Card sx={{ p: 3, mb: 3 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-          <Typography variant="h6">Grupos</Typography>
-          <Stack direction="row" spacing={1}>
-            {hasGroups && (
+      {/* Status guard banner */}
+      {isLocked && (
+        <Card sx={{ p: 2, mb: 3, bgcolor: 'warning.lighter', border: '1px solid', borderColor: 'warning.light' }}>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Iconify icon="mdi:lock-outline" sx={{ color: 'warning.dark' }} />
+            <Typography variant="body2" color="warning.dark">
+              El torneo está {tournament.status === 'active' ? 'activo' : 'finalizado'}. No es posible agregar o eliminar equipos.
+            </Typography>
+          </Stack>
+        </Card>
+      )}
+
+      {/* Group Management — only for hybrid / knockout */}
+      {showGroups && (
+        <Card sx={{ p: 3, mb: 3 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+            <Typography variant="h6">Grupos</Typography>
+            <Stack direction="row" spacing={1}>
+              {hasGroups && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:shuffle-variant" />}
+                  onClick={handleRandomAssign}
+                  disabled={teams.length < 2 || isLocked}
+                >
+                  Asignar Aleatorio
+                </Button>
+              )}
               <Button
                 size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:shuffle-variant" />}
-                onClick={handleRandomAssign}
-                disabled={teams.length < 2}
+                variant="contained"
+                startIcon={<Iconify icon="mingcute:add-line" />}
+                onClick={() => setGroupDialog(true)}
+                disabled={isLocked}
               >
-                Asignar Aleatorio
+                Agregar Grupo
               </Button>
-            )}
+            </Stack>
+          </Stack>
+
+          {!hasGroups ? (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+              Sin grupos. Crea grupos para organizar los equipos.
+            </Typography>
+          ) : (
+            <Box
+              gap={2}
+              display="grid"
+              gridTemplateColumns={{
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: `repeat(${Math.min(groups.length, 4)}, 1fr)`,
+              }}
+            >
+              {groups.map((group) => {
+                const groupTeams = teams.filter((t) =>
+                  group.teams?.some((gt) => gt.team_id === t.id)
+                );
+
+                return (
+                  <Card key={group.id} variant="outlined" sx={{ p: 2 }}>
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      sx={{ mb: 1 }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="subtitle2">{group.name}</Typography>
+                        <Chip
+                          label={`Clasifican: ${group.advancement_slots || 2}`}
+                          size="small"
+                          color="success"
+                          variant="soft"
+                        />
+                      </Stack>
+                      {!isLocked && (
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteGroup(group.id)}
+                        >
+                          <Iconify icon="solar:trash-bin-trash-bold" width={16} />
+                        </IconButton>
+                      )}
+                    </Stack>
+
+                    <Divider sx={{ mb: 1 }} />
+
+                    {groupTeams.length === 0 ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', py: 1 }}
+                      >
+                        Sin equipos
+                      </Typography>
+                    ) : (
+                      <Stack spacing={0.5}>
+                        {groupTeams.map((t) => (
+                          <Stack
+                            key={t.id}
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                          >
+                            <Typography variant="body2">{t.short_name || t.name}</Typography>
+                          </Stack>
+                        ))}
+                      </Stack>
+                    )}
+                  </Card>
+                );
+              })}
+            </Box>
+          )}
+        </Card>
+      )}
+
+      {/* Teams list header */}
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Typography variant="h6">
+          Equipos ({teams.length})
+        </Typography>
+        <Tooltip
+          title={isLocked ? 'El torneo ya está activo o finalizado' : ''}
+          placement="left"
+          arrow
+        >
+          <span>
             <Button
-              size="small"
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
-              onClick={() => setGroupDialog(true)}
+              onClick={() => setTeamDialog({ open: true, team: null })}
+              disabled={isLocked}
             >
-              Agregar Grupo
+              Agregar Equipo
             </Button>
-          </Stack>
-        </Stack>
-
-        {!hasGroups ? (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-            Sin grupos. Crea grupos para organizar los equipos por fase de grupos.
-          </Typography>
-        ) : (
-          <Box gap={2} display="grid" gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: `repeat(${Math.min(groups.length, 4)}, 1fr)` }}>
-            {groups.map((group) => {
-              const groupTeams = teams.filter((t) =>
-                group.teams?.some((gt) => gt.team_id === t.id)
-              );
-
-              return (
-                <Card key={group.id} variant="outlined" sx={{ p: 2 }}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="subtitle2">{group.name}</Typography>
-                      <Chip
-                        label={`Clasifican: ${group.advancement_slots || 2}`}
-                        size="small"
-                        color="success"
-                        variant="soft"
-                      />
-                    </Stack>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteGroup(group.id)}
-                    >
-                      <Iconify icon="solar:trash-bin-trash-bold" width={16} />
-                    </IconButton>
-                  </Stack>
-
-                  <Divider sx={{ mb: 1 }} />
-
-                  {groupTeams.length === 0 ? (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', py: 1 }}>
-                      Sin equipos
-                    </Typography>
-                  ) : (
-                    <Stack spacing={0.5}>
-                      {groupTeams.map((t) => (
-                        <Stack key={t.id} direction="row" alignItems="center" justifyContent="space-between">
-                          <Typography variant="body2">{t.short_name || t.name}</Typography>
-                        </Stack>
-                      ))}
-                    </Stack>
-                  )}
-                </Card>
-              );
-            })}
-          </Box>
-        )}
-      </Card>
-
-      {/* Teams */}
-      <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
-        <Button
-          variant="contained"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => setTeamDialog({ open: true, team: null })}
-        >
-          Agregar Equipo
-        </Button>
+          </span>
+        </Tooltip>
       </Stack>
 
-      <Box
-        gap={3}
-        display="grid"
-        gridTemplateColumns={{ xs: '1fr', md: 'repeat(2, 1fr)' }}
-      >
+      <Box gap={3} display="grid" gridTemplateColumns={{ xs: '1fr', md: 'repeat(2, 1fr)' }}>
         {teams.map((team) => (
           <TeamCard
             key={team.id}
             team={team}
             tournamentId={tournamentId}
             groups={groups}
+            isLocked={isLocked}
             expanded={expandedTeam === team.id}
             onExpand={() => setExpandedTeam(expandedTeam === team.id ? null : team.id)}
             onEdit={() => setTeamDialog({ open: true, team })}
             onDelete={() => handleDeleteTeam(team.id)}
             onAssignGroup={handleAssignTeam}
+            onAddPlayer={() => setPlayerDialog({ open: true, teamId: team.id })}
           />
         ))}
       </Box>
@@ -240,6 +294,7 @@ export function TeamList({ tournamentId, teams, groups }) {
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               placeholder="Grupo A"
+              autoFocus
             />
             <TextField
               fullWidth
@@ -266,6 +321,13 @@ export function TeamList({ tournamentId, teams, groups }) {
         currentTeam={teamDialog.team}
         groups={groups}
       />
+
+      <PlayerFormDialog
+        open={playerDialog.open}
+        onClose={() => setPlayerDialog({ open: false, teamId: null })}
+        tournamentId={tournamentId}
+        teamId={playerDialog.teamId}
+      />
     </>
   );
 }
@@ -276,30 +338,42 @@ function TeamCard({
   team,
   tournamentId,
   groups,
+  isLocked,
   expanded,
   onExpand,
   onEdit,
   onDelete,
   onAssignGroup,
+  onAddPlayer,
 }) {
   const { players } = useGetPlayers(expanded ? tournamentId : null, team.id);
   const hasGroups = groups?.length > 0;
-  const currentGroupId = groups?.find((g) => g.teams?.some((gt) => gt.team_id === team.id))?.id || '';
+  const currentGroupId =
+    groups?.find((g) => g.teams?.some((gt) => gt.team_id === team.id))?.id || '';
 
   return (
     <Card sx={{ p: 2 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Typography variant="subtitle1">{team.name}</Typography>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant="subtitle1" noWrap>
+            {team.name}
+          </Typography>
           {team.short_name && (
             <Chip label={team.short_name} size="small" variant="outlined" />
           )}
-          {currentGroupId && <Chip label={groups?.find((g) => g.id === currentGroupId)?.name} size="small" color="primary" variant="soft" />}
+          {currentGroupId && (
+            <Chip
+              label={groups?.find((g) => g.id === currentGroupId)?.name}
+              size="small"
+              color="primary"
+              variant="soft"
+            />
+          )}
         </Stack>
 
-        <Stack direction="row" alignItems="center">
-          {hasGroups && (
-            <FormControl size="small" sx={{ minWidth: 100, mr: 0.5 }}>
+        <Stack direction="row" alignItems="center" spacing={0.5} flexShrink={0}>
+          {hasGroups && !isLocked && (
+            <FormControl size="small" sx={{ minWidth: 100 }}>
               <InputLabel>Grupo</InputLabel>
               <Select
                 value={currentGroupId}
@@ -307,6 +381,7 @@ function TeamCard({
                 onChange={(e) => onAssignGroup(team.id, e.target.value)}
                 size="small"
               >
+                <MenuItem value="">Sin grupo</MenuItem>
                 {groups.map((g) => (
                   <MenuItem key={g.id} value={g.id}>
                     {g.name}
@@ -318,21 +393,39 @@ function TeamCard({
           <IconButton size="small" onClick={onExpand}>
             <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} />
           </IconButton>
-          <IconButton size="small" onClick={onEdit}>
-            <Iconify icon="solar:pen-bold" />
-          </IconButton>
-          <IconButton size="small" color="error" onClick={onDelete}>
-            <Iconify icon="solar:trash-bin-trash-bold" />
-          </IconButton>
+          {!isLocked && (
+            <IconButton size="small" onClick={onEdit}>
+              <Iconify icon="solar:pen-bold" />
+            </IconButton>
+          )}
+          {!isLocked && (
+            <IconButton size="small" color="error" onClick={onDelete}>
+              <Iconify icon="solar:trash-bin-trash-bold" />
+            </IconButton>
+          )}
         </Stack>
       </Stack>
 
       {expanded && (
-        <PlayerDataGrid
-          tournamentId={tournamentId}
-          teamId={team.id}
-          players={players}
-        />
+        <>
+          <Divider sx={{ mb: 1.5 }} />
+          {!isLocked && (
+            <Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
+              <Button
+                size="small"
+                startIcon={<Iconify icon="mingcute:add-line" />}
+                onClick={onAddPlayer}
+              >
+                Agregar Jugador
+              </Button>
+            </Stack>
+          )}
+          <PlayerDataGrid
+            tournamentId={tournamentId}
+            teamId={team.id}
+            players={players}
+          />
+        </>
       )}
     </Card>
   );

@@ -1,7 +1,7 @@
 import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
 
 import { Iconify } from 'src/components/iconify';
 

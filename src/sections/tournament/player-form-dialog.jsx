@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { z as zod } from 'zod';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-import Stack from '@mui/material/Stack';
-import Dialog from '@mui/material/Dialog';
 import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
 import MenuItem from '@mui/material/MenuItem';
-import TextField from '@mui/material/TextField';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -13,6 +14,7 @@ import DialogActions from '@mui/material/DialogActions';
 import { createPlayer, updatePlayer } from 'src/actions/tournament';
 
 import { toast } from 'src/components/snackbar';
+import { Form, Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
@@ -23,35 +25,53 @@ const POSITION_OPTIONS = [
   { value: 'Forward', label: 'Delantero' },
 ];
 
+const PlayerSchema = zod.object({
+  name: zod.string().min(1, 'El nombre es obligatorio'),
+  number: zod.coerce
+    .number()
+    .int('Debe ser un número entero')
+    .min(1, 'Debe ser mayor a 0')
+    .optional()
+    .or(zod.literal('')),
+  position: zod.string().optional(),
+});
+
 export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentPlayer }) {
   const isEdit = !!currentPlayer;
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const defaultValues = {
+    name: '',
+    number: '',
+    position: '',
+  };
 
-  const [formData, setFormData] = useState({
-    name: currentPlayer?.name || '',
-    number: currentPlayer?.number || '',
-    position: currentPlayer?.position || '',
-    user_id: currentPlayer?.user_id || '',
+  const methods = useForm({
+    resolver: zodResolver(PlayerSchema),
+    defaultValues,
   });
 
-  const handleChange = useCallback((field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const {
+    reset,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = methods;
 
-  const handleEnter = useCallback(() => {
-    setFormData({
-      name: currentPlayer?.name || '',
-      number: currentPlayer?.number || '',
-      position: currentPlayer?.position || '',
-      user_id: currentPlayer?.user_id || '',
-    });
-  }, [currentPlayer]);
+  useEffect(() => {
+    if (open) {
+      reset({
+        name: currentPlayer?.name || '',
+        number: currentPlayer?.number || '',
+        position: currentPlayer?.position || '',
+      });
+    }
+  }, [open, currentPlayer, reset]);
 
-  const handleSubmit = useCallback(async () => {
+  const onSubmit = handleSubmit(async (data) => {
     try {
-      setIsSubmitting(true);
-      const payload = { ...formData, number: Number(formData.number) };
+      const payload = {
+        ...data,
+        number: data.number ? Number(data.number) : 0,
+      };
 
       if (isEdit) {
         await updatePlayer(tournamentId, currentPlayer.id, payload);
@@ -63,56 +83,40 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
       onClose();
     } catch (error) {
       toast.error(error.message || 'Error');
-    } finally {
-      setIsSubmitting(false);
     }
-  }, [isEdit, tournamentId, teamId, currentPlayer, formData, onClose]);
+  });
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth TransitionProps={{ onEnter: handleEnter }}>
-      <DialogTitle>{isEdit ? 'Editar Jugador' : 'Agregar Jugador'}</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField
-            fullWidth
-            label="Nombre"
-            value={formData.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            required
-          />
-          <TextField
-            fullWidth
-            type="number"
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <Form methods={methods} onSubmit={onSubmit}>
+        <DialogTitle>{isEdit ? 'Editar Jugador' : 'Agregar Jugador'}</DialogTitle>
+
+        <DialogContent>
+          <Field.Text name="name" label="Nombre" required sx={{ mt: 1, mb: 2 }} />
+          <Field.Text
+            name="number"
             label="Número"
-            value={formData.number}
-            onChange={(e) => handleChange('number', e.target.value)}
+            type="number"
+            helperText="Número de camiseta"
+            sx={{ mb: 2 }}
           />
-          <TextField
-            fullWidth
-            select
-            label="Posición"
-            value={formData.position}
-            onChange={(e) => handleChange('position', e.target.value)}
-          >
+          <Field.Select name="position" label="Posición">
+            <MenuItem value="">Sin posición</MenuItem>
             {POSITION_OPTIONS.map((opt) => (
               <MenuItem key={opt.value} value={opt.value}>
                 {opt.label}
               </MenuItem>
             ))}
-          </TextField>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <LoadingButton
-          variant="contained"
-          loading={isSubmitting}
-          onClick={handleSubmit}
-          disabled={!formData.name}
-        >
-          {isEdit ? 'Guardar' : 'Crear'}
-        </LoadingButton>
-      </DialogActions>
+          </Field.Select>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={onClose}>Cancelar</Button>
+          <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
+            {isEdit ? 'Guardar' : 'Crear'}
+          </LoadingButton>
+        </DialogActions>
+      </Form>
     </Dialog>
   );
 }

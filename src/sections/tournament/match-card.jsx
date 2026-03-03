@@ -1,7 +1,7 @@
-
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -19,23 +19,27 @@ const STATUS_MAP = {
   postponed: { label: 'Aplazado', color: 'warning', icon: 'mdi:clock-alert' },
 };
 
-export function MatchCard({ match, teams, onClick }) {
+export function MatchCard({ match, teams, onClick, onScoreClick }) {
   const homeTeam = teams?.find((t) => t.id === match.home_team_id);
   const awayTeam = teams?.find((t) => t.id === match.away_team_id);
   const status = STATUS_MAP[match.status] || STATUS_MAP.scheduled;
 
   const hasScore = match.status === 'finished' || match.status === 'live';
-  const scoreHome = match.score_home >= 0 ? match.score_home : (match.status === 'live' ? 0 : '-');
-  const scoreAway = match.score_away >= 0 ? match.score_away : (match.status === 'live' ? 0 : '-');
+  const scoreHome =
+    match.score_home >= 0 ? match.score_home : match.status === 'live' ? 0 : '-';
+  const scoreAway =
+    match.score_away >= 0 ? match.score_away : match.status === 'live' ? 0 : '-';
 
   return (
     <Card
       sx={{
         transition: 'all 0.2s',
         '&:hover': { boxShadow: (theme) => theme.shadows[8] },
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <CardActionArea onClick={onClick}>
+      <CardActionArea onClick={onClick} sx={{ flex: 1 }}>
         <CardContent sx={{ p: 2.5 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
             <Chip
@@ -58,7 +62,12 @@ export function MatchCard({ match, teams, onClick }) {
             </Stack>
           </Stack>
 
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            spacing={2}
+          >
             {/* Home */}
             <Stack alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" noWrap>
@@ -95,6 +104,23 @@ export function MatchCard({ match, teams, onClick }) {
           </Stack>
         </CardContent>
       </CardActionArea>
+
+      {/* Inline score button for finished/live matches */}
+      {onScoreClick && (
+        <Stack sx={{ px: 2, pb: 1.5 }}>
+          <Button
+            size="small"
+            variant="soft"
+            startIcon={<Iconify icon="mdi:pencil" width={16} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onScoreClick();
+            }}
+          >
+            {match.status === 'finished' ? 'Editar Marcador' : 'Registrar Marcador'}
+          </Button>
+        </Stack>
+      )}
     </Card>
   );
 }

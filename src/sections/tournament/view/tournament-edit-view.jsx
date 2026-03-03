@@ -1,9 +1,8 @@
 import { useParams } from 'react-router-dom';
 
-import { DashboardContent } from 'src/layouts/dashboard';
-
 import { paths } from 'src/routes/paths';
 
+import { DashboardContent } from 'src/layouts/dashboard';
 import { useGetTournament } from 'src/actions/tournament';
 
 import { LoadingScreen } from 'src/components/loading-screen';
