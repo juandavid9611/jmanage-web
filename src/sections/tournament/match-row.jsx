@@ -25,7 +25,7 @@ const STATUS_BADGE = {
   postponed:  { label: 'Aplazado',  color: 'warning' },
 };
 
-const EVENT_CONFIG = {
+export const EVENT_CONFIG = {
   goal:             { icon: 'mdi:soccer',          color: 'success.main',  label: 'Gol' },
   own_goal:         { icon: 'mdi:soccer',          color: 'error.main',    label: 'En propia' },
   penalty_scored:   { icon: 'mdi:soccer',          color: 'success.main',  label: 'Penal' },
@@ -317,7 +317,7 @@ function MatchEventPanel({ matchId, tournamentId, homeTeamId, awayTeamId, homeNa
 
 // ----------------------------------------------------------------------
 
-function EventBadge({ cfg, player, assist, align }) {
+export function EventBadge({ cfg, player, assist, align }) {
   const isRight = align === 'right';
 
   return (
