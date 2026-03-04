@@ -49,7 +49,6 @@ const TournamentListPage = lazy(() => import('src/pages/dashboard/tournament/lis
 const TournamentCreatePage = lazy(() => import('src/pages/dashboard/tournament/new'));
 const TournamentDetailsPage = lazy(() => import('src/pages/dashboard/tournament/details'));
 const TournamentEditPage = lazy(() => import('src/pages/dashboard/tournament/edit'));
-const TournamentMatchesPage = lazy(() => import('src/pages/dashboard/tournament/matches'));
 const TournamentMatchDetailPage = lazy(() => import('src/pages/dashboard/tournament/match-detail'));
 // ----------------------------------------------------------------------
 
@@ -141,7 +140,6 @@ export const dashboardRoutes = [
           { path: 'new', element: <TournamentCreatePage /> },
           { path: ':id', element: <TournamentDetailsPage /> },
           { path: ':id/edit', element: <TournamentEditPage /> },
-          { path: ':id/matches', element: <TournamentMatchesPage /> },
           { path: ':id/matches/:matchId', element: <TournamentMatchDetailPage /> },
         ],
       },

@@ -120,7 +120,7 @@ export function MatchDetailView() {
     try {
       await deleteMatch(tournamentId, matchId);
       toast.success('Partido eliminado');
-      navigate(paths.dashboard.tournament.matches(tournamentId));
+      navigate(paths.dashboard.tournament.details(tournamentId));
     } catch (error) {
       toast.error('Error al eliminar');
     }
@@ -164,7 +164,6 @@ export function MatchDetailView() {
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: 'Torneos', href: paths.dashboard.tournament.root },
           { name: tournament?.name || '', href: paths.dashboard.tournament.details(tournamentId) },
-          { name: 'Partidos', href: paths.dashboard.tournament.matches(tournamentId) },
           { name: `${homeTeam?.short_name || '?'} vs ${awayTeam?.short_name || '?'}` },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

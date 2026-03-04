@@ -2,15 +2,13 @@ import { useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
-import Tab from '@mui/material/Tab';
-import Chip from '@mui/material/Chip';
-import Tabs from '@mui/material/Tabs';
-import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import { alpha } from '@mui/material/styles';
+import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -26,33 +24,46 @@ import {
   useGetStats,
   useGetGroups,
   useGetMatches,
+  useGetPlayers,
   useGetTournament,
   deleteTournament,
   updateTournament,
+  generateSchedule,
 } from 'src/actions/tournament';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 
 import { TeamList } from '../team-list';
 import { MatchList } from '../match-row';
 import { BracketView } from '../bracket-view';
 import { StatsOverview } from '../stats-overview';
-import { TopScorersTable } from '../top-scorers-table';
-import { TournamentBanner } from '../tournament-banner';
 import { StandingsSidebar } from '../standings-sidebar';
 import { MatchweekTimeline } from '../matchweek-timeline';
+import { getPhases, TournamentBanner } from '../tournament-banner';
+import { TournamentConfigSummary } from '../tournament-config-summary';
 
 // ----------------------------------------------------------------------
 
-const TABS = [
-  { value: 'overview', label: 'General', icon: 'mdi:view-dashboard-outline' },
-  { value: 'jornada', label: 'Jornada', icon: 'mdi:calendar-text' },
-  { value: 'teams', label: 'Equipos', icon: 'mdi:shield-half-full' },
-  { value: 'scorers', label: 'Goleadores', icon: 'mdi:soccer' },
-  { value: 'bracket', label: 'Cuadro', icon: 'mdi:tournament' },
-];
+/**
+ * Determine the default active phase based on tournament state.
+ */
+function getDefaultPhase(tournament, teams) {
+  const phases = getPhases(tournament, teams);
+
+  // Find the first 'active' phase
+  const activePhase = phases.find((p) => p.state === 'active');
+  if (activePhase) return activePhase.key;
+
+  // If all done, show last done phase
+  const lastDone = [...phases].reverse().find((p) => p.state === 'done');
+  if (lastDone) return lastDone.key;
+
+  // Fallback
+  return phases[0]?.key || 'configuracion';
+}
 
 // ----------------------------------------------------------------------
 
@@ -65,22 +76,34 @@ export function TournamentDetailView() {
   const { groups } = useGetGroups(id);
   const { stats } = useGetStats(id);
   const { matches: allMatches } = useGetMatches(id);
+  const { players } = useGetPlayers(id);
 
-  const [currentTab, setCurrentTab] = useState('overview');
-  const [selectedMatchweek, setSelectedMatchweek] = useState(null);
+  const [activePhase, setActivePhase] = useState(null);
+  const [selectedMatchweek, setSelectedMatchweek] = useState(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activateDialog, setActivateDialog] = useState(false);
   const [finishDialog, setFinishDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const [scheduleDialog, setScheduleDialog] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    start_date: new Date().toISOString().split('T')[0],
+    match_interval_days: 7,
+    default_venue: '',
+    group_id: '',
+  });
 
-  // Derive current matchweek for selection
+  // Resolve active phase (lazy init after tournament loads)
+  const currentPhase = activePhase || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
+
+  // Derive current matchweek
   const currentMw = tournament?.current_matchweek || 1;
-  const activeMw = selectedMatchweek || currentMw;
   const totalMw = tournament?.rules?.total_matchweeks || 0;
+  // undefined = default to currentMw; null = show all; number = specific matchweek
+  const activeMw = selectedMatchweek === undefined ? currentMw : selectedMatchweek;
 
-  // Filter matches by selected matchweek
+  // Filter matches by selected matchweek (null = all)
   const currentMatches = useMemo(
-    () => allMatches.filter((m) => m.matchweek === activeMw),
+    () => (activeMw === null ? allMatches : allMatches.filter((m) => m.matchweek === activeMw)),
     [allMatches, activeMw]
   );
 
@@ -89,14 +112,6 @@ export function TournamentDetailView() {
     () => allMatches.find((m) => m.status === 'scheduled'),
     [allMatches]
   );
-
-  // Stats for Jornada tab
-  const jornadaStats = useMemo(() => {
-    const live = currentMatches.filter((m) => m.status === 'live').length;
-    const pending = currentMatches.filter((m) => m.status === 'scheduled').length;
-    const finished = currentMatches.filter((m) => m.status === 'finished').length;
-    return { live, pending, finished, total: currentMatches.length };
-  }, [currentMatches]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -161,6 +176,29 @@ export function TournamentDetailView() {
     }
   }, [id, tournament]);
 
+  const handleGenerateSchedule = useCallback(async () => {
+    try {
+      setIsSubmitting(true);
+      const payload = {
+        start_date: new Date(scheduleForm.start_date).toISOString(),
+        match_interval_days: scheduleForm.match_interval_days,
+        default_venue: scheduleForm.default_venue,
+      };
+      if (scheduleForm.group_id) {
+        payload.group_id = scheduleForm.group_id;
+      }
+      const result = await generateSchedule(id, payload);
+      setScheduleDialog(false);
+      toast.success(
+        `${result.matches_created} partidos generados (${result.matchweeks_generated} jornadas)`
+      );
+    } catch (error) {
+      toast.error(error.message || 'Error al generar calendario');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [id, scheduleForm]);
+
   const handleMatchClick = useCallback(
     (match) => {
       navigate(paths.dashboard.tournament.matchDetail(id, match.id));
@@ -175,234 +213,130 @@ export function TournamentDetailView() {
     [id, navigate]
   );
 
+  const handlePhaseClick = useCallback((phaseKey) => {
+    setActivePhase(phaseKey);
+  }, []);
+
   if (tournamentLoading) return <LoadingScreen />;
   if (!tournament) return <Typography>Torneo no encontrado</Typography>;
 
   const isLeague = tournament.type === 'league';
   const isHybrid = tournament.type === 'hybrid';
+  const isKnockoutPhase = ['eliminatorias'].includes(currentPhase);
 
   return (
     <DashboardContent maxWidth={false} sx={{ p: { xs: 0, md: 0 } }}>
-      {/* ═══ Banner ═══ */}
+      {/* ═══ Banner + Phase Stepper ═══ */}
       <TournamentBanner
         tournament={tournament}
         teams={teams}
+        activePhase={currentPhase}
         isSubmitting={isSubmitting}
+        onPhaseClick={handlePhaseClick}
         onActivate={() => setActivateDialog(true)}
         onFinish={() => setFinishDialog(true)}
         onDelete={() => setDeleteDialog(true)}
         onAdvanceMatchweek={handleAdvanceMatchweek}
-        onNavigateMatches={() => navigate(paths.dashboard.tournament.matches(id))}
         onNavigateEdit={() => navigate(paths.dashboard.tournament.edit(id))}
-        onTabChange={setCurrentTab}
       />
 
-      {/* ═══ Matchweek Timeline ═══ */}
-      {(isLeague || isHybrid) && totalMw > 0 && (
-        <MatchweekTimeline
-          totalMatchweeks={totalMw}
-          currentMatchweek={currentMw}
-          allMatches={allMatches}
-          selectedMatchweek={activeMw}
-          onSelect={(mw) => {
-            setSelectedMatchweek(mw);
-            if (currentTab !== 'jornada') setCurrentTab('jornada');
-          }}
-        />
-      )}
-
-      {/* ═══ Tabs ═══ */}
-      <Box
-        sx={{
-          bgcolor: 'background.paper',
-          borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
-          px: { xs: 1, md: 3.5 },
-        }}
-      >
-        <Tabs
-          value={currentTab}
-          onChange={(_, v) => setCurrentTab(v)}
-          sx={{
-            '& .MuiTab-root': { minHeight: 44, fontSize: '0.8rem' },
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              key={tab.value}
-              value={tab.value}
-              label={tab.label}
-              icon={<Iconify icon={tab.icon} width={18} />}
-              iconPosition="start"
-            />
-          ))}
-        </Tabs>
-      </Box>
-
-      {/* ═══ Tab Content ═══ */}
+      {/* ═══ Phase Content ═══ */}
       <Box sx={{ bgcolor: (t) => alpha(t.palette.grey[500], 0.02), minHeight: 400 }}>
-        {/* OVERVIEW TAB */}
-        {currentTab === 'overview' && (
-          <Grid container>
-            <Grid xs={12} md={8} sx={{ p: { xs: 2, md: 3 } }}>
-              {/* Stats cards */}
-              <Box sx={{ mb: 3 }}>
-                <StatsOverview tournamentId={id} tournament={tournament} />
-              </Box>
 
-              {/* Current matchweek matches */}
-              {(isLeague || isHybrid) && currentMatches.length > 0 && (
-                <Box>
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                    <Typography
-                      variant="overline"
-                      sx={{ color: 'text.disabled', letterSpacing: 2, fontSize: '0.6rem' }}
-                    >
-                      Hoy · Jornada {activeMw}
-                    </Typography>
-                    <Box
-                      sx={{
-                        flex: 1,
-                        height: 1,
-                        bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
-                      }}
-                    />
-                    {jornadaStats.live > 0 && (
-                      <Chip
-                        label={`${jornadaStats.live} en vivo`}
-                        size="small"
-                        color="error"
-                        variant="soft"
-                        sx={{ height: 20, fontSize: '0.6rem', fontFamily: 'monospace' }}
-                      />
-                    )}
-                    {jornadaStats.pending > 0 && (
-                      <Chip
-                        label={`${jornadaStats.pending} pendientes`}
-                        size="small"
-                        color="warning"
-                        variant="soft"
-                        sx={{ height: 20, fontSize: '0.6rem', fontFamily: 'monospace' }}
-                      />
-                    )}
-                  </Stack>
-                  <MatchList
-                    matches={currentMatches}
-                    teams={teams}
-                    grouped={false}
-                    onMatchClick={handleMatchClick}
-                    onScoreClick={handleScoreClick}
-                  />
-                </Box>
-              )}
-            </Grid>
-            <Grid xs={12} md={4}>
-              <StandingsSidebar
-                tournamentId={id}
-                teams={teams}
-                nextPendingMatch={nextPendingMatch}
-                onViewAll={() => navigate(paths.dashboard.tournament.matches(id))}
-                onNextAction={
-                  nextPendingMatch
-                    ? () => handleScoreClick(nextPendingMatch)
-                    : undefined
-                }
-              />
-            </Grid>
-          </Grid>
+        {/* ── CONFIGURACIÓN: Tournament overview, stats ── */}
+        {currentPhase === 'configuracion' && (
+          <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
+            <StatsOverview tournamentId={id} tournament={tournament} />
+            <TournamentConfigSummary tournament={tournament} />
+          </Stack>
         )}
 
-        {/* JORNADA TAB */}
-        {currentTab === 'jornada' && (
-          <Grid container>
-            <Grid xs={12} md={8}>
-              {/* Stats bar */}
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
-                  gap: 1,
-                  px: { xs: 2, md: 3 },
-                  py: 2,
-                  bgcolor: 'background.paper',
-                  borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
-                }}
-              >
-                {[
-                  { value: jornadaStats.live, label: 'En vivo', color: 'error.main' },
-                  { value: jornadaStats.pending, label: 'Pendientes', color: 'warning.main' },
-                  { value: jornadaStats.finished, label: 'Finalizados', color: 'success.main' },
-                  { value: jornadaStats.total, label: 'Total', color: 'text.primary' },
-                ].map((item) => (
-                  <Card
-                    key={item.label}
-                    sx={{
-                      py: 1.5,
-                      textAlign: 'center',
-                      bgcolor: (t) => alpha(t.palette.grey[500], 0.04),
-                      border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
-                      boxShadow: 'none',
-                    }}
-                  >
-                    <Typography
-                      variant="h4"
-                      sx={{ fontFamily: 'monospace', fontWeight: 500, letterSpacing: -0.5, color: item.color, lineHeight: 1, mb: 0.5 }}
-                    >
-                      {item.value}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: 'text.disabled', textTransform: 'uppercase', letterSpacing: 1, fontSize: '0.6rem' }}
-                    >
-                      {item.label}
-                    </Typography>
-                  </Card>
-                ))}
-              </Box>
-
-              {/* Match list grouped by status */}
-              <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <MatchList
-                  matches={currentMatches}
-                  teams={teams}
-                  grouped
-                  onMatchClick={handleMatchClick}
-                  onScoreClick={handleScoreClick}
-                />
-              </Box>
-            </Grid>
-            <Grid xs={12} md={4}>
-              <StandingsSidebar
-                tournamentId={id}
-                teams={teams}
-                nextPendingMatch={nextPendingMatch}
-                onNextAction={
-                  nextPendingMatch
-                    ? () => handleScoreClick(nextPendingMatch)
-                    : undefined
-                }
-              />
-            </Grid>
-          </Grid>
-        )}
-
-        {/* TEAMS TAB */}
-        {currentTab === 'teams' && (
+        {/* ── INSCRIPCIÓN: Teams ── */}
+        {currentPhase === 'inscripcion' && (
           <Box sx={{ p: { xs: 2, md: 3 } }}>
             <TeamList tournamentId={id} tournament={tournament} teams={teams} groups={groups} />
           </Box>
         )}
 
-        {/* SCORERS TAB */}
-        {currentTab === 'scorers' && (
-          <Box sx={{ p: { xs: 2, md: 3 } }}>
-            <TopScorersTable tournamentId={id} />
-          </Box>
+        {/* ── FASE GRUPOS: [selector + matches | standings] 50/50 ── */}
+        {currentPhase === 'fase_grupos' && (
+          <Grid container>
+            {/* Left: jornada selector + match list */}
+            <Grid
+              xs={12}
+              md={6}
+              sx={{ borderRight: (t) => ({ md: `1px solid ${alpha(t.palette.grey[500], 0.12)}` }) }}
+            >
+              {(isLeague || isHybrid) && totalMw > 0 && (
+                <MatchweekTimeline
+                  totalMatchweeks={totalMw}
+                  currentMatchweek={currentMw}
+                  allMatches={allMatches}
+                  selectedMatchweek={activeMw}
+                  onSelect={(mw) => setSelectedMatchweek(mw)}
+                  onViewAll={() => setSelectedMatchweek(null)}
+                />
+              )}
+
+              <Box sx={{ p: { xs: 2, md: 3 } }}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                  <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
+                    {activeMw === null ? 'Todos los partidos' : `Jornada ${activeMw}`}
+                  </Typography>
+                  <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.08) }} />
+                </Stack>
+
+                {allMatches.length === 0 ? (
+                  <EmptyContent
+                    filled
+                    title="No hay partidos"
+                    description="Aún no se ha generado el calendario de la fase de grupos"
+                    action={
+                      <Button
+                        variant="contained"
+                        startIcon={<Iconify icon="mdi:auto-fix" />}
+                        onClick={() => setScheduleDialog(true)}
+                        disabled={teams.length < 2 || isSubmitting}
+                      >
+                        Generar Calendario
+                      </Button>
+                    }
+                    sx={{ py: 6 }}
+                  />
+                ) : (
+                  <MatchList
+                    matches={currentMatches}
+                    teams={teams}
+                    players={players}
+                    tournamentId={id}
+                    grouped
+                    onMatchClick={handleMatchClick}
+                    onScoreClick={handleScoreClick}
+                  />
+                )}
+              </Box>
+            </Grid>
+
+              {/* Right: standings */}
+              <Grid xs={12} md={6}>
+                <StandingsSidebar
+                  tournamentId={id}
+                  teams={teams}
+                  nextPendingMatch={nextPendingMatch}
+                  onNextAction={
+                    nextPendingMatch
+                      ? () => handleScoreClick(nextPendingMatch)
+                      : undefined
+                  }
+                />
+              </Grid>
+            </Grid>
         )}
 
-        {/* BRACKET TAB */}
-        {currentTab === 'bracket' && (
+        {/* ── KNOCKOUT PHASES: Bracket view ── */}
+        {isKnockoutPhase && (
           <Box sx={{ p: { xs: 2, md: 3 } }}>
-            <BracketView tournamentId={id} teams={teams} tournament={tournament} />
+            <BracketView tournamentId={id} teams={teams} tournament={tournament} allMatches={allMatches} />
           </Box>
         )}
       </Box>
@@ -453,7 +387,7 @@ export function TournamentDetailView() {
         </DialogActions>
       </Dialog>
 
-      {/* Delete confirmation */}
+      {/* Delete confirmation (existing) */}
       <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Eliminar Torneo</DialogTitle>
         <DialogContent>
@@ -467,9 +401,65 @@ export function TournamentDetailView() {
           <LoadingButton
             variant="contained"
             color="error"
+            loading={isSubmitting}
             onClick={handleDelete}
           >
             Eliminar
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* Schedule Generation Dialog */}
+      <Dialog open={scheduleDialog} onClose={() => setScheduleDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Generar Calendario</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Fecha de inicio"
+              value={scheduleForm.start_date}
+              onChange={(e) => setScheduleForm((f) => ({ ...f, start_date: e.target.value }))}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              fullWidth
+              type="number"
+              label="Días entre jornadas"
+              value={scheduleForm.match_interval_days}
+              onChange={(e) =>
+                setScheduleForm((f) => ({ ...f, match_interval_days: Number(e.target.value) }))
+              }
+            />
+            <TextField
+              fullWidth
+              label="Sede por defecto (opcional)"
+              value={scheduleForm.default_venue}
+              onChange={(e) => setScheduleForm((f) => ({ ...f, default_venue: e.target.value }))}
+            />
+            {isHybrid && groups.length > 0 && (
+              <TextField
+                fullWidth
+                select
+                label="Grupo (opcional)"
+                value={scheduleForm.group_id}
+                onChange={(e) => setScheduleForm((f) => ({ ...f, group_id: e.target.value }))}
+                helperText="Dejar vacío para generar para todos los equipos"
+              >
+                <MenuItem value="">Todos los equipos</MenuItem>
+                {groups.map((g) => (
+                  <MenuItem key={g.id} value={g.id}>
+                    {g.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setScheduleDialog(false)}>Cancelar</Button>
+          <LoadingButton variant="contained" loading={isSubmitting} onClick={handleGenerateSchedule}>
+            Generar
           </LoadingButton>
         </DialogActions>
       </Dialog>

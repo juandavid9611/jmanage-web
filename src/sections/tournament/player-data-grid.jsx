@@ -40,7 +40,7 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
     const tempId = `new_${Date.now()}`;
     setRows((prev) => [
       ...prev,
-      { id: tempId, name: '', number: '', position: '', isNew: true },
+      { id: tempId, name: '', number: '', position: 'Forward', isNew: true },
     ]);
   }, []);
 
@@ -58,7 +58,7 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
           const payload = {
             name: newRow.name,
             number: newRow.number ? Number(newRow.number) : 0,
-            position: newRow.position || '',
+            position: newRow.position || 'Forward',
           };
           const created = await createPlayer(tournamentId, teamId, payload);
           // Remove from local rows — it'll appear from the API players on next render
@@ -71,7 +71,7 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
         const payload = {
           name: newRow.name,
           number: newRow.number ? Number(newRow.number) : 0,
-          position: newRow.position || '',
+          position: newRow.position || 'Forward',
         };
         await updatePlayer(tournamentId, newRow.id, payload);
         toast.success(`${newRow.name} actualizado`);

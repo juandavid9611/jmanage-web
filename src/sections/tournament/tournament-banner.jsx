@@ -1,5 +1,7 @@
+import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
@@ -41,63 +43,78 @@ const SPORT_ICONS = {
 
 // ----------------------------------------------------------------------
 
-function getPhases(tournament, teams) {
+/**
+ * Build the list of phases for this tournament.
+ * Each phase has: key, label, sub, state (done | active | locked).
+ * The `key` is used for navigation — it maps to what content to show.
+ */
+export function getPhases(tournament, teams) {
   const { status, type } = tournament;
   const teamCount = teams?.length || 0;
   const totalTeams = tournament.num_teams || teamCount;
+  const totalMw = tournament.rules?.total_matchweeks || 0;
+  const currentMw = tournament.current_matchweek || 0;
 
   const phases = [];
 
-  // Configuración
+  // Configuración — maps to overview/stats
   phases.push({
+    key: 'configuracion',
     label: 'Configuración',
     sub: status === 'draft' ? 'En progreso' : 'Completo',
     state: status === 'draft' ? 'active' : 'done',
   });
 
-  // Inscripción
+  // Inscripción — maps to teams + scorers
   if (status === 'draft') {
     phases.push({
+      key: 'inscripcion',
       label: 'Inscripción',
       sub: `${teamCount}/${totalTeams}`,
       state: teamCount > 0 ? 'active' : 'locked',
     });
   } else {
     phases.push({
+      key: 'inscripcion',
       label: 'Inscripción',
       sub: `${teamCount}/${totalTeams}`,
       state: 'done',
     });
   }
 
-  // Fase de grupos (for league and hybrid)
+  // Fase de grupos (for league and hybrid) — maps to matchweek/jornada content
   if (type === 'league' || type === 'hybrid') {
-    const totalMw = tournament.rules?.total_matchweeks || 0;
-    const currentMw = tournament.current_matchweek || 0;
-
     if (status === 'active' && currentMw > 0) {
       phases.push({
+        key: 'fase_grupos',
         label: 'Fase grupos',
         sub: `J${currentMw} de ${totalMw}`,
         state: currentMw >= totalMw ? 'done' : 'active',
       });
     } else if (status === 'finished') {
-      phases.push({ label: 'Fase grupos', sub: 'Completo', state: 'done' });
+      phases.push({ key: 'fase_grupos', label: 'Fase grupos', sub: 'Completo', state: 'done' });
     } else {
-      phases.push({ label: 'Fase grupos', sub: 'Bloqueado', state: 'locked' });
+      phases.push({ key: 'fase_grupos', label: 'Fase grupos', sub: 'Bloqueado', state: 'locked' });
     }
   }
 
-  // Knockout phases (for knockout and hybrid)
+  // Knockout phases (for knockout and hybrid) — maps to bracket view
   if (type === 'knockout' || type === 'hybrid') {
-    const knockoutPhases = ['Cuartos', 'Semis', 'Final'];
-    knockoutPhases.forEach((label) => {
-      if (status === 'finished') {
-        phases.push({ label, sub: 'Completo', state: 'done' });
-      } else {
-        phases.push({ label, sub: 'Bloqueado', state: 'locked' });
-      }
-    });
+    if (status === 'finished') {
+      phases.push({ key: 'eliminatorias', label: 'Fase Final', sub: 'Completo', state: 'done' });
+    } else if (status === 'active') {
+      // For knockout-only: always accessible once active.
+      // For hybrid: only after all group-stage jornadas are done.
+      const groupsDone = type === 'knockout' || (totalMw > 0 && currentMw >= totalMw);
+      phases.push({
+        key: 'eliminatorias',
+        label: 'Fase Final',
+        sub: groupsDone ? 'Lista para iniciar' : 'Bloqueado',
+        state: groupsDone ? 'active' : 'locked',
+      });
+    } else {
+      phases.push({ key: 'eliminatorias', label: 'Fase Final', sub: 'Bloqueado', state: 'locked' });
+    }
   }
 
   return phases;
@@ -108,14 +125,14 @@ function getPhases(tournament, teams) {
 export function TournamentBanner({
   tournament,
   teams,
+  activePhase,
   isSubmitting,
+  onPhaseClick,
   onActivate,
   onFinish,
   onDelete,
   onAdvanceMatchweek,
-  onNavigateMatches,
   onNavigateEdit,
-  onTabChange,
 }) {
   const theme = useTheme();
 
@@ -126,7 +143,6 @@ export function TournamentBanner({
   const canActivate = teamCount >= 2;
   const isLeague = tournament.type === 'league';
   const isHybrid = tournament.type === 'hybrid';
-  const isKnockout = tournament.type === 'knockout';
 
   const phases = getPhases(tournament, teams);
 
@@ -202,32 +218,26 @@ export function TournamentBanner({
             {tournament.status === 'active' && (isLeague || isHybrid) && totalMw > 0 && (
               <Stack direction="row" spacing={2.5}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography
-                    variant="h5"
-                    sx={{ fontFamily: 'monospace', fontWeight: 500, letterSpacing: -0.5 }}
-                  >
+                  <Typography variant="h5" sx={{ fontWeight: 600 }}>
                     J{currentMw}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.disabled', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     Activa
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontFamily: 'monospace', fontWeight: 500, letterSpacing: -0.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 600 }}>
                     {currentMw}/{totalMw}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.disabled', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     Jornadas
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography
-                    variant="h5"
-                    sx={{ fontFamily: 'monospace', fontWeight: 500, letterSpacing: -0.5, color: 'success.main' }}
-                  >
+                  <Typography variant="h5" sx={{ fontWeight: 600, color: 'success.main' }}>
                     {completion}%
                   </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.disabled', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     Completado
                   </Typography>
                 </Box>
@@ -240,7 +250,7 @@ export function TournamentBanner({
                 <Button
                   variant="contained"
                   size="small"
-                  onClick={() => onTabChange?.('jornada')}
+                  onClick={() => onPhaseClick?.('fase_grupos')}
                   endIcon={<Iconify icon="eva:arrow-forward-fill" width={16} />}
                 >
                   Ir a Jornada {currentMw}
@@ -278,6 +288,18 @@ export function TournamentBanner({
                 >
                   Avanzar Jornada
                 </LoadingButton>
+              )}
+
+              {isHybrid && tournament.status === 'active' && totalMw > 0 && currentMw >= totalMw && (
+                <Button
+                  variant="contained"
+                  color="success"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:tournament" width={16} />}
+                  onClick={() => onPhaseClick?.('eliminatorias')}
+                >
+                  Iniciar Fase Final
+                </Button>
               )}
 
               {tournament.status === 'active' && (
@@ -318,68 +340,62 @@ export function TournamentBanner({
         </Stack>
       </Box>
 
-      {/* ── Phase Progress Bar ── */}
-      <Box
+      {/* ── Phase Stepper Navigation ── */}
+      <Tabs
+        value={activePhase}
+        onChange={(_, v) => onPhaseClick?.(v)}
+        variant="scrollable"
+        scrollButtons="auto"
         sx={{
-          display: 'flex',
-          px: { xs: 0.5, md: 0 },
-          overflowX: 'auto',
-          '&::-webkit-scrollbar': { height: 0 },
+          px: { xs: 1, md: 2 },
+          '& .MuiTabs-indicator': {
+            height: 3,
+            borderRadius: '3px 3px 0 0',
+          },
         }}
       >
         {phases.map((phase) => (
-          <Box
-            key={phase.label}
+          <Tab
+            key={phase.key}
+            value={phase.key}
+            label={
+              <Stack alignItems="center" spacing={0.25}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: activePhase === phase.key ? 700 : 500,
+                    color:
+                      activePhase === phase.key
+                        ? 'primary.main'
+                        : phase.state === 'done'
+                          ? 'success.main'
+                          : phase.state === 'active'
+                            ? 'text.primary'
+                            : 'text.disabled',
+                  }}
+                >
+                  {phase.label}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: activePhase === phase.key ? 'primary.main' : 'text.disabled',
+                    fontSize: '0.65rem',
+                  }}
+                >
+                  {phase.sub}
+                </Typography>
+              </Stack>
+            }
             sx={{
-              px: { xs: 1.5, md: 2 },
-              py: 1.25,
-              borderBottom: '2px solid',
-              borderColor:
-                phase.state === 'done'
-                  ? alpha(theme.palette.success.main, 0.5)
-                  : phase.state === 'active'
-                    ? theme.palette.text.primary
-                    : 'transparent',
-              cursor: 'default',
-              flexShrink: 0,
-              transition: 'all 0.2s',
-              '&:hover': {
-                borderColor:
-                  phase.state === 'locked'
-                    ? alpha(theme.palette.grey[500], 0.2)
-                    : undefined,
-              },
+              minHeight: 56,
+              textTransform: 'none',
+              minWidth: 'auto',
+              px: 2,
             }}
-          >
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 500,
-                color:
-                  phase.state === 'done'
-                    ? 'success.main'
-                    : phase.state === 'active'
-                      ? 'text.primary'
-                      : 'text.disabled',
-              }}
-            >
-              {phase.label}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                display: 'block',
-                fontFamily: 'monospace',
-                fontSize: '0.65rem',
-                color: 'text.disabled',
-                mt: 0.25,
-              }}
-            >
-              {phase.sub}
-            </Typography>
-          </Box>
+          />
         ))}
-      </Box>
+      </Tabs>
     </Box>
   );
 }

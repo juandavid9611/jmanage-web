@@ -121,7 +121,7 @@ export function TournamentListView() {
       <Box
         gap={3}
         display="grid"
-        gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
+        gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}
       >
         {tournaments.map((tournament) => (
           <TournamentCard key={tournament.id} tournament={tournament} onDelete={handleDelete} />

@@ -1,4 +1,3 @@
-export { MatchCenterView } from './match-center-view';
 export { MatchDetailView } from './match-detail-view';
 export { TournamentListView } from './tournament-list-view';
 export { TournamentEditView } from './tournament-edit-view';
