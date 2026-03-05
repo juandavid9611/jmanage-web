@@ -61,7 +61,10 @@ const TeamSchema = zod.object({
   name: zod.string().min(1, 'El nombre es obligatorio'),
   short_name: zod.string().max(3, 'Máximo 3 caracteres').optional().or(zod.literal('')),
   group_id: zod.string().optional(),
-  seed: zod.coerce.number().int().min(1).optional(),
+  seed: zod.preprocess(
+    (val) => (val === '' || val === null ? undefined : val),
+    zod.coerce.number().int().min(1).optional()
+  ),
   // UI-only
   manager_name: zod.string().optional(),
   contact_email: zod.string().email().optional().or(zod.literal('')),
@@ -85,7 +88,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
       name: currentTeam?.name || '',
       short_name: currentTeam?.short_name || '',
       group_id: currentTeam?.group_id || '',
-      seed: currentTeam?.seed || 1,
+      seed: currentTeam?.seed ?? '',
       manager_name: '',
       contact_email: '',
       primary_color: COLOR_OPTIONS[0],
@@ -130,7 +133,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
             name: values.name,
             short_name: values.short_name || undefined,
             group_id: values.group_id || undefined,
-            seed: values.seed,
+            seed: values.seed !== '' && values.seed != null ? Number(values.seed) : undefined,
           };
           const result = await createTeam(tournamentId, payload);
           setTeamId(result.id);
@@ -145,7 +148,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
           const payload = {
             name: values.name,
             short_name: values.short_name || undefined,
-            seed: values.seed,
+            seed: values.seed !== '' && values.seed != null ? Number(values.seed) : undefined,
           };
           await updateTeam(tournamentId, teamId, payload);
         } catch (error) {
