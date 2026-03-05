@@ -141,16 +141,14 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
           direction="row"
           alignItems="center"
           justifyContent="space-between"
-          spacing={2}
+          spacing={1}
+          sx={{ mb: 1 }}
         >
-          <Stack direction="row" alignItems="center" spacing={2.5}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Iconify icon="mdi:account-group" width={20} sx={{ color: 'primary.main' }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                Inscripción
-              </Typography>
-            </Stack>
-
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Iconify icon="mdi:account-group" width={20} sx={{ color: 'primary.main' }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              Inscripción
+            </Typography>
             <Stack direction="row" alignItems="baseline" spacing={0.5}>
               <Typography variant="h5" sx={{ fontWeight: 800, color: 'primary.main' }}>
                 {teams.length}
@@ -159,25 +157,6 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                 /{totalTeams} equipos
               </Typography>
             </Stack>
-
-            <LinearProgress
-              variant="determinate"
-              value={inscriptionProgress}
-              sx={{
-                width: 120,
-                height: 4,
-                borderRadius: 1,
-                bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
-                '& .MuiLinearProgress-bar': {
-                  borderRadius: 1,
-                  bgcolor: inscriptionProgress >= 100 ? 'success.main' : 'primary.main',
-                },
-              }}
-            />
-
-            <Typography variant="caption" sx={{ color: inscriptionProgress >= 100 ? 'success.main' : 'text.secondary', fontWeight: 600 }}>
-              {inscriptionProgress}%
-            </Typography>
           </Stack>
 
           {!isLocked && (
@@ -191,6 +170,20 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
             </Button>
           )}
         </Stack>
+
+        <LinearProgress
+          variant="determinate"
+          value={inscriptionProgress}
+          sx={{
+            height: 4,
+            borderRadius: 1,
+            bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 1,
+              bgcolor: inscriptionProgress >= 100 ? 'success.main' : 'primary.main',
+            },
+          }}
+        />
       </Card>
 
       {/* ── Locked banner ── */}
