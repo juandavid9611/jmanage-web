@@ -17,7 +17,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Replace these with the actual S3 URLs once the videos are uploaded
 const PWA_VIDEO_URL = 'https://jmanage-bucket.s3.us-west-2.amazonaws.com/pwa-guide.mp4';
-const NOTIFICATIONS_VIDEO_URL = '';
+const NOTIFICATIONS_VIDEO_URL = 'https://jmanage-bucket.s3.us-west-2.amazonaws.com/notifications_guide.mp4';
 
 // ----------------------------------------------------------------------
 
