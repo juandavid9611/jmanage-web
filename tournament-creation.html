@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuevo Torneo · SportsManage</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0E0E0F;
+  --surface: #161618;
+  --surface-2: #1E1E21;
+  --surface-3: #27272B;
+  --border: rgba(255,255,255,0.07);
+  --border-active: rgba(255,255,255,0.18);
+  --ink: #F2F1EE;
+  --ink-2: #8C8B88;
+  --ink-3: #4A4A4E;
+  --accent: #C8F135;
+  --accent-dim: rgba(200,241,53,0.12);
+  --accent-dim2: rgba(200,241,53,0.06);
+  --red: #FF4B4B;
+  --red-dim: rgba(255,75,75,0.1);
+  --blue: #4B8FFF;
+  --blue-dim: rgba(75,143,255,0.1);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 7px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 2px; }
+
+/* LAYOUT */
+.shell {
+  display: grid;
+  grid-template-columns: 260px 1fr 280px;
+  min-height: 100vh;
+}
+
+/* LEFT NAV */
+.left-nav {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+  padding: 0 4px;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-mark svg { color: #0E0E0F; }
+.logo-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+
+/* PROGRESS STEPS */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background var(--transition);
+  position: relative;
+}
+.step:hover { background: var(--surface-2); }
+.step.active { background: var(--accent-dim2); }
+.step.locked { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+.step-indicator {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink-3);
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+.step.done .step-indicator {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.step.active .step-indicator {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim2);
+}
+
+.step-content {}
+.step-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  transition: color var(--transition);
+}
+.step.done .step-title { color: var(--ink); }
+.step.active .step-title { color: var(--ink); }
+.step-value {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 1px;
+  font-family: 'DM Mono', monospace;
+}
+.step.done .step-value { color: var(--accent); }
+
+.step-connector {
+  width: 1px;
+  height: 18px;
+  background: var(--surface-3);
+  margin-left: 21px;
+}
+.step-connector.done { background: var(--accent); opacity: 0.3; }
+
+.nav-bottom {
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-xs);
+}
+.nav-avatar {
+  width: 30px; height: 30px;
+  background: var(--surface-3);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.nav-user-name { font-size: 12px; font-weight: 500; }
+.nav-user-role { font-size: 11px; color: var(--ink-3); }
+
+/* MAIN */
+.main {
+  padding: 48px 56px;
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+.page-header {
+  margin-bottom: 48px;
+}
+.page-eyebrow {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+.page-desc {
+  font-size: 14px;
+  color: var(--ink-2);
+  font-weight: 300;
+  max-width: 480px;
+  line-height: 1.6;
+}
+
+/* SECTIONS */
+.form-section {
+  margin-bottom: 40px;
+  transition: opacity var(--transition);
+}
+.form-section.locked {
+  opacity: 0.3;
+  pointer-events: none;
+  filter: blur(1px);
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.section-number {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink-3);
+}
+.form-section.unlocked .section-number {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.section-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.section-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* FIELD */
+.field { margin-bottom: 16px; }
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.field-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  appearance: none;
+}
+.field-input:focus {
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
+}
+.field-input::placeholder { color: var(--ink-3); }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* OPTION CARDS */
+.option-grid {
+  display: grid;
+  gap: 10px;
+}
+.option-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.option-grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+.option-card {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.option-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-dim2);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.option-card:hover { border-color: var(--border-active); }
+.option-card:hover::before { opacity: 1; }
+.option-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.option-card.selected::before { opacity: 0; }
+
+.option-icon {
+  font-size: 20px;
+  margin-bottom: 10px;
+  display: block;
+}
+.option-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+.option-desc {
+  font-size: 11px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.option-badge {
+  position: absolute;
+  top: 10px; right: 10px;
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+/* SCORING RULES */
+.scoring-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.scoring-field {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  text-align: center;
+  transition: border-color var(--transition);
+}
+.scoring-field:focus-within { border-color: var(--border-active); }
+.scoring-field label {
+  display: block;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.scoring-field input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--ink);
+  color: var(--accent);
+}
+
+/* TIEBREAKER CHIPS */
+.tiebreaker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tiebreaker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 10px 14px;
+  cursor: grab;
+  transition: all var(--transition);
+  user-select: none;
+}
+.tiebreaker-item:hover { border-color: var(--border-active); }
+.tiebreaker-order {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 16px;
+}
+.tiebreaker-name {
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+}
+.tiebreaker-drag {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+/* SMART PREVIEW */
+.smart-preview {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+.smart-preview-label {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+.smart-preview-content {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.smart-preview-content strong { color: var(--ink); font-weight: 500; }
+
+/* TOGGLE */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-info {}
+.toggle-title { font-size: 13px; font-weight: 500; }
+.toggle-desc { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+.toggle {
+  width: 36px; height: 20px;
+  background: var(--surface-3);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition);
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  background: white;
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: transform var(--transition);
+}
+.toggle.on::after { transform: translateX(16px); background: #0E0E0F; }
+
+/* RIGHT PANEL */
+.right-panel {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  padding: 28px 22px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 14px;
+}
+
+/* STRUCTURE PREVIEW */
+.structure-visual {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+}
+.structure-phase {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.structure-phase:last-child { border-bottom: none; }
+.structure-phase-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  flex-shrink: 0;
+}
+.structure-phase-dot.active { background: var(--accent); }
+.structure-phase-dot.pending { background: var(--blue); }
+.structure-phase-name { font-size: 12px; font-weight: 500; }
+.structure-phase-detail { font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+.structure-phase-right { margin-left: auto; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--ink-3); }
+
+/* REQUIREMENTS */
+.requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.req-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-3);
+  padding: 6px 0;
+}
+.req-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  flex-shrink: 0;
+}
+.req-item.done .req-dot { background: var(--accent); }
+.req-item.done { color: var(--ink-2); }
+
+/* CTA */
+.cta-section {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.cta-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #0E0E0F;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.cta-btn:hover {
+  background: #d4f540;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(200,241,53,0.2);
+}
+.cta-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.cta-note {
+  font-size: 11px;
+  color: var(--ink-3);
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* COMPLETENESS BAR */
+.completeness {
+  margin-bottom: 4px;
+}
+.completeness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.completeness-label { font-size: 11px; color: var(--ink-3); }
+.completeness-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+}
+.completeness-track {
+  height: 3px;
+  background: var(--surface-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.completeness-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* DIVIDER */
+.panel-divider { height: 1px; background: var(--border); }
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 600px; }
+}
+.anim { animation: fadeUp 0.5s cubic-bezier(0.4,0,0.2,1) both; }
+.anim-1 { animation-delay: 0.05s; }
+.anim-2 { animation-delay: 0.1s; }
+.anim-3 { animation-delay: 0.15s; }
+.anim-4 { animation-delay: 0.2s; }
+.anim-5 { animation-delay: 0.25s; }
+.anim-6 { animation-delay: 0.3s; }
+
+.unlock-anim {
+  animation: fadeUp 0.4s cubic-bezier(0.4,0,0.2,1) both;
+}
+
+/* SELECT */
+select.field-input {
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%234A4A4E' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+  .left-nav {
+    position: relative;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 16px;
+    gap: 10px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { margin-bottom: 0; }
+  .steps {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .step-connector { display: none; }
+  .step { padding: 6px 10px; }
+  .step-content .step-value { display: none; }
+  .right-panel {
+    position: relative;
+    height: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+  .main { padding: 28px 20px; max-height: none; }
+  .option-grid-3 { grid-template-columns: 1fr; }
+  .field-row { grid-template-columns: 1fr; }
+  .scoring-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .nav-bottom { display: none; }
+  .cta-section { margin-top: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- LEFT NAV -->
+  <nav class="left-nav">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
+      </div>
+      <span class="logo-name">SportsManage</span>
+    </div>
+
+    <div class="nav-label">Nuevo torneo</div>
+
+    <div class="steps" id="stepNav">
+
+      <div class="step active" onclick="goToStep(1)">
+        <div class="step-indicator">01</div>
+        <div class="step-content">
+          <div class="step-title">Identidad</div>
+          <div class="step-value" id="nav-name">—</div>
+        </div>
+      </div>
+      <div class="step-connector" id="conn-1"></div>
+
+      <div class="step locked" id="nav-step-2" onclick="goToStep(2)">
+        <div class="step-indicator">02</div>
+        <div class="step-content">
+          <div class="step-title">Formato</div>
+          <div class="step-value" id="nav-format">—</div>
+        </div>
+      </div>
+      <div class="step-connector" id="conn-2"></div>
+
+      <div class="step locked" id="nav-step-3" onclick="goToStep(3)">
+        <div class="step-indicator">03</div>
+        <div class="step-content">
+          <div class="step-title">Puntuación</div>
+          <div class="step-value" id="nav-scoring">—</div>
+        </div>
+      </div>
+      <div class="step-connector" id="conn-3"></div>
+
+      <div class="step locked" id="nav-step-4" onclick="goToStep(4)">
+        <div class="step-indicator">04</div>
+        <div class="step-content">
+          <div class="step-title">Desempates</div>
+          <div class="step-value" id="nav-tiebreak">—</div>
+        </div>
+      </div>
+      <div class="step-connector" id="conn-4"></div>
+
+      <div class="step locked" id="nav-step-5" onclick="goToStep(5)">
+        <div class="step-indicator">05</div>
+        <div class="step-content">
+          <div class="step-title">Opciones</div>
+          <div class="step-value" id="nav-options">—</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="nav-bottom">
+      <div class="nav-user">
+        <div class="nav-avatar">JR</div>
+        <div>
+          <div class="nav-user-name">Jorge R.</div>
+          <div class="nav-user-role">Organizador</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN FORM -->
+  <main class="main">
+
+    <div class="page-header anim anim-1">
+      <div class="page-eyebrow">Nuevo torneo</div>
+      <h1 class="page-title">Crea tu torneo.</h1>
+      <p class="page-desc">Cada sección se habilita conforme avanzas. El sistema ajusta las opciones según tus decisiones anteriores.</p>
+    </div>
+
+    <!-- SECTION 1: IDENTIDAD -->
+    <div class="form-section unlocked anim anim-2" id="section-1">
+      <div class="section-label">
+        <div class="section-number">01</div>
+        <span class="section-name">Identidad</span>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Nombre del torneo</label>
+        <input type="text" class="field-input" placeholder="Ej. Copa Verano 2025" id="input-name" oninput="onNameInput(this.value)">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Deporte</label>
+          <select class="field-input" id="input-sport" onchange="onSportChange(this.value)">
+            <option value="">Seleccionar deporte</option>
+            <option value="futbol">Fútbol</option>
+            <option value="baloncesto">Baloncesto</option>
+            <option value="voleibol">Voleibol</option>
+            <option value="tenis">Tenis</option>
+            <option value="padel">Pádel</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Sede / Ciudad</label>
+          <input type="text" class="field-input" placeholder="Ej. Bogotá" id="input-city">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: FORMATO -->
+    <div class="form-section locked anim anim-3" id="section-2">
+      <div class="section-label">
+        <div class="section-number">02</div>
+        <span class="section-name">Formato del torneo</span>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="option-grid option-grid-3" style="margin-bottom: 20px;">
+        <div class="option-card" onclick="selectFormat('grupos-knockout')" id="fmt-grupos-knockout">
+          <span class="option-icon">⊞ →</span>
+          <div class="option-title">Grupos + Knockout</div>
+          <div class="option-desc">Fase de grupos seguida de eliminación directa. El más completo.</div>
+          <span class="option-badge">Popular</span>
+        </div>
+        <div class="option-card" onclick="selectFormat('liga')" id="fmt-liga">
+          <span class="option-icon">⊞</span>
+          <div class="option-title">Liga / Round Robin</div>
+          <div class="option-desc">Todos contra todos. Gana quien más puntos acumule al final.</div>
+        </div>
+        <div class="option-card" onclick="selectFormat('knockout')" id="fmt-knockout">
+          <span class="option-icon">→</span>
+          <div class="option-title">Solo Knockout</div>
+          <div class="option-desc">Eliminación directa desde el inicio. Rápido e intenso.</div>
+        </div>
+      </div>
+
+      <!-- Subparámetros que aparecen al elegir formato -->
+      <div id="format-params" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Número de equipos</label>
+            <select class="field-input" id="input-teams" onchange="onTeamsChange(this.value)">
+              <option value="">Seleccionar</option>
+              <option value="8">8 equipos</option>
+              <option value="12">12 equipos</option>
+              <option value="16">16 equipos</option>
+              <option value="20">20 equipos</option>
+              <option value="24">24 equipos</option>
+              <option value="32">32 equipos</option>
+            </select>
+          </div>
+          <div class="field" id="group-size-field">
+            <label class="field-label">Equipos por grupo</label>
+            <select class="field-input" id="input-group-size" onchange="onGroupSizeChange(this.value)">
+              <option value="">Seleccionar</option>
+              <option value="3">3 equipos</option>
+              <option value="4">4 equipos</option>
+              <option value="5">5 equipos</option>
+              <option value="6">6 equipos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="smart-preview" id="structure-preview" style="display:none;">
+          <div class="smart-preview-label">✦ Vista previa de estructura</div>
+          <div class="smart-preview-content" id="preview-text">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: PUNTUACIÓN -->
+    <div class="form-section locked anim anim-4" id="section-3">
+      <div class="section-label">
+        <div class="section-number">03</div>
+        <span class="section-name">Sistema de puntuación</span>
+        <div class="section-divider"></div>
+      </div>
+
+      <!-- Preset options -->
+      <div class="option-grid option-grid-2" style="margin-bottom: 20px;">
+        <div class="option-card selected" onclick="selectScoringPreset('standard')" id="score-standard">
+          <div class="option-title">Estándar FIFA</div>
+          <div class="option-desc">Victoria 3 pts · Empate 1 pt · Derrota 0 pts</div>
+        </div>
+        <div class="option-card" onclick="selectScoringPreset('custom')" id="score-custom">
+          <div class="option-title">Personalizado</div>
+          <div class="option-desc">Define tus propios valores de puntuación.</div>
+        </div>
+      </div>
+
+      <div class="scoring-grid" id="scoring-inputs">
+        <div class="scoring-field">
+          <label>Victoria</label>
+          <input type="number" value="3" min="0" max="9" id="pts-win" oninput="updateScoringPreview()">
+        </div>
+        <div class="scoring-field">
+          <label>Empate</label>
+          <input type="number" value="1" min="0" max="9" id="pts-draw" oninput="updateScoringPreview()">
+        </div>
+        <div class="scoring-field">
+          <label>Derrota</label>
+          <input type="number" value="0" min="0" max="9" id="pts-loss" oninput="updateScoringPreview()">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: DESEMPATES -->
+    <div class="form-section locked anim anim-5" id="section-4">
+      <div class="section-label">
+        <div class="section-number">04</div>
+        <span class="section-name">Criterios de desempate</span>
+        <div class="section-divider"></div>
+      </div>
+
+      <p style="font-size: 13px; color: var(--ink-2); margin-bottom: 16px; line-height: 1.6;">Define el orden en que se resolverán los empates en la tabla. El sistema los aplicará automáticamente.</p>
+
+      <div class="tiebreaker-list" id="tiebreaker-list">
+        <div class="tiebreaker-item" draggable="true">
+          <span class="tiebreaker-order">1°</span>
+          <span class="tiebreaker-name">Puntos acumulados</span>
+          <span class="tiebreaker-drag">⠿</span>
+        </div>
+        <div class="tiebreaker-item" draggable="true">
+          <span class="tiebreaker-order">2°</span>
+          <span class="tiebreaker-name">Diferencia de goles</span>
+          <span class="tiebreaker-drag">⠿</span>
+        </div>
+        <div class="tiebreaker-item" draggable="true">
+          <span class="tiebreaker-order">3°</span>
+          <span class="tiebreaker-name">Goles a favor</span>
+          <span class="tiebreaker-drag">⠿</span>
+        </div>
+        <div class="tiebreaker-item" draggable="true">
+          <span class="tiebreaker-order">4°</span>
+          <span class="tiebreaker-name">Enfrentamiento directo</span>
+          <span class="tiebreaker-drag">⠿</span>
+        </div>
+        <div class="tiebreaker-item" draggable="true">
+          <span class="tiebreaker-order">5°</span>
+          <span class="tiebreaker-name">Menor número de tarjetas</span>
+          <span class="tiebreaker-drag">⠿</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: OPCIONES -->
+    <div class="form-section locked anim anim-6" id="section-5">
+      <div class="section-label">
+        <div class="section-number">05</div>
+        <span class="section-name">Opciones avanzadas</span>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Inscripción pública</div>
+          <div class="toggle-desc">Los managers pueden registrar sus equipos con un link</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Estadísticas individuales</div>
+          <div class="toggle-desc">Goles, asistencias y tarjetas por jugador</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Resultados públicos</div>
+          <div class="toggle-desc">Tabla y resultados visibles sin login para todos</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Notificaciones por email</div>
+          <div class="toggle-desc">Avisar a los managers de partidos y resultados</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-title">Tiempo extra en knockout</div>
+          <div class="toggle-desc">Habilitar prórroga y penales en eliminatorias</div>
+        </div>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+
+    <!-- COMPLETENESS -->
+    <div class="completeness">
+      <div class="completeness-header">
+        <span class="completeness-label">Configuración completa</span>
+        <span class="completeness-pct" id="pct-display">0%</span>
+      </div>
+      <div class="completeness-track">
+        <div class="completeness-fill" id="pct-bar" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <div class="panel-divider"></div>
+
+    <!-- STRUCTURE VISUAL -->
+    <div>
+      <div class="panel-title">Estructura del torneo</div>
+      <div class="structure-visual" id="structure-visual">
+        <div class="structure-phase">
+          <div>
+            <div class="structure-phase-dot" id="phase-dot-inscripcion"></div>
+          </div>
+          <div>
+            <div class="structure-phase-name">Inscripción</div>
+            <div class="structure-phase-detail" id="phase-detail-inscripcion">Esperando configuración</div>
+          </div>
+          <div class="structure-phase-right" id="phase-right-inscripcion">—</div>
+        </div>
+        <div class="structure-phase" id="phase-grupos-row">
+          <div>
+            <div class="structure-phase-dot" id="phase-dot-grupos"></div>
+          </div>
+          <div>
+            <div class="structure-phase-name">Fase de grupos</div>
+            <div class="structure-phase-detail" id="phase-detail-grupos">—</div>
+          </div>
+          <div class="structure-phase-right" id="phase-right-grupos">—</div>
+        </div>
+        <div class="structure-phase" id="phase-knockout-row">
+          <div>
+            <div class="structure-phase-dot" id="phase-dot-knockout"></div>
+          </div>
+          <div>
+            <div class="structure-phase-name">Knockout</div>
+            <div class="structure-phase-detail" id="phase-detail-knockout">—</div>
+          </div>
+          <div class="structure-phase-right" id="phase-right-knockout">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-divider"></div>
+
+    <!-- REQUIREMENTS -->
+    <div>
+      <div class="panel-title">Pendiente</div>
+      <div class="requirements" id="requirements">
+        <div class="req-item" id="req-name">
+          <div class="req-dot"></div>
+          Nombre del torneo
+        </div>
+        <div class="req-item" id="req-sport">
+          <div class="req-dot"></div>
+          Deporte
+        </div>
+        <div class="req-item" id="req-format">
+          <div class="req-dot"></div>
+          Formato
+        </div>
+        <div class="req-item" id="req-teams">
+          <div class="req-dot"></div>
+          Número de equipos
+        </div>
+        <div class="req-item" id="req-scoring">
+          <div class="req-dot"></div>
+          Sistema de puntuación
+        </div>
+        <div class="req-item" id="req-tiebreak">
+          <div class="req-dot"></div>
+          Criterios de desempate
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-divider"></div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <button class="cta-btn" id="cta-btn" disabled>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Crear torneo
+      </button>
+      <div class="cta-note" id="cta-note">Completa los campos requeridos para continuar</div>
+    </div>
+
+  </aside>
+
+</div>
+
+<script>
+// STATE
+const state = {
+  name: '', sport: '', city: '',
+  format: '',
+  teams: '', groupSize: '',
+  scoringPreset: 'standard',
+  ptsWin: 3, ptsDraw: 1, ptsLoss: 0,
+  step: 1,
+  unlockedSteps: new Set([1]),
+};
+
+// COMPLETENESS
+function getCompleteness() {
+  let done = 0, total = 6;
+  if (state.name && state.sport) { done++; markReq('req-name', true); markReq('req-sport', true); }
+  else { if (!state.name) markReq('req-name', false); else markReq('req-name', true); if (!state.sport) markReq('req-sport', false); else markReq('req-sport', true); }
+  if (state.format) { done++; markReq('req-format', true); } else markReq('req-format', false);
+  if (state.teams) { done++; markReq('req-teams', true); } else markReq('req-teams', false);
+  done++; markReq('req-scoring', true); // always done (has defaults)
+  done++; markReq('req-tiebreak', true); // always done (has defaults)
+  if (state.name && state.sport) done++; // identity full
+  return Math.min(Math.round((done / total) * 100), 100);
+}
+
+function markReq(id, done) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (done) el.classList.add('done'); else el.classList.remove('done');
+}
+
+function updateProgress() {
+  const pct = getCompleteness();
+  document.getElementById('pct-display').textContent = pct + '%';
+  document.getElementById('pct-bar').style.width = pct + '%';
+  const ready = state.name && state.sport && state.format && state.teams;
+  const btn = document.getElementById('cta-btn');
+  btn.disabled = !ready;
+  document.getElementById('cta-note').textContent = ready
+    ? 'Listo para crear el torneo'
+    : 'Completa los campos requeridos para continuar';
+}
+
+// STEP NAVIGATION
+function unlockStep(n) {
+  state.unlockedSteps.add(n);
+  const el = document.getElementById('nav-step-' + n);
+  if (el) { el.classList.remove('locked'); }
+  const sec = document.getElementById('section-' + n);
+  if (sec) {
+    sec.classList.remove('locked');
+    sec.classList.add('unlocked');
+    sec.classList.add('unlock-anim');
+    const conn = document.getElementById('conn-' + (n-1));
+    if (conn) conn.classList.add('done');
+  }
+}
+
+function goToStep(n) {
+  if (!state.unlockedSteps.has(n)) return;
+  document.getElementById('section-' + n)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// INPUT HANDLERS
+function onNameInput(val) {
+  state.name = val.trim();
+  document.getElementById('nav-name').textContent = state.name || '—';
+  checkIdentityComplete();
+}
+
+function onSportChange(val) {
+  state.sport = val;
+  checkIdentityComplete();
+  // Update tiebreaker labels based on sport
+  if (val === 'baloncesto' || val === 'voleibol') {
+    updateTiebreakerLabels('puntos');
+  } else {
+    updateTiebreakerLabels('goles');
+  }
+}
+
+function updateTiebreakerLabels(mode) {
+  const list = document.getElementById('tiebreaker-list');
+  const items = list.querySelectorAll('.tiebreaker-item .tiebreaker-name');
+  if (mode === 'puntos') {
+    const labels = ['Puntos acumulados', 'Diferencia de puntos', 'Puntos a favor', 'Enfrentamiento directo', 'Menor número de faltas'];
+    items.forEach((el, i) => { if (labels[i]) el.textContent = labels[i]; });
+  } else {
+    const labels = ['Puntos acumulados', 'Diferencia de goles', 'Goles a favor', 'Enfrentamiento directo', 'Menor número de tarjetas'];
+    items.forEach((el, i) => { if (labels[i]) el.textContent = labels[i]; });
+  }
+}
+
+function checkIdentityComplete() {
+  if (state.name && state.sport) {
+    unlockStep(2);
+    document.getElementById('nav-step-2').classList.add('done');
+    updateStructureVisual();
+  }
+  updateProgress();
+}
+
+function selectFormat(fmt) {
+  state.format = fmt;
+  ['grupos-knockout', 'liga', 'knockout'].forEach(f => {
+    document.getElementById('fmt-' + f)?.classList.remove('selected');
+  });
+  document.getElementById('fmt-' + fmt)?.classList.add('selected');
+
+  const labels = { 'grupos-knockout': 'Grupos + KO', 'liga': 'Liga', 'knockout': 'Knockout' };
+  document.getElementById('nav-format').textContent = labels[fmt] || '—';
+
+  const params = document.getElementById('format-params');
+  params.style.display = 'block';
+
+  // Show/hide group size based on format
+  const groupField = document.getElementById('group-size-field');
+  groupField.style.display = (fmt === 'liga' || fmt === 'knockout') ? 'none' : 'block';
+
+  if (fmt === 'liga') {
+    state.groupSize = '';
+    updateStructureVisual();
+  }
+
+  // Hide groups phase if knockout only
+  document.getElementById('phase-grupos-row').style.display = fmt === 'knockout' ? 'none' : '';
+
+  unlockStep(3);
+  updateProgress();
+  updateStructureVisual();
+}
+
+function onTeamsChange(val) {
+  state.teams = val;
+  updateStructureVisual();
+  updatePreviewText();
+  if (val) unlockStep(4);
+  updateProgress();
+}
+
+function onGroupSizeChange(val) {
+  state.groupSize = val;
+  updatePreviewText();
+}
+
+function updatePreviewText() {
+  const preview = document.getElementById('structure-preview');
+  const text = document.getElementById('preview-text');
+  if (!state.teams || !state.format) { preview.style.display = 'none'; return; }
+  preview.style.display = 'block';
+
+  const t = parseInt(state.teams);
+  if (state.format === 'grupos-knockout') {
+    const gs = parseInt(state.groupSize) || 4;
+    const groups = Math.ceil(t / gs);
+    const advance = Math.min(2, gs - 1);
+    const koTeams = groups * advance;
+    const roundName = koTeams <= 2 ? 'Final' : koTeams <= 4 ? 'Semifinales' : koTeams <= 8 ? 'Cuartos de final' : 'Octavos de final';
+    text.innerHTML = `<strong>${groups} grupos</strong> de <strong>${gs} equipos</strong>. Los <strong>${advance} mejores</strong> de cada grupo avanzan a <strong>${roundName}</strong> con <strong>${koTeams} equipos</strong>.`;
+  } else if (state.format === 'liga') {
+    const matches = (t * (t - 1)) / 2;
+    text.innerHTML = `<strong>${matches} partidos</strong> en total. Cada equipo juega <strong>${t - 1} jornadas</strong>. Gana quien más puntos acumule.`;
+  } else if (state.format === 'knockout') {
+    const rounds = Math.ceil(Math.log2(t));
+    text.innerHTML = `<strong>${rounds} rondas</strong> de eliminación directa. Desde los primeros partidos, perder significa quedar eliminado.`;
+  }
+}
+
+function updateStructureVisual() {
+  const dotI = document.getElementById('phase-dot-inscripcion');
+  const detailI = document.getElementById('phase-detail-inscripcion');
+  const rightI = document.getElementById('phase-right-inscripcion');
+  if (state.name && state.sport) {
+    dotI.classList.add('active');
+    detailI.textContent = state.sport.charAt(0).toUpperCase() + state.sport.slice(1) + (state.city ? ' · ' + state.city : '');
+    rightI.textContent = state.teams ? state.teams + ' eq.' : '—';
+  }
+
+  const dotG = document.getElementById('phase-dot-grupos');
+  const detailG = document.getElementById('phase-detail-grupos');
+  const rightG = document.getElementById('phase-right-grupos');
+  if (state.format && state.format !== 'knockout') {
+    dotG.classList.add('pending');
+    if (state.format === 'liga') { detailG.textContent = 'Round Robin completo'; }
+    else if (state.groupSize && state.teams) {
+      const gs = parseInt(state.groupSize);
+      const groups = Math.ceil(parseInt(state.teams) / gs);
+      detailG.textContent = groups + ' grupos de ' + gs;
+      rightG.textContent = groups + ' grupos';
+    } else {
+      detailG.textContent = 'Pendiente de configurar';
+    }
+  }
+
+  const dotK = document.getElementById('phase-dot-knockout');
+  const detailK = document.getElementById('phase-detail-knockout');
+  if (state.format === 'grupos-knockout' || state.format === 'knockout') {
+    dotK.classList.add('pending');
+    detailK.textContent = 'Se genera automáticamente';
+  }
+}
+
+function selectScoringPreset(preset) {
+  state.scoringPreset = preset;
+  ['standard', 'custom'].forEach(p => document.getElementById('score-' + p)?.classList.remove('selected'));
+  document.getElementById('score-' + preset)?.classList.add('selected');
+
+  if (preset === 'standard') {
+    document.getElementById('pts-win').value = 3;
+    document.getElementById('pts-draw').value = 1;
+    document.getElementById('pts-loss').value = 0;
+    document.getElementById('nav-scoring').textContent = '3-1-0';
+  }
+  unlockStep(4);
+  unlockStep(5);
+  updateProgress();
+}
+
+function updateScoringPreview() {
+  const w = document.getElementById('pts-win').value;
+  const d = document.getElementById('pts-draw').value;
+  const l = document.getElementById('pts-loss').value;
+  document.getElementById('nav-scoring').textContent = w + '-' + d + '-' + l;
+  state.scoringPreset = 'custom';
+  document.getElementById('score-custom')?.classList.add('selected');
+  document.getElementById('score-standard')?.classList.remove('selected');
+}
+
+// Init defaults
+document.getElementById('nav-scoring').textContent = '3-1-0';
+document.getElementById('nav-tiebreak').textContent = '5 criterios';
+document.getElementById('nav-options').textContent = '3 activas';
+unlockStep(1);
+
+// Drag tiebreakers
+let dragSrc = null;
+document.querySelectorAll('.tiebreaker-item').forEach(item => {
+  item.addEventListener('dragstart', e => { dragSrc = item; item.style.opacity = '0.4'; });
+  item.addEventListener('dragend', e => { item.style.opacity = '1'; updateTiebreakerOrder(); });
+  item.addEventListener('dragover', e => { e.preventDefault(); });
+  item.addEventListener('drop', e => {
+    e.preventDefault();
+    if (dragSrc !== item) {
+      const list = item.parentNode;
+      const items = [...list.children];
+      const srcIdx = items.indexOf(dragSrc);
+      const dstIdx = items.indexOf(item);
+      if (srcIdx < dstIdx) list.insertBefore(dragSrc, item.nextSibling);
+      else list.insertBefore(dragSrc, item);
+    }
+  });
+});
+
+function updateTiebreakerOrder() {
+  document.querySelectorAll('.tiebreaker-item').forEach((item, i) => {
+    item.querySelector('.tiebreaker-order').textContent = (i + 1) + '°';
+  });
+}
+
+// Unlock section 4 and 5 by default after a delay (they have defaults)
+setTimeout(() => { unlockStep(4); unlockStep(5); }, 200);
+
+// CTA
+document.getElementById('cta-btn').addEventListener('click', () => {
+  if (!document.getElementById('cta-btn').disabled) {
+    alert('✓ Torneo "' + state.name + '" creado. Redirigiendo a inscripción de equipos...');
+  }
+});
+
+updateProgress();
+</script>
+
+</body>
+</html>

@@ -39,4 +39,5 @@ export const endpoints = {
   workspaces: '/workspaces',
   products: '/products',
   orders: '/orders',
+  tournaments: '/tournaments',
 };

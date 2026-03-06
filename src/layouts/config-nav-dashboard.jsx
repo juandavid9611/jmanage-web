@@ -96,6 +96,12 @@ export const navData = [
         icon: ICONS.product,
         roles: ['admin', 'user'],
       },
+      {
+        title: 'Torneos',
+        path: paths.dashboard.tournament.root,
+        icon: ICONS.tour,
+        roles: ['admin', 'user'],
+      },
     ],
   },
   /**
