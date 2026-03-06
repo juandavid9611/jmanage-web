@@ -48,11 +48,11 @@ const SPORT_ICONS = {
  * Each phase has: key, label, sub, state (done | active | locked).
  * The `key` is used for navigation — it maps to what content to show.
  */
-export function getPhases(tournament, teams) {
+export function getPhases(tournament, teams, totalMatchweeks) {
   const { status, type } = tournament;
   const teamCount = teams?.length || 0;
   const totalTeams = tournament.num_teams || teamCount;
-  const totalMw = tournament.rules?.total_matchweeks || 0;
+  const totalMw = totalMatchweeks ?? tournament.rules?.total_matchweeks ?? 0;
   const currentMw = tournament.current_matchweek || 0;
 
   const phases = [];
@@ -127,6 +127,7 @@ export function TournamentBanner({
   teams,
   activePhase,
   isSubmitting,
+  totalMatchweeks,
   onPhaseClick,
   onActivate,
   onFinish,
@@ -136,7 +137,7 @@ export function TournamentBanner({
 }) {
   const theme = useTheme();
 
-  const totalMw = tournament.rules?.total_matchweeks || 0;
+  const totalMw = totalMatchweeks ?? tournament.rules?.total_matchweeks ?? 0;
   const currentMw = tournament.current_matchweek || 0;
   const completion = totalMw > 0 ? Math.round((currentMw / totalMw) * 100) : 0;
   const teamCount = teams?.length || 0;
@@ -144,7 +145,7 @@ export function TournamentBanner({
   const isLeague = tournament.type === 'league';
   const isHybrid = tournament.type === 'hybrid';
 
-  const phases = getPhases(tournament, teams);
+  const phases = getPhases(tournament, teams, totalMw);
 
   return (
     <Box

@@ -13,7 +13,6 @@ const REQUIREMENTS = [
   { key: 'name', label: 'Nombre del torneo', check: (v) => !!v.name },
   { key: 'sport', label: 'Deporte', check: (v) => !!v.sport },
   { key: 'format', label: 'Formato', check: (v) => !!v.type },
-  { key: 'teams', label: 'Número de equipos', check: (v) => !!v.num_teams },
   { key: 'scoring', label: 'Sistema de puntuación', check: () => true },
   { key: 'tiebreak', label: 'Criterios de desempate', check: () => true },
 ];

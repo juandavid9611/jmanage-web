@@ -33,7 +33,7 @@ export function TournamentCreationStepper({ steps, activeStep, unlockedSteps, va
 
   const isStepDone = (index) => {
     if (index === 0) return !!(values.name && values.sport);
-    if (index === 1) return !!(values.type && values.num_teams);
+    if (index === 1) return !!values.type;
     if (index === 2) return true; // has defaults
     if (index === 3) return true; // has defaults
     if (index === 4) return true; // has defaults

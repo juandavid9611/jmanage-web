@@ -97,7 +97,9 @@ export function TournamentDetailView() {
 
   // Derive current matchweek
   const currentMw = tournament?.current_matchweek || 1;
-  const totalMw = tournament?.rules?.total_matchweeks || 0;
+  const totalMw =
+    tournament?.rules?.total_matchweeks ||
+    (allMatches.length > 0 ? Math.max(...allMatches.map((m) => m.matchweek || 0)) : 0);
   // undefined = default to currentMw; null = show all; number = specific matchweek
   const activeMw = selectedMatchweek === undefined ? currentMw : selectedMatchweek;
 
@@ -232,6 +234,7 @@ export function TournamentDetailView() {
         teams={teams}
         activePhase={currentPhase}
         isSubmitting={isSubmitting}
+        totalMatchweeks={totalMw}
         onPhaseClick={handlePhaseClick}
         onActivate={() => setActivateDialog(true)}
         onFinish={() => setFinishDialog(true)}

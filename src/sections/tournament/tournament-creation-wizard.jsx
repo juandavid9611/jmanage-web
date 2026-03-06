@@ -60,8 +60,7 @@ const FORMAT_OPTIONS = [
   },
 ];
 
-const TEAM_COUNT_OPTIONS = [8, 12, 16, 20, 24, 32];
-const GROUP_SIZE_OPTIONS = [3, 4, 5, 6];
+const GROUP_SIZE_OPTIONS = [1, 2, 3, 4, 5, 6];
 
 const DEFAULT_TIEBREAKERS_FUTBOL = [
   'Puntos acumulados',
@@ -88,8 +87,8 @@ const WizardSchema = zod.object({
   city: zod.string().optional(),
   // Step 2
   type: zod.string().min(1, 'Selecciona un formato'),
-  num_teams: zod.coerce.number().int().min(2, 'Selecciona el número de equipos'),
   teams_per_group: zod.coerce.number().int().optional(),
+  legs: zod.coerce.number().int().optional(),
   // Step 3
   rules: zod.object({
     points_per_win: zod.coerce.number().int().min(0),
@@ -120,7 +119,7 @@ const STEPS = [
 // Step validation: which fields must be valid to unlock the next step
 const STEP_FIELDS = {
   0: ['name', 'sport'],
-  1: ['type', 'num_teams'],
+  1: ['type'],
   2: ['rules.points_per_win', 'rules.points_per_draw', 'rules.points_per_loss'],
   3: [],
   4: [],
@@ -138,8 +137,8 @@ export function TournamentCreationWizard() {
     sport: '',
     city: '',
     type: '',
-    num_teams: '',
     teams_per_group: 4,
+    legs: 1,
     rules: { points_per_win: 3, points_per_draw: 1, points_per_loss: 0 },
     scoring_preset: 'standard',
     tiebreaker_order: [...DEFAULT_TIEBREAKERS_FUTBOL],
@@ -217,9 +216,8 @@ export function TournamentCreationWizard() {
         sport: data.sport,
         city: data.city,
         type: data.type,
-        num_teams: data.num_teams,
         teams_per_group: data.teams_per_group,
-        rules: data.rules,
+        rules: { ...data.rules, legs: data.legs },
         tiebreaker_order: data.tiebreaker_order,
         options: data.options,
       };
@@ -395,24 +393,23 @@ function StepFormat({ values, structurePreview }) {
         {/* Sub-parameters */}
         {values.type && (
           <Grid container spacing={2}>
-            <Grid xs={12} md={6}>
-              <Field.Select name="num_teams" label="Número de equipos">
-                {TEAM_COUNT_OPTIONS.map((n) => (
-                  <MenuItem key={n} value={n}>
-                    {n} equipos
-                  </MenuItem>
-                ))}
-              </Field.Select>
-            </Grid>
-
             {values.type !== 'league' && values.type !== 'knockout' && (
               <Grid xs={12} md={6}>
-                <Field.Select name="teams_per_group" label="Equipos por grupo">
+                <Field.Select name="teams_per_group" label="Equipos clasificados por grupo">
                   {GROUP_SIZE_OPTIONS.map((n) => (
                     <MenuItem key={n} value={n}>
                       {n} equipos
                     </MenuItem>
                   ))}
+                </Field.Select>
+              </Grid>
+            )}
+
+            {values.type !== 'knockout' && (
+              <Grid xs={12} md={6}>
+                <Field.Select name="legs" label="Vueltas">
+                  <MenuItem value={1}>Ida (1 vuelta)</MenuItem>
+                  <MenuItem value={2}>Ida y Vuelta (2 vueltas)</MenuItem>
                 </Field.Select>
               </Grid>
             )}
@@ -780,52 +777,38 @@ function StepSection({ number, title, children }) {
 // ======================================================================
 
 function getStructurePreview(values) {
-  const { type, num_teams, teams_per_group } = values;
-  if (!type || !num_teams) return { text: '', phases: [] };
+  const { type, teams_per_group } = values;
+  if (!type) return { text: '', phases: [] };
 
-  const t = parseInt(num_teams, 10);
   const gs = parseInt(teams_per_group, 10) || 4;
 
   if (type === 'hybrid') {
-    const groups = Math.ceil(t / gs);
-    const advance = Math.min(2, gs - 1);
-    const koTeams = groups * advance;
-    const roundName =
-      koTeams <= 2
-        ? 'Final'
-        : koTeams <= 4
-          ? 'Semifinales'
-          : koTeams <= 8
-            ? 'Cuartos de final'
-            : 'Octavos de final';
     return {
-      text: `${groups} grupos de ${gs} equipos. Los ${advance} mejores de cada grupo avanzan a ${roundName} con ${koTeams} equipos.`,
+      text: `Fase de grupos de ${gs} equipos por grupo, seguida de eliminación directa. Los mejores de cada grupo avanzan automáticamente.`,
       phases: [
-        { name: 'Inscripción', detail: `${t} equipos`, active: true },
-        { name: 'Fase de grupos', detail: `${groups} grupos de ${gs}`, pending: true },
+        { name: 'Inscripción', detail: 'Equipos dinámicos', active: true },
+        { name: 'Fase de grupos', detail: `${gs} equipos/grupo`, pending: true },
         { name: 'Knockout', detail: 'Se genera automáticamente', pending: true },
       ],
     };
   }
 
   if (type === 'league') {
-    const matches = (t * (t - 1)) / 2;
     return {
-      text: `${matches} partidos en total. Cada equipo juega ${t - 1} jornadas. Gana quien más puntos acumule.`,
+      text: 'Todos contra todos. Gana quien más puntos acumule al final de la temporada.',
       phases: [
-        { name: 'Inscripción', detail: `${t} equipos`, active: true },
-        { name: 'Round Robin', detail: `${matches} partidos`, pending: true },
+        { name: 'Inscripción', detail: 'Equipos dinámicos', active: true },
+        { name: 'Round Robin', detail: 'Todos contra todos', pending: true },
       ],
     };
   }
 
   if (type === 'knockout') {
-    const rounds = Math.ceil(Math.log2(t));
     return {
-      text: `${rounds} rondas de eliminación directa. Desde los primeros partidos, perder significa quedar eliminado.`,
+      text: 'Eliminación directa desde el inicio. Desde los primeros partidos, perder significa quedar eliminado.',
       phases: [
-        { name: 'Inscripción', detail: `${t} equipos`, active: true },
-        { name: 'Knockout', detail: `${rounds} rondas`, pending: true },
+        { name: 'Inscripción', detail: 'Equipos dinámicos', active: true },
+        { name: 'Knockout', detail: 'Eliminación directa', pending: true },
       ],
     };
   }
