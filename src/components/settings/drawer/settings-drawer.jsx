@@ -114,6 +114,30 @@ export function SettingsDrawer({
     />
   );
 
+  // Reflect actual browser + OneSignal state, not just the stored preference.
+  // Notification.permission is synchronous and always current.
+  const notificationsActive =
+    settings.notificationsEnabled &&
+    typeof Notification !== 'undefined' &&
+    Notification.permission === 'granted';
+
+  const renderNotifications = (
+    <BaseOption
+      label="Notificaciones"
+      icon="notification"
+      selected={notificationsActive}
+      onClick={() => {
+        if (settings.notificationsEnabled) {
+          settings.onUpdateField('notificationsEnabled', false);
+        } else {
+          // Clear the one-time flag so the provider re-requests permission if it was reset
+          localStorage.removeItem('onesignal-asked');
+          settings.onUpdateField('notificationsEnabled', true);
+        }
+      }}
+    />
+  );
+
   const renderPresets = (
     <PresetsOptions
       value={settings.primaryColor}
@@ -182,6 +206,7 @@ export function SettingsDrawer({
             {!hideContrast && renderContrast}
             {!hideDirection && renderRTL}
             {!hideCompact && renderCompact}
+            {renderNotifications}
           </Box>
           {!(hideNavLayout && hideNavColor) && renderNav}
           {!hidePresets && renderPresets}

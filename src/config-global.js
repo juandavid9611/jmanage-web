@@ -30,4 +30,5 @@ export const CONFIG = {
     userPoolWebClientId: import.meta.env.VITE_AWS_AMPLIFY_USER_POOL_WEB_CLIENT_ID ?? '',
     region: import.meta.env.VITE_AWS_AMPLIFY_REGION ?? '',
   },
+  onesignalAppId: import.meta.env.VITE_ONESIGNAL_APP_ID ?? '',
 };
