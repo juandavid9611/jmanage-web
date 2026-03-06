@@ -3,6 +3,8 @@ import { useMemo, useState, useEffect, useContext, useCallback, createContext } 
 
 import axiosInstance, { endpoints } from 'src/utils/axios';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 // ----------------------------------------------------------------------
 
 const NotificationsContext = createContext(undefined);
@@ -16,18 +18,23 @@ export function useNotificationsContext() {
 // ----------------------------------------------------------------------
 
 export function NotificationsProvider({ children }) {
+  const { authenticated } = useAuthContext();
   const [foreground, setForeground] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(
+    typeof Notification !== 'undefined' && Notification.permission === 'granted'
+  );
 
   const { data: apiData, mutate } = useSWR(
-    endpoints.notifications,
+    authenticated ? endpoints.notifications : null,
     (url) =>
       axiosInstance.get(url).then((r) =>
-        r.data.notifications.map((item) => ({
+        (r.data.notifications ?? []).map((item) => ({
           ...item,
           createdAt: new Date(item.createdAt),
         }))
       ),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, onError: () => {} }
   );
 
   // Once SWR data arrives (after the 3s revalidation triggered by addNotification),
@@ -53,20 +60,37 @@ export function NotificationsProvider({ children }) {
 
   const markAsRead = useCallback(
     async (id) => {
-      await axiosInstance.post(`${endpoints.notifications}/${id}/read`);
-      mutate();
+      try {
+        await axiosInstance.post(`${endpoints.notifications}/${id}/read`);
+        mutate();
+      } catch (_) {
+        // network errors are non-fatal; the UI dot will clear on next revalidation
+      }
     },
     [mutate]
   );
 
   const markAllAsRead = useCallback(async () => {
-    await axiosInstance.post(`${endpoints.notifications}/read`);
-    mutate();
+    try {
+      await axiosInstance.post(`${endpoints.notifications}/read`);
+      mutate();
+    } catch (_) {
+      // non-fatal
+    }
   }, [mutate]);
 
   const value = useMemo(
-    () => ({ notifications, addNotification, markAllAsRead, markAsRead }),
-    [notifications, addNotification, markAllAsRead, markAsRead]
+    () => ({
+      notifications,
+      addNotification,
+      markAllAsRead,
+      markAsRead,
+      notificationsLoading,
+      setNotificationsLoading,
+      permissionGranted,
+      setPermissionGranted,
+    }),
+    [notifications, addNotification, markAllAsRead, markAsRead, notificationsLoading, permissionGranted]
   );
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;

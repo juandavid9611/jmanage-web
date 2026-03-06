@@ -163,7 +163,7 @@ export function OverviewAppView() {
     if (action === 'reset') {
       localStorage.setItem('documents-feature-seen', 'true');
       setHasSeenTour(true);
-      router.push(paths.dashboard.fileManager);
+      router.push(paths.dashboard.guide);
     }
     
     walktour.onCallback(data);

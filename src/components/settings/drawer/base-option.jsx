@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Switch from '@mui/material/Switch';
 import Tooltip from '@mui/material/Tooltip';
 import ButtonBase from '@mui/material/ButtonBase';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { CONFIG } from 'src/config-global';
 import { varAlpha } from 'src/theme/styles';
@@ -12,15 +13,16 @@ import { SvgColor } from '../../svg-color';
 
 // ----------------------------------------------------------------------
 
-export function BaseOption({ icon, label, tooltip, selected, ...other }) {
+export function BaseOption({ icon, label, tooltip, selected, loading, ...other }) {
   return (
     <ButtonBase
       disableRipple
+      disabled={loading}
       sx={{
         px: 2,
         py: 2.5,
         borderRadius: 2,
-        cursor: 'pointer',
+        cursor: loading ? 'default' : 'pointer',
         flexDirection: 'column',
         alignItems: 'flex-start',
         border: (theme) => `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
@@ -38,7 +40,11 @@ export function BaseOption({ icon, label, tooltip, selected, ...other }) {
         sx={{ width: 1, mb: 3 }}
       >
         <SvgColor src={`${CONFIG.site.basePath}/assets/icons/setting/ic-${icon}.svg`} />
-        <Switch name={label} size="small" color="default" checked={selected} sx={{ mr: -0.75 }} />
+        {loading ? (
+          <CircularProgress size={16} color="inherit" sx={{ mr: 0.5, opacity: 0.5 }} />
+        ) : (
+          <Switch name={label} size="small" color="default" checked={selected} sx={{ mr: -0.75 }} />
+        )}
       </Box>
 
       <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ width: 1 }}>

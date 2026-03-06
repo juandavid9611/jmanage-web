@@ -1,43 +1,29 @@
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Badge from '@mui/material/Badge';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
 import { useTheme, useColorScheme } from '@mui/material/styles';
 
-import COLORS from 'src/theme/core/colors.json';
 import { paper, varAlpha } from 'src/theme/styles';
-import { defaultFont } from 'src/theme/core/typography';
-import PRIMARY_COLOR from 'src/theme/with-settings/primary-color.json';
 
-import { Iconify } from '../../iconify';
+import { Iconify } from 'src/components/iconify';
+
 import { BaseOption } from './base-option';
-import { NavOptions } from './nav-options';
 import { Scrollbar } from '../../scrollbar';
-import { FontOptions } from './font-options';
 import { useSettingsContext } from '../context';
-import { PresetsOptions } from './presets-options';
-import { defaultSettings } from '../config-settings';
 import { FullScreenButton } from './fullscreen-button';
+import { useNotificationsContext } from '../../onesignal/notifications-context';
 
 // ----------------------------------------------------------------------
 
-export function SettingsDrawer({
-  sx,
-  hideFont,
-  hideCompact,
-  hidePresets,
-  hideNavColor,
-  hideContrast,
-  hideNavLayout,
-  hideDirection,
-  hideColorScheme,
-}) {
+export function SettingsDrawer({ sx }) {
   const theme = useTheme();
 
   const settings = useSettingsContext();
+
+  const { notificationsLoading, permissionGranted } = useNotificationsContext();
 
   const { mode, setMode } = useColorScheme();
 
@@ -48,19 +34,6 @@ export function SettingsDrawer({
       </Typography>
 
       <FullScreenButton />
-
-      <Tooltip title="Reset">
-        <IconButton
-          onClick={() => {
-            settings.onReset();
-            setMode(defaultSettings.colorScheme);
-          }}
-        >
-          <Badge color="error" variant="dot" invisible={!settings.canReset}>
-            <Iconify icon="solar:restart-bold" />
-          </Badge>
-        </IconButton>
-      </Tooltip>
 
       <Tooltip title="Close">
         <IconButton onClick={settings.onCloseDrawer}>
@@ -93,90 +66,20 @@ export function SettingsDrawer({
     />
   );
 
-  const renderRTL = (
-    <BaseOption
-      label="Right to left"
-      icon="align-right"
-      selected={settings.direction === 'rtl'}
-      onClick={() =>
-        settings.onUpdateField('direction', settings.direction === 'ltr' ? 'rtl' : 'ltr')
-      }
-    />
-  );
-
-  const renderCompact = (
-    <BaseOption
-      tooltip="Dashboard only and available at large resolutions > 1600px (xl)"
-      label="Compact"
-      icon="autofit-width"
-      selected={settings.compactLayout}
-      onClick={() => settings.onUpdateField('compactLayout', !settings.compactLayout)}
-    />
-  );
-
-  // Reflect actual browser + OneSignal state, not just the stored preference.
-  // Notification.permission is synchronous and always current.
-  const notificationsActive =
-    settings.notificationsEnabled &&
-    typeof Notification !== 'undefined' &&
-    Notification.permission === 'granted';
-
   const renderNotifications = (
     <BaseOption
       label="Notificaciones"
       icon="notification"
-      selected={notificationsActive}
+      selected={settings.notificationsEnabled && permissionGranted}
+      loading={notificationsLoading}
       onClick={() => {
         if (settings.notificationsEnabled) {
           settings.onUpdateField('notificationsEnabled', false);
         } else {
-          // Clear the one-time flag so the provider re-requests permission if it was reset
           localStorage.removeItem('onesignal-asked');
           settings.onUpdateField('notificationsEnabled', true);
         }
       }}
-    />
-  );
-
-  const renderPresets = (
-    <PresetsOptions
-      value={settings.primaryColor}
-      onClickOption={(newValue) => settings.onUpdateField('primaryColor', newValue)}
-      options={[
-        { name: 'default', value: COLORS.primary.main },
-        { name: 'cyan', value: PRIMARY_COLOR.cyan.main },
-        { name: 'purple', value: PRIMARY_COLOR.purple.main },
-        { name: 'green', value: PRIMARY_COLOR.green.main },
-        { name: 'orange', value: PRIMARY_COLOR.orange.main },
-        { name: 'red', value: PRIMARY_COLOR.red.main },
-      ]}
-    />
-  );
-
-  const renderNav = (
-    <NavOptions
-      value={{
-        color: settings.navColor,
-        layout: settings.navLayout,
-      }}
-      onClickOption={{
-        color: (newValue) => settings.onUpdateField('navColor', newValue),
-        layout: (newValue) => settings.onUpdateField('navLayout', newValue),
-      }}
-      options={{
-        colors: ['integrate', 'apparent'],
-        layouts: ['vertical', 'horizontal', 'mini'],
-      }}
-      hideNavColor={hideNavColor}
-      hideNavLayout={hideNavLayout}
-    />
-  );
-
-  const renderFont = (
-    <FontOptions
-      value={settings.fontFamily}
-      onClickOption={(newValue) => settings.onUpdateField('fontFamily', newValue)}
-      options={[defaultFont, 'Inter', 'DM Sans', 'Nunito Sans']}
     />
   );
 
@@ -202,15 +105,10 @@ export function SettingsDrawer({
       <Scrollbar>
         <Stack spacing={6} sx={{ px: 2.5, pb: 5 }}>
           <Box gap={2} display="grid" gridTemplateColumns="repeat(2, 1fr)">
-            {!hideColorScheme && renderMode}
-            {!hideContrast && renderContrast}
-            {!hideDirection && renderRTL}
-            {!hideCompact && renderCompact}
+            {renderMode}
+            {renderContrast}
             {renderNotifications}
           </Box>
-          {!(hideNavLayout && hideNavColor) && renderNav}
-          {!hidePresets && renderPresets}
-          {!hideFont && renderFont}
         </Stack>
       </Scrollbar>
     </Drawer>

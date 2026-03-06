@@ -73,6 +73,7 @@ export const paths = {
       },
     },
     fileManager: `${ROOTS.DASHBOARD}/file-manager`,
+    guide: `${ROOTS.DASHBOARD}/guide`,
     tournament: {
       root: `${ROOTS.DASHBOARD}/tournament`,
       new: `${ROOTS.DASHBOARD}/tournament/new`,
