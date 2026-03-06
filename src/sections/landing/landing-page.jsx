@@ -3149,7 +3149,7 @@ export function LandingPage() {
                 </AnimatedDiv>
                 <AnimatedDiv>
                   <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 480, mx: 'auto' }}>
-                    Cientos de clubes y organizadores ya confían en SportsManagement para llevar su deporte al siguiente nivel.
+                    Cientos de jugadores, equipos y organizadores ya confían en SportsManagement para llevar su deporte al siguiente nivel.
                   </Typography>
                 </AnimatedDiv>
               </Stack>
