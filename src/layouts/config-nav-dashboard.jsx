@@ -102,6 +102,12 @@ export const navData = [
         icon: ICONS.tour,
         roles: ['admin', 'user'],
       },
+      {
+        title: 'Guia de inicio',
+        path: paths.dashboard.guide,
+        icon: ICONS.blank,
+        roles: ['admin', 'user'],
+      },
     ],
   },
   /**

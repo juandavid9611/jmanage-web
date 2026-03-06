@@ -31,4 +31,5 @@ export const CONFIG = {
     region: import.meta.env.VITE_AWS_AMPLIFY_REGION ?? '',
   },
   onesignalAppId: import.meta.env.VITE_ONESIGNAL_APP_ID ?? '',
+  onesignalSafariWebId: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID ?? '',
 };

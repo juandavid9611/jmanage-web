@@ -40,4 +40,5 @@ export const endpoints = {
   products: '/products',
   orders: '/orders',
   tournaments: '/tournaments',
+  notifications: '/notifications',
 };

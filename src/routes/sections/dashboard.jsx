@@ -44,6 +44,8 @@ const OrderListPage = lazy(() => import('src/pages/dashboard/order/list'));
 const OrderDetailsPage = lazy(() => import('src/pages/dashboard/order/details'));
 // File manager
 const FileManagerPage = lazy(() => import('src/pages/dashboard/file-manager'));
+// Guide
+const GuidePage = lazy(() => import('src/pages/dashboard/guide'));
 // Tournament
 const TournamentListPage = lazy(() => import('src/pages/dashboard/tournament/list'));
 const TournamentCreatePage = lazy(() => import('src/pages/dashboard/tournament/new'));
@@ -132,6 +134,7 @@ export const dashboardRoutes = [
         ],
       },
       { path: 'file-manager', element: <FileManagerPage /> },
+      { path: 'guide', element: <GuidePage /> },
       {
         path: 'tournament',
         children: [

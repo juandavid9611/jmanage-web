@@ -7,6 +7,8 @@ import { useSettingsContext } from 'src/components/settings';
 
 import { useAuthContext } from 'src/auth/hooks';
 
+import { useNotificationsContext } from './notifications-context';
+
 // Module-level guard — survives component remounts
 let initialized = false;
 
@@ -22,21 +24,61 @@ function isOnesignalAliasClaimed(e) {
 export function OneSignalProvider() {
   const { user } = useAuthContext();
   const { notificationsEnabled } = useSettingsContext();
+  const { addNotification, setNotificationsLoading, setPermissionGranted } = useNotificationsContext();
   const loggedIn = useRef(false);
 
-  // Init once per app lifetime
+  // Init once per app lifetime and register foreground notification listener
   useEffect(() => {
-    if (initialized) return;
-    initialized = true;
+    // Suppress "Permission blocked" unhandled rejections thrown inside the SDK
+    // when the browser has notifications blocked — they are cosmetic and safe to ignore.
+    const handleUnhandledRejection = (event) => {
+      const msg = String(event?.reason?.message ?? event?.reason ?? '');
+      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('blocked')) {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
-    OneSignal.init({
-      appId: CONFIG.onesignalAppId,
-      allowLocalhostAsSecureOrigin: true,
-      serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
-      serviceWorkerParam: { scope: '/onesignal/' },
-      notifyButton: { enable: true, displayPredicate: () => false },
-    }).catch((e) => console.error('OneSignal init failed', e));
+    if (!initialized) {
+      initialized = true;
+      OneSignal.init({
+        appId: CONFIG.onesignalAppId,
+        safariWebId: CONFIG.onesignalSafariWebId,
+        allowLocalhostAsSecureOrigin: true,
+        serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
+        serviceWorkerParam: { scope: '/onesignal/' },
+        notifyButton: { enable: true, displayPredicate: () => false },
+      }).catch((e) => console.error('OneSignal init failed', e));
+    }
+
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
   }, []);
+
+  // Listen for foreground notifications and add them to the UI list
+  useEffect(() => {
+    const handleForeground = (event) => {
+      try {
+        const { notification } = event;
+        addNotification({
+          id: notification.notificationId ?? String(Date.now()),
+          title: notification.title ?? '',
+          body: notification.body ?? '',
+          isUnRead: true,
+          createdAt: new Date(),
+          type: 'onesignal',
+        });
+        // Let the notification display as a native browser notification too
+        event.preventDefault();
+      } catch (_) {
+        // never let a notification handling error break the page
+      }
+    };
+
+    OneSignal.Notifications.addEventListener('foregroundWillDisplay', handleForeground);
+    return () => {
+      OneSignal.Notifications.removeEventListener('foregroundWillDisplay', handleForeground);
+    };
+  }, [addNotification]);
 
   // Manage push subscription when user or notifications setting changes
   useEffect(() => {
@@ -45,33 +87,47 @@ export function OneSignalProvider() {
     if (!notificationsEnabled) {
       // Opt out without logging out — logout() creates a new anonymous identity
       // which then conflicts (user-2) when login() is called again on re-enable.
-      OneSignal.User.PushSubscription.optOut?.();
+      setPermissionGranted(false);
+      OneSignal.User.PushSubscription.optOut?.()?.catch?.(() => {});
       return undefined;
     }
 
     let cancelled = false;
 
+    setNotificationsLoading(true);
+
     OneSignal.login(user.email)
       .then(() => {
+        // Always clear loading first — even if cancelled, so the button isn't stuck disabled.
+        setNotificationsLoading(false);
         if (cancelled) return;
         loggedIn.current = true;
 
         if (Notification.permission === 'granted') {
           // Permission already granted (e.g. re-enable after opt-out) — just opt back in
-          OneSignal.User.PushSubscription.optIn?.();
+          OneSignal.User.PushSubscription.optIn?.()?.catch?.(() => {});
+          setPermissionGranted(true);
           return;
         }
 
-        if (Notification.permission === 'denied') return;
+        if (Notification.permission === 'denied') {
+          setPermissionGranted(false);
+          return;
+        }
 
         // Ask for permission only once per browser
         const alreadyAsked = localStorage.getItem('onesignal-asked');
         if (alreadyAsked) return;
 
         localStorage.setItem('onesignal-asked', '1');
-        OneSignal.Notifications.requestPermission().catch(() => {});
+        OneSignal.Notifications.requestPermission()
+          .then(() => {
+            setPermissionGranted(Notification.permission === 'granted');
+          })
+          .catch(() => {});
       })
       .catch((e) => {
+        setNotificationsLoading(false);
         if (isOnesignalAliasClaimed(e)) return;
         console.error('OneSignal login failed', e);
       });
@@ -79,7 +135,7 @@ export function OneSignalProvider() {
     return () => {
       cancelled = true;
     };
-  }, [user?.email, notificationsEnabled]);
+  }, [user?.email, notificationsEnabled, setNotificationsLoading, setPermissionGranted]);
 
   return null;
 }
