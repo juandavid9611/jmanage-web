@@ -1,3 +1,4 @@
+import OneSignal from 'react-onesignal';
 import {
   signIn as _signIn,
   signUp as _signUp,
@@ -49,6 +50,7 @@ export const resendSignUpCode = async ({ username }) => {
  * Sign out
  *************************************** */
 export const signOut = async () => {
+  try { await OneSignal.logout(); } catch (e) { console.error('OneSignal logout failed', e); }
   await _signOut();
 };
 

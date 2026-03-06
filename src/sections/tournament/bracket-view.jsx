@@ -111,14 +111,13 @@ export function BracketView({ tournamentId, teams, tournament, allMatches = [] }
     return slotH * idx + slotH / 2;
   };
 
-  // Find featured finalist (champion if decided, else team in final)
+  // Find champion — only set once the final match has a winner
   const finalist = useMemo(() => {
     if (!hasRounds) return null;
     const lastRound   = roundEntries[roundEntries.length - 1];
     const finalMatchup = lastRound?.matchups[0];
-    if (!finalMatchup) return null;
-    const leadId = finalMatchup.winner_team_id || finalMatchup.team1_id;
-    return teams?.find((t) => t.id === leadId) || null;
+    if (!finalMatchup?.winner_team_id) return null;
+    return teams?.find((t) => t.id === finalMatchup.winner_team_id) || null;
   }, [roundEntries, hasRounds, teams]);
 
   // Build finalist's round-by-round path

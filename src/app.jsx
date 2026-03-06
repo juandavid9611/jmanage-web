@@ -18,6 +18,7 @@ import { AuthProvider } from 'src/auth/context/amplify';
 import { Snackbar } from './components/snackbar';
 import { CheckoutProvider } from './sections/checkout/context';
 import { WorkspaceProvider } from './workspace/workspace-provider';
+import { OneSignalProvider } from './components/onesignal/onesignal-provider';
 
 // ----------------------------------------------------------------------
 
@@ -28,6 +29,7 @@ export default function App() {
     <LocalizationProvider>
       <AuthProvider>
         <SettingsProvider settings={defaultSettings}>
+          <OneSignalProvider />
           <WorkspaceProvider>
             <ThemeProvider>
               <MotionLazy>
