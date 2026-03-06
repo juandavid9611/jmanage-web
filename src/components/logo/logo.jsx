@@ -98,7 +98,7 @@ export const Logo = forwardRef(
             component="img"
             alt="SportsManagement"
             src="/assets/illustrations/illustration_dashboard.png"
-            sx={{ height, width: 'auto' }}
+            sx={{ height: height + 10, width: 'auto' }}
           />
         </Box>
       </NoSsr>
