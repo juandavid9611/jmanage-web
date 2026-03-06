@@ -1,4 +1,7 @@
-import { useMemo, useState, useContext, useCallback, createContext } from 'react';
+import useSWR from 'swr';
+import { useMemo, useState, useEffect, useContext, useCallback, createContext } from 'react';
+
+import axiosInstance, { endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
 
@@ -13,19 +16,53 @@ export function useNotificationsContext() {
 // ----------------------------------------------------------------------
 
 export function NotificationsProvider({ children }) {
-  const [notifications, setNotifications] = useState([]);
+  const [foreground, setForeground] = useState([]);
 
-  const addNotification = useCallback((notification) => {
-    setNotifications((prev) => [notification, ...prev]);
-  }, []);
+  const { data: apiData, mutate } = useSWR(
+    endpoints.notifications,
+    (url) =>
+      axiosInstance.get(url).then((r) =>
+        r.data.notifications.map((item) => ({
+          ...item,
+          createdAt: new Date(item.createdAt),
+        }))
+      ),
+    { revalidateOnFocus: false }
+  );
 
-  const markAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isUnRead: false })));
-  }, []);
+  // Once SWR data arrives (after the 3s revalidation triggered by addNotification),
+  // clear foreground items — the server response is now authoritative.
+  useEffect(() => {
+    if (apiData) setForeground([]);
+  }, [apiData]);
 
-  const markAsRead = useCallback((id) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isUnRead: false } : n)));
-  }, []);
+  const notifications = useMemo(() => {
+    const apiItems = apiData ?? [];
+    const apiIds = new Set(apiItems.map((n) => n.id));
+    const newFg = foreground.filter((n) => !apiIds.has(n.id));
+    return [...newFg, ...apiItems];
+  }, [foreground, apiData]);
+
+  const addNotification = useCallback(
+    (notification) => {
+      setForeground((prev) => [notification, ...prev]);
+      setTimeout(() => mutate(), 3000);
+    },
+    [mutate]
+  );
+
+  const markAsRead = useCallback(
+    async (id) => {
+      await axiosInstance.post(`${endpoints.notifications}/${id}/read`);
+      mutate();
+    },
+    [mutate]
+  );
+
+  const markAllAsRead = useCallback(async () => {
+    await axiosInstance.post(`${endpoints.notifications}/read`);
+    mutate();
+  }, [mutate]);
 
   const value = useMemo(
     () => ({ notifications, addNotification, markAllAsRead, markAsRead }),

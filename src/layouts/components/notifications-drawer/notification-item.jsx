@@ -11,7 +11,7 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function NotificationItem({ notification }) {
+export function NotificationItem({ notification, onMarkRead }) {
   const renderAvatar = (
     <ListItemAvatar>
       {notification.avatarUrl ? (
@@ -64,7 +64,8 @@ export function NotificationItem({ notification }) {
   return (
     <ListItemButton
       disableRipple
-sx={{
+      onClick={onMarkRead}
+      sx={{
         p: 2.5,
         alignItems: 'flex-start',
         borderBottom: (theme) => `dashed 1px ${theme.vars.palette.divider}`,

@@ -27,7 +27,7 @@ import { NotificationItem } from './notification-item';
 export function NotificationsDrawer({ sx, ...other }) {
   const drawer = useBoolean();
 
-  const { notifications, markAllAsRead } = useNotificationsContext();
+  const { notifications, markAllAsRead, markAsRead } = useNotificationsContext();
 
   const [currentTab, setCurrentTab] = useState('all');
 
@@ -103,7 +103,10 @@ export function NotificationsDrawer({ sx, ...other }) {
         <Box component="ul">
           {filtered.map((notification) => (
             <Box component="li" key={notification.id} sx={{ display: 'flex' }}>
-              <NotificationItem notification={notification} />
+              <NotificationItem
+                notification={notification}
+                onMarkRead={() => markAsRead(notification.id)}
+              />
             </Box>
           ))}
         </Box>
