@@ -19,6 +19,7 @@ import { Snackbar } from './components/snackbar';
 import { CheckoutProvider } from './sections/checkout/context';
 import { WorkspaceProvider } from './workspace/workspace-provider';
 import { OneSignalProvider } from './components/onesignal/onesignal-provider';
+import { NotificationsProvider } from './components/onesignal/notifications-context';
 
 // ----------------------------------------------------------------------
 
@@ -29,19 +30,21 @@ export default function App() {
     <LocalizationProvider>
       <AuthProvider>
         <SettingsProvider settings={defaultSettings}>
-          <OneSignalProvider />
-          <WorkspaceProvider>
-            <ThemeProvider>
-              <MotionLazy>
-                <CheckoutProvider>
-                  <Snackbar />
-                  <ProgressBar />
-                  <SettingsDrawer />
-                  <Router />
-                </CheckoutProvider>
-              </MotionLazy>
-            </ThemeProvider>
-          </WorkspaceProvider>
+          <NotificationsProvider>
+            <OneSignalProvider />
+            <WorkspaceProvider>
+              <ThemeProvider>
+                <MotionLazy>
+                  <CheckoutProvider>
+                    <Snackbar />
+                    <ProgressBar />
+                    <SettingsDrawer />
+                    <Router />
+                  </CheckoutProvider>
+                </MotionLazy>
+              </ThemeProvider>
+            </WorkspaceProvider>
+          </NotificationsProvider>
         </SettingsProvider>
       </AuthProvider>
     </LocalizationProvider>
