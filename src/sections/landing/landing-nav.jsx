@@ -74,14 +74,18 @@ export function LandingNav({ basePath = '' }) {
             ))}
           </Stack>
 
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center">
             <Button
               size="small"
               variant="contained"
               color="error"
               href="/tournaments"
               sx={{
-                borderRadius: 1.5, fontWeight: 700, px: 2,
+                borderRadius: 1.5,
+                fontWeight: 700,
+                px: { xs: 1, sm: 2 },
+                fontSize: { xs: '0.7rem', sm: '0.8125rem' },
+                whiteSpace: 'nowrap',
                 boxShadow: (t) => `0 4px 12px ${varAlpha(t.vars.palette.error.mainChannel, 0.3)}`,
               }}
             >
@@ -94,7 +98,11 @@ export function LandingNav({ basePath = '' }) {
               color="primary"
               href="/dashboard"
               sx={{
-                borderRadius: 1.5, fontWeight: 700, px: 2,
+                borderRadius: 1.5,
+                fontWeight: 700,
+                px: { xs: 1, sm: 2 },
+                fontSize: { xs: '0.7rem', sm: '0.8125rem' },
+                whiteSpace: 'nowrap',
                 boxShadow: (t) => `0 4px 12px ${varAlpha(t.vars.palette.primary.mainChannel, 0.3)}`,
               }}
             >
