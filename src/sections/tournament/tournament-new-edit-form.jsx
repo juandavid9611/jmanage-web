@@ -34,6 +34,7 @@ const TournamentSchema = zod.object({
   name: zod.string().min(1, 'El nombre es obligatorio'),
   season: zod.string().optional(),
   type: zod.enum(['league', 'knockout', 'hybrid']),
+  is_public: zod.boolean().optional(),
   rules: zod.object({
     points_per_win: zod.coerce.number().int().min(0, 'Debe ser 0 o más'),
     points_per_draw: zod.coerce.number().int().min(0, 'Debe ser 0 o más'),
@@ -51,6 +52,7 @@ export function TournamentNewEditForm({ currentTournament }) {
     name: currentTournament?.name || '',
     season: currentTournament?.season || '',
     type: currentTournament?.type || 'league',
+    is_public: currentTournament?.is_public ?? false,
     rules: {
       points_per_win: currentTournament?.rules?.points_per_win ?? 3,
       points_per_draw: currentTournament?.rules?.points_per_draw ?? 1,
@@ -109,6 +111,12 @@ export function TournamentNewEditForm({ currentTournament }) {
                   </MenuItem>
                 ))}
               </Field.Select>
+
+              <Field.Switch
+                name="is_public"
+                label="Torneo público"
+                helperText="Visible para cualquier persona sin necesidad de iniciar sesión"
+              />
             </Stack>
           </Card>
         </Grid>

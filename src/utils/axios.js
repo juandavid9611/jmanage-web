@@ -39,8 +39,9 @@ publicAxiosInstance.interceptors.response.use(
   (error) => Promise.reject((error.response && error.response.data) || 'Something went wrong!')
 );
 
-export const publicFetcher = async ([url, params]) => {
+export const publicFetcher = async (args) => {
   try {
+    const [url, params] = Array.isArray(args) ? args : [args];
     const res = await publicAxiosInstance.get(url, { params });
     return res.data;
   } catch (error) {

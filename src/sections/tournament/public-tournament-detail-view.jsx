@@ -93,7 +93,7 @@ export function PublicTournamentDetailView({ id }) {
   );
 
   if (tournamentLoading) return <LoadingScreen />;
-  if (!tournament) return <EmptyContent title="Torneo no encontrado" />;
+  if (!tournament) return <EmptyContent title="Torneo no disponible" description="Este torneo no existe o no está configurado como público." />;
 
   const meta = STATUS_META[tournament.status] || STATUS_META.draft;
 

@@ -414,11 +414,10 @@ export function useGetTopScorers(tournamentId) {
 // ── Public Hooks (no auth) ─────────────────────────────────────────────
 
 export function useGetPublicTournaments(status) {
-  const params = { account_id: PUBLIC_ACCOUNT_ID };
-  if (status) params.status = status;
+  const params = status ? { status } : {};
 
   const { data, isLoading, error, isValidating } = useSWR(
-    PUBLIC_ACCOUNT_ID ? [PUBLIC_URL, params] : null,
+    [PUBLIC_URL, params],
     publicFetcher
   );
 
@@ -437,9 +436,7 @@ export function useGetPublicTournaments(status) {
 
 export function useGetPublicTournament(tournamentId) {
   const { data, isLoading, error } = useSWR(
-    tournamentId && PUBLIC_ACCOUNT_ID
-      ? [`${PUBLIC_URL}/${tournamentId}`, { account_id: PUBLIC_ACCOUNT_ID }]
-      : null,
+    tournamentId ? `${PUBLIC_URL}/${tournamentId}` : null,
     publicFetcher
   );
 
@@ -455,9 +452,7 @@ export function useGetPublicTournament(tournamentId) {
 
 export function useGetPublicGroups(tournamentId) {
   const { data, isLoading, error } = useSWR(
-    tournamentId && PUBLIC_ACCOUNT_ID
-      ? [`${PUBLIC_URL}/${tournamentId}/groups`, { account_id: PUBLIC_ACCOUNT_ID }]
-      : null,
+    tournamentId ? `${PUBLIC_URL}/${tournamentId}/groups` : null,
     publicFetcher
   );
 
@@ -473,9 +468,7 @@ export function useGetPublicGroups(tournamentId) {
 
 export function useGetPublicTeams(tournamentId) {
   const { data, isLoading, error } = useSWR(
-    tournamentId && PUBLIC_ACCOUNT_ID
-      ? [`${PUBLIC_URL}/${tournamentId}/teams`, { account_id: PUBLIC_ACCOUNT_ID }]
-      : null,
+    tournamentId ? `${PUBLIC_URL}/${tournamentId}/teams` : null,
     publicFetcher
   );
 
@@ -490,14 +483,12 @@ export function useGetPublicTeams(tournamentId) {
 }
 
 export function useGetPublicMatches(tournamentId, filters = {}) {
-  const params = { account_id: PUBLIC_ACCOUNT_ID };
+  const params = {};
   if (filters.matchweek) params.matchweek = filters.matchweek;
   if (filters.status) params.status = filters.status;
 
   const { data, isLoading, error } = useSWR(
-    tournamentId && PUBLIC_ACCOUNT_ID
-      ? [`${PUBLIC_URL}/${tournamentId}/matches`, params]
-      : null,
+    tournamentId ? [`${PUBLIC_URL}/${tournamentId}/matches`, params] : null,
     publicFetcher,
     {
       refreshInterval: (latestData) =>
@@ -517,9 +508,7 @@ export function useGetPublicMatches(tournamentId, filters = {}) {
 
 export function useGetPublicStandings(tournamentId) {
   const { data, isLoading, error } = useSWR(
-    tournamentId && PUBLIC_ACCOUNT_ID
-      ? [`${PUBLIC_URL}/${tournamentId}/standings`, { account_id: PUBLIC_ACCOUNT_ID }]
-      : null,
+    tournamentId ? `${PUBLIC_URL}/${tournamentId}/standings` : null,
     publicFetcher
   );
 
@@ -535,9 +524,7 @@ export function useGetPublicStandings(tournamentId) {
 
 export function useGetPublicStats(tournamentId) {
   const { data, isLoading, error } = useSWR(
-    tournamentId && PUBLIC_ACCOUNT_ID
-      ? [`${PUBLIC_URL}/${tournamentId}/stats`, { account_id: PUBLIC_ACCOUNT_ID }]
-      : null,
+    tournamentId ? `${PUBLIC_URL}/${tournamentId}/stats` : null,
     publicFetcher
   );
 
@@ -553,9 +540,7 @@ export function useGetPublicStats(tournamentId) {
 
 export function useGetPublicTopScorers(tournamentId) {
   const { data, isLoading, error } = useSWR(
-    tournamentId && PUBLIC_ACCOUNT_ID
-      ? [`${PUBLIC_URL}/${tournamentId}/top-scorers`, { account_id: PUBLIC_ACCOUNT_ID }]
-      : null,
+    tournamentId ? `${PUBLIC_URL}/${tournamentId}/top-scorers` : null,
     publicFetcher
   );
 
