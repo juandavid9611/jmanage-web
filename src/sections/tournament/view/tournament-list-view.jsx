@@ -38,10 +38,7 @@ export function TournamentListView() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Load all tournaments for count badges on tabs
-  const { tournaments: allTournaments } = useGetTournaments();
-  // Load filtered list for the grid
-  const { tournaments, tournamentsLoading, tournamentsEmpty } = useGetTournaments(
+  const { tournaments, countsByStatus, tournamentsLoading, tournamentsEmpty } = useGetTournaments(
     statusFilter || undefined
   );
 
@@ -50,8 +47,8 @@ export function TournamentListView() {
   }, []);
 
   const getCount = (status) => {
-    if (!status) return allTournaments.length;
-    return allTournaments.filter((t) => t.status === status).length;
+    if (!status) return Object.values(countsByStatus).reduce((a, b) => a + b, 0);
+    return countsByStatus[status] || 0;
   };
 
   const handleDelete = useCallback(() => {

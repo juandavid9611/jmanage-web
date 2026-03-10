@@ -1,10 +1,11 @@
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
+import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
 
-import { useGetStats, useGetTeams, useGetBracket } from 'src/actions/tournament';
+import { useGetStats } from 'src/actions/tournament';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -25,13 +26,22 @@ const STAT_TILES = [
 
 export function StatsOverview({ tournamentId, tournament }) {
   const { stats, statsLoading } = useGetStats(tournamentId);
-  const { bracket } = useGetBracket(tournamentId);
-  const { teams } = useGetTeams(tournamentId);
 
-  const championId = bracket?.final?.[0]?.winner_team_id;
-  const champion = championId ? teams?.find((t) => t.id === championId) : null;
+  const champion = stats?.champion || null;
 
-  if (statsLoading || !stats) return null;
+  if (statsLoading || !stats) {
+    return (
+      <Box
+        display="grid"
+        gap={1.5}
+        gridTemplateColumns={{ xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }}
+      >
+        {STAT_TILES.map((tile) => (
+          <Skeleton key={tile.key} variant="rounded" height={90} />
+        ))}
+      </Box>
+    );
+  }
 
   return (
     <Stack spacing={2}>

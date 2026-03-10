@@ -7,6 +7,7 @@ import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -220,7 +221,19 @@ export function BracketView({ tournamentId, teams, tournament, allMatches = [] }
     [tournamentId, navigate]
   );
 
-  if (bracketLoading) return null;
+  if (bracketLoading) {
+    return (
+      <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 2 }}>
+        {[4, 2, 1].map((count, col) => (
+          <Stack key={col} spacing={2} sx={{ minWidth: 180 }}>
+            {[...Array(count)].map((_, row) => (
+              <Skeleton key={row} variant="rounded" height={72} />
+            ))}
+          </Stack>
+        ))}
+      </Stack>
+    );
+  }
 
   // ── Empty state ──────────────────────────────────────────────────────
   if (!hasRounds) {

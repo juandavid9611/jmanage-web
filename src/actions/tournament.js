@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
 
-import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
+import axiosInstance, { fetcher, endpoints, publicFetcher } from 'src/utils/axios';
 
 const URL = endpoints.tournaments;
+const PUBLIC_URL = '/public/tournaments';
+const PUBLIC_ACCOUNT_ID = import.meta.env.VITE_PUBLIC_ACCOUNT_ID;
 
 // ── Tournament CRUD ───────────────────────────────────────────────────
 
@@ -13,11 +15,12 @@ export function useGetTournaments(status) {
 
   return useMemo(
     () => ({
-      tournaments: data || [],
+      tournaments: data?.items || [],
+      countsByStatus: data?.counts_by_status || {},
       tournamentsLoading: isLoading,
       tournamentsError: error,
       tournamentsValidating: isValidating,
-      tournamentsEmpty: !isLoading && !data?.length,
+      tournamentsEmpty: !isLoading && !data?.items?.length,
     }),
     [data, error, isLoading, isValidating]
   );
@@ -207,7 +210,11 @@ export function useGetMatches(tournamentId, filters = {}) {
 
   const { data, isLoading, error } = useSWR(
     tournamentId ? `${URL}/${tournamentId}/matches${qs}` : null,
-    fetcher
+    fetcher,
+    {
+      refreshInterval: (latestData) =>
+        latestData?.some((m) => m.status === 'live') ? 15000 : 0,
+    }
   );
 
   return useMemo(
@@ -223,7 +230,10 @@ export function useGetMatches(tournamentId, filters = {}) {
 export function useGetMatch(tournamentId, matchId) {
   const { data, isLoading, error } = useSWR(
     tournamentId && matchId ? `${URL}/${tournamentId}/matches/${matchId}` : null,
-    fetcher
+    fetcher,
+    {
+      refreshInterval: (latestData) => (latestData?.status === 'live' ? 15000 : 0),
+    }
   );
 
   return useMemo(
@@ -314,6 +324,24 @@ export function useGetStandings(tournamentId, groupId) {
   );
 }
 
+// Returns combined standings for all groups + tournament level in one request.
+// Response shape: { groups: { [groupId]: { group_name, as_of, items } }, tournament: { as_of, items } }
+export function useGetAllStandings(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId ? `${URL}/${tournamentId}/standings` : null,
+    fetcher
+  );
+
+  return useMemo(
+    () => ({
+      allStandings: data,
+      allStandingsLoading: isLoading,
+      allStandingsError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
 // ── Bracket ───────────────────────────────────────────────────────────
 
 export function useGetBracket(tournamentId) {
@@ -371,6 +399,164 @@ export function useGetTopScorers(tournamentId) {
   const { data, isLoading, error } = useSWR(
     tournamentId ? `${URL}/${tournamentId}/top-scorers` : null,
     fetcher
+  );
+
+  return useMemo(
+    () => ({
+      scorers: data || [],
+      scorersLoading: isLoading,
+      scorersError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+// ── Public Hooks (no auth) ─────────────────────────────────────────────
+
+export function useGetPublicTournaments(status) {
+  const params = { account_id: PUBLIC_ACCOUNT_ID };
+  if (status) params.status = status;
+
+  const { data, isLoading, error, isValidating } = useSWR(
+    PUBLIC_ACCOUNT_ID ? [PUBLIC_URL, params] : null,
+    publicFetcher
+  );
+
+  return useMemo(
+    () => ({
+      tournaments: data?.items || [],
+      countsByStatus: data?.counts_by_status || {},
+      tournamentsLoading: isLoading,
+      tournamentsError: error,
+      tournamentsValidating: isValidating,
+      tournamentsEmpty: !isLoading && !data?.items?.length,
+    }),
+    [data, error, isLoading, isValidating]
+  );
+}
+
+export function useGetPublicTournament(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId && PUBLIC_ACCOUNT_ID
+      ? [`${PUBLIC_URL}/${tournamentId}`, { account_id: PUBLIC_ACCOUNT_ID }]
+      : null,
+    publicFetcher
+  );
+
+  return useMemo(
+    () => ({
+      tournament: data,
+      tournamentLoading: isLoading,
+      tournamentError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicGroups(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId && PUBLIC_ACCOUNT_ID
+      ? [`${PUBLIC_URL}/${tournamentId}/groups`, { account_id: PUBLIC_ACCOUNT_ID }]
+      : null,
+    publicFetcher
+  );
+
+  return useMemo(
+    () => ({
+      groups: data || [],
+      groupsLoading: isLoading,
+      groupsError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicTeams(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId && PUBLIC_ACCOUNT_ID
+      ? [`${PUBLIC_URL}/${tournamentId}/teams`, { account_id: PUBLIC_ACCOUNT_ID }]
+      : null,
+    publicFetcher
+  );
+
+  return useMemo(
+    () => ({
+      teams: data || [],
+      teamsLoading: isLoading,
+      teamsError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicMatches(tournamentId, filters = {}) {
+  const params = { account_id: PUBLIC_ACCOUNT_ID };
+  if (filters.matchweek) params.matchweek = filters.matchweek;
+  if (filters.status) params.status = filters.status;
+
+  const { data, isLoading, error } = useSWR(
+    tournamentId && PUBLIC_ACCOUNT_ID
+      ? [`${PUBLIC_URL}/${tournamentId}/matches`, params]
+      : null,
+    publicFetcher,
+    {
+      refreshInterval: (latestData) =>
+        latestData?.some((m) => m.status === 'live') ? 15000 : 0,
+    }
+  );
+
+  return useMemo(
+    () => ({
+      matches: data || [],
+      matchesLoading: isLoading,
+      matchesError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicStandings(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId && PUBLIC_ACCOUNT_ID
+      ? [`${PUBLIC_URL}/${tournamentId}/standings`, { account_id: PUBLIC_ACCOUNT_ID }]
+      : null,
+    publicFetcher
+  );
+
+  return useMemo(
+    () => ({
+      allStandings: data,
+      allStandingsLoading: isLoading,
+      allStandingsError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicStats(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId && PUBLIC_ACCOUNT_ID
+      ? [`${PUBLIC_URL}/${tournamentId}/stats`, { account_id: PUBLIC_ACCOUNT_ID }]
+      : null,
+    publicFetcher
+  );
+
+  return useMemo(
+    () => ({
+      stats: data,
+      statsLoading: isLoading,
+      statsError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicTopScorers(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId && PUBLIC_ACCOUNT_ID
+      ? [`${PUBLIC_URL}/${tournamentId}/top-scorers`, { account_id: PUBLIC_ACCOUNT_ID }]
+      : null,
+    publicFetcher
   );
 
   return useMemo(

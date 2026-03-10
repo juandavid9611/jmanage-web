@@ -11,6 +11,11 @@ const ROOTS = {
 
 export const paths = {
   faqs: '/faqs',
+  // PUBLIC
+  publicTournaments: {
+    root: '/tournaments',
+    detail: (id) => `/tournaments/${id}`,
+  },
   // AUTH
   auth: {
     amplify: {

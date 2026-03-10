@@ -106,10 +106,12 @@ export function getPhases(tournament, teams, totalMatchweeks) {
       // For knockout-only: always accessible once active.
       // For hybrid: only after all group-stage jornadas are done.
       const groupsDone = type === 'knockout' || (totalMw > 0 && currentMw >= totalMw);
+      const bracketGenerated =
+        tournament.bracket && Object.keys(tournament.bracket).length > 0;
       phases.push({
         key: 'eliminatorias',
         label: 'Fase Final',
-        sub: groupsDone ? 'Lista para iniciar' : 'Bloqueado',
+        sub: bracketGenerated ? 'En curso' : groupsDone ? 'Lista para iniciar' : 'Bloqueado',
         state: groupsDone ? 'active' : 'locked',
       });
     } else {
@@ -128,6 +130,7 @@ export function TournamentBanner({
   activePhase,
   isSubmitting,
   totalMatchweeks,
+  allMatches,
   onPhaseClick,
   onActivate,
   onFinish,
@@ -146,6 +149,13 @@ export function TournamentBanner({
   const isHybrid = tournament.type === 'hybrid';
 
   const phases = getPhases(tournament, teams, totalMw);
+
+  const allGroupMatchesFinished =
+    !allMatches ||
+    allMatches.length === 0 ||
+    allMatches.every((m) => m.status === 'finished');
+
+  const hasBracket = tournament.bracket && Object.keys(tournament.bracket).length > 0;
 
   return (
     <Box
@@ -247,17 +257,6 @@ export function TournamentBanner({
 
             {/* Action Buttons */}
             <Stack direction="row" spacing={1} flexWrap="wrap">
-              {tournament.status === 'active' && (isLeague || isHybrid) && totalMw > 0 && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => onPhaseClick?.('fase_grupos')}
-                  endIcon={<Iconify icon="eva:arrow-forward-fill" width={16} />}
-                >
-                  Ir a Jornada {currentMw}
-                </Button>
-              )}
-
               {tournament.status === 'draft' && (
                 <Tooltip
                   title={!canActivate ? 'Se necesitan al menos 2 equipos' : ''}
@@ -291,16 +290,24 @@ export function TournamentBanner({
                 </LoadingButton>
               )}
 
-              {isHybrid && tournament.status === 'active' && totalMw > 0 && currentMw >= totalMw && (
-                <Button
-                  variant="contained"
-                  color="success"
-                  size="small"
-                  startIcon={<Iconify icon="mdi:tournament" width={16} />}
-                  onClick={() => onPhaseClick?.('eliminatorias')}
+              {isHybrid && tournament.status === 'active' && totalMw > 0 && currentMw >= totalMw && !hasBracket && (
+                <Tooltip
+                  title={!allGroupMatchesFinished ? 'Hay partidos pendientes en la fase de grupos' : ''}
+                  arrow
                 >
-                  Iniciar Fase Final
-                </Button>
+                  <span>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      size="small"
+                      startIcon={<Iconify icon="mdi:tournament" width={16} />}
+                      disabled={!allGroupMatchesFinished}
+                      onClick={() => onPhaseClick?.('eliminatorias')}
+                    >
+                      Iniciar Fase Final
+                    </Button>
+                  </span>
+                </Tooltip>
               )}
 
               {tournament.status === 'active' && (

@@ -30,6 +30,27 @@ export const fetcher = async (args) => {
 
 // ----------------------------------------------------------------------
 
+// ----------------------------------------------------------------------
+
+export const publicAxiosInstance = axios.create({ baseURL: CONFIG.site.serverUrl });
+
+publicAxiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject((error.response && error.response.data) || 'Something went wrong!')
+);
+
+export const publicFetcher = async ([url, params]) => {
+  try {
+    const res = await publicAxiosInstance.get(url, { params });
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch:', error);
+    throw error;
+  }
+};
+
+// ----------------------------------------------------------------------
+
 export const endpoints = {
   users: '/users',
   calendar: '/calendar',

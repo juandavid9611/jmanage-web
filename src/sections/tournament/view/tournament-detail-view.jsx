@@ -6,6 +6,7 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import { alpha } from '@mui/material/styles';
+import Skeleton from '@mui/material/Skeleton';
 import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
 import TextField from '@mui/material/TextField';
@@ -75,7 +76,7 @@ export function TournamentDetailView() {
   const { teams } = useGetTeams(id);
   const { groups } = useGetGroups(id);
   const { stats } = useGetStats(id);
-  const { matches: allMatches } = useGetMatches(id);
+  const { matches: allMatches, matchesLoading } = useGetMatches(id);
   const { players } = useGetPlayers(id);
 
   const [activePhase, setActivePhase] = useState(null);
@@ -111,8 +112,8 @@ export function TournamentDetailView() {
 
   // Next pending match for sidebar action
   const nextPendingMatch = useMemo(
-    () => allMatches.find((m) => m.status === 'scheduled'),
-    [allMatches]
+    () => allMatches.find((m) => m.status === 'scheduled' && m.matchweek === currentMw),
+    [allMatches, currentMw]
   );
 
   const handleDelete = useCallback(async () => {
@@ -235,6 +236,7 @@ export function TournamentDetailView() {
         activePhase={currentPhase}
         isSubmitting={isSubmitting}
         totalMatchweeks={totalMw}
+        allMatches={allMatches}
         onPhaseClick={handlePhaseClick}
         onActivate={() => setActivateDialog(true)}
         onFinish={() => setFinishDialog(true)}
@@ -289,7 +291,13 @@ export function TournamentDetailView() {
                   <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.08) }} />
                 </Stack>
 
-                {allMatches.length === 0 ? (
+                {matchesLoading ? (
+                  <Stack spacing={1.5}>
+                    {[...Array(4)].map((_, i) => (
+                      <Skeleton key={i} variant="rounded" height={64} />
+                    ))}
+                  </Stack>
+                ) : allMatches.length === 0 ? (
                   <EmptyContent
                     filled
                     title="No hay partidos"
@@ -326,6 +334,8 @@ export function TournamentDetailView() {
                   tournamentId={id}
                   teams={teams}
                   nextPendingMatch={nextPendingMatch}
+                  currentMatchweek={currentMw}
+                  totalMatchweeks={totalMw}
                   onNextAction={
                     nextPendingMatch
                       ? () => handleScoreClick(nextPendingMatch)

@@ -4,6 +4,7 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableRow from '@mui/material/TableRow';
+import Skeleton from '@mui/material/Skeleton';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
@@ -89,6 +90,16 @@ export function StandingsTable({ tournamentId, groups, teams }) {
                   </TableCell>
                 </TableRow>
               ))}
+              {standingsLoading &&
+                [...Array(6)].map((_, i) => (
+                  <TableRow key={i}>
+                    {[...Array(10)].map((__, j) => (
+                      <TableCell key={j}>
+                        <Skeleton variant="text" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
               {rows.length === 0 && !standingsLoading && (
                 <TableRow>
                   <TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>
