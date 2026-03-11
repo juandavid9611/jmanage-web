@@ -1,3 +1,4 @@
+import { mutate } from 'swr';
 import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -13,6 +14,7 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -46,6 +48,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
   const [groupDialog, setGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupSlots, setGroupSlots] = useState(2);
+  const [isAssigning, setIsAssigning] = useState(false);
 
   const isLocked = tournament?.status === 'active' || tournament?.status === 'finished';
   const totalTeams = tournament?.num_teams || teams.length;
@@ -101,6 +104,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
 
   const handleRandomAssign = async () => {
     if (!groups?.length) { toast.error('Crea grupos primero'); return; }
+    setIsAssigning(true);
     try {
       const removeOps = groups.flatMap((g) =>
         (g.teams || []).map((gt) => removeTeamFromGroup(tournamentId, g.id, gt.team_id))
@@ -112,9 +116,13 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
         return assignTeamToGroup(tournamentId, group.id, team.id);
       });
       await Promise.all(assignOps);
+      // Single revalidation after all ops complete
+      mutate((key) => typeof key === 'string' && key.includes(tournamentId));
       toast.success(`${shuffled.length} equipos asignados aleatoriamente`);
     } catch (error) {
       toast.error(error.message || 'Error');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -215,15 +223,16 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
             </Stack>
             <Stack direction="row" spacing={1}>
               {hasGroups && (
-                <Button
+                <LoadingButton
                   size="small"
                   variant="outlined"
                   startIcon={<Iconify icon="mdi:shuffle-variant" />}
                   onClick={handleRandomAssign}
+                  loading={isAssigning}
                   disabled={teams.length < 2 || isLocked}
                 >
                   Asignar Aleatorio
-                </Button>
+                </LoadingButton>
               )}
               <Button
                 size="small"

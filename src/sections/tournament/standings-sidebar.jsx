@@ -4,33 +4,35 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
+import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
-import { useGetGroups, useGetStandings } from 'src/actions/tournament';
+import { useGetGroups, useGetAllStandings } from 'src/actions/tournament';
 
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
 const COLS = [
-  { key: 'rank',           label: '#',      fixed: '20px', align: 'center' },
-  { key: 'name',           label: 'Equipo', fixed: '2fr',  align: 'left' },
-  { key: 'played',         label: 'PJ',     fixed: '1fr',  align: 'center' },
-  { key: 'won',            label: 'PG',     fixed: '1fr',  align: 'center' },
-  { key: 'drawn',          label: 'PE',     fixed: '1fr',  align: 'center' },
-  { key: 'lost',           label: 'PP',     fixed: '1fr',  align: 'center' },
-  { key: 'goals_for',      label: 'GF',     fixed: '1fr',  align: 'center' },
-  { key: 'goals_against',  label: 'GC',     fixed: '1fr',  align: 'center' },
-  { key: 'goal_difference',label: 'DG',     fixed: '1fr',  align: 'center' },
-  { key: 'points',         label: 'PTS',    fixed: '1fr',  align: 'center' },
+  { key: 'rank', label: '#', fixed: '20px', align: 'center' },
+  { key: 'name', label: 'Equipo', fixed: '2fr', align: 'left' },
+  { key: 'played', label: 'PJ', fixed: '1fr', align: 'center' },
+  { key: 'won', label: 'PG', fixed: '1fr', align: 'center' },
+  { key: 'drawn', label: 'PE', fixed: '1fr', align: 'center' },
+  { key: 'lost', label: 'PP', fixed: '1fr', align: 'center' },
+  { key: 'goals_for', label: 'GF', fixed: '1fr', align: 'center' },
+  { key: 'goals_against', label: 'GC', fixed: '1fr', align: 'center' },
+  { key: 'goal_difference', label: 'DG', fixed: '1fr', align: 'center' },
+  { key: 'points', label: 'PTS', fixed: '1fr', align: 'center' },
 ];
 
 const GRID_TEMPLATE = COLS.map((c) => c.fixed).join(' ');
 
 // ----------------------------------------------------------------------
 
-export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onViewAll, onNextAction }) {
+export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onViewAll, onNextAction, currentMatchweek, totalMatchweeks }) {
   const { groups } = useGetGroups(tournamentId);
+  const { allStandings, allStandingsLoading } = useGetAllStandings(tournamentId);
 
   return (
     <Box
@@ -67,22 +69,28 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onView
 
       {/* Body */}
       <Box sx={{ px: 1.5, py: 1.5, flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
-        {groups?.length > 0 ? (
+        {allStandingsLoading ? (
+          <Stack spacing={0.75}>
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} variant="rounded" height={32} />
+            ))}
+          </Stack>
+        ) : groups?.length > 0 ? (
           groups.map((group) => (
             <GroupStandings
               key={group.id}
               group={group}
-              tournamentId={tournamentId}
+              rows={allStandings?.groups?.[group.id]?.items || []}
               teams={teams}
             />
           ))
         ) : (
-          <AllStandings tournamentId={tournamentId} teams={teams} />
+          <AllStandings rows={allStandings?.tournament?.items || []} teams={teams} />
         )}
       </Box>
 
-      {/* Footer — Next Action */}
-      {nextPendingMatch && (
+      {/* Footer */}
+      {(nextPendingMatch || (currentMatchweek > 0 && currentMatchweek < totalMatchweeks)) && (
         <Box
           sx={{
             px: 2.25,
@@ -90,41 +98,66 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onView
             borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
           }}
         >
-          <Box
-            onClick={onNextAction}
-            sx={{
-              bgcolor: (t) => alpha(t.palette.grey[900], 0.04),
-              border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
-              borderRadius: 1,
-              px: 1.75,
-              py: 1.25,
-              cursor: onNextAction ? 'pointer' : 'default',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              transition: 'all 0.2s',
-              '&:hover': onNextAction
-                ? { bgcolor: (t) => alpha(t.palette.grey[900], 0.06) }
-                : {},
-            }}
-          >
-            <Box>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Registrar{' '}
-                {(teams?.find((t) => t.id === nextPendingMatch.home_team_id)?.short_name ||
-                  teams?.find((t) => t.id === nextPendingMatch.home_team_id)?.name ||
-                  'LOC')}{' '}
-                vs{' '}
-                {(teams?.find((t) => t.id === nextPendingMatch.away_team_id)?.short_name ||
-                  teams?.find((t) => t.id === nextPendingMatch.away_team_id)?.name ||
-                  'VIS')}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                Resultado pendiente{nextPendingMatch.venue ? ` · ${nextPendingMatch.venue}` : ''}
-              </Typography>
+          {nextPendingMatch ? (
+            <Box
+              onClick={onNextAction}
+              sx={{
+                bgcolor: (t) => alpha(t.palette.grey[900], 0.04),
+                border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+                borderRadius: 1,
+                px: 1.75,
+                py: 1.25,
+                cursor: onNextAction ? 'pointer' : 'default',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.2s',
+                '&:hover': onNextAction
+                  ? { bgcolor: (t) => alpha(t.palette.grey[900], 0.06) }
+                  : {},
+              }}
+            >
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Registrar{' '}
+                  {(teams?.find((t) => t.id === nextPendingMatch.home_team_id)?.short_name ||
+                    teams?.find((t) => t.id === nextPendingMatch.home_team_id)?.name ||
+                    'LOC')}{' '}
+                  vs{' '}
+                  {(teams?.find((t) => t.id === nextPendingMatch.away_team_id)?.short_name ||
+                    teams?.find((t) => t.id === nextPendingMatch.away_team_id)?.name ||
+                    'VIS')}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                  Resultado pendiente{nextPendingMatch.venue ? ` · ${nextPendingMatch.venue}` : ''}
+                </Typography>
+              </Box>
+              <Iconify icon="eva:arrow-forward-fill" sx={{ color: 'text.disabled' }} />
             </Box>
-            <Iconify icon="eva:arrow-forward-fill" sx={{ color: 'text.disabled' }} />
-          </Box>
+          ) : (
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={1.25}
+              sx={{
+                px: 1.75,
+                py: 1.25,
+                borderRadius: 1,
+                bgcolor: (t) => alpha(t.palette.success.main, 0.06),
+                border: (t) => `1px solid ${alpha(t.palette.success.main, 0.16)}`,
+              }}
+            >
+              <Iconify icon="mdi:check-circle" width={18} sx={{ color: 'success.main', flexShrink: 0 }} />
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.dark' }}>
+                  Jornada {currentMatchweek} completada
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                  Lista para avanzar a la Jornada {currentMatchweek + 1}
+                </Typography>
+              </Box>
+            </Stack>
+          )}
         </Box>
       )}
     </Box>
@@ -133,10 +166,7 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onView
 
 // ----------------------------------------------------------------------
 
-function GroupStandings({ group, tournamentId, teams }) {
-  const { standings } = useGetStandings(tournamentId, group.id);
-  const rows = standings?.items || [];
-
+function GroupStandings({ group, rows, teams }) {
   return (
     <Box>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
@@ -152,10 +182,7 @@ function GroupStandings({ group, tournamentId, teams }) {
   );
 }
 
-function AllStandings({ tournamentId, teams }) {
-  const { standings } = useGetStandings(tournamentId);
-  const rows = standings?.items || [];
-
+function AllStandings({ rows, teams }) {
   return <StandingsTable rows={rows} teams={teams} />;
 }
 

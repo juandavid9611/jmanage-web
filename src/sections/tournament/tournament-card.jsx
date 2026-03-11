@@ -267,7 +267,10 @@ function DraftSection({ teamCount, numTeams }) {
 // ----------------------------------------------------------------------
 
 function ActiveSection({ type, currentMw, totalMw, matchweekPct }) {
-  if (type === 'knockout') {
+  const inKnockoutPhase =
+    type === 'knockout' || (type === 'hybrid' && totalMw > 0 && currentMw >= totalMw);
+
+  if (inKnockoutPhase) {
     return (
       <Stack direction="row" alignItems="center" spacing={1}>
         <Box
