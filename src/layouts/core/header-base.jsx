@@ -151,23 +151,6 @@ export function HeaderBase({
               {/* -- Sign in button -- */}
               {signIn && <SignInButton />}
 
-              {/* -- Torneos en vivo button -- */}
-              <Button
-                data-slot="torneos-en-vivo"
-                variant="contained"
-                component={RouterLink}
-                href={paths.dashboard.tournament.root}
-                color="error"
-                sx={{
-                  display: 'none',
-                  [theme.breakpoints.up(layoutQuery)]: {
-                    display: 'inline-flex',
-                  },
-                }}
-              >
-                Torneos en vivo
-              </Button>
-
               {/* -- Purchase button -- */}
               {purchase && (
                 <Button
