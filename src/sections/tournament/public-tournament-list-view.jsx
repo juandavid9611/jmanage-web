@@ -193,7 +193,12 @@ function PublicTournamentCard({ tournament, onView }) {
 
       <Stack sx={{ flex: 1, pl: 2.5, pr: 2, pt: 2.5, pb: 0 }} spacing={0}>
         {/* Top row */}
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1.75 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          sx={{ mb: 1.75 }}
+        >
           <Stack direction="row" alignItems="center" spacing={1}>
             <Box
               sx={{
@@ -214,11 +219,21 @@ function PublicTournamentCard({ tournament, onView }) {
               />
             </Box>
             <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600, color: `${TYPE_COLOR[type] || 'primary'}.main`, lineHeight: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 600,
+                  color: `${TYPE_COLOR[type] || 'primary'}.main`,
+                  lineHeight: 1,
+                }}
+              >
                 {TYPE_LABEL[type] || type}
               </Typography>
               {season && (
-                <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', lineHeight: 1.4 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'text.disabled', display: 'block', lineHeight: 1.4 }}
+                >
                   {season}
                 </Typography>
               )}
@@ -246,65 +261,78 @@ function PublicTournamentCard({ tournament, onView }) {
         <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
 
         {/* Status section */}
-        {status === 'active' && (() => {
-          const inKnockout = type === 'knockout' || (type === 'hybrid' && totalMw > 0 && currentMw >= totalMw);
-          const inGroupStage = !inKnockout && totalMw > 0;
+        {status === 'active' &&
+          (() => {
+            const inKnockout =
+              type === 'knockout' || (type === 'hybrid' && totalMw > 0 && currentMw >= totalMw);
+            const inGroupStage = !inKnockout && totalMw > 0;
 
-          if (inKnockout) {
-            return (
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: 'success.main',
-                    flexShrink: 0,
-                    animation: 'pulseDot 2s ease-in-out infinite',
-                    '@keyframes pulseDot': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.25 } },
-                  }}
-                />
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Fase eliminatoria en curso
-                </Typography>
-              </Stack>
-            );
-          }
-
-          if (inGroupStage) {
-            return (
-              <Stack spacing={1} sx={{ mb: 1 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" alignItems="center" spacing={0.75}>
-                    <Iconify icon="mdi:calendar-today" width={15} sx={{ color: 'success.main' }} />
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Jornada {currentMw}
-                      <Typography component="span" variant="caption" sx={{ color: 'text.disabled', ml: 0.25 }}>
-                        / {totalMw}
-                      </Typography>
-                    </Typography>
-                  </Stack>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main' }}>
-                    {Math.round(matchweekPct)}%
+            if (inKnockout) {
+              return (
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      bgcolor: 'success.main',
+                      flexShrink: 0,
+                      animation: 'pulseDot 2s ease-in-out infinite',
+                      '@keyframes pulseDot': {
+                        '0%,100%': { opacity: 1 },
+                        '50%': { opacity: 0.25 },
+                      },
+                    }}
+                  />
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    Fase eliminatoria en curso
                   </Typography>
                 </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={matchweekPct}
-                  color="success"
-                  sx={{
-                    height: 5,
-                    borderRadius: 1,
-                    bgcolor: (t) => alpha(t.palette.success.main, 0.1),
-                    '& .MuiLinearProgress-bar': { borderRadius: 1 },
-                  }}
-                />
-              </Stack>
-            );
-          }
+              );
+            }
 
-          return null;
-        })()}
+            if (inGroupStage) {
+              return (
+                <Stack spacing={1} sx={{ mb: 1 }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Stack direction="row" alignItems="center" spacing={0.75}>
+                      <Iconify
+                        icon="mdi:calendar-today"
+                        width={15}
+                        sx={{ color: 'success.main' }}
+                      />
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Jornada {currentMw}
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          sx={{ color: 'text.disabled', ml: 0.25 }}
+                        >
+                          / {totalMw}
+                        </Typography>
+                      </Typography>
+                    </Stack>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main' }}>
+                      {Math.round(matchweekPct)}%
+                    </Typography>
+                  </Stack>
+                  <LinearProgress
+                    variant="determinate"
+                    value={matchweekPct}
+                    color="success"
+                    sx={{
+                      height: 5,
+                      borderRadius: 1,
+                      bgcolor: (t) => alpha(t.palette.success.main, 0.1),
+                      '& .MuiLinearProgress-bar': { borderRadius: 1 },
+                    }}
+                  />
+                </Stack>
+              );
+            }
+
+            return null;
+          })()}
 
         {status === 'finished' && (
           <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1 }}>

@@ -42,29 +42,29 @@ import { LandingNav } from 'src/sections/landing/landing-nav';
 // ----------------------------------------------------------------------
 
 const STATUS_META = {
-  draft:    { label: 'Borrador',   color: 'default' },
-  active:   { label: 'Activo',     color: 'success' },
+  draft: { label: 'Borrador', color: 'default' },
+  active: { label: 'Activo', color: 'success' },
   finished: { label: 'Finalizado', color: 'info' },
 };
 
 const TYPE_LABEL = {
-  league:   'Liga',
+  league: 'Liga',
   knockout: 'Eliminación',
-  hybrid:   'Híbrido',
+  hybrid: 'Híbrido',
 };
 
 const TABS = [
-  { value: 'overview',  label: 'Resumen' },
+  { value: 'overview', label: 'Resumen' },
   { value: 'standings', label: 'Tabla' },
-  { value: 'matches',   label: 'Partidos' },
-  { value: 'scorers',   label: 'Goleadores' },
+  { value: 'matches', label: 'Partidos' },
+  { value: 'scorers', label: 'Goleadores' },
 ];
 
 const STATUS_BADGE = {
-  finished:  { label: 'Final',     color: 'success' },
-  live:      { label: 'En vivo',   color: 'error' },
+  finished: { label: 'Final', color: 'success' },
+  live: { label: 'En vivo', color: 'error' },
   scheduled: { label: 'Pendiente', color: 'warning' },
-  postponed: { label: 'Aplazado',  color: 'warning' },
+  postponed: { label: 'Aplazado', color: 'warning' },
 };
 
 // ----------------------------------------------------------------------
@@ -82,8 +82,7 @@ export function PublicTournamentDetailView({ id }) {
   const { scorers, scorersLoading } = useGetPublicTopScorers(id);
 
   const currentMw = tournament?.current_matchweek || 1;
-  const totalMw =
-    tournament?.rules?.total_matchweeks || 0;
+  const totalMw = tournament?.rules?.total_matchweeks || 0;
   const activeMw = selectedMw === undefined ? currentMw : selectedMw;
 
   const { matches: allMatches, matchesLoading } = useGetPublicMatches(id);
@@ -93,87 +92,98 @@ export function PublicTournamentDetailView({ id }) {
   );
 
   if (tournamentLoading) return <LoadingScreen />;
-  if (!tournament) return <EmptyContent title="Torneo no disponible" description="Este torneo no existe o no está configurado como público." />;
+  if (!tournament)
+    return (
+      <EmptyContent
+        title="Torneo no disponible"
+        description="Este torneo no existe o no está configurado como público."
+      />
+    );
 
   const meta = STATUS_META[tournament.status] || STATUS_META.draft;
 
   return (
     <>
-    <LandingNav basePath="/" />
-    <Container maxWidth="lg" sx={{ pt: { xs: 12, md: 14 }, pb: { xs: 5, md: 8 } }}>
-      {/* Back button */}
-      <Button
-        startIcon={<Iconify icon="eva:arrow-back-fill" />}
-        onClick={() => navigate(paths.publicTournaments.root)}
-        sx={{ mb: 3, color: 'text.secondary' }}
-      >
-        Torneos
-      </Button>
+      <LandingNav basePath="/" />
+      <Container maxWidth="lg" sx={{ pt: { xs: 12, md: 14 }, pb: { xs: 5, md: 8 } }}>
+        {/* Back button */}
+        <Button
+          startIcon={<Iconify icon="eva:arrow-back-fill" />}
+          onClick={() => navigate(paths.publicTournaments.root)}
+          sx={{ mb: 3, color: 'text.secondary' }}
+        >
+          Torneos
+        </Button>
 
-      {/* Header */}
-      <Stack spacing={1} sx={{ mb: { xs: 3, md: 4 } }}>
-        <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" gap={1}>
-          <Typography variant="h4">{tournament.name}</Typography>
-          <Chip label={meta.label} color={meta.color} size="small" variant="soft" />
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
-          {tournament.season && (
+        {/* Header */}
+        <Stack spacing={1} sx={{ mb: { xs: 3, md: 4 } }}>
+          <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" gap={1}>
+            <Typography variant="h4">{tournament.name}</Typography>
+            <Chip label={meta.label} color={meta.color} size="small" variant="soft" />
+          </Stack>
+          <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
+            {tournament.season && (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Temporada {tournament.season}
+              </Typography>
+            )}
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Temporada {tournament.season}
+              {TYPE_LABEL[tournament.type] || tournament.type}
             </Typography>
-          )}
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {TYPE_LABEL[tournament.type] || tournament.type}
-          </Typography>
-          {tournament.type !== 'knockout' && totalMw > 0 && (
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Jornada {currentMw} / {totalMw}
-            </Typography>
-          )}
+            {tournament.type !== 'knockout' && totalMw > 0 && (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Jornada {currentMw} / {totalMw}
+              </Typography>
+            )}
+          </Stack>
         </Stack>
-      </Stack>
 
-      {/* Tabs */}
-      <Tabs
-        value={activeTab}
-        onChange={(_, v) => setActiveTab(v)}
-        sx={{
-          mb: { xs: 3, md: 4 },
-          boxShadow: (theme) => `inset 0 -2px 0 0 ${alpha(theme.palette.grey[500], 0.08)}`,
-        }}
-      >
-        {TABS.map((tab) => (
-          <Tab key={tab.value} value={tab.value} label={tab.label} />
-        ))}
-      </Tabs>
+        {/* Tabs */}
+        <Tabs
+          value={activeTab}
+          onChange={(_, v) => setActiveTab(v)}
+          sx={{
+            mb: { xs: 3, md: 4 },
+            boxShadow: (theme) => `inset 0 -2px 0 0 ${alpha(theme.palette.grey[500], 0.08)}`,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} />
+          ))}
+        </Tabs>
 
-      {/* Tab content */}
-      {activeTab === 'overview' && (
-        <PublicStatsOverview stats={stats} statsLoading={statsLoading} tournament={tournament} />
-      )}
+        {/* Tab content */}
+        {activeTab === 'overview' && (
+          <PublicStatsOverview stats={stats} statsLoading={statsLoading} tournament={tournament} />
+        )}
 
-      {activeTab === 'standings' && (
-        <PublicStandingsView groups={groups} allStandings={allStandings} allStandingsLoading={allStandingsLoading} teams={teams} />
-      )}
+        {activeTab === 'standings' && (
+          <PublicStandingsView
+            groups={groups}
+            allStandings={allStandings}
+            allStandingsLoading={allStandingsLoading}
+            teams={teams}
+          />
+        )}
 
-      {activeTab === 'matches' && (
-        <PublicMatchesView
-          allMatches={allMatches}
-          matchesLoading={matchesLoading}
-          currentMatches={currentMatches}
-          teams={teams}
-          totalMw={totalMw}
-          currentMw={currentMw}
-          activeMw={activeMw}
-          selectedMw={selectedMw}
-          onSelectMw={setSelectedMw}
-        />
-      )}
+        {activeTab === 'matches' && (
+          <PublicMatchesView
+            allMatches={allMatches}
+            matchesLoading={matchesLoading}
+            currentMatches={currentMatches}
+            teams={teams}
+            totalMw={totalMw}
+            currentMw={currentMw}
+            activeMw={activeMw}
+            selectedMw={selectedMw}
+            onSelectMw={setSelectedMw}
+          />
+        )}
 
-      {activeTab === 'scorers' && (
-        <PublicTopScorers scorers={scorers} scorersLoading={scorersLoading} />
-      )}
-    </Container>
+        {activeTab === 'scorers' && (
+          <PublicTopScorers scorers={scorers} scorersLoading={scorersLoading} />
+        )}
+      </Container>
     </>
   );
 }
@@ -182,21 +192,39 @@ export function PublicTournamentDetailView({ id }) {
 // Stats Overview
 
 const STAT_TILES = [
-  { key: 'total_matches',           label: 'Partidos',      icon: 'mdi:soccer-field',    color: 'primary' },
-  { key: 'matches_played',          label: 'Jugados',       icon: 'mdi:check-circle',    color: 'success', progressOf: 'total_matches' },
-  { key: 'total_goals',             label: 'Goles',         icon: 'mdi:soccer',          color: 'warning' },
-  { key: 'average_goals_per_match', label: 'Goles/Partido', icon: 'mdi:chart-line',      color: 'info',    decimals: 1 },
-  { key: 'total_yellow_cards',      label: 'Amarillas',     icon: 'mdi:card',            color: 'warning' },
-  { key: 'total_red_cards',         label: 'Rojas',         icon: 'mdi:card',            color: 'error' },
-  { key: 'total_teams',             label: 'Equipos',       icon: 'mdi:shield-half-full',color: 'primary' },
-  { key: 'current_matchweek',       label: 'Jornada',       icon: 'mdi:calendar-today',  color: 'info' },
+  { key: 'total_matches', label: 'Partidos', icon: 'mdi:soccer-field', color: 'primary' },
+  {
+    key: 'matches_played',
+    label: 'Jugados',
+    icon: 'mdi:check-circle',
+    color: 'success',
+    progressOf: 'total_matches',
+  },
+  { key: 'total_goals', label: 'Goles', icon: 'mdi:soccer', color: 'warning' },
+  {
+    key: 'average_goals_per_match',
+    label: 'Goles/Partido',
+    icon: 'mdi:chart-line',
+    color: 'info',
+    decimals: 1,
+  },
+  { key: 'total_yellow_cards', label: 'Amarillas', icon: 'mdi:card', color: 'warning' },
+  { key: 'total_red_cards', label: 'Rojas', icon: 'mdi:card', color: 'error' },
+  { key: 'total_teams', label: 'Equipos', icon: 'mdi:shield-half-full', color: 'primary' },
+  { key: 'current_matchweek', label: 'Jornada', icon: 'mdi:calendar-today', color: 'info' },
 ];
 
 function PublicStatsOverview({ stats, statsLoading, tournament }) {
   if (statsLoading) {
     return (
-      <Box display="grid" gap={1.5} gridTemplateColumns={{ xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }}>
-        {STAT_TILES.map((tile) => <Skeleton key={tile.key} variant="rounded" height={90} />)}
+      <Box
+        display="grid"
+        gap={1.5}
+        gridTemplateColumns={{ xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }}
+      >
+        {STAT_TILES.map((tile) => (
+          <Skeleton key={tile.key} variant="rounded" height={90} />
+        ))}
       </Box>
     );
   }
@@ -234,10 +262,23 @@ function PublicStatsOverview({ stats, statsLoading, tournament }) {
             <Iconify icon="mdi:trophy" width={24} sx={{ color: 'warning.main' }} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="caption" sx={{ color: 'warning.dark', fontWeight: 700, display: 'block', lineHeight: 1, mb: 0.25 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'warning.dark',
+                fontWeight: 700,
+                display: 'block',
+                lineHeight: 1,
+                mb: 0.25,
+              }}
+            >
               CAMPEÓN
             </Typography>
-            <Typography variant="h6" sx={{ color: 'warning.darker', fontWeight: 800, lineHeight: 1.2 }} noWrap>
+            <Typography
+              variant="h6"
+              sx={{ color: 'warning.darker', fontWeight: 800, lineHeight: 1.2 }}
+              noWrap
+            >
               {champion.name}
             </Typography>
             {tournament?.season && (
@@ -246,7 +287,11 @@ function PublicStatsOverview({ stats, statsLoading, tournament }) {
               </Typography>
             )}
           </Box>
-          <Iconify icon="mdi:laurel-wreath" width={32} sx={{ color: (t) => alpha(t.palette.warning.main, 0.3), flexShrink: 0 }} />
+          <Iconify
+            icon="mdi:laurel-wreath"
+            width={32}
+            sx={{ color: (t) => alpha(t.palette.warning.main, 0.3), flexShrink: 0 }}
+          />
         </Box>
       )}
 
@@ -257,7 +302,7 @@ function PublicStatsOverview({ stats, statsLoading, tournament }) {
       >
         {STAT_TILES.map((tile) => {
           const raw = stats[tile.key];
-          const value = tile.decimals ? Number(raw).toFixed(tile.decimals) : (raw ?? 0);
+          const value = tile.decimals ? Number(raw).toFixed(tile.decimals) : raw ?? 0;
           const progressPct = tile.progressOf
             ? Math.min((Number(raw) / (stats[tile.progressOf] || 1)) * 100, 100)
             : null;
@@ -307,12 +352,17 @@ function StatTile({ icon, color, label, value, progressPct }) {
         >
           <Iconify icon={icon} width={15} sx={{ color: `${color}.main` }} />
         </Box>
-        <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600, lineHeight: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.disabled', fontWeight: 600, lineHeight: 1 }}
+        >
           {label}
         </Typography>
       </Stack>
 
-      <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, lineHeight: 1, color: 'text.primary' }}>
+      <Typography
+        sx={{ fontSize: '1.5rem', fontWeight: 700, lineHeight: 1, color: 'text.primary' }}
+      >
         {value}
       </Typography>
 
@@ -337,16 +387,16 @@ function StatTile({ icon, color, label, value, progressPct }) {
 // Standings
 
 const COLS = [
-  { key: 'rank',            label: '#',    fixed: '20px', align: 'center' },
-  { key: 'name',            label: 'Equipo', fixed: '2fr', align: 'left' },
-  { key: 'played',          label: 'PJ',   fixed: '1fr', align: 'center' },
-  { key: 'won',             label: 'PG',   fixed: '1fr', align: 'center' },
-  { key: 'drawn',           label: 'PE',   fixed: '1fr', align: 'center' },
-  { key: 'lost',            label: 'PP',   fixed: '1fr', align: 'center' },
-  { key: 'goals_for',       label: 'GF',   fixed: '1fr', align: 'center' },
-  { key: 'goals_against',   label: 'GC',   fixed: '1fr', align: 'center' },
-  { key: 'goal_difference', label: 'DG',   fixed: '1fr', align: 'center' },
-  { key: 'points',          label: 'PTS',  fixed: '1fr', align: 'center' },
+  { key: 'rank', label: '#', fixed: '20px', align: 'center' },
+  { key: 'name', label: 'Equipo', fixed: '2fr', align: 'left' },
+  { key: 'played', label: 'PJ', fixed: '1fr', align: 'center' },
+  { key: 'won', label: 'PG', fixed: '1fr', align: 'center' },
+  { key: 'drawn', label: 'PE', fixed: '1fr', align: 'center' },
+  { key: 'lost', label: 'PP', fixed: '1fr', align: 'center' },
+  { key: 'goals_for', label: 'GF', fixed: '1fr', align: 'center' },
+  { key: 'goals_against', label: 'GC', fixed: '1fr', align: 'center' },
+  { key: 'goal_difference', label: 'DG', fixed: '1fr', align: 'center' },
+  { key: 'points', label: 'PTS', fixed: '1fr', align: 'center' },
 ];
 
 const GRID_TEMPLATE = COLS.map((c) => c.fixed).join(' ');
@@ -355,7 +405,9 @@ function PublicStandingsView({ groups, allStandings, allStandingsLoading, teams 
   if (allStandingsLoading) {
     return (
       <Stack spacing={0.75}>
-        {[...Array(8)].map((_, i) => <Skeleton key={i} variant="rounded" height={36} />)}
+        {[...Array(8)].map((_, i) => (
+          <Skeleton key={i} variant="rounded" height={36} />
+        ))}
       </Stack>
     );
   }
@@ -368,17 +420,18 @@ function PublicStandingsView({ groups, allStandings, allStandingsLoading, teams 
 
   return (
     <Stack spacing={3}>
-      {groups?.length > 0
-        ? groups.map((group) => (
-            <Box key={group.id}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>
-                {group.name}
-              </Typography>
-              <StandingsTable rows={allStandings?.groups?.[group.id]?.items || []} teams={teams} />
-            </Box>
-          ))
-        : <StandingsTable rows={allStandings?.tournament?.items || []} teams={teams} />
-      }
+      {groups?.length > 0 ? (
+        groups.map((group) => (
+          <Box key={group.id}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>
+              {group.name}
+            </Typography>
+            <StandingsTable rows={allStandings?.groups?.[group.id]?.items || []} teams={teams} />
+          </Box>
+        ))
+      ) : (
+        <StandingsTable rows={allStandings?.tournament?.items || []} teams={teams} />
+      )}
     </Stack>
   );
 }
@@ -448,36 +501,112 @@ function StandingsTable({ rows, teams }) {
               >
                 <Typography
                   variant="caption"
-                  sx={{ fontWeight: 700, fontSize: '0.65rem', color: isTop ? 'success.main' : 'text.disabled', textAlign: 'center' }}
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.65rem',
+                    color: isTop ? 'success.main' : 'text.disabled',
+                    textAlign: 'center',
+                  }}
                 >
                   {idx + 1}
                 </Typography>
 
                 <Stack direction="row" alignItems="center" spacing={0.5}>
                   {isTop && (
-                    <Box sx={{ width: 3, height: 12, borderRadius: 0.5, bgcolor: 'success.main', flexShrink: 0 }} />
+                    <Box
+                      sx={{
+                        width: 3,
+                        height: 12,
+                        borderRadius: 0.5,
+                        bgcolor: 'success.main',
+                        flexShrink: 0,
+                      }}
+                    />
                   )}
-                  <Typography variant="caption" sx={{ fontWeight: isTop ? 600 : 500, fontSize: '0.7rem' }} noWrap>
+                  <Typography
+                    variant="caption"
+                    sx={{ fontWeight: isTop ? 600 : 500, fontSize: '0.7rem' }}
+                    noWrap
+                  >
                     {name}
                   </Typography>
                 </Stack>
 
-                <Typography variant="caption" sx={{ fontSize: '0.65rem', textAlign: 'center', color: 'text.secondary' }}>{row.played ?? 0}</Typography>
-                <Typography variant="caption" sx={{ fontSize: '0.65rem', textAlign: 'center', color: row.won > 0 ? 'success.main' : 'text.secondary' }}>{row.won ?? 0}</Typography>
-                <Typography variant="caption" sx={{ fontSize: '0.65rem', textAlign: 'center', color: 'text.secondary' }}>{row.drawn ?? 0}</Typography>
-                <Typography variant="caption" sx={{ fontSize: '0.65rem', textAlign: 'center', color: row.lost > 0 ? 'error.main' : 'text.secondary' }}>{row.lost ?? 0}</Typography>
-                <Typography variant="caption" sx={{ fontSize: '0.65rem', textAlign: 'center', color: 'text.secondary' }}>{row.goals_for ?? 0}</Typography>
-                <Typography variant="caption" sx={{ fontSize: '0.65rem', textAlign: 'center', color: 'text.secondary' }}>{row.goals_against ?? 0}</Typography>
-                <Typography variant="caption" sx={{ fontSize: '0.65rem', textAlign: 'center', color: gd > 0 ? 'success.main' : gd < 0 ? 'error.main' : 'text.disabled' }}>
+                <Typography
+                  variant="caption"
+                  sx={{ fontSize: '0.65rem', textAlign: 'center', color: 'text.secondary' }}
+                >
+                  {row.played ?? 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: '0.65rem',
+                    textAlign: 'center',
+                    color: row.won > 0 ? 'success.main' : 'text.secondary',
+                  }}
+                >
+                  {row.won ?? 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ fontSize: '0.65rem', textAlign: 'center', color: 'text.secondary' }}
+                >
+                  {row.drawn ?? 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: '0.65rem',
+                    textAlign: 'center',
+                    color: row.lost > 0 ? 'error.main' : 'text.secondary',
+                  }}
+                >
+                  {row.lost ?? 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ fontSize: '0.65rem', textAlign: 'center', color: 'text.secondary' }}
+                >
+                  {row.goals_for ?? 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ fontSize: '0.65rem', textAlign: 'center', color: 'text.secondary' }}
+                >
+                  {row.goals_against ?? 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: '0.65rem',
+                    textAlign: 'center',
+                    color: gd > 0 ? 'success.main' : gd < 0 ? 'error.main' : 'text.disabled',
+                  }}
+                >
                   {gd > 0 ? `+${gd}` : gd}
                 </Typography>
-                <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.8rem', textAlign: 'center', color: isTop ? 'success.main' : 'text.primary' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.8rem',
+                    textAlign: 'center',
+                    color: isTop ? 'success.main' : 'text.primary',
+                  }}
+                >
                   {row.points}
                 </Typography>
               </Box>
 
               {idx === 1 && rows.length > 2 && (
-                <Divider sx={{ mx: 1, borderStyle: 'dashed', borderColor: (t) => alpha(t.palette.success.main, 0.24) }} />
+                <Divider
+                  sx={{
+                    mx: 1,
+                    borderStyle: 'dashed',
+                    borderColor: (t) => alpha(t.palette.success.main, 0.24),
+                  }}
+                />
               )}
             </Box>
           );
@@ -490,19 +619,32 @@ function StandingsTable({ rows, teams }) {
 // ----------------------------------------------------------------------
 // Matches
 
-function PublicMatchesView({ allMatches, matchesLoading, currentMatches, teams, totalMw, currentMw, activeMw, selectedMw, onSelectMw }) {
+function PublicMatchesView({
+  allMatches,
+  matchesLoading,
+  currentMatches,
+  teams,
+  totalMw,
+  currentMw,
+  activeMw,
+  selectedMw,
+  onSelectMw,
+}) {
   if (matchesLoading) {
     return (
       <Stack spacing={1.5}>
-        {[...Array(4)].map((_, i) => <Skeleton key={i} variant="rounded" height={64} />)}
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} variant="rounded" height={64} />
+        ))}
       </Stack>
     );
   }
   if (allMatches.length === 0) return <EmptyContent title="Sin partidos" sx={{ py: 8 }} />;
 
-  const matchweeks = totalMw > 0
-    ? Array.from({ length: totalMw }, (_, i) => i + 1)
-    : [...new Set(allMatches.map((m) => m.matchweek).filter(Boolean))].sort((a, b) => a - b);
+  const matchweeks =
+    totalMw > 0
+      ? Array.from({ length: totalMw }, (_, i) => i + 1)
+      : [...new Set(allMatches.map((m) => m.matchweek).filter(Boolean))].sort((a, b) => a - b);
 
   return (
     <Box>
@@ -560,7 +702,13 @@ function PublicMatchRow({ match, teams }) {
     <Card sx={{ px: 2.5, py: 2 }}>
       <Stack direction="row" alignItems="center" spacing={2}>
         {/* Status badge */}
-        <Chip label={badge.label} color={badge.color} size="small" variant="soft" sx={{ minWidth: 72, justifyContent: 'center' }} />
+        <Chip
+          label={badge.label}
+          color={badge.color}
+          size="small"
+          variant="soft"
+          sx={{ minWidth: 72, justifyContent: 'center' }}
+        />
 
         {/* Match info */}
         <Stack direction="row" alignItems="center" spacing={1.5} flex={1} justifyContent="center">
@@ -584,7 +732,10 @@ function PublicMatchRow({ match, teams }) {
               </Typography>
             </Box>
           ) : (
-            <Typography variant="body2" sx={{ color: 'text.disabled', minWidth: 40, textAlign: 'center' }}>
+            <Typography
+              variant="body2"
+              sx={{ color: 'text.disabled', minWidth: 40, textAlign: 'center' }}
+            >
               vs
             </Typography>
           )}
@@ -596,7 +747,11 @@ function PublicMatchRow({ match, teams }) {
 
         {/* Venue */}
         {match.venue && (
-          <Typography variant="caption" sx={{ color: 'text.disabled', display: { xs: 'none', sm: 'block' } }} noWrap>
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.disabled', display: { xs: 'none', sm: 'block' } }}
+            noWrap
+          >
             {match.venue}
           </Typography>
         )}
@@ -618,7 +773,9 @@ function PublicTopScorers({ scorers, scorersLoading }) {
               {[...Array(5)].map((_, i) => (
                 <TableRow key={i}>
                   {[...Array(4)].map((__, j) => (
-                    <TableCell key={j}><Skeleton variant="text" /></TableCell>
+                    <TableCell key={j}>
+                      <Skeleton variant="text" />
+                    </TableCell>
                   ))}
                 </TableRow>
               ))}
@@ -648,7 +805,10 @@ function PublicTopScorers({ scorers, scorersLoading }) {
             {scorers.map((scorer, idx) => (
               <TableRow key={scorer.player_id || idx} hover>
                 <TableCell>
-                  <Typography variant="subtitle2" sx={{ color: idx < 3 ? 'warning.main' : 'text.primary' }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: idx < 3 ? 'warning.main' : 'text.primary' }}
+                  >
                     {idx + 1}
                   </Typography>
                 </TableCell>
