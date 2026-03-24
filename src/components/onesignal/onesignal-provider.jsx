@@ -98,33 +98,44 @@ export function OneSignalProvider() {
 
     OneSignal.login(user.email)
       .then(() => {
-        // Always clear loading first — even if cancelled, so the button isn't stuck disabled.
-        setNotificationsLoading(false);
-        if (cancelled) return;
+        if (cancelled) {
+          setNotificationsLoading(false);
+          return;
+        }
         loggedIn.current = true;
 
         if (Notification.permission === 'granted') {
           // Permission already granted (e.g. re-enable after opt-out) — just opt back in
           OneSignal.User.PushSubscription.optIn?.()?.catch?.(() => {});
           setPermissionGranted(true);
+          setNotificationsLoading(false);
           return;
         }
 
         if (Notification.permission === 'denied') {
           setPermissionGranted(false);
+          setNotificationsLoading(false);
           return;
         }
 
-        // Ask for permission only once per browser
+        // Ask for permission only once per browser.
+        // Keep loading=true until the dialog resolves so the toggle stays
+        // disabled and doesn't appear as "off" while the dialog is open.
         const alreadyAsked = localStorage.getItem('onesignal-asked');
-        if (alreadyAsked) return;
+        if (alreadyAsked) {
+          setNotificationsLoading(false);
+          return;
+        }
 
         localStorage.setItem('onesignal-asked', '1');
         OneSignal.Notifications.requestPermission()
           .then(() => {
             setPermissionGranted(Notification.permission === 'granted');
           })
-          .catch(() => {});
+          .catch(() => {})
+          .finally(() => {
+            setNotificationsLoading(false);
+          });
       })
       .catch((e) => {
         setNotificationsLoading(false);

@@ -3,6 +3,7 @@ import useSWR, { mutate } from 'swr';
 
 import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
+import { _products } from 'src/_mock';
 import { uploadFileToS3 } from 'src/actions/filesS3';
 
 // ----------------------------------------------------------------------
@@ -21,11 +22,11 @@ export function useGetProducts() {
 
   const memoizedValue = useMemo(
     () => ({
-      products: data || [],
+      products: data?.length ? data : _products,
       productsLoading: isLoading,
       productsError: error,
       productsValidating: isValidating,
-      productsEmpty: !isLoading && !data?.length,
+      productsEmpty: false,
     }),
     [data, error, isLoading, isValidating]
   );

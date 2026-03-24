@@ -22,6 +22,7 @@ import { TourList } from '../tour-list';
 import { TourSort } from '../tour-sort';
 import { TourSearch } from '../tour-search';
 import { TourFilters } from '../tour-filters';
+import { TourSeasonStats } from '../tour-season-stats';
 import { TourFiltersResult } from '../tour-filters-result';
 
 // ----------------------------------------------------------------------
@@ -128,6 +129,8 @@ export function TourListView() {
 
         {canReset && renderResults}
       </Stack>
+
+      <TourSeasonStats tours={tours} />
 
       {notFound && <EmptyContent filled sx={{ py: 10 }} />}
 
