@@ -9,7 +9,6 @@ import { useRouter } from 'src/routes/hooks';
 
 import { orderBy } from 'src/utils/helper';
 
-import { _appFeatured } from 'src/_mock';
 import { useTranslate } from 'src/locales';
 import { useGetEvents } from 'src/actions/calendar';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -27,7 +26,6 @@ import { useAuthContext } from 'src/auth/hooks';
 
 import { AppWelcome } from '../app-welcome';
 import { NextEvents } from '../next-events';
-import { AppFeatured } from '../app-featured';
 import { FileUpgrade } from '../file-upgrade';
 import { AppTopAuthors } from '../app-top-authors';
 import { AppNewInvoice } from '../app-new-invoice';
@@ -221,7 +219,7 @@ export function OverviewAppView() {
         {/* Featured content + stats */}
         <Grid xs={12} md={8}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <AppFeatured list={_appFeatured} />
+            {/* <AppFeatured list={_appFeatured} /> */}
 
             <Grid container spacing={3}>
               <Grid xs={12} md={6}>

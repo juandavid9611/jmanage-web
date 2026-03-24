@@ -3,6 +3,8 @@ import useSWR, { mutate } from 'swr';
 
 import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
+import { _orders } from 'src/_mock';
+
 // ----------------------------------------------------------------------
 
 const swrOptions = {
@@ -19,11 +21,11 @@ export function useGetOrders() {
 
   const memoizedValue = useMemo(
     () => ({
-      orders: data || [],
+      orders: data?.length ? data : _orders,
       ordersLoading: isLoading,
       ordersError: error,
       ordersValidating: isValidating,
-      ordersEmpty: !isLoading && !data?.length,
+      ordersEmpty: false,
     }),
     [data, error, isLoading, isValidating]
   );
