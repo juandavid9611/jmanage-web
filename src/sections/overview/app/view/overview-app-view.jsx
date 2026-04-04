@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Box, Stack } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -15,6 +15,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
 import {
+  markTourSeen,
+  useGetTourPreferences,
   useGetUserAssistsStats,
   useGetTopGoalsAndAssists,
 } from 'src/actions/user';
@@ -50,11 +52,11 @@ export function OverviewAppView() {
     (request) => request.status === 'pending' || request.status === 'overdue'
   );
 
-  // Check localStorage immediately on component creation
-  const [hasSeenTour, setHasSeenTour] = useState(() => {
-    const seen = localStorage.getItem('documents-feature-seen');
-    return !!seen;
-  });
+  // Fast-path: same browser already has the flag
+  const [hasSeenTour, setHasSeenTour] = useState(() => !!localStorage.getItem('documents-feature-seen'));
+
+  // Only hit the API when the local flag is absent (new browser / incognito)
+  const { tourPreferences, tourPrefsLoading } = useGetTourPreferences(!hasSeenTour ? user.id : null);
 
   const [tourHelpers, setTourHelpers] = useState(null);
   const [pendingWorkspace, setPendingWorkspace] = useState(null);
@@ -143,9 +145,23 @@ export function OverviewAppView() {
   ];
 
   const walktour = useWalktour({
-    defaultRun: !hasSeenTour,
+    defaultRun: false,
     steps: walktourSteps,
   });
+
+  // Start the tour once the API check resolves (only runs when local flag was absent)
+  useEffect(() => {
+    if (hasSeenTour) return;
+    if (tourPrefsLoading) return;
+
+    if (tourPreferences['documents-feature']) {
+      localStorage.setItem('documents-feature-seen', 'true');
+      setHasSeenTour(true);
+    } else {
+      walktour.setRun(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourPrefsLoading]);
 
   const handleTourCallback = (data) => {
     const { action, index, lifecycle } = data;
@@ -161,6 +177,7 @@ export function OverviewAppView() {
     if (action === 'reset') {
       localStorage.setItem('documents-feature-seen', 'true');
       setHasSeenTour(true);
+      markTourSeen(user.id, 'documents-feature');
       router.push(paths.dashboard.guide);
     }
     

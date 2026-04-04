@@ -70,6 +70,16 @@ export async function updateUser(id, userData) {
   return res.data;
 }
 
+export function useGetTourPreferences(userId) {
+  const { data, isLoading } = useSWR(userId ? `${URL}/${userId}/tour-preferences` : null, fetcher);
+  return { tourPreferences: data || {}, tourPrefsLoading: isLoading };
+}
+
+export async function markTourSeen(userId, tourKey) {
+  await axiosInstance.put(`${URL}/${userId}/tour-preferences`, { tourKey });
+  mutate(`${URL}/${userId}/tour-preferences`);
+}
+
 export async function updateUserMetrics(id, metricsData) {
   const res = await axiosInstance.put(`${URL}/${id}/metrics`, metricsData);
   mutate((key) => key.startsWith(URL));

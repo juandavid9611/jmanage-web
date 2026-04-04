@@ -78,6 +78,18 @@ export const paths = {
       },
     },
     fileManager: `${ROOTS.DASHBOARD}/file-manager`,
+    attendance: {
+      root: `${ROOTS.DASHBOARD}/attendance`,
+      votation: {
+        new: `${ROOTS.DASHBOARD}/attendance/votation/new`,
+        detail: (id) => `${ROOTS.DASHBOARD}/attendance/votation/${id}`,
+      },
+    },
+    votaciones: {
+      root: `${ROOTS.DASHBOARD}/votaciones`,
+      new: `${ROOTS.DASHBOARD}/votaciones/new`,
+      detail: (id) => `${ROOTS.DASHBOARD}/votaciones/${id}`,
+    },
     guide: `${ROOTS.DASHBOARD}/guide`,
     tournament: {
       root: `${ROOTS.DASHBOARD}/tournament`,
