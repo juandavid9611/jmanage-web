@@ -1,184 +1,143 @@
-import { useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 
-import Stack from '@mui/material/Stack';
-
-import { paths } from 'src/routes/paths';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSetState } from 'src/hooks/use-set-state';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 
 import { orderBy } from 'src/utils/helper';
-import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { useGetTours } from 'src/actions/tours';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
-import { _tours, _tourGuides, TOUR_SORT_OPTIONS, TOUR_SERVICE_OPTIONS } from 'src/_mock';
 
+import { Label } from 'src/components/label';
 import { EmptyContent } from 'src/components/empty-content';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { TourList } from '../tour-list';
-import { TourSort } from '../tour-sort';
-import { TourSearch } from '../tour-search';
-import { TourFilters } from '../tour-filters';
 import { TourSeasonStats } from '../tour-season-stats';
-import { TourFiltersResult } from '../tour-filters-result';
+
+// ----------------------------------------------------------------------
+
+const MONTH_NAMES = [
+  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+];
+
+function getTs(t) {
+  const s = t.available?.startDate;
+  if (!s) return 0;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : new Date(s).getTime();
+}
 
 // ----------------------------------------------------------------------
 
 export function TourListView() {
-  const { selectedWorkspace, workspaceRole } = useWorkspace();
-  const isAdmin = workspaceRole === 'admin';
+  const { selectedWorkspace } = useWorkspace();
   const { tours } = useGetTours(selectedWorkspace?.id, 'match');
 
-  const openFilters = useBoolean();
-
-  const [sortBy, setSortBy] = useState('latest');
-
-  const search = useSetState({ query: '', results: [] });
-
-  const filters = useSetState({
-    destination: [],
-    tourGuides: [],
-    services: [],
-    startDate: null,
-    endDate: null,
-  });
-
-  const dateError = fIsAfter(filters.state.startDate, filters.state.endDate);
-
-  const dataFiltered = applyFilter({
-    inputData: tours,
-    filters: filters.state,
-    sortBy,
-    dateError,
-  });
-
-  const canReset =
-    filters.state.destination.length > 0 ||
-    filters.state.tourGuides.length > 0 ||
-    filters.state.services.length > 0 ||
-    (!!filters.state.startDate && !!filters.state.endDate);
-
-  const notFound = !dataFiltered.length && canReset;
-
-  const handleSortBy = useCallback((newValue) => {
-    setSortBy(newValue);
-  }, []);
-
-  const handleSearch = useCallback(
-    (inputValue) => {
-      search.setState({ query: inputValue });
-
-      if (inputValue) {
-        const results = _tours.filter(
-          (tour) => tour.name.toLowerCase().indexOf(search.state.query.toLowerCase()) !== -1
-        );
-
-        search.setState({ results });
+  // Derive available months from tours, sorted newest first
+  const months = useMemo(() => {
+    const seen = new Map();
+    tours.forEach((t) => {
+      const ts = getTs(t);
+      if (!ts) return;
+      const d = new Date(ts);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!seen.has(key)) {
+        seen.set(key, { key, label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}` });
       }
-    },
-    [search]
-  );
+    });
+    return [...seen.values()].sort((a, b) => b.key.localeCompare(a.key));
+  }, [tours]);
 
-  const renderFilters = (
-    <Stack
-      spacing={3}
-      justifyContent="space-between"
-      alignItems={{ xs: 'flex-end', sm: 'center' }}
-      direction={{ xs: 'column', sm: 'row' }}
-    >
-      <TourSearch search={search} onSearch={handleSearch} />
+  // Default to the current (or most recent) month
+  const defaultMonth = useMemo(() => {
+    const now = new Date();
+    const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return months.find((m) => m.key === currentKey)?.key || months[0]?.key || 'all';
+  }, [months]);
 
-      <Stack direction="row" spacing={1} flexShrink={0}>
-        <TourFilters
-          filters={filters}
-          canReset={canReset}
-          dateError={dateError}
-          open={openFilters.value}
-          onOpen={openFilters.onTrue}
-          onClose={openFilters.onFalse}
-          options={{
-            tourGuides: _tourGuides,
-            services: TOUR_SERVICE_OPTIONS.map((option) => option.label),
-          }}
-        />
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const activeMonth = selectedMonth ?? defaultMonth;
 
-        <TourSort sort={sortBy} onSort={handleSortBy} sortOptions={TOUR_SORT_OPTIONS} />
-      </Stack>
-    </Stack>
-  );
+  const sorted = useMemo(() => {
+    const filtered =
+      activeMonth === 'all'
+        ? tours
+        : tours.filter((t) => {
+            const ts = getTs(t);
+            if (!ts) return false;
+            const d = new Date(ts);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            return key === activeMonth;
+          });
 
-  const renderResults = <TourFiltersResult filters={filters} totalResults={dataFiltered.length} />;
+    const now = Date.now();
+    const upcoming = orderBy(filtered.filter((t) => getTs(t) >= now), ['available.startDate'], ['asc']);
+    const past = orderBy(filtered.filter((t) => getTs(t) < now), ['available.startDate'], ['desc']);
+    return [...upcoming, ...past];
+  }, [tours, activeMonth]);
+
+  const countFor = (key) =>
+    key === 'all'
+      ? tours.length
+      : tours.filter((t) => {
+          const ts = getTs(t);
+          if (!ts) return false;
+          const d = new Date(ts);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === key;
+        }).length;
 
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="List"
-        links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Tour', href: paths.dashboard.admin.tour.root },
-          { name: 'List' },
-        ]}
+        heading="Partidos"
+        links={[{ name: 'Partidos' }]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Stack spacing={2.5} sx={{ mb: { xs: 3, md: 5 } }}>
-        {renderFilters}
-
-        {canReset && renderResults}
-      </Stack>
-
       <TourSeasonStats tours={tours} />
 
-      {notFound && <EmptyContent filled sx={{ py: 10 }} />}
+      {months.length > 0 && (
+        <Tabs
+          value={activeMonth}
+          onChange={(_, v) => setSelectedMonth(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ mb: 3, borderBottom: (t) => `1px solid ${t.palette.divider}` }}
+        >
+          <Tab
+            value="all"
+            label={
+              <span>
+                Todos{' '}
+                <Label color="default" sx={{ ml: 0.75 }}>
+                  {tours.length}
+                </Label>
+              </span>
+            }
+          />
+          {months.map((m) => (
+            <Tab
+              key={m.key}
+              value={m.key}
+              label={
+                <span>
+                  {m.label}{' '}
+                  <Label color="default" sx={{ ml: 0.75 }}>
+                    {countFor(m.key)}
+                  </Label>
+                </span>
+              }
+            />
+          ))}
+        </Tabs>
+      )}
 
-      <TourList tours={dataFiltered} />
+      {!sorted.length && <EmptyContent filled sx={{ py: 10 }} />}
+
+      <TourList tours={sorted} />
     </DashboardContent>
   );
 }
-
-const applyFilter = ({ inputData, filters, sortBy, dateError }) => {
-  const { services, destination, startDate, endDate, tourGuides } = filters;
-
-  const tourGuideIds = tourGuides.map((tourGuide) => tourGuide.id);
-
-  // Filters
-  if (destination.length) {
-    inputData = inputData.filter((tour) => destination.includes(tour.destination));
-  }
-
-  if (tourGuideIds.length) {
-    inputData = inputData.filter((tour) =>
-      tour.tourGuides.some((filterItem) => tourGuideIds.includes(filterItem.id))
-    );
-  }
-
-  if (services.length) {
-    inputData = inputData.filter((tour) => tour.services.some((item) => services.includes(item)));
-  }
-
-  if (!dateError) {
-    if (startDate && endDate) {
-      inputData = inputData.filter((tour) =>
-        fIsBetween(startDate, tour.available.startDate, tour.available.endDate)
-      );
-    }
-  }
-
-  // Sort by
-  if (sortBy === 'latest') {
-    inputData = orderBy(inputData, ['available.startDate'], ['desc']);
-  }
-
-  if (sortBy === 'oldest') {
-    inputData = orderBy(inputData, ['available.startDate'], ['asc']);
-  }
-
-  if (sortBy === 'popular') {
-    inputData = orderBy(inputData, ['totalViews'], ['desc']);
-  }
-
-  return inputData;
-};

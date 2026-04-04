@@ -63,4 +63,5 @@ export const endpoints = {
   orders: '/orders',
   tournaments: '/tournaments',
   notifications: '/notifications',
+  votations: '/votations',
 };

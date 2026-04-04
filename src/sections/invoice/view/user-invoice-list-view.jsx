@@ -25,6 +25,7 @@ import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
+import { markTourSeen, useGetTourPreferences } from 'src/actions/user';
 import { useGetPaymentRequestsByUser } from 'src/actions/paymentRequest';
 
 import { Label } from 'src/components/label';
@@ -94,16 +95,19 @@ export function UserInvoiceListView() {
     endDate: null,
   });
 
-  // Walktour state
-  const [hasSeenInvoiceTour, setHasSeenInvoiceTour] = useState(() => {
-    const seen = localStorage.getItem('invoice-payment-tour-seen');
-    return !!seen;
-  });
+  // Walktour state — fast-path local cache, API fallback for new browsers
+  const [hasSeenInvoiceTour, setHasSeenInvoiceTour] = useState(
+    () => !!localStorage.getItem('invoice-payment-tour-seen')
+  );
+
+  const { tourPreferences, tourPrefsLoading } = useGetTourPreferences(
+    !hasSeenInvoiceTour ? user.id : null
+  );
 
   const [tourHelpers, setTourHelpers] = useState(null);
 
   const walktour = useWalktour({
-    defaultRun: !hasSeenInvoiceTour,
+    defaultRun: false,
     steps: [
       {
         target: '#invoice-analytics-summary',
@@ -174,14 +178,28 @@ export function UserInvoiceListView() {
     ],
   });
 
+  useEffect(() => {
+    if (hasSeenInvoiceTour) return;
+    if (tourPrefsLoading) return;
+
+    if (tourPreferences['invoice-payment']) {
+      localStorage.setItem('invoice-payment-tour-seen', 'true');
+      setHasSeenInvoiceTour(true);
+    } else {
+      walktour.setRun(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourPrefsLoading]);
+
   const handleTourCallback = (data) => {
     const { action } = data;
-    
+
     if (action === 'reset') {
       localStorage.setItem('invoice-payment-tour-seen', 'true');
       setHasSeenInvoiceTour(true);
+      markTourSeen(user.id, 'invoice-payment');
     }
-    
+
     walktour.onCallback(data);
   };
 

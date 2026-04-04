@@ -44,6 +44,14 @@ const OrderListPage = lazy(() => import('src/pages/dashboard/order/list'));
 const OrderDetailsPage = lazy(() => import('src/pages/dashboard/order/details'));
 // File manager
 const FileManagerPage = lazy(() => import('src/pages/dashboard/file-manager'));
+// Attendance
+const AttendancePage = lazy(() => import('src/pages/dashboard/attendance'));
+const VotationCreatePage = lazy(() => import('src/pages/dashboard/attendance/votation/new'));
+const VotationDetailPage = lazy(() => import('src/pages/dashboard/attendance/votation/detail'));
+// Votaciones
+const VotacionesPage = lazy(() => import('src/pages/dashboard/votaciones/index'));
+const VotacionesNewPage = lazy(() => import('src/pages/dashboard/votaciones/new'));
+const VotacionesDetailPage = lazy(() => import('src/pages/dashboard/votaciones/detail'));
 // Guide
 const GuidePage = lazy(() => import('src/pages/dashboard/guide'));
 // Tournament
@@ -131,6 +139,22 @@ export const dashboardRoutes = [
           { element: <OrderListPage />, index: true },
           { path: 'list', element: <OrderListPage /> },
           { path: ':id', element: <OrderDetailsPage /> },
+        ],
+      },
+      {
+        path: 'attendance',
+        children: [
+          { element: <AttendancePage />, index: true },
+          { path: 'votation/new', element: <VotationCreatePage /> },
+          { path: 'votation/:votationId', element: <VotationDetailPage /> },
+        ],
+      },
+      {
+        path: 'votaciones',
+        children: [
+          { element: <VotacionesPage />, index: true },
+          { path: 'new', element: <VotacionesNewPage /> },
+          { path: ':votationId', element: <VotacionesDetailPage /> },
         ],
       },
       { path: 'file-manager', element: <FileManagerPage /> },

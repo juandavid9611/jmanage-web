@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -290,16 +290,20 @@ export function TourSeasonStats({ tours = [] }) {
       cells: chronoTours.map((tour) => {
         const b = Object.values(tour.bookers || {}).find((bk) => bk.name === p.name);
         if (!b) return null;
-        if (b.redCard)    return 'red';
-        if (b.mvp)        return 'mvp';
-        if (b.goals > 0)  return 'goal';
-        if (b.assists > 0) return 'assist';
-        if (b.yellowCard) return 'yellow';
-        if (b.late)       return 'late';
-        return 'played';
+        const events = [];
+        if (b.redCard)     events.push('red');
+        if (b.mvp)         events.push('mvp');
+        if (b.goals > 0)   events.push('goal');
+        if (b.assists > 0) events.push('assist');
+        if (b.yellowCard)  events.push('yellow');
+        if (b.late)        events.push('late');
+        if (events.length === 0) events.push('played');
+        return { events, goalCount: b.goals, assistCount: b.assists };
       }),
     }));
   }, [chronoTours]);
+
+  const [matrixFilter, setMatrixFilter] = useState(null);
 
   if (tours.length === 0) return null;
 
@@ -557,27 +561,62 @@ export function TourSeasonStats({ tours = [] }) {
       {/* ── Player contribution matrix ───────────────────────────────── */}
       {playerMatrix.length > 0 && chronoTours.length > 1 && (
         <Card sx={{ overflow: 'hidden' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 1.75, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.1)}` }}>
-            <Stack direction="row" alignItems="center" spacing={1}>
+          <Box sx={{ px: 2.5, pt: 1.75, pb: 1.25, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.1)}` }}>
+            {/* Title row */}
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
               <Iconify icon="mdi:grid" width={18} sx={{ color: 'primary.main' }} />
               <Typography variant="h6" sx={{ fontWeight: 700 }}>Mapa de Contribuciones</Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>Jugadores × partidos</Typography>
             </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="flex-end">
+            {/* Legend pills row */}
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" rowGap={0.75}>
               {[
-                { label: 'Gol', color: '#22C55E' },
-                { label: 'Asist.', color: '#0C68E9' },
-                { label: 'MVP', color: '#FFAB00' },
-                { label: 'Amarilla', color: '#FFF5CC' },
-                { label: 'Roja', color: '#FF5630' },
-              ].map((l) => (
-                <Stack key={l.label} direction="row" alignItems="center" spacing={0.4}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: 0.5, bgcolor: l.color, opacity: 0.8 }} />
-                  <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem' }}>{l.label}</Typography>
+                { label: 'Gol',      type: 'goal',   color: '#22C55E' },
+                { label: 'Asist.',   type: 'assist', color: '#0C68E9' },
+                { label: 'MVP',      type: 'mvp',    color: '#FFAB00' },
+                { label: 'Amarilla', type: 'yellow', color: '#FFAB00' },
+                { label: 'Roja',     type: 'red',    color: '#FF5630' },
+                { label: 'Tarde',    type: 'late',   color: '#8E33FF' },
+              ].map((l) => {
+                const active = matrixFilter === l.type;
+                return (
+                  <Stack
+                    key={l.label}
+                    direction="row"
+                    alignItems="center"
+                    spacing={0.5}
+                    onClick={() => setMatrixFilter(active ? null : l.type)}
+                    sx={{
+                      cursor: 'pointer',
+                      px: 1,
+                      py: 0.4,
+                      borderRadius: 1,
+                      border: `1px solid ${active ? alpha(l.color, 0.5) : alpha(l.color, 0.15)}`,
+                      bgcolor: active ? alpha(l.color, 0.12) : 'transparent',
+                      transition: 'all 0.15s',
+                      '&:hover': { bgcolor: alpha(l.color, 0.1), borderColor: alpha(l.color, 0.4) },
+                    }}
+                  >
+                    <Box sx={{ width: 8, height: 8, borderRadius: 0.5, bgcolor: l.color, flexShrink: 0 }} />
+                    <Typography variant="caption" sx={{ color: active ? l.color : 'text.secondary', fontSize: '0.65rem', fontWeight: active ? 700 : 500, lineHeight: 1 }}>
+                      {l.label}
+                    </Typography>
+                  </Stack>
+                );
+              })}
+              {matrixFilter && (
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={0.5}
+                  onClick={() => setMatrixFilter(null)}
+                  sx={{ cursor: 'pointer', px: 1, py: 0.4, borderRadius: 1, border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.3)}`, '&:hover': { bgcolor: (t) => alpha(t.palette.grey[500], 0.06) } }}
+                >
+                  <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>Ver todos</Typography>
                 </Stack>
-              ))}
+              )}
             </Stack>
-          </Stack>
+          </Box>
 
           <Box sx={{ overflowX: 'auto', px: 2.5, py: 2, '&::-webkit-scrollbar': { height: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: (t) => alpha(t.palette.grey[500], 0.2), borderRadius: 2 } }}>
             {/* Header row: match dates */}
@@ -604,20 +643,122 @@ export function TourSeasonStats({ tours = [] }) {
                   <Typography variant="caption" noWrap sx={{ fontWeight: 600, fontSize: '0.7rem' }}>{player.name.split(' ')[0]}</Typography>
                 </Stack>
                 {player.cells.map((cell, ci) => {
-                  const cellConfig = {
-                    goal:   { bg: alpha('#22C55E', 0.3), border: '#22C55E', icon: 'mdi:soccer', iconColor: '#22C55E' },
-                    assist: { bg: alpha('#0C68E9', 0.2), border: '#0C68E9', icon: 'mdi:shoe-cleat', iconColor: '#6BB1F8' },
-                    mvp:    { bg: alpha('#FFAB00', 0.25), border: '#FFAB00', icon: 'solar:star-bold', iconColor: '#FFAB00' },
-                    yellow: { bg: alpha('#FFAB00', 0.12), border: alpha('#FFAB00', 0.4), icon: 'mdi:card', iconColor: '#FFAB00' },
-                    red:    { bg: alpha('#FF5630', 0.2), border: '#FF5630', icon: 'mdi:card', iconColor: '#FF5630' },
-                    late:   { bg: alpha('#8E33FF', 0.12), border: alpha('#8E33FF', 0.4), icon: 'mdi:clock-alert', iconColor: '#C684FF' },
-                    played: { bg: alpha('#919EAB', 0.06), border: 'transparent', icon: null },
-                  }[cell] || { bg: alpha('#919EAB', 0.03), border: 'transparent', icon: null };
+                  const CELL_CFG = {
+                    goal:   { bg: alpha('#22C55E', 0.3),  border: '#22C55E',             icon: 'mdi:soccer',        iconColor: '#22C55E' },
+                    assist: { bg: alpha('#0C68E9', 0.2),  border: '#0C68E9',             icon: 'mdi:shoe-cleat',    iconColor: '#6BB1F8' },
+                    mvp:    { bg: alpha('#FFAB00', 0.25), border: '#FFAB00',             icon: 'solar:star-bold',   iconColor: '#FFAB00' },
+                    yellow: { bg: alpha('#FFAB00', 0.12), border: alpha('#FFAB00', 0.4), icon: 'mdi:card',          iconColor: '#FFAB00' },
+                    red:    { bg: alpha('#FF5630', 0.2),  border: '#FF5630',             icon: 'mdi:card',          iconColor: '#FF5630' },
+                    late:   { bg: alpha('#8E33FF', 0.12), border: alpha('#8E33FF', 0.4), icon: 'mdi:clock-alert',   iconColor: '#C684FF' },
+                    played: { bg: alpha('#919EAB', 0.06), border: 'transparent',         icon: null },
+                  };
+
+                  if (cell === null) {
+                    return <Box key={ci} sx={{ width: 28, height: 28, mr: 0.5, flexShrink: 0 }} />;
+                  }
+
+                  const { events, goalCount, assistCount } = cell;
+                  const isMatch    = !matrixFilter || events.includes(matrixFilter);
+                  const dimmed     = matrixFilter && !isMatch;
+                  const activeGlow = isMatch && !!matrixFilter;
+
+                  // When a filter is active, show only the filtered event; otherwise show all
+                  const displayEvents = matrixFilter && isMatch
+                    ? [matrixFilter]
+                    : events.filter((ev) => ev !== 'played');
+
+                  // Background/border follow the active filter when matched, else dominant priority
+                  const dominantKey = matrixFilter && isMatch ? matrixFilter : events[0];
+                  const dominant    = CELL_CFG[dominantKey] ?? CELL_CFG.played;
+
+                  // Tooltip label
+                  const tipParts = [];
+                  if (events.includes('mvp'))    tipParts.push('MVP');
+                  if (goalCount > 0)             tipParts.push(`${goalCount} gol${goalCount > 1 ? 'es' : ''}`);
+                  if (assistCount > 0)           tipParts.push(`${assistCount} asist.`);
+                  if (events.includes('yellow')) tipParts.push('Amarilla');
+                  if (events.includes('red'))    tipParts.push('Roja');
+                  if (events.includes('late'))   tipParts.push('Tarde');
+                  if (tipParts.length === 0)     tipParts.push('Jugó');
 
                   return (
-                    <Box key={ci} sx={{ width: 28, height: 28, mr: 0.5, flexShrink: 0, borderRadius: 0.75, bgcolor: cell === null ? 'transparent' : cellConfig.bg, border: `1px solid ${cell === null ? 'transparent' : cellConfig.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {cellConfig.icon && <Iconify icon={cellConfig.icon} width={12} sx={{ color: cellConfig.iconColor }} />}
-                    </Box>
+                    <Tooltip key={ci} title={tipParts.join(' · ')} arrow placement="top">
+                      <Box
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          mr: 0.5,
+                          flexShrink: 0,
+                          borderRadius: 0.75,
+                          bgcolor: dominant.bg,
+                          border: `1px solid ${dominant.border}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: dimmed ? 0.15 : 1,
+                          transition: 'opacity 0.2s',
+                          ...(activeGlow && { boxShadow: `0 0 0 1.5px ${dominant.border}` }),
+                        }}
+                      >
+                        {displayEvents.length === 0 && null}
+
+                        {/* Single event */}
+                        {displayEvents.length === 1 && (() => {
+                          const cfg = CELL_CFG[displayEvents[0]];
+                          const count = displayEvents[0] === 'goal' ? goalCount : displayEvents[0] === 'assist' ? assistCount : null;
+                          return (
+                            <Stack direction="row" alignItems="center" spacing={0.25} sx={{ lineHeight: 1 }}>
+                              <Iconify icon={cfg.icon} width={11} sx={{ color: cfg.iconColor, flexShrink: 0 }} />
+                              {count > 1 && (
+                                <Typography sx={{ fontSize: '0.55rem', fontWeight: 900, color: cfg.iconColor, lineHeight: 1 }}>
+                                  {count}
+                                </Typography>
+                              )}
+                            </Stack>
+                          );
+                        })()}
+
+                        {/* 2 events */}
+                        {displayEvents.length === 2 && (
+                          <Stack direction="row" alignItems="center" spacing={0.3}>
+                            {displayEvents.map((ev) => {
+                              const cfg = CELL_CFG[ev];
+                              const count = ev === 'goal' ? goalCount : ev === 'assist' ? assistCount : null;
+                              return (
+                                <Stack key={ev} direction="row" alignItems="center" spacing={0.15}>
+                                  <Iconify icon={cfg.icon} width={9} sx={{ color: cfg.iconColor }} />
+                                  {count > 1 && (
+                                    <Typography sx={{ fontSize: '0.5rem', fontWeight: 900, color: cfg.iconColor, lineHeight: 1 }}>
+                                      {count}
+                                    </Typography>
+                                  )}
+                                </Stack>
+                              );
+                            })}
+                          </Stack>
+                        )}
+
+                        {/* 3+ events: 2x2 mini grid */}
+                        {displayEvents.length >= 3 && (
+                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', width: 18, height: 18 }}>
+                            {displayEvents.slice(0, 4).map((ev) => {
+                              const cfg = CELL_CFG[ev];
+                              const count = ev === 'goal' ? goalCount : ev === 'assist' ? assistCount : null;
+                              return (
+                                <Stack key={ev} direction="row" alignItems="center" justifyContent="center" spacing={0.1}>
+                                  <Iconify icon={cfg.icon} width={7} sx={{ color: cfg.iconColor }} />
+                                  {count > 1 && (
+                                    <Typography sx={{ fontSize: '0.45rem', fontWeight: 900, color: cfg.iconColor, lineHeight: 1 }}>
+                                      {count}
+                                    </Typography>
+                                  )}
+                                </Stack>
+                              );
+                            })}
+                          </Box>
+                        )}
+                      </Box>
+                    </Tooltip>
                   );
                 })}
               </Stack>

@@ -35,6 +35,7 @@ const ICONS = {
   analytics: icon('ic-analytics'),
   dashboard: icon('ic-dashboard'),
   parameter: icon('ic-parameter'),
+  votaciones: icon('ic-job'),
 };
 
 // ----------------------------------------------------------------------
@@ -106,6 +107,18 @@ export const navData = [
         title: 'Guia de inicio',
         path: paths.dashboard.guide,
         icon: ICONS.blank,
+        roles: ['admin', 'user'],
+      },
+      {
+        title: 'Asistencias',
+        path: paths.dashboard.attendance.root,
+        icon: ICONS.booking,
+        roles: ['admin', 'user'],
+      },
+      {
+        title: 'Votaciones',
+        path: paths.dashboard.votaciones.root,
+        icon: ICONS.votaciones,
         roles: ['admin', 'user'],
       },
     ],
