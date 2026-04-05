@@ -2,6 +2,7 @@ import { paths } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
 
+import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -110,9 +111,9 @@ export const navData = [
         roles: ['admin', 'user'],
       },
       {
-        title: 'Asistencias',
+        title: 'Entrenamientos',
         path: paths.dashboard.attendance.root,
-        icon: ICONS.booking,
+        icon: <Iconify icon="solar:running-round-bold" />,
         roles: ['admin', 'user'],
       },
       {
