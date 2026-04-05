@@ -211,8 +211,8 @@ export function AttendanceView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Asistencias"
-        links={[{ name: 'Asistencias' }]}
+        heading="Entrenamientos"
+        links={[{ name: 'Entrenamientos' }]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
