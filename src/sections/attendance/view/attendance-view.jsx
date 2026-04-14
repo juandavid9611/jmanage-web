@@ -102,7 +102,7 @@ export function AttendanceView() {
   const { selectedWorkspace, workspaceRole } = useWorkspace();
   const { user } = useAuthContext();
   const { tours, toursLoading } = useGetTours(selectedWorkspace?.id, 'training');
-  const isAdmin = workspaceRole === 'admin';
+  const isAdminOrCoach = workspaceRole === 'admin' || workspaceRole === 'coach';
 
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [search, setSearch]               = useState('');
@@ -158,7 +158,7 @@ export function AttendanceView() {
     return { ...player, attended, pct };
   });
 
-  const visiblePlayers = isAdmin
+  const visiblePlayers = isAdminOrCoach
     ? playersWithStats
     : playersWithStats.filter((p) => p.id === user?.sub);
 
@@ -292,7 +292,7 @@ export function AttendanceView() {
           </Tooltip>
 
           {/* Nueva Votación — admin only */}
-          {isAdmin && (
+          {isAdminOrCoach && (
             <>
               <Divider orientation="vertical" flexItem sx={{ my: 1 }} />
               <Button
@@ -469,7 +469,7 @@ export function AttendanceView() {
                       const prevMonth = i > 0 ? getDateParts(sessions[i - 1].available?.startDate)?.month : month;
                       const status    = getStatus(session.bookers, player.id);
                       const { icon, color, label } = STATUS_CONFIG[status];
-                      const isInteractive = isAdmin && status !== STATUS.AUSENTE;
+                      const isInteractive = isAdminOrCoach && status !== STATUS.AUSENTE;
 
                       return (
                         <Tooltip key={session.id} title={isInteractive ? `${label} — clic para cambiar` : label} placement="top">
