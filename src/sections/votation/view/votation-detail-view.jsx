@@ -1,9 +1,10 @@
 import { toast } from 'sonner';
-import { useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -18,6 +19,7 @@ import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useGetUsers } from 'src/actions/user';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
@@ -70,6 +72,23 @@ export function VotationDetailView() {
         ? Object.values(votation.votes || {}).filter((v) => v === candidateId).length
         : 0,
     [votation]
+  );
+
+  const { users } = useGetUsers(isAdmin ? selectedWorkspace : null);
+
+  const voterMap = useMemo(() => {
+    const map = {};
+    (users || []).forEach((u) => { map[u.id] = u; });
+    return map;
+  }, [users]);
+
+  const getVotersForCandidate = useCallback(
+    (candidateId) =>
+      Object.entries(votation?.votes || {})
+        .filter(([, cid]) => cid === candidateId)
+        .map(([vid]) => voterMap[vid])
+        .filter(Boolean),
+    [votation, voterMap]
   );
 
   const handleVote = useCallback(
@@ -362,6 +381,9 @@ export function VotationDetailView() {
                               bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
                             }}
                           />
+                          {isAdmin && (
+                            <VoterChips voters={getVotersForCandidate(candidate.id)} />
+                          )}
                         </Box>
                       </Box>
                     );
@@ -406,8 +428,10 @@ export function VotationDetailView() {
                     isMyVote={myVote === candidate.id}
                     isClosed={showResults}
                     isOpen={false}
+                    isAdmin={isAdmin}
                     myVote={myVote}
                     onVote={handleVote}
+                    voters={isAdmin ? getVotersForCandidate(candidate.id) : []}
                   />
                 </Grid>
               );
@@ -435,6 +459,7 @@ export function VotationDetailView() {
                   isAdmin={isAdmin}
                   myVote={myVote}
                   onVote={handleVote}
+                  voters={isAdmin ? getVotersForCandidate(candidate.id) : []}
                 />
               </Grid>
             );
@@ -581,7 +606,7 @@ function StatChip({ icon, label, value, color = 'text.secondary' }) {
   );
 }
 
-function CandidateCard({ candidate, votes, voteBarWidth, isWinner, isMyVote, isClosed, isOpen, isAdmin, myVote, onVote }) {
+function CandidateCard({ candidate, votes, voteBarWidth, isWinner, isMyVote, isClosed, isOpen, isAdmin, myVote, onVote, voters }) {
   const matchPct = candidate.match_pct ?? 0;
   const mvpCount = candidate.mvp ?? 0;
 
@@ -671,6 +696,7 @@ function CandidateCard({ candidate, votes, voteBarWidth, isWinner, isMyVote, isC
                 bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
               }}
             />
+            {isAdmin && <VoterChips voters={voters} />}
           </Box>
         )}
 
@@ -774,6 +800,27 @@ function TieBanner({ votation, candidates, getVotes, isAdmin, onCreateTiebreaker
         )}
       </Stack>
     </Card>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+function VoterChips({ voters }) {
+  if (!voters?.length) return null;
+  return (
+    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.75 }}>
+      {voters.map((voter) => (
+        <Tooltip key={voter.id} title={voter.name}>
+          <Chip
+            avatar={<Avatar src={voter.avatarUrl}>{voter.name?.charAt(0)}</Avatar>}
+            label={voter.name}
+            size="small"
+            variant="outlined"
+            sx={{ height: 22, fontSize: '0.68rem' }}
+          />
+        </Tooltip>
+      ))}
+    </Stack>
   );
 }
 
