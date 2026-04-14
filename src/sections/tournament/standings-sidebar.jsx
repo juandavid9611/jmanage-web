@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -30,9 +32,15 @@ const GRID_TEMPLATE = COLS.map((c) => c.fixed).join(' ');
 
 // ----------------------------------------------------------------------
 
-export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onViewAll, onNextAction, currentMatchweek, totalMatchweeks }) {
+export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMatches, onViewAll, onNextAction, currentMatchweek, totalMatchweeks }) {
   const { groups } = useGetGroups(tournamentId);
   const { allStandings, allStandingsLoading } = useGetAllStandings(tournamentId);
+
+  const liveTeamIds = useMemo(() => {
+    if (!allMatches) return new Set();
+    const live = allMatches.filter((m) => m.status === 'live');
+    return new Set(live.flatMap((m) => [m.home_team_id, m.away_team_id]));
+  }, [allMatches]);
 
   return (
     <Box
@@ -82,10 +90,11 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onView
               group={group}
               rows={allStandings?.groups?.[group.id]?.items || []}
               teams={teams}
+              liveTeamIds={liveTeamIds}
             />
           ))
         ) : (
-          <AllStandings rows={allStandings?.tournament?.items || []} teams={teams} />
+          <AllStandings rows={allStandings?.tournament?.items || []} teams={teams} liveTeamIds={liveTeamIds} />
         )}
       </Box>
 
@@ -119,7 +128,7 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onView
             >
               <Box>
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  Registrar{' '}
+                  {nextPendingMatch.status === 'live' ? 'Ver en vivo ' : 'Registrar '}
                   {(teams?.find((t) => t.id === nextPendingMatch.home_team_id)?.short_name ||
                     teams?.find((t) => t.id === nextPendingMatch.home_team_id)?.name ||
                     'LOC')}{' '}
@@ -129,7 +138,7 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onView
                     'VIS')}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  Resultado pendiente{nextPendingMatch.venue ? ` · ${nextPendingMatch.venue}` : ''}
+                  {nextPendingMatch.status === 'live' ? 'Partido en curso' : 'Resultado pendiente'}{nextPendingMatch.venue ? ` · ${nextPendingMatch.venue}` : ''}
                 </Typography>
               </Box>
               <Iconify icon="eva:arrow-forward-fill" sx={{ color: 'text.disabled' }} />
@@ -166,7 +175,7 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, onView
 
 // ----------------------------------------------------------------------
 
-function GroupStandings({ group, rows, teams }) {
+function GroupStandings({ group, rows, teams, liveTeamIds }) {
   return (
     <Box>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
@@ -177,18 +186,18 @@ function GroupStandings({ group, rows, teams }) {
           {group.name}
         </Typography>
       </Stack>
-      <StandingsTable rows={rows} teams={teams} />
+      <StandingsTable rows={rows} teams={teams} liveTeamIds={liveTeamIds} />
     </Box>
   );
 }
 
-function AllStandings({ rows, teams }) {
-  return <StandingsTable rows={rows} teams={teams} />;
+function AllStandings({ rows, teams, liveTeamIds }) {
+  return <StandingsTable rows={rows} teams={teams} liveTeamIds={liveTeamIds} />;
 }
 
 // ----------------------------------------------------------------------
 
-function StandingsTable({ rows, teams }) {
+function StandingsTable({ rows, teams, liveTeamIds }) {
   if (!rows || rows.length === 0) {
     return (
       <Typography
@@ -293,6 +302,29 @@ function StandingsTable({ rows, teams }) {
                   >
                     {name}
                   </Typography>
+                  {liveTeamIds?.has(row.team_id) && (
+                    <Box
+                      sx={{
+                        px: 0.75,
+                        py: 0.25,
+                        borderRadius: 0.5,
+                        bgcolor: (t) => alpha(t.palette.error.main, 0.16),
+                        color: 'error.main',
+                        fontSize: '0.6rem',
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        ml: 0.5,
+                        animation: 'pulse 2s infinite',
+                        '@keyframes pulse': {
+                          '0%': { opacity: 1 },
+                          '50%': { opacity: 0.5 },
+                          '100%': { opacity: 1 },
+                        },
+                      }}
+                    >
+                      En vivo
+                    </Box>
+                  )}
                 </Stack>
 
                 {/* PJ */}

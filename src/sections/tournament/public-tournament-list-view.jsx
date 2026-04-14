@@ -7,6 +7,7 @@ import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
@@ -152,7 +153,7 @@ export function PublicTournamentListView() {
 // ----------------------------------------------------------------------
 
 function PublicTournamentCard({ tournament, onView }) {
-  const { name, season, type, status, current_matchweek, rules, teams } = tournament;
+  const { name, season, type, status, current_matchweek, rules, teams, logo_url } = tournament;
 
   const meta = STATUS_META[status] || STATUS_META.draft;
   const totalMw = rules?.total_matchweeks || 0;
@@ -200,24 +201,32 @@ function PublicTournamentCard({ tournament, onView }) {
           sx={{ mb: 1.75 }}
         >
           <Stack direction="row" alignItems="center" spacing={1}>
-            <Box
-              sx={{
-                width: 36,
-                height: 36,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: (t) => alpha(t.palette[TYPE_COLOR[type] || 'primary'].main, 0.08),
-                flexShrink: 0,
-              }}
-            >
-              <Iconify
-                icon={TYPE_ICON[type] || 'mdi:trophy-outline'}
-                width={18}
-                sx={{ color: `${TYPE_COLOR[type] || 'primary'}.main` }}
+            {logo_url ? (
+              <Avatar
+                src={logo_url}
+                variant="rounded"
+                sx={{ width: 40, height: 40, borderRadius: 1.5, flexShrink: 0 }}
               />
-            </Box>
+            ) : (
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: (t) => alpha(t.palette[TYPE_COLOR[type] || 'primary'].main, 0.08),
+                  flexShrink: 0,
+                }}
+              >
+                <Iconify
+                  icon={TYPE_ICON[type] || 'mdi:trophy-outline'}
+                  width={20}
+                  sx={{ color: `${TYPE_COLOR[type] || 'primary'}.main` }}
+                />
+              </Box>
+            )}
             <Box>
               <Typography
                 variant="caption"

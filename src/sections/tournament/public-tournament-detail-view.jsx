@@ -8,6 +8,7 @@ import Chip from '@mui/material/Chip';
 import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
+import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
@@ -117,9 +118,24 @@ export function PublicTournamentDetailView({ id }) {
 
         {/* Header */}
         <Stack spacing={1} sx={{ mb: { xs: 3, md: 4 } }}>
-          <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" gap={1}>
-            <Typography variant="h4">{tournament.name}</Typography>
-            <Chip label={meta.label} color={meta.color} size="small" variant="soft" />
+          <Stack direction="row" alignItems="center" spacing={2}>
+            {tournament.logo_url && (
+              <Avatar
+                src={tournament.logo_url}
+                variant="rounded"
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 2,
+                  flexShrink: 0,
+                  border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                }}
+              />
+            )}
+            <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap" gap={1}>
+              <Typography variant="h4">{tournament.name}</Typography>
+              <Chip label={meta.label} color={meta.color} size="small" variant="soft" />
+            </Stack>
           </Stack>
           <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
             {tournament.season && (

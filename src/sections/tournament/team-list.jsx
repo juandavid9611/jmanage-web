@@ -335,16 +335,17 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                           {groupTeams.map((t) => (
                             <Stack key={t.id} direction="row" alignItems="center" spacing={1.5}>
                               <Avatar
+                                src={t.logo_url || undefined}
                                 sx={{
                                   width: 24,
                                   height: 24,
                                   fontSize: 10,
                                   fontWeight: 700,
-                                  bgcolor: `${accent}.main`,
+                                  bgcolor: t.primary_color || `${accent}.main`,
                                   color: 'common.white',
                                 }}
                               >
-                                {(t.short_name || t.name?.slice(0, 2))?.toUpperCase()}
+                                {!t.logo_url && (t.short_name || t.name?.slice(0, 2))?.toUpperCase()}
                               </Avatar>
                               <Typography variant="body2" sx={{ fontWeight: 500, flex: 1 }} noWrap>
                                 {t.name}
@@ -504,6 +505,9 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, onEdit, onDele
   const currentGroup = groups?.find((g) => g.id === currentGroupId);
   const initials = team.short_name || team.name?.slice(0, 2)?.toUpperCase() || '?';
 
+  // Count total uploaded documents across all types
+  const totalDocs = Object.values(team.documents || {}).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+
   // Setup steps with completion status
   const setupSteps = [
     {
@@ -524,15 +528,15 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, onEdit, onDele
       key: 'documents',
       label: 'Documentos',
       icon: 'mdi:file-document-outline',
-      done: false,
-      detail: 'Pendiente',
+      done: totalDocs > 0,
+      detail: totalDocs > 0 ? `${totalDocs} archivo${totalDocs !== 1 ? 's' : ''}` : 'Pendiente',
     },
     {
       key: 'rules',
       label: 'Reglamento',
       icon: 'mdi:gavel',
-      done: false,
-      detail: 'Sin aceptar',
+      done: !!team.rules_accepted,
+      detail: team.rules_accepted ? 'Aceptado' : 'Sin aceptar',
     },
   ];
 
@@ -561,16 +565,17 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, onEdit, onDele
         {/* Header */}
         <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
           <Avatar
+            src={team.logo_url || undefined}
             sx={{
               width: 36,
               height: 36,
               fontSize: 13,
               fontWeight: 700,
-              bgcolor: 'primary.main',
+              bgcolor: team.primary_color || 'primary.main',
               color: 'common.white',
             }}
           >
-            {initials}
+            {!team.logo_url && initials}
           </Avatar>
 
           <Box sx={{ flex: 1, minWidth: 0 }}>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 
-import { Box, Stack } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
+import { Box, Stack, Alert, Button } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
@@ -21,6 +21,7 @@ import {
   useGetTopGoalsAndAssists,
 } from 'src/actions/user';
 
+import { Iconify } from 'src/components/iconify';
 import { Walktour, useWalktour } from 'src/components/walktour';
 import { WalktourWorkspaceSelector } from 'src/components/walktour/walktour-workspace-selector';
 
@@ -202,6 +203,34 @@ export function OverviewAppView() {
       />
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
+        {/* Votaciones Banner */}
+        <Grid xs={12}>
+          <Alert
+            severity="primary"
+            variant="standard"
+            icon={<Iconify icon="mdi:vote" width={24} />}
+            action={
+              <Button
+                color="primary"
+                size="small"
+                variant="outlined"
+                onClick={() => router.push(paths.dashboard.votaciones.root)}
+                endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                Vota ya
+              </Button>
+            }
+            sx={{ 
+              alignItems: 'center', 
+              bgcolor: 'primary.lighter',
+              color: 'primary.darker',
+            }}
+          >
+            ¡Participa en las votaciones activas de tu club y haz escuchar tu voz!
+          </Alert>
+        </Grid>
+
         {/* Welcome / hero */}
         <Grid xs={12} md={6}>
           <AppWelcome
@@ -216,7 +245,7 @@ export function OverviewAppView() {
             title="Pagos pendientes o vencidos"
             tableData={pendingOrOverduePaymentRequests}
             headLabel={[
-              { id: 'status', label: 'Estado' },
+              { id: 'status', label: 'Estado' }, 
               { id: 'totalAmount', label: 'Monto' },
               { id: 'concept', label: 'Concepto' },
               { id: 'dueDate', label: 'Vencimiento' },

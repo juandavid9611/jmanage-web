@@ -112,7 +112,7 @@ export function TournamentDetailView() {
 
   // Next pending match for sidebar action
   const nextPendingMatch = useMemo(
-    () => allMatches.find((m) => m.status === 'scheduled' && m.matchweek === currentMw),
+    () => allMatches.find((m) => m.matchweek === currentMw && m.status !== 'finished' && m.status !== 'cancelled'),
     [allMatches, currentMw]
   );
 
@@ -333,6 +333,7 @@ export function TournamentDetailView() {
                 <StandingsSidebar
                   tournamentId={id}
                   teams={teams}
+                  allMatches={allMatches}
                   nextPendingMatch={nextPendingMatch}
                   currentMatchweek={currentMw}
                   totalMatchweeks={totalMw}
