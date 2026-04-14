@@ -61,6 +61,14 @@ export async function deleteTournament(id) {
   return res.data;
 }
 
+export async function getTournamentLogoUploadUrl(tournamentId, filename, contentType) {
+  const res = await axiosInstance.post(`${URL}/${tournamentId}/logo-url`, {
+    filename,
+    content_type: contentType,
+  });
+  return res.data; // { key, url }
+}
+
 // ── Groups ────────────────────────────────────────────────────────────
 
 export function useGetGroups(tournamentId) {
@@ -151,6 +159,51 @@ export async function deleteTeam(tournamentId, teamId) {
   return res.data;
 }
 
+export function useGetTeam(tournamentId, teamId) {
+  const { data, isLoading, error, mutate: revalidate } = useSWR(
+    tournamentId && teamId ? `${URL}/${tournamentId}/teams/${teamId}` : null,
+    fetcher
+  );
+  return useMemo(
+    () => ({ team: data || null, teamLoading: isLoading, teamError: error, revalidateTeam: revalidate }),
+    [data, error, isLoading, revalidate]
+  );
+}
+
+export async function getTeamLogoUploadUrl(tournamentId, teamId, filename, contentType) {
+  const res = await axiosInstance.post(
+    `${URL}/${tournamentId}/teams/${teamId}/logo-url`,
+    { filename, content_type: contentType }
+  );
+  return res.data; // { key, url }
+}
+
+export async function getTeamDocumentUploadUrl(tournamentId, teamId, docType, filename, contentType) {
+  const res = await axiosInstance.post(
+    `${URL}/${tournamentId}/teams/${teamId}/documents/upload-url`,
+    { doc_type: docType, filename, content_type: contentType }
+  );
+  return res.data; // { key, url }
+}
+
+export async function confirmTeamDocument(tournamentId, teamId, docType, name, key) {
+  const res = await axiosInstance.post(
+    `${URL}/${tournamentId}/teams/${teamId}/documents`,
+    { doc_type: docType, name, key }
+  );
+  mutate((k) => typeof k === 'string' && k.includes(`${tournamentId}/teams/${teamId}`));
+  return res.data;
+}
+
+export async function removeTeamDocument(tournamentId, teamId, docType, key) {
+  const res = await axiosInstance.delete(
+    `${URL}/${tournamentId}/teams/${teamId}/documents`,
+    { data: { doc_type: docType, key } }
+  );
+  mutate((k) => typeof k === 'string' && k.includes(`${tournamentId}/teams/${teamId}`));
+  return res.data;
+}
+
 // ── Players ───────────────────────────────────────────────────────────
 
 export function useGetPlayers(tournamentId, teamId, sort) {
@@ -195,6 +248,14 @@ export async function deletePlayer(tournamentId, playerId) {
   const res = await axiosInstance.delete(`${URL}/${tournamentId}/players/${playerId}`);
   mutate((key) => typeof key === 'string' && key.includes(`${tournamentId}/players`));
   return res.data;
+}
+
+export async function getPlayerAvatarUploadUrl(tournamentId, playerId, filename, contentType) {
+  const res = await axiosInstance.post(`${URL}/${tournamentId}/players/${playerId}/avatar-url`, {
+    filename,
+    content_type: contentType,
+  });
+  return res.data; // { key, url }
 }
 
 // ── Matches ───────────────────────────────────────────────────────────

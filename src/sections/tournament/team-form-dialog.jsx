@@ -1,6 +1,6 @@
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
@@ -19,7 +19,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
-import { createTeam, updateTeam } from 'src/actions/tournament';
+import { createTeam, updateTeam, getTeamLogoUploadUrl } from 'src/actions/tournament';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -45,7 +45,9 @@ const TeamSchema = zod.object({
 
 export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, groups }) {
   const isEdit = !!currentTeam;
+  const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const defaultValues = {
     name: '',
@@ -80,34 +82,58 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
         short_name: currentTeam?.short_name || '',
         group_id: currentTeam?.group_id || '',
         seed: currentTeam?.seed || 1,
-        manager_name: '',
-        contact_email: '',
-        primary_color: COLOR_OPTIONS[0],
+        manager_name: currentTeam?.manager_name || '',
+        contact_email: currentTeam?.contact_email || '',
+        primary_color: currentTeam?.primary_color || COLOR_OPTIONS[0],
       });
+      setLogoFile(null);
       setLogoPreview(currentTeam?.logo_url || null);
     }
   }, [open, currentTeam, reset]);
 
-  const handleLogoSelect = () => {
-    // Non-functional placeholder — will wire to file upload later
-    toast.info('Carga de logo disponible próximamente');
+  const handleLogoSelect = () => fileInputRef.current?.click();
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+    e.target.value = '';
+  };
+
+  const uploadLogoToS3 = async (teamId, file) => {
+    const { key, url } = await getTeamLogoUploadUrl(tournamentId, teamId, file.name, file.type);
+    await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+    return key;
   };
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      // Only send API-supported fields
       const payload = {
         name: data.name,
         short_name: data.short_name,
         group_id: data.group_id || undefined,
         seed: data.seed,
+        manager_name: data.manager_name,
+        contact_email: data.contact_email,
+        primary_color: data.primary_color,
       };
 
       if (isEdit) {
+        if (logoFile) {
+          const key = await uploadLogoToS3(currentTeam.id, logoFile);
+          payload.logo_url = key;
+        } else if (!logoPreview) {
+          payload.logo_url = '';
+        }
         await updateTeam(tournamentId, currentTeam.id, payload);
         toast.success('Equipo actualizado');
       } else {
-        await createTeam(tournamentId, payload);
+        const team = await createTeam(tournamentId, payload);
+        if (logoFile) {
+          const key = await uploadLogoToS3(team.id, logoFile);
+          await updateTeam(tournamentId, team.id, { logo_url: key });
+        }
         toast.success('Equipo creado');
       }
       onClose();
@@ -134,6 +160,13 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
         </DialogTitle>
 
         <DialogContent sx={{ pt: 2 }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
           {/* ── Section 1: Identidad ── */}
           <FormSection number="01" title="Identidad del equipo">
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>

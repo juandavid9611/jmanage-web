@@ -1,6 +1,6 @@
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
-import { useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
@@ -18,13 +18,23 @@ import { alpha, useTheme } from '@mui/material/styles';
 import LinearProgress from '@mui/material/LinearProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
-import { createTeam, updateTeam, useGetPlayers } from 'src/actions/tournament';
+import {
+  createTeam,
+  updateTeam,
+  useGetTeam,
+  deletePlayer,
+  useGetPlayers,
+  removeTeamDocument,
+  confirmTeamDocument,
+  getTeamLogoUploadUrl,
+  getTeamDocumentUploadUrl,
+} from 'src/actions/tournament';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
-import { PlayerDataGrid } from './player-data-grid';
+import { PlayerFormDialog } from './player-form-dialog';
 
 // ======================================================================
 // CONSTANTS
@@ -77,7 +87,10 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
   const isEdit = !!currentTeam;
   const [activeStep, setActiveStep] = useState(0);
   const [teamId, setTeamId] = useState(currentTeam?.id || null);
-  const [rulesAccepted, setRulesAccepted] = useState(false);
+  const [rulesAccepted, setRulesAccepted] = useState(currentTeam?.rules_accepted || false);
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(currentTeam?.logo_url || null);
+  const logoInputRef = useRef(null);
 
   const methods = useForm({
     resolver: zodResolver(TeamSchema),
@@ -103,8 +116,10 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
 
   const values = watch();
 
-  // For edit mode, load players
+  // For edit mode, load players + team (for documents)
   const { players = [] } = useGetPlayers(teamId ? tournamentId : null, teamId);
+  const { team: teamData } = useGetTeam(teamId ? tournamentId : null, teamId);
+  const teamDocuments = teamData?.documents || {};
 
   // Derive unlocked steps — all steps unlocked once team has a name
   const unlockedSteps = new Set([0]);
@@ -131,9 +146,21 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
             short_name: values.short_name || undefined,
             group_id: values.group_id || undefined,
             seed: values.seed,
+            manager_name: values.manager_name || undefined,
+            contact_email: values.contact_email || undefined,
+            primary_color: values.primary_color || undefined,
           };
           const result = await createTeam(tournamentId, payload);
           setTeamId(result.id);
+          if (logoFile) {
+            try {
+              const { key, url } = await getTeamLogoUploadUrl(tournamentId, result.id, logoFile.name, logoFile.type);
+              await fetch(url, { method: 'PUT', body: logoFile, headers: { 'Content-Type': logoFile.type } });
+              await updateTeam(tournamentId, result.id, { logo_url: key });
+            } catch {
+              // best-effort
+            }
+          }
           toast.success('Equipo creado — ahora agrega jugadores');
         } catch (error) {
           toast.error(error.message || 'Error al crear equipo');
@@ -146,7 +173,15 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
             name: values.name,
             short_name: values.short_name || undefined,
             seed: values.seed,
+            manager_name: values.manager_name || undefined,
+            contact_email: values.contact_email || undefined,
+            primary_color: values.primary_color || undefined,
           };
+          if (logoFile) {
+            const { key, url } = await getTeamLogoUploadUrl(tournamentId, teamId, logoFile.name, logoFile.type);
+            await fetch(url, { method: 'PUT', body: logoFile, headers: { 'Content-Type': logoFile.type } });
+            payload.logo_url = key;
+          }
           await updateTeam(tournamentId, teamId, payload);
         } catch (error) {
           toast.error(error.message || 'Error al actualizar');
@@ -155,22 +190,32 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
       }
     }
     setActiveStep((prev) => Math.min(prev + 1, STEPS.length - 1));
-  }, [activeStep, trigger, values, teamId, tournamentId]);
+  }, [activeStep, trigger, values, teamId, tournamentId, logoFile]);
 
   const handleBack = useCallback(() => {
     setActiveStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback(async () => {
+    if (teamId && rulesAccepted) {
+      try {
+        await updateTeam(tournamentId, teamId, { rules_accepted: true });
+      } catch {
+        // non-blocking — finish anyway
+      }
+    }
     toast.success(isEdit ? 'Equipo actualizado' : '¡Equipo registrado exitosamente!');
     onComplete?.();
-  }, [isEdit, onComplete]);
+  }, [isEdit, onComplete, teamId, tournamentId, rulesAccepted]);
 
   // Step completion checks
   const isStepDone = (index) => {
     if (index === 0) return !!values.name;
     if (index === 1) return !!teamId && players.length > 0;
-    if (index === 2) return false; // Documents — future
+    if (index === 2) {
+      const requiredKeys = DOCUMENT_TYPES.filter((d) => d.required).map((d) => d.key);
+      return !!teamId && requiredKeys.every((k) => (teamDocuments[k] || []).length > 0);
+    }
     if (index === 3) return rulesAccepted;
     return false;
   };
@@ -179,7 +224,10 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
     switch (stepKey) {
       case 'identity': return values.name || '—';
       case 'roster': return teamId ? `${players.length} jugadores` : '—';
-      case 'documents': return 'Próximamente';
+      case 'documents': {
+        const totalFiles = Object.values(teamDocuments).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+        return teamId ? `${totalFiles} archivo${totalFiles !== 1 ? 's' : ''}` : '—';
+      }
       case 'rules': return rulesAccepted ? 'Aceptado' : 'Pendiente';
       case 'review': return isStepDone(0) && isStepDone(1) ? 'Listo' : 'Pendiente';
       default: return '—';
@@ -239,8 +287,35 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
             </Typography>
           </Box>
 
+          {/* Hidden logo file input — shared across step renders */}
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setLogoFile(file);
+                setLogoPreview(URL.createObjectURL(file));
+              }
+              e.target.value = '';
+            }}
+          />
+
           {/* Step content */}
-          {activeStep === 0 && <StepIdentity values={values} setValue={setValue} />}
+          {activeStep === 0 && (
+            <StepIdentity
+              values={values}
+              setValue={setValue}
+              logoPreview={logoPreview}
+              logoInputRef={logoInputRef}
+              onLogoChange={(file) => {
+                setLogoFile(file);
+                setLogoPreview(URL.createObjectURL(file));
+              }}
+            />
+          )}
           {activeStep === 1 && (
             <StepRoster
               tournamentId={tournamentId}
@@ -249,7 +324,9 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
               positionCounts={positionCounts}
             />
           )}
-          {activeStep === 2 && <StepDocuments />}
+          {activeStep === 2 && (
+            <StepDocuments tournamentId={tournamentId} teamId={teamId} />
+          )}
           {activeStep === 3 && (
             <StepRules accepted={rulesAccepted} onToggle={() => setRulesAccepted(!rulesAccepted)} />
           )}
@@ -312,6 +389,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
             unassigned={unassigned}
             teamId={teamId}
             rulesAccepted={rulesAccepted}
+            logoPreview={logoPreview}
           />
         </Grid>
       </Grid>
@@ -323,12 +401,8 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
 // STEP 1 — IDENTIDAD
 // ======================================================================
 
-function StepIdentity({ values, setValue }) {
+function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChange }) {
   const initials = values.short_name || values.name?.slice(0, 2)?.toUpperCase() || '?';
-
-  const handleLogoSelect = () => {
-    toast.info('Carga de logo disponible próximamente');
-  };
 
   return (
     <FormSection number="01" title="Identidad del equipo">
@@ -336,6 +410,7 @@ function StepIdentity({ values, setValue }) {
         {/* Logo */}
         <Stack alignItems="center" spacing={1.5} sx={{ minWidth: 140 }}>
           <Avatar
+            src={logoPreview || undefined}
             sx={{
               width: 96,
               height: 96,
@@ -348,18 +423,18 @@ function StepIdentity({ values, setValue }) {
               transition: 'all 0.2s',
               '&:hover': { opacity: 0.8, transform: 'scale(1.05)' },
             }}
-            onClick={handleLogoSelect}
+            onClick={() => logoInputRef.current?.click()}
           >
-            {initials}
+            {!logoPreview && initials}
           </Avatar>
           <Button
             size="small"
             variant="soft"
             startIcon={<Iconify icon="mdi:camera-plus-outline" width={16} />}
-            onClick={handleLogoSelect}
+            onClick={() => logoInputRef.current?.click()}
             sx={{ fontSize: 11 }}
           >
-            Subir logo
+            {logoPreview ? 'Cambiar logo' : 'Subir logo'}
           </Button>
         </Stack>
 
@@ -437,7 +512,44 @@ function StepIdentity({ values, setValue }) {
 // STEP 2 — PLANTILLA
 // ======================================================================
 
+const POSITION_COLORS = {
+  Goalkeeper: 'warning',
+  Defender: 'info',
+  Midfielder: 'success',
+  Forward: 'error',
+};
+
 function StepRoster({ tournamentId, teamId, players, positionCounts }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState(null);
+
+  const handleAdd = () => {
+    setEditingPlayer(null);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (player) => {
+    setEditingPlayer(player);
+    setDialogOpen(true);
+  };
+
+  const handleClose = () => {
+    setDialogOpen(false);
+    setEditingPlayer(null);
+  };
+
+  const handleDelete = useCallback(
+    async (playerId) => {
+      try {
+        await deletePlayer(tournamentId, playerId);
+        toast.success('Jugador eliminado');
+      } catch (error) {
+        toast.error(error.message || 'Error al eliminar');
+      }
+    },
+    [tournamentId]
+  );
+
   if (!teamId) {
     return (
       <FormSection number="02" title="Plantilla de jugadores">
@@ -458,6 +570,8 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
     );
   }
 
+  const sortedPlayers = [...players].sort((a, b) => (a.number ?? 99) - (b.number ?? 99));
+
   return (
     <FormSection number="02" title="Plantilla de jugadores">
       {/* Position stats */}
@@ -474,7 +588,7 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
               boxShadow: 'none',
             }}
           >
-            <Iconify icon={POSITION_ICONS[key]} width={20} sx={{ color: 'text.secondary', mb: 0.5 }} />
+            <Iconify icon={POSITION_ICONS[key]} width={20} sx={{ color: `${POSITION_COLORS[key]}.main`, mb: 0.5 }} />
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
               {positionCounts[key]}
             </Typography>
@@ -496,21 +610,116 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
           boxShadow: 'none',
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Iconify
-            icon={players.length >= 11 ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
-            width={20}
-            sx={{ color: players.length >= 11 ? 'success.dark' : 'warning.dark' }}
-          />
-          <Typography variant="body2" sx={{ color: players.length >= 11 ? 'success.dark' : 'warning.dark' }}>
-            {players.length} jugador{players.length !== 1 ? 'es' : ''} registrado{players.length !== 1 ? 's' : ''}
-            {players.length < 11 && ` — faltan ${11 - players.length} para completar el equipo`}
-          </Typography>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Iconify
+              icon={players.length >= 11 ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
+              width={20}
+              sx={{ color: players.length >= 11 ? 'success.dark' : 'warning.dark' }}
+            />
+            <Typography variant="body2" sx={{ color: players.length >= 11 ? 'success.dark' : 'warning.dark' }}>
+              {players.length} jugador{players.length !== 1 ? 'es' : ''} registrado{players.length !== 1 ? 's' : ''}
+              {players.length < 11 && ` — faltan ${11 - players.length} para completar el equipo`}
+            </Typography>
+          </Stack>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Iconify icon="mingcute:add-line" width={16} />}
+            onClick={handleAdd}
+          >
+            Agregar jugador
+          </Button>
         </Stack>
       </Card>
 
-      {/* Inline player grid */}
-      <PlayerDataGrid tournamentId={tournamentId} teamId={teamId} players={players} />
+      {/* Player list */}
+      {sortedPlayers.length === 0 ? (
+        <Card
+          sx={{
+            py: 5,
+            textAlign: 'center',
+            border: (t) => `2px dashed ${alpha(t.palette.grey[500], 0.14)}`,
+            boxShadow: 'none',
+          }}
+        >
+          <Iconify icon="mdi:account-plus-outline" width={40} sx={{ color: 'text.disabled', mb: 1.5 }} />
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+            Sin jugadores todavía
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+            Agrega al menos 11 jugadores para completar la plantilla
+          </Typography>
+        </Card>
+      ) : (
+        <Card sx={{ overflow: 'hidden', boxShadow: 'none', border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
+          <Stack divider={<Box sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}` }} />}>
+            {sortedPlayers.map((player) => (
+              <Stack
+                key={player.id}
+                direction="row"
+                alignItems="center"
+                spacing={1.5}
+                sx={{ px: 2, py: 1.25 }}
+              >
+                {/* Jersey number */}
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+                    flexShrink: 0,
+                  }}
+                >
+                  <Typography variant="caption" sx={{ fontWeight: 700, lineHeight: 1 }}>
+                    {player.number || '—'}
+                  </Typography>
+                </Box>
+
+                {/* Name */}
+                <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }} noWrap>
+                  {player.name}
+                </Typography>
+
+                {/* Position */}
+                {player.position ? (
+                  <Chip
+                    label={POSITION_LABELS[player.position] || player.position}
+                    size="small"
+                    color={POSITION_COLORS[player.position] || 'default'}
+                    variant="soft"
+                    sx={{ fontSize: 11, fontWeight: 600, minWidth: 80 }}
+                  />
+                ) : (
+                  <Chip label="Sin posición" size="small" variant="soft" sx={{ fontSize: 11, minWidth: 80 }} />
+                )}
+
+                {/* Actions */}
+                <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
+                  <IconButton size="small" onClick={() => handleEdit(player)} sx={{ color: 'text.secondary' }}>
+                    <Iconify icon="solar:pen-bold" width={15} />
+                  </IconButton>
+                  <IconButton size="small" color="error" onClick={() => handleDelete(player.id)}>
+                    <Iconify icon="solar:trash-bin-trash-bold" width={15} />
+                  </IconButton>
+                </Stack>
+              </Stack>
+            ))}
+          </Stack>
+        </Card>
+      )}
+
+      <PlayerFormDialog
+        open={dialogOpen}
+        onClose={handleClose}
+        tournamentId={tournamentId}
+        teamId={teamId}
+        currentPlayer={editingPlayer}
+      />
     </FormSection>
   );
 }
@@ -526,6 +735,8 @@ const DOCUMENT_TYPES = [
     title: 'Identificación de jugadores',
     description: 'Cédula o documento de identidad de cada integrante',
     required: true,
+    accept: '.pdf,.jpg,.jpeg,.png',
+    multiple: true,
   },
   {
     key: 'insurance',
@@ -533,6 +744,8 @@ const DOCUMENT_TYPES = [
     title: 'Póliza de seguro',
     description: 'Seguro médico o de accidentes deportivos',
     required: true,
+    accept: '.pdf',
+    multiple: false,
   },
   {
     key: 'medical',
@@ -540,6 +753,8 @@ const DOCUMENT_TYPES = [
     title: 'Certificados médicos',
     description: 'Aptitud física de cada jugador',
     required: false,
+    accept: '.pdf,.jpg,.jpeg,.png',
+    multiple: true,
   },
   {
     key: 'consent',
@@ -547,101 +762,254 @@ const DOCUMENT_TYPES = [
     title: 'Consentimiento informado',
     description: 'Autorización firmada para menores de edad',
     required: false,
+    accept: '.pdf',
+    multiple: true,
   },
 ];
 
-function StepDocuments() {
+function StepDocuments({ tournamentId, teamId }) {
+  const { team, revalidateTeam } = useGetTeam(tournamentId, teamId);
+  const [uploading, setUploading] = useState({});
+  const [deleting, setDeleting] = useState({});
+  const fileInputRefs = useRef({});
+
+  const documents = team?.documents || {};
+
+  const requiredDone = DOCUMENT_TYPES.filter((d) => d.required).every(
+    (d) => (documents[d.key] || []).length > 0
+  );
+
+  const handleUpload = useCallback(
+    async (docType, files) => {
+      if (!teamId || !files?.length) return;
+      setUploading((prev) => ({ ...prev, [docType]: true }));
+      try {
+        await Promise.all(
+          Array.from(files).map(async (file) => {
+            const ct = file.type || 'application/octet-stream';
+            const { key, url: presignedUrl } = await getTeamDocumentUploadUrl(
+              tournamentId, teamId, docType, file.name, ct
+            );
+            await fetch(presignedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': ct } });
+            await confirmTeamDocument(tournamentId, teamId, docType, file.name, key);
+          })
+        );
+        await revalidateTeam();
+        toast.success('Documento subido');
+      } catch (error) {
+        toast.error(error.message || 'Error al subir documento');
+      } finally {
+        setUploading((prev) => ({ ...prev, [docType]: false }));
+      }
+    },
+    [tournamentId, teamId, revalidateTeam]
+  );
+
+  const handleDelete = useCallback(
+    async (docType, key) => {
+      const deleteKey = `${docType}:${key}`;
+      setDeleting((prev) => ({ ...prev, [deleteKey]: true }));
+      try {
+        await removeTeamDocument(tournamentId, teamId, docType, key);
+        await revalidateTeam();
+        toast.success('Documento eliminado');
+      } catch (error) {
+        toast.error(error.message || 'Error al eliminar');
+      } finally {
+        setDeleting((prev) => ({ ...prev, [deleteKey]: false }));
+      }
+    },
+    [tournamentId, teamId, revalidateTeam]
+  );
+
+  if (!teamId) {
+    return (
+      <FormSection number="03" title="Documentos del equipo">
+        <Card sx={{ p: 4, textAlign: 'center', border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.24)}`, boxShadow: 'none' }}>
+          <Iconify icon="mdi:file-document-outline" width={48} sx={{ color: 'text.disabled', mb: 1 }} />
+          <Typography variant="body2" color="text.secondary">
+            Completa el paso anterior para subir documentos.
+          </Typography>
+        </Card>
+      </FormSection>
+    );
+  }
+
   return (
     <FormSection number="03" title="Documentos del equipo">
+      {/* Completion status */}
       <Card
         sx={{
           p: 2,
           mb: 3,
-          bgcolor: 'info.lighter',
+          bgcolor: requiredDone ? 'success.lighter' : 'warning.lighter',
           border: '1px solid',
-          borderColor: 'info.light',
+          borderColor: requiredDone ? 'success.light' : 'warning.light',
           boxShadow: 'none',
         }}
       >
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Iconify icon="mdi:information-outline" width={20} sx={{ color: 'info.dark' }} />
-          <Typography variant="body2" sx={{ color: 'info.dark' }}>
-            La carga de documentos estará disponible próximamente. Aquí podrás subir toda la documentación requerida.
+          <Iconify
+            icon={requiredDone ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
+            width={20}
+            sx={{ color: requiredDone ? 'success.dark' : 'warning.dark' }}
+          />
+          <Typography variant="body2" sx={{ color: requiredDone ? 'success.dark' : 'warning.dark' }}>
+            {requiredDone
+              ? 'Documentos obligatorios completos'
+              : 'Sube los documentos obligatorios para continuar'}
           </Typography>
         </Stack>
       </Card>
 
       <Stack spacing={2}>
-        {DOCUMENT_TYPES.map((doc) => (
-          <Card
-            key={doc.key}
-            sx={{
-              p: 2.5,
-              border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
-              boxShadow: 'none',
-              opacity: 0.65,
-            }}
-          >
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Box
-                sx={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 1.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
-                  flexShrink: 0,
-                }}
-              >
-                <Iconify icon={doc.icon} width={22} sx={{ color: 'primary.main' }} />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Typography variant="subtitle2">{doc.title}</Typography>
-                  {doc.required && (
-                    <Chip label="Requerido" size="small" color="error" variant="soft" sx={{ height: 18, fontSize: 10 }} />
-                  )}
-                </Stack>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                  {doc.description}
-                </Typography>
-              </Box>
-              <Button
-                size="small"
-                variant="outlined"
-                color="inherit"
-                disabled
-                startIcon={<Iconify icon="mdi:cloud-upload-outline" width={16} />}
-                sx={{ flexShrink: 0 }}
-              >
-                Subir
-              </Button>
-            </Stack>
-          </Card>
-        ))}
-      </Stack>
+        {DOCUMENT_TYPES.map((doc) => {
+          const files = documents[doc.key] || [];
+          const isUploading = uploading[doc.key];
+          const hasDocs = files.length > 0;
 
-      {/* Drag-and-drop area */}
-      <Card
-        sx={{
-          mt: 3,
-          p: 4,
-          textAlign: 'center',
-          border: (t) => `2px dashed ${alpha(t.palette.grey[500], 0.16)}`,
-          boxShadow: 'none',
-          opacity: 0.5,
-        }}
-      >
-        <Iconify icon="mdi:cloud-upload-outline" width={48} sx={{ color: 'text.disabled', mb: 1 }} />
-        <Typography variant="body2" color="text.secondary">
-          Arrastra archivos aquí o haz clic para seleccionar
-        </Typography>
-        <Typography variant="caption" color="text.disabled">
-          PDF, JPG, PNG — Máximo 5MB por archivo
-        </Typography>
-      </Card>
+          return (
+            <Card
+              key={doc.key}
+              sx={{
+                p: 2.5,
+                border: (t) => `1px solid ${
+                  hasDocs
+                    ? alpha(t.palette.success.main, 0.24)
+                    : alpha(t.palette.grey[500], 0.12)
+                }`,
+                boxShadow: 'none',
+                transition: 'border-color 0.2s',
+              }}
+            >
+              {/* Header */}
+              <Stack direction="row" spacing={2} alignItems="flex-start">
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: hasDocs
+                      ? (t) => alpha(t.palette.success.main, 0.1)
+                      : (t) => alpha(t.palette.primary.main, 0.08),
+                    flexShrink: 0,
+                  }}
+                >
+                  <Iconify
+                    icon={hasDocs ? 'mdi:check-circle' : doc.icon}
+                    width={22}
+                    sx={{ color: hasDocs ? 'success.main' : 'primary.main' }}
+                  />
+                </Box>
+
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                    <Typography variant="subtitle2">{doc.title}</Typography>
+                    {doc.required && !hasDocs && (
+                      <Chip label="Requerido" size="small" color="error" variant="soft" sx={{ height: 18, fontSize: 10 }} />
+                    )}
+                    {hasDocs && (
+                      <Chip label={`${files.length} archivo${files.length > 1 ? 's' : ''}`} size="small" color="success" variant="soft" sx={{ height: 18, fontSize: 10 }} />
+                    )}
+                  </Stack>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {doc.description}
+                  </Typography>
+                </Box>
+
+                {/* Upload button */}
+                <Button
+                  size="small"
+                  variant={hasDocs ? 'outlined' : 'contained'}
+                  color={hasDocs ? 'inherit' : 'primary'}
+                  loading={isUploading}
+                  disabled={isUploading}
+                  startIcon={<Iconify icon="mdi:cloud-upload-outline" width={16} />}
+                  onClick={() => fileInputRefs.current[doc.key]?.click()}
+                  sx={{ flexShrink: 0 }}
+                >
+                  {hasDocs ? 'Agregar' : 'Subir'}
+                </Button>
+
+                <input
+                  ref={(el) => { fileInputRefs.current[doc.key] = el; }}
+                  type="file"
+                  accept={doc.accept}
+                  multiple={doc.multiple}
+                  hidden
+                  onChange={(e) => {
+                    handleUpload(doc.key, e.target.files);
+                    e.target.value = '';
+                  }}
+                />
+              </Stack>
+
+              {/* Uploaded file list */}
+              {files.length > 0 && (
+                <Stack
+                  spacing={0.5}
+                  sx={{
+                    mt: 2,
+                    pl: 7,
+                    borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+                    pt: 1.5,
+                  }}
+                >
+                  {files.map((file) => {
+                    const deleteKey = `${doc.key}:${file.key}`;
+                    const isDeleting = deleting[deleteKey];
+                    return (
+                      <Stack
+                        key={file.key}
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                      >
+                        <Iconify
+                          icon={file.name?.endsWith('.pdf') ? 'mdi:file-pdf-box' : 'mdi:file-image'}
+                          width={18}
+                          sx={{ color: 'text.secondary', flexShrink: 0 }}
+                        />
+                        <Typography
+                          component="a"
+                          href={file.url || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="caption"
+                          sx={{
+                            flex: 1,
+                            color: 'text.primary',
+                            textDecoration: 'none',
+                            '&:hover': { textDecoration: 'underline' },
+                          }}
+                          noWrap
+                        >
+                          {file.name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.disabled', flexShrink: 0 }}>
+                          {file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString('es') : ''}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={isDeleting}
+                          onClick={() => handleDelete(doc.key, file.key)}
+                          sx={{ flexShrink: 0 }}
+                        >
+                          <Iconify icon={isDeleting ? 'mdi:loading' : 'solar:trash-bin-trash-bold'} width={14} />
+                        </IconButton>
+                      </Stack>
+                    );
+                  })}
+                </Stack>
+              )}
+            </Card>
+          );
+        })}
+      </Stack>
     </FormSection>
   );
 }
@@ -993,7 +1361,7 @@ const REQUIREMENTS = [
   { key: 'rules', label: 'Reglamento aceptado', check: (v, _p, extra) => extra?.rulesAccepted },
 ];
 
-function WizardSummary({ values, players, positionCounts, unassigned, teamId, rulesAccepted }) {
+function WizardSummary({ values, players, positionCounts, unassigned, teamId, rulesAccepted, logoPreview }) {
   const extra = { rulesAccepted };
   const completedCount = REQUIREMENTS.filter((r) => r.check(values, players, extra)).length;
   const percentage = Math.round((completedCount / REQUIREMENTS.length) * 100);
@@ -1022,6 +1390,7 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
         }}
       >
         <Avatar
+          src={logoPreview || undefined}
           sx={{
             width: 56,
             height: 56,
@@ -1033,7 +1402,7 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
             color: 'common.white',
           }}
         >
-          {initials}
+          {!logoPreview && initials}
         </Avatar>
         <Typography variant="subtitle2" noWrap>
           {values.name || 'Nombre del equipo'}

@@ -84,7 +84,7 @@ const WizardSchema = zod.object({
   // Step 1
   name: zod.string().min(1, 'El nombre es obligatorio'),
   sport: zod.string().min(1, 'Selecciona un deporte'),
-  city: zod.string().optional(),
+  location: zod.string().optional(),
   // Step 2
   type: zod.string().min(1, 'Selecciona un formato'),
   teams_per_group: zod.coerce.number().int().optional(),
@@ -135,7 +135,7 @@ export function TournamentCreationWizard() {
   const defaultValues = {
     name: '',
     sport: '',
-    city: '',
+    location: '',
     type: '',
     teams_per_group: 4,
     legs: 1,
@@ -214,7 +214,7 @@ export function TournamentCreationWizard() {
       const payload = {
         name: data.name,
         sport: data.sport,
-        city: data.city,
+        location: data.location,
         type: data.type,
         teams_per_group: data.teams_per_group,
         rules: { ...data.rules, legs: data.legs },
@@ -360,7 +360,7 @@ function StepIdentity({ onSportChange }) {
             </Field.Select>
           </Grid>
           <Grid xs={12} md={6}>
-            <Field.Text name="city" label="Sede / Ciudad" placeholder="Ej. Bogotá" />
+            <Field.Text name="location" label="Sede / Ciudad" placeholder="Ej. Bogotá" />
           </Grid>
         </Grid>
       </Stack>

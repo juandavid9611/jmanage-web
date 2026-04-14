@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
@@ -174,50 +175,66 @@ export function TournamentBanner({
           sx={{ mb: 2.25 }}
         >
           {/* Left */}
-          <Box>
-            <Typography
-              variant="overline"
-              sx={{ color: 'text.disabled', letterSpacing: 2, mb: 0.5, display: 'block' }}
-            >
-              Torneo {STATUS_LABEL[tournament.status]?.toLowerCase() || ''}
-            </Typography>
-
-            <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 0.75 }}>
-              <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: -0.5 }}>
-                {tournament.name}
-              </Typography>
-              <Chip
-                label={STATUS_LABEL[tournament.status] || tournament.status}
-                color={STATUS_COLOR[tournament.status] || 'default'}
-                size="small"
+          <Stack direction="row" alignItems="flex-start" spacing={2}>
+            {tournament.logo_url && (
+              <Avatar
+                src={tournament.logo_url}
+                variant="rounded"
                 sx={{
-                  fontWeight: 600,
-                  ...(tournament.status === 'active' && {
-                    animation: 'pulse 2s ease-in-out infinite',
-                    '@keyframes pulse': {
-                      '0%, 100%': { opacity: 1 },
-                      '50%': { opacity: 0.7 },
-                    },
-                  }),
+                  width: 64,
+                  height: 64,
+                  borderRadius: 2,
+                  flexShrink: 0,
+                  border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                  mt: 0.5,
                 }}
               />
-            </Stack>
+            )}
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ color: 'text.disabled', letterSpacing: 2, mb: 0.5, display: 'block' }}
+              >
+                Torneo {STATUS_LABEL[tournament.status]?.toLowerCase() || ''}
+              </Typography>
 
-            <Stack direction="row" spacing={1.75} sx={{ color: 'text.secondary' }}>
-              <Typography variant="body2">
-                {SPORT_ICONS[tournament.sport] || '🏆'} {tournament.sport || 'Deporte'}
-              </Typography>
-              {tournament.city && (
-                <Typography variant="body2">📍 {tournament.city}</Typography>
-              )}
-              <Typography variant="body2">
-                {teamCount} equipo{teamCount !== 1 ? 's' : ''}
-              </Typography>
-              <Typography variant="body2">
-                {TYPE_LABEL[tournament.type] || tournament.type}
-              </Typography>
-            </Stack>
-          </Box>
+              <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 0.75 }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: -0.5 }}>
+                  {tournament.name}
+                </Typography>
+                <Chip
+                  label={STATUS_LABEL[tournament.status] || tournament.status}
+                  color={STATUS_COLOR[tournament.status] || 'default'}
+                  size="small"
+                  sx={{
+                    fontWeight: 600,
+                    ...(tournament.status === 'active' && {
+                      animation: 'pulse 2s ease-in-out infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.7 },
+                      },
+                    }),
+                  }}
+                />
+              </Stack>
+
+              <Stack direction="row" spacing={1.75} sx={{ color: 'text.secondary' }}>
+                <Typography variant="body2">
+                  {SPORT_ICONS[tournament.sport] || '🏆'} {tournament.sport || 'Deporte'}
+                </Typography>
+                {tournament.location && (
+                  <Typography variant="body2">📍 {tournament.location}</Typography>
+                )}
+                <Typography variant="body2">
+                  {teamCount} equipo{teamCount !== 1 ? 's' : ''}
+                </Typography>
+                <Typography variant="body2">
+                  {TYPE_LABEL[tournament.type] || tournament.type}
+                </Typography>
+              </Stack>
+            </Box>
+          </Stack>
 
           {/* Right */}
           <Stack

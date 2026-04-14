@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import { alpha } from '@mui/material/styles';
@@ -80,6 +81,12 @@ export function MatchDetailView() {
     assist_player_id: '',
   });
 
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    if (match) setNotes(match.notes || '');
+  }, [match]);
+
   if (matchLoading) return <LoadingScreen />;
   if (!match) return <Typography>Partido no encontrado</Typography>;
 
@@ -140,6 +147,18 @@ export function MatchDetailView() {
     }
   };
 
+  const handleSaveNotes = async () => {
+    try {
+      setIsSubmitting(true);
+      await updateMatch(tournamentId, matchId, { notes });
+      toast.success('Observaciones guardadas exitosamente');
+    } catch (error) {
+      toast.error(error.message || 'Error al guardar observaciones');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteEvent = async (eventId) => {
     try {
       await deleteMatchEvent(matchId, eventId);
@@ -149,10 +168,13 @@ export function MatchDetailView() {
     }
   };
 
-  // ── Compute live score ─────────────────────────────────────────────
+  // ── Compute live score & mocked pending payments ─────────────────────────────────────────────
   const goalTypes = new Set(['goal', 'penalty_scored']);
   let liveScoreHome = 0;
   let liveScoreAway = 0;
+  let yellowCardsCount = 0;
+  let redCardsCount = 0;
+
   events.forEach((ev) => {
     if (goalTypes.has(ev.type)) {
       if (ev.team_id === match.home_team_id) liveScoreHome += 1;
@@ -160,8 +182,14 @@ export function MatchDetailView() {
     } else if (ev.type === 'own_goal') {
       if (ev.team_id === match.home_team_id) liveScoreAway += 1;
       if (ev.team_id === match.away_team_id) liveScoreHome += 1;
+    } else if (ev.type === 'yellow_card') {
+      yellowCardsCount += 1;
+    } else if (ev.type === 'red_card' || ev.type === 'second_yellow') {
+      redCardsCount += 1;
     }
   });
+
+  const pendingAmount = (yellowCardsCount * 15000) + (redCardsCount * 30000);
 
   const scoreHome = isLive ? liveScoreHome : match.score_home === -1 ? '-' : match.score_home;
   const scoreAway = isLive ? liveScoreAway : match.score_away === -1 ? '-' : match.score_away;
@@ -482,6 +510,41 @@ export function MatchDetailView() {
             </Stack>
           </Box>
         )}
+      </Box>
+
+      {/* ── Observaciones (Comments & Mocked Payments) ────────────────────── */}
+      <Box sx={{ px: { xs: 2, md: 3.5 }, py: 4, bgcolor: (t) => alpha(t.palette.grey[500], 0.02) }}>
+        <Typography variant="overline" sx={{ color: 'text.disabled', letterSpacing: 2, fontSize: '0.65rem', mb: 2, display: 'block' }}>
+          Observaciones del Oficial de Partido
+        </Typography>
+
+        <Box sx={{ maxWidth: 640, mx: 'auto' }}>
+          {pendingAmount > 0 && (
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              Existen cobros pendientes por emitir: <strong>{yellowCardsCount} amarillas</strong> y <strong>{redCardsCount} rojas/doble amarilla</strong>, total de <strong>${pendingAmount.toLocaleString()}</strong> pendientes de cobro y pago.
+            </Alert>
+          )}
+
+          <TextField
+             fullWidth
+             multiline
+             rows={4}
+             placeholder="Agregar observaciones, incidentes o notas adicionales del partido..."
+             value={notes}
+             onChange={(e) => setNotes(e.target.value)}
+          />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
+            <LoadingButton 
+               variant="contained" 
+               size="small" 
+               loading={isSubmitting} 
+               onClick={handleSaveNotes}
+               disabled={notes === (match.notes || '')}
+            >
+               Guardar Observaciones
+            </LoadingButton>
+          </Box>
+        </Box>
       </Box>
 
       {/* ── Add Event Dialog ───────────────────────────────────────── */}

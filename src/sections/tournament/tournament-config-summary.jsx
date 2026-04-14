@@ -68,7 +68,7 @@ export function TournamentConfigSummary({ tournament }) {
               value={SPORT_LABELS[tournament.sport] || tournament.sport || '—'}
             />
             <Divider />
-            <ConfigRow label="Ciudad" value={tournament.city || '—'} />
+            <ConfigRow label="Ciudad" value={tournament.location || '—'} />
           </Stack>
         </Card>
 
