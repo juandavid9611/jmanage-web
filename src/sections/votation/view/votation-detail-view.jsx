@@ -74,7 +74,7 @@ export function VotationDetailView() {
     [votation]
   );
 
-  const { users } = useGetUsers(isAdmin ? selectedWorkspace : null);
+  const { users } = useGetUsers(selectedWorkspace);
 
   const voterMap = useMemo(() => {
     const map = {};
@@ -89,6 +89,12 @@ export function VotationDetailView() {
         .map(([vid]) => voterMap[vid])
         .filter(Boolean),
     [votation, voterMap]
+  );
+
+  // candidate.id === user.id (Cognito sub), so voterMap gives a fresh presigned URL
+  const candidateAvatar = useCallback(
+    (candidate) => voterMap[candidate.id]?.avatarUrl || candidate.avatar_url,
+    [voterMap]
   );
 
   const handleVote = useCallback(
@@ -308,7 +314,7 @@ export function VotationDetailView() {
                             {idx + 1}
                           </Typography>
                           <Avatar
-                            src={candidate.avatar_url}
+                            src={candidateAvatar(candidate)}
                             alt={candidate.name}
                             sx={{ width: 28, height: 28, fontSize: '0.75rem', flexShrink: 0 }}
                           >
@@ -400,6 +406,7 @@ export function VotationDetailView() {
                     candidates={podiumCandidates}
                     getVotes={getVotesForCandidate}
                     totalVotes={totalVotes}
+                    getCandidateAvatar={candidateAvatar}
                   />
                 </Card>
               </Grid>
@@ -422,6 +429,7 @@ export function VotationDetailView() {
                 <Grid key={candidate.id} xs={12} sm={6} md={4}>
                   <CandidateCard
                     candidate={candidate}
+                    avatarSrc={candidateAvatar(candidate)}
                     votes={votes}
                     voteBarWidth={voteBarWidth}
                     isWinner={false}
@@ -450,6 +458,7 @@ export function VotationDetailView() {
               <Grid key={candidate.id} xs={12} sm={6} md={4}>
                 <CandidateCard
                   candidate={candidate}
+                  avatarSrc={candidateAvatar(candidate)}
                   votes={votes}
                   voteBarWidth={voteBarWidth}
                   isWinner={false}
@@ -484,7 +493,7 @@ export function VotationDetailView() {
 
 // ----------------------------------------------------------------------
 
-function PodiumView({ candidates, getVotes, totalVotes }) {
+function PodiumView({ candidates, getVotes, totalVotes, getCandidateAvatar }) {
   // Olympic order: 2nd | 1st | 3rd
   const order = candidates.length >= 3
     ? [candidates[1], candidates[0], candidates[2]]
@@ -519,7 +528,7 @@ function PodiumView({ candidates, getVotes, totalVotes }) {
             {/* Avatar + name above podium block */}
             <Stack alignItems="center" spacing={0.75}>
               <Avatar
-                src={candidate.avatar_url}
+                src={getCandidateAvatar ? getCandidateAvatar(candidate) : candidate.avatar_url}
                 alt={candidate.name}
                 sx={{
                   width: rankIdx === 0 ? 72 : 56,
@@ -606,7 +615,7 @@ function StatChip({ icon, label, value, color = 'text.secondary' }) {
   );
 }
 
-function CandidateCard({ candidate, votes, voteBarWidth, isWinner, isMyVote, isClosed, isOpen, isAdmin, myVote, onVote, voters }) {
+function CandidateCard({ candidate, avatarSrc, votes, voteBarWidth, isWinner, isMyVote, isClosed, isOpen, isAdmin, myVote, onVote, voters }) {
   const matchPct = candidate.match_pct ?? 0;
   const mvpCount = candidate.mvp ?? 0;
 
@@ -642,7 +651,7 @@ function CandidateCard({ candidate, votes, voteBarWidth, isWinner, isMyVote, isC
         {/* Header */}
         <Stack direction="row" alignItems="center" spacing={1.5}>
           <Avatar
-            src={candidate.avatar_url}
+            src={avatarSrc || candidate.avatar_url}
             alt={candidate.name}
             sx={{ width: 44, height: 44, fontSize: '1rem', flexShrink: 0 }}
           >
