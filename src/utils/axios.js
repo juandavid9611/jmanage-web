@@ -55,7 +55,7 @@ export const publicFetcher = async (args) => {
 export const endpoints = {
   users: '/users',
   calendar: '/calendar',
-  paymentRquests: '/payment_requests',
+  paymentRequests: '/payment_requests',
   files: '/files',
   tours: '/tours',
   workspaces: '/workspaces',

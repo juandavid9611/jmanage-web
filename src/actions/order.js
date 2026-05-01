@@ -3,8 +3,6 @@ import useSWR, { mutate } from 'swr';
 
 import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
-import { _orders } from 'src/_mock';
-
 // ----------------------------------------------------------------------
 
 const swrOptions = {
@@ -21,11 +19,11 @@ export function useGetOrders() {
 
   const memoizedValue = useMemo(
     () => ({
-      orders: data?.length ? data : _orders,
+      orders: data || [],
       ordersLoading: isLoading,
       ordersError: error,
       ordersValidating: isValidating,
-      ordersEmpty: false,
+      ordersEmpty: !isLoading && !data?.length,
     }),
     [data, error, isLoading, isValidating]
   );
@@ -61,7 +59,7 @@ export async function createOrder(orderData) {
 
 export async function updateOrder(id, orderData) {
   const res = await axiosInstance.put(`${URL}/${id}`, orderData);
-  mutate((key) => key.startsWith(URL), undefined, { revalidate: true });
+  mutate((key) => key.startsWith(URL), undefined, { revalidate: false });
   return res.data;
 }
 

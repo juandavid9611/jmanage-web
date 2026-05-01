@@ -7,9 +7,12 @@ import Grid from '@mui/material/Unstable_Grid2';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import { createOrder } from 'src/actions/order';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { Form } from 'src/components/hook-form';
 import { Iconify } from 'src/components/iconify';
+
+import { useAuthContext } from 'src/auth/hooks';
 
 import { useCheckoutContext } from './context';
 import { CheckoutSummary } from './checkout-summary';
@@ -20,38 +23,51 @@ import { CheckoutPaymentMethods } from './checkout-payment-methods';
 // ----------------------------------------------------------------------
 
 const DELIVERY_OPTIONS = [
-  { value: 0, label: 'Free', description: '5-7 days delivery' },
-  { value: 10, label: 'Standard', description: '3-5 days delivery' },
-  { value: 20, label: 'Express', description: '2-3 days delivery' },
+  {
+    value: 0,
+    label: 'Entrega en el lugar',
+    description: 'Recoge tu pedido en la tienda sin costo.',
+    disabled: false,
+  },
+  {
+    value: 10,
+    label: 'Standard',
+    description: 'Entrega en 3-5 días.',
+    disabled: true,
+  },
+  {
+    value: 20,
+    label: 'Express',
+    description: 'Entrega en 2-3 días.',
+    disabled: true,
+  },
 ];
 
 const PAYMENT_OPTIONS = [
   {
     value: 'paypal',
-    label: 'Pay with Paypal',
-    description: 'You will be redirected to PayPal website to complete your purchase securely.',
+    label: 'PayPal',
+    description: 'Paga con tu cuenta de PayPal.',
+    disabled: true,
   },
   {
     value: 'creditcard',
-    label: 'Credit / Debit card',
-    description: 'We support Mastercard, Visa, Discover and Stripe.',
+    label: 'Tarjeta crédito / débito',
+    description: 'Aceptamos Mastercard, Visa, Discover y Stripe.',
+    disabled: true,
   },
   {
     value: 'cash',
-    label: 'Cash',
-    description: 'Pay with cash when your order is delivered.',
+    label: 'Efectivo',
+    description: 'Paga en efectivo al recibir tu pedido.',
+    disabled: false,
   },
 ];
 
-const CARD_OPTIONS = [
-  { value: 'visa1', label: '**** **** **** 1212 - Jimmy Holland' },
-  { value: 'visa2', label: '**** **** **** 2424 - Shawn Stokes' },
-  { value: 'mastercard', label: '**** **** **** 4545 - Cole Armstrong' },
-];
+const CARD_OPTIONS = [];
 
 export const PaymentSchema = zod.object({
-  payment: zod.string().min(1, { message: 'Payment is required!' }),
-  // Not required
+  payment: zod.string().min(1, { message: 'Selecciona un método de pago' }),
   delivery: zod.number(),
 });
 
@@ -59,8 +75,10 @@ export const PaymentSchema = zod.object({
 
 export function CheckoutPayment() {
   const checkout = useCheckoutContext();
+  const { selectedWorkspace } = useWorkspace();
+  const { user } = useAuthContext();
 
-  const defaultValues = { delivery: checkout.shipping, payment: '' };
+  const defaultValues = { delivery: 0, payment: 'cash' };
 
   const methods = useForm({
     resolver: zodResolver(PaymentSchema),
@@ -74,38 +92,38 @@ export function CheckoutPayment() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
+      const deliveryOption = DELIVERY_OPTIONS.find((option) => option.value === data.delivery);
       const orderData = {
+        workspaceId: selectedWorkspace?.id,
         items: checkout.items.map((item) => ({
           ...item,
-          sku: item.sku || item.id, // Ensure sku is present
+          sku: item.sku || item.id,
         })),
         subtotal: checkout.subtotal,
-        shipping: checkout.shipping,
+        shipping: data.delivery,
         discount: checkout.discount,
-        totalAmount: checkout.total,
+        totalAmount: checkout.subtotal - checkout.discount + data.delivery,
         totalQuantity: checkout.totalItems,
         customer: {
-          id: checkout.billing?.id,
-          name: checkout.billing?.name,
-          email: checkout.billing?.email,
-          phoneNumber: checkout.billing?.phoneNumber,
+          id: user?.id,
+          name: user?.displayName || user?.name,
+          email: user?.email,
+          phoneNumber: user?.phone_number || user?.phoneNumber || '',
+          avatarUrl: user?.photoURL,
         },
         shippingAddress: {
-          fullAddress: checkout.billing?.fullAddress,
-          addressType: checkout.billing?.addressType,
-          company: checkout.billing?.company,
+          fullAddress: checkout.billing?.fullAddress || 'Entrega en el lugar',
+          addressType: checkout.billing?.addressType || 'Pickup',
+          company: checkout.billing?.company || '',
         },
         delivery: {
-          shipment_amount: checkout.shipping,
-          delivery_type: DELIVERY_OPTIONS.find((option) => option.value === data.delivery)?.label || 'Standard',
+          shipmentAmount: data.delivery,
+          deliveryType: deliveryOption?.label || 'Entrega en el lugar',
         },
         payment: {
           payment: data.payment,
-          cardType: 'visa', // Dummy value to satisfy validation
-          cardNumber: '**** **** **** 1234', // Dummy value to satisfy validation
         },
       };
-      console.info('Creating order with data:', orderData);
       await createOrder(orderData);
       checkout.onNextStep();
       checkout.onReset();
@@ -139,7 +157,7 @@ export function CheckoutPayment() {
             onClick={checkout.onBackStep}
             startIcon={<Iconify icon="eva:arrow-ios-back-fill" />}
           >
-            Back
+            Atrás
           </Button>
         </Grid>
 
@@ -147,10 +165,10 @@ export function CheckoutPayment() {
           <CheckoutBillingInfo billing={checkout.billing} onBackStep={checkout.onBackStep} />
 
           <CheckoutSummary
-            total={checkout.total}
+            total={checkout.subtotal - checkout.discount}
             subtotal={checkout.subtotal}
             discount={checkout.discount}
-            shipping={checkout.shipping}
+            shipping={0}
             onEdit={() => checkout.onGotoStep(0)}
           />
 
@@ -161,7 +179,7 @@ export function CheckoutPayment() {
             variant="contained"
             loading={isSubmitting}
           >
-            Complete order
+            Completar orden
           </LoadingButton>
         </Grid>
       </Grid>

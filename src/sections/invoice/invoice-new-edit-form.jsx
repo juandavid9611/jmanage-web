@@ -130,7 +130,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
 
     try {
       if (currentInvoice) {
-        await updatePaymentRequest(currentInvoice.id, data, selectedWorkspace?.id);
+        await updatePaymentRequest(currentInvoice.id, data, selectedWorkspace?.id, currentInvoice.orderId);
         toast.success('Update success!');
       } else {
         await createPaymentRequests(data, selectedWorkspace?.id);
@@ -162,13 +162,13 @@ export function InvoiceNewEditForm({ currentInvoice }) {
           error: 'File upload failed',
         });
         const file_names = values.images.map((file) => file.name);
-        await requestPaymentRequestApproval(values.id, file_names, selectedWorkspace?.id);
+        await requestPaymentRequestApproval(values.id, file_names, selectedWorkspace?.id, currentInvoice?.orderId);
         router.push(paths.dashboard.user.invoice.invoiceList);
       } catch (error) {
         console.error('File upload failed', error);
       }
     },
-    [values.images, values.id, router, selectedWorkspace?.id]
+    [values.images, values.id, router, selectedWorkspace?.id, currentInvoice?.orderId]
   );
 
   const handleRemoveFile = useCallback(

@@ -1,6 +1,5 @@
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Timeline from '@mui/lab/Timeline';
 import TimelineDot from '@mui/lab/TimelineDot';
@@ -15,82 +14,47 @@ import { fDateTime } from 'src/utils/format-time';
 
 // ----------------------------------------------------------------------
 
+const EVENT_DOT_COLOR = {
+  order_created: 'primary',
+  payment_created: 'info',
+  payment_approval_pending: 'warning',
+  payment_paid: 'success',
+  payment_overdue: 'error',
+  payment_canceled: 'default',
+  payment_pending: 'grey',
+  order_status_changed: 'secondary',
+};
+
 export function OrderDetailsHistory({ history }) {
-  const renderSummary = (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 2.5,
-        gap: 2,
-        minWidth: 260,
-        flexShrink: 0,
-        borderRadius: 2,
-        display: 'flex',
-        typography: 'body2',
-        borderStyle: 'dashed',
-        flexDirection: 'column',
-      }}
-    >
-      <Stack spacing={0.5}>
-        <Box sx={{ color: 'text.disabled' }}>Order time</Box>
-        {fDateTime(history?.orderTime)}
-      </Stack>
-      <Stack spacing={0.5}>
-        <Box sx={{ color: 'text.disabled' }}>Payment time</Box>
-        {fDateTime(history?.orderTime)}
-      </Stack>
-      <Stack spacing={0.5}>
-        <Box sx={{ color: 'text.disabled' }}>Delivery time for the carrier</Box>
-        {fDateTime(history?.orderTime)}
-      </Stack>
-      <Stack spacing={0.5}>
-        <Box sx={{ color: 'text.disabled' }}>Completion time</Box>
-        {fDateTime(history?.orderTime)}
-      </Stack>
-    </Paper>
-  );
-
-  const renderTimeline = (
-    <Timeline
-      sx={{ p: 0, m: 0, [`& .${timelineItemClasses.root}:before`]: { flex: 0, padding: 0 } }}
-    >
-      {history?.timeline.map((item, index) => {
-        const firstTimeline = index === 0;
-
-        const lastTimeline = index === history.timeline.length - 1;
-
-        return (
-          <TimelineItem key={item.title}>
-            <TimelineSeparator>
-              <TimelineDot color={(firstTimeline && 'primary') || 'grey'} />
-              {lastTimeline ? null : <TimelineConnector />}
-            </TimelineSeparator>
-
-            <TimelineContent>
-              <Typography variant="subtitle2">{item.title}</Typography>
-
-              <Box sx={{ color: 'text.disabled', typography: 'caption', mt: 0.5 }}>
-                {fDateTime(item.time)}
-              </Box>
-            </TimelineContent>
-          </TimelineItem>
-        );
-      })}
-    </Timeline>
-  );
+  const events = history || [];
 
   return (
     <Card>
-      <CardHeader title="History" />
-      <Stack
-        spacing={3}
-        alignItems={{ md: 'flex-start' }}
-        direction={{ xs: 'column-reverse', md: 'row' }}
-        sx={{ p: 3 }}
-      >
-        {renderTimeline}
-
-        {renderSummary}
+      <CardHeader title="Historial" />
+      <Stack spacing={3} sx={{ p: 3 }}>
+        <Timeline
+          sx={{ p: 0, m: 0, [`& .${timelineItemClasses.root}:before`]: { flex: 0, padding: 0 } }}
+        >
+          {events.map((item, index) => {
+            const isLast = index === events.length - 1;
+            return (
+              <TimelineItem key={`${item.type}-${item.time}-${index}`}>
+                <TimelineSeparator>
+                  <TimelineDot color={EVENT_DOT_COLOR[item.type] || 'grey'} />
+                  {isLast ? null : <TimelineConnector />}
+                </TimelineSeparator>
+                <TimelineContent>
+                  <Typography variant="subtitle2">{item.title}</Typography>
+                  {item.time && (
+                    <Box sx={{ color: 'text.disabled', typography: 'caption', mt: 0.5 }}>
+                      {fDateTime(item.time)}
+                    </Box>
+                  )}
+                </TimelineContent>
+              </TimelineItem>
+            );
+          })}
+        </Timeline>
       </Stack>
     </Card>
   );
