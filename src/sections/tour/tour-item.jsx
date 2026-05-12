@@ -23,7 +23,7 @@ import { useAuthContext } from 'src/auth/hooks';
 export function TourItem({ tour, onView, onEdit, onDelete }) {
   const popover = usePopover();
   const { user } = useAuthContext();
-  const isAdmin = user.role === 'admin';
+  const isAdmin = user.role === 'admin' || user.role === 'coach';
   const userAssists = Object.keys(tour?.bookers).includes(user.id);
 
   const renderRating = (

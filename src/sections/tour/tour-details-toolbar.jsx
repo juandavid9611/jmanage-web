@@ -29,7 +29,7 @@ export function TourDetailsToolbar({
   const popover = usePopover();
 
   const { workspaceRole } = useWorkspace();
-  const isAdmin = workspaceRole === 'admin';
+  const isAdmin = workspaceRole === 'admin' || workspaceRole === 'coach';
 
   return (
     <>
