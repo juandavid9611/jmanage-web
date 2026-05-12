@@ -29,7 +29,7 @@ export function CheckoutPaymentMethods({ name, options, ...other }) {
   return (
     <>
       <Card {...other}>
-        <CardHeader title="Payment" />
+        <CardHeader title="Pago" />
 
         <Controller
           name={name}
@@ -44,10 +44,14 @@ export function CheckoutPaymentMethods({ name, options, ...other }) {
                     key={option.label}
                     option={option}
                     selected={isSelected}
+                    disabled={option.disabled}
                     onOpen={openForm.onTrue}
                     cardOptions={options.cards}
                     isCredit={isSelected && option.value === 'creditcard'}
-                    onClick={() => onChange(option.value)}
+                    onClick={() => {
+                      if (option.disabled) return;
+                      onChange(option.value);
+                    }}
                   />
                 );
               })}
@@ -85,7 +89,7 @@ export function CheckoutPaymentMethods({ name, options, ...other }) {
 
 // ----------------------------------------------------------------------
 
-function OptionItem({ sx, option, onOpen, selected, isCredit, cardOptions, ...other }) {
+function OptionItem({ sx, option, onOpen, selected, disabled, isCredit, cardOptions, ...other }) {
   return (
     <Box
       sx={{
@@ -99,11 +103,18 @@ function OptionItem({ sx, option, onOpen, selected, isCredit, cardOptions, ...ot
         ...(selected && {
           boxShadow: (theme) => `0 0 0 2px ${theme.vars.palette.text.primary}`,
         }),
+        ...(disabled && {
+          opacity: 0.5,
+        }),
         ...sx,
       }}
       {...other}
     >
-      <Box display="flex" alignItems="flex-start" sx={{ p: 2.5, cursor: 'pointer' }}>
+      <Box
+        display="flex"
+        alignItems="flex-start"
+        sx={{ p: 2.5, cursor: disabled ? 'not-allowed' : 'pointer' }}
+      >
         <Box
           gap={0.5}
           flexGrow={1}

@@ -5,7 +5,13 @@ import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
 
-const URL = endpoints.paymentRquests;
+const URL = endpoints.paymentRequests;
+
+const invalidateOrder = (orderId) => {
+  if (!orderId) return;
+  mutate(`${endpoints.orders}/${orderId}`);
+  mutate(endpoints.orders);
+};
 
 export function useGetPaymentRequests(workspaceId) {
   const url = workspaceId ? `${URL}?workspace_id=${workspaceId}` : null;
@@ -66,11 +72,12 @@ export async function createPaymentRequests(paymentRequestsData, workspaceId) {
   return res;
 }
 
-export async function updatePaymentRequest(id, paymentRequestData, workspaceId) {
+export async function updatePaymentRequest(id, paymentRequestData, workspaceId, orderId) {
   paymentRequestData.id = id;
   const url = workspaceId ? `${URL}/${id}?workspace_id=${workspaceId}` : `${URL}/${id}`;
   const res = await axiosInstance.put(url, paymentRequestData);
   mutate((key) => key.startsWith(URL));
+  invalidateOrder(orderId);
   return res;
 }
 
@@ -81,10 +88,11 @@ export async function deletePaymentRequest(id, workspaceId) {
   return res.data;
 }
 
-export async function requestPaymentRequestApproval(id, file_names, workspaceId) {
+export async function requestPaymentRequestApproval(id, file_names, workspaceId, orderId) {
   const url = workspaceId ? `${URL}/${id}/request_approval?workspace_id=${workspaceId}` : `${URL}/${id}/request_approval`;
   const res = await axiosInstance.post(url, file_names);
   mutate((key) => key.startsWith(URL));
+  invalidateOrder(orderId);
   return res.data;
 }
 

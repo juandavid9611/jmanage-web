@@ -15,7 +15,7 @@ export function CheckoutDelivery({ name, options, onApplyShipping, sx, ...other 
 
   return (
     <Card sx={sx} {...other}>
-      <CardHeader title="Delivery" />
+      <CardHeader title="Entrega" />
 
       <Controller
         name={name}
@@ -33,7 +33,9 @@ export function CheckoutDelivery({ name, options, onApplyShipping, sx, ...other 
                 key={option.label}
                 option={option}
                 selected={value === option.value}
+                disabled={option.disabled}
                 onClick={() => {
+                  if (option.disabled) return;
                   onChange(option.value);
                   onApplyShipping(option.value);
                 }}
@@ -48,14 +50,14 @@ export function CheckoutDelivery({ name, options, onApplyShipping, sx, ...other 
 
 // ----------------------------------------------------------------------
 
-function OptionItem({ option, selected, sx, ...other }) {
+function OptionItem({ option, selected, disabled, sx, ...other }) {
   return (
     <Box
       display="flex"
       sx={{
         p: 2.5,
         gap: 2,
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         borderRadius: 1.5,
         border: (theme) => `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.24)}`,
         transition: (theme) =>
@@ -66,6 +68,10 @@ function OptionItem({ option, selected, sx, ...other }) {
         ...(selected && {
           boxShadow: (theme) => `0 0 0 2px ${theme.vars.palette.text.primary}`,
         }),
+        ...(disabled && {
+          opacity: 0.5,
+          pointerEvents: 'auto',
+        }),
         ...sx,
       }}
       {...other}
@@ -75,6 +81,7 @@ function OptionItem({ option, selected, sx, ...other }) {
         icon={
           (option.label === 'Standard' && 'carbon:delivery') ||
           (option.label === 'Express' && 'carbon:rocket') ||
+          (option.value === 'pickup' && 'carbon:location') ||
           'carbon:bicycle'
         }
       />
@@ -84,7 +91,7 @@ function OptionItem({ option, selected, sx, ...other }) {
           <Box component="span" flexGrow={1} sx={{ typography: 'subtitle1' }}>
             {option.label}
           </Box>
-          {`$${option.value}`}
+          {option.value === 'pickup' ? 'Gratis' : `$${option.value}`}
         </Box>
         <Box component="span" display="flex" sx={{ typography: 'body2', color: 'text.secondary' }}>
           {option.description}

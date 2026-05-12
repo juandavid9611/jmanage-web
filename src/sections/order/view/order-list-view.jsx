@@ -19,7 +19,6 @@ import { useSetState } from 'src/hooks/use-set-state';
 import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 
 import { varAlpha } from 'src/theme/styles';
-import { ORDER_STATUS_OPTIONS } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { deleteOrder, useGetOrders } from 'src/actions/order';
 
@@ -42,6 +41,7 @@ import {
 } from 'src/components/table';
 
 import { OrderTableRow } from '../order-table-row';
+import { ORDER_STATUS_OPTIONS } from '../order-status';
 import { OrderTableToolbar } from '../order-table-toolbar';
 import { OrderTableFiltersResult } from '../order-table-filters-result';
 

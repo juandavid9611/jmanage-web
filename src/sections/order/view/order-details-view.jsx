@@ -7,13 +7,14 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
-import { ORDER_STATUS_OPTIONS } from 'src/_mock';
+import { updateOrder } from 'src/actions/order';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { SplashScreen } from 'src/components/loading-screen';
 
+import { ORDER_STATUS_OPTIONS } from '../order-status';
 import { OrderDetailsInfo } from '../order-details-info';
 import { OrderDetailsItems } from '../order-details-item';
 import { OrderDetailsToolbar } from '../order-details-toolbar';
@@ -24,9 +25,18 @@ import { OrderDetailsHistory } from '../order-details-history';
 export function OrderDetailsView({ order, loading, error }) {
   const [status, setStatus] = useState(order?.status);
 
-  const handleChangeStatus = useCallback((newValue) => {
-    setStatus(newValue);
-  }, []);
+  const handleChangeStatus = useCallback(
+    async (newValue) => {
+      try {
+        setStatus(newValue);
+        await updateOrder(order.id, { status: newValue });
+      } catch (err) {
+        console.error(err);
+        setStatus(order?.status);
+      }
+    },
+    [order?.id, order?.status]
+  );
 
   if (loading) {
     return <SplashScreen />;
@@ -87,6 +97,7 @@ export function OrderDetailsView({ order, loading, error }) {
             delivery={order?.delivery}
             payment={order?.payment}
             shippingAddress={order?.shippingAddress}
+            paymentRequestId={order?.paymentRequestId}
           />
         </Grid>
       </Grid>
