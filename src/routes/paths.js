@@ -105,5 +105,8 @@ export const paths = {
       matchDetail: (tournamentId, matchId) =>
         `${ROOTS.DASHBOARD}/tournament/${tournamentId}/matches/${matchId}`,
     },
+    teamOwner: {
+      root: `${ROOTS.DASHBOARD}/team-owner`,
+    },
   },
 };
