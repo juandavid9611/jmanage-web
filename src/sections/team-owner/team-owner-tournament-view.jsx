@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -13,7 +12,6 @@ import { useGetMyTeamOwnerTeams } from 'src/actions/me';
 import { DashboardContent } from 'src/layouts/dashboard';
 import {
   useGetTeams,
-  useGetGroups,
   useGetMatches,
   useGetPlayers,
   useGetBracket,
@@ -51,11 +49,9 @@ function getDefaultPhase(tournament, teams) {
 function TournamentView({ tournamentId, highlightTeamId }) {
   const [activePhase, setActivePhase] = useState(null);
   const [selectedMw, setSelectedMw] = useState(undefined);
-  const navigate = useNavigate();
 
   const { tournament, tournamentLoading } = useGetTournament(tournamentId);
   const { teams } = useGetTeams(tournamentId);
-  const { groups } = useGetGroups(tournamentId);
   const { matches: allMatches, matchesLoading } = useGetMatches(tournamentId);
   const { bracket, bracketLoading } = useGetBracket(tournamentId);
 
