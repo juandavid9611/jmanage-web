@@ -19,11 +19,11 @@ import { usePopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export function UserWorkspaceCard() {
-  const { selectedWorkspace, changeWorkspaceMembership, allWorkspaces } = useWorkspace();
+  const { selectedWorkspace, selectWorkspace, allWorkspaces } = useWorkspace();
   const popover = usePopover();
 
   const handleSelect = (workspace) => {
-    changeWorkspaceMembership(workspace);
+    selectWorkspace(workspace);
     popover.onClose();
   };
 

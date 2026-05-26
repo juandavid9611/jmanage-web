@@ -57,6 +57,7 @@ const TABLE_HEAD = [
   { id: 'identityCardNumber', label: 'identity_card', width: 220 },
   { id: 'shirtNumber', label: 'shirt_number', width: 180 },
   { id: 'eps', label: 'eps', width: 180 },
+  { id: 'role', label: 'role', width: 140 },
   { id: 'confirmationStatus', label: 'status', width: 100 },
 ];
 

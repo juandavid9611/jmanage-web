@@ -1,9 +1,6 @@
-import { mutate } from 'swr';
 import React, { useMemo, useState, useEffect, useContext, useCallback, createContext } from 'react';
 
-import { endpoints } from 'src/utils/axios';
-
-import { useGetWorkspaces, updateMyWorkspace, useGetAllWorkspaces } from 'src/actions/workspaces';
+import { useGetWorkspaces, useGetAllWorkspaces } from 'src/actions/workspaces';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -15,14 +12,13 @@ export const WorkspaceProvider = ({ children }) => {
   const { authenticated } = useAuthContext();
   const { workspaces, isLoading, error } = useGetWorkspaces(authenticated);
   const { allWorkspaces } = useGetAllWorkspaces(authenticated);
-  const [selectedWorkspace, setSelectedWorkspace] = useState(null); // Start with null as default
+  const [selectedWorkspace, setSelectedWorkspace] = useState(null);
 
-  // Set selectedWorkspace based on localStorage or default to first workspace
   useEffect(() => {
     if (!isLoading && workspaces.length > 0) {
       const storedWorkspaceId = localStorage.getItem('selectedWorkspaceId');
       const storedWorkspace = workspaces.find((w) => w.id === storedWorkspaceId);
-      
+
       if (storedWorkspace) {
         setSelectedWorkspace(storedWorkspace);
       } else {
@@ -31,8 +27,7 @@ export const WorkspaceProvider = ({ children }) => {
     }
   }, [workspaces, isLoading]);
 
-  // Local-only switch: updates state + localStorage (used by sidebar popover)
-  const handleSetSelectedWorkspace = useCallback((workspace) => {
+  const selectWorkspace = useCallback((workspace) => {
     setSelectedWorkspace(workspace);
     if (workspace?.id) {
       localStorage.setItem('selectedWorkspaceId', workspace.id);
@@ -41,31 +36,16 @@ export const WorkspaceProvider = ({ children }) => {
     }
   }, []);
 
-  // Membership change: updates state + localStorage + calls API (used by workspace card & walktour)
-  const changeWorkspaceMembership = useCallback((workspace) => {
-    handleSetSelectedWorkspace(workspace);
-    if (workspace?.id) {
-      updateMyWorkspace(workspace.id)
-        .then(() => {
-          mutate(endpoints.workspaces);
-          mutate(`${endpoints.workspaces}/all`);
-        })
-        .catch((err) => {
-          console.error('Failed to update workspace membership:', err);
-        });
-    }
-  }, [handleSetSelectedWorkspace]);
-
   const value = useMemo(
     () => ({
       selectedWorkspace,
-      setSelectedWorkspace: handleSetSelectedWorkspace,
-      changeWorkspaceMembership,
+      setSelectedWorkspace: selectWorkspace,
+      selectWorkspace,
       workspaces,
       allWorkspaces,
       workspaceRole: selectedWorkspace?.role,
     }),
-    [selectedWorkspace, workspaces, allWorkspaces, handleSetSelectedWorkspace, changeWorkspaceMembership]
+    [selectedWorkspace, workspaces, allWorkspaces, selectWorkspace]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

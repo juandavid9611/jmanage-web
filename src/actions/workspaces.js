@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import { useMemo } from 'react';
 
-import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
+import { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.workspaces;
 const ALL_URL = `${URL}/all`;
@@ -38,9 +38,3 @@ export function useGetAllWorkspaces(authenticated) {
   return memoizedValue;
 }
 
-export async function updateMyWorkspace(workspaceId) {
-  const res = await axiosInstance.put('/memberships/my-workspace', null, {
-    params: { workspace_id: workspaceId },
-  });
-  return res.data;
-}
