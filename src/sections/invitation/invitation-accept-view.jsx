@@ -103,19 +103,27 @@ function ExistingUserForm({ invitation, token }) {
   } = methods;
 
   const onSubmit = handleSubmit(async (data) => {
+    setErrorMsg('');
+
     try {
-      setErrorMsg('');
       await signInWithPassword({ username: data.email, password: data.password });
-      const result = await acceptInvitation({ token, password: undefined });
+    } catch (signInError) {
+      console.error(signInError);
+      setErrorMsg(signInError?.message || 'Credenciales inválidas. Verifica el correo y la contraseña.');
+      return;
+    }
+
+    try {
+      const result = await acceptInvitation({ token });
       await checkUserSession?.();
       if (result?.accountId) {
         switchAccount?.(result.accountId);
       } else {
         navigate('/dashboard');
       }
-    } catch (error) {
-      console.error(error);
-      setErrorMsg(error instanceof Error ? error.message : String(error));
+    } catch (acceptError) {
+      console.error(acceptError);
+      setErrorMsg(acceptError?.response?.data?.detail || 'Tu sesión está activa, pero no pudimos aceptar la invitación. Contacta al organizador.');
     }
   });
 
@@ -155,6 +163,7 @@ function ExistingUserForm({ invitation, token }) {
             placeholder="6+ caracteres"
             type={password.value ? 'text' : 'password'}
             InputLabelProps={{ shrink: true }}
+            inputProps={{ autoComplete: 'current-password' }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -207,16 +216,24 @@ function NewUserForm({ invitation, token }) {
   } = methods;
 
   const onSubmit = handleSubmit(async (data) => {
+    setErrorMsg('');
+
     try {
-      setErrorMsg('');
       await acceptInvitation({ token, password: data.password });
+    } catch (acceptError) {
+      console.error(acceptError);
+      setErrorMsg(acceptError?.response?.data?.detail || acceptError?.message || 'No pudimos aceptar tu invitación. Inténtalo de nuevo.');
+      return;
+    }
+
+    try {
       // User now exists in Cognito — sign in to install the Amplify session
       await signInWithPassword({ username: data.email, password: data.password });
       await checkUserSession?.();
       navigate('/dashboard');
-    } catch (error) {
-      console.error(error);
-      setErrorMsg(error instanceof Error ? error.message : String(error));
+    } catch (signInError) {
+      console.error(signInError);
+      setErrorMsg('Tu cuenta fue creada. Intenta iniciar sesión directamente con el correo y la contraseña que acabas de configurar.');
     }
   });
 
@@ -256,6 +273,7 @@ function NewUserForm({ invitation, token }) {
             placeholder="6+ caracteres"
             type={password.value ? 'text' : 'password'}
             InputLabelProps={{ shrink: true }}
+            inputProps={{ autoComplete: 'new-password' }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -273,6 +291,7 @@ function NewUserForm({ invitation, token }) {
             placeholder="6+ caracteres"
             type={confirmPassword.value ? 'text' : 'password'}
             InputLabelProps={{ shrink: true }}
+            inputProps={{ autoComplete: 'new-password' }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
