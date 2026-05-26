@@ -59,9 +59,17 @@ export const endpoints = {
   files: '/files',
   tours: '/tours',
   workspaces: '/workspaces',
+  memberships: '/memberships',
   products: '/products',
   orders: '/orders',
   tournaments: '/tournaments',
   notifications: '/notifications',
   votations: '/votations',
+  invitation: {
+    publicGet: (token) => `/public/invites/${token}`,
+    publicAccept: (token) => `/public/invites/${token}/accept`,
+    list: (tournamentId) => `/tournaments/${tournamentId}/invitations`,
+    resend: (tournamentId, teamId) => `/tournaments/${tournamentId}/teams/${teamId}/invitations/resend`,
+    revoke: (tournamentId, teamId) => `/tournaments/${tournamentId}/teams/${teamId}/invitations`,
+  },
 };
