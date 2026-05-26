@@ -1,5 +1,5 @@
-import useSWR from 'swr';
 import { useMemo } from 'react';
+import useSWR, { mutate } from 'swr';
 
 import axiosInstance, { fetcher, endpoints, publicFetcher } from 'src/utils/axios';
 
@@ -9,7 +9,7 @@ const URL = endpoints.tournaments;
 // ── Public Invitation (no auth) ───────────────────────────────────────
 
 export function useGetPublicInvitation(token) {
-  const { data, error, isLoading, isValidating, mutate } = useSWR(
+  const { data, error, isLoading, isValidating, mutate: revalidate } = useSWR(
     token ? `${PUBLIC_INVITE_URL}/${token}` : null,
     publicFetcher
   );
@@ -20,9 +20,9 @@ export function useGetPublicInvitation(token) {
       invitationLoading: isLoading,
       invitationError: error,
       invitationValidating: isValidating,
-      refetch: mutate,
+      refetch: revalidate,
     }),
-    [data, error, isLoading, isValidating, mutate]
+    [data, error, isLoading, isValidating, revalidate]
   );
 }
 
@@ -34,7 +34,7 @@ export async function acceptInvitation({ token, password }) {
 // ── Tournament Invitations (auth required) ────────────────────────────
 
 export function useGetTournamentInvitations(tournamentId) {
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate: revalidate } = useSWR(
     tournamentId ? `${URL}/${tournamentId}/invitations` : null,
     fetcher
   );
@@ -44,9 +44,9 @@ export function useGetTournamentInvitations(tournamentId) {
       invitations: data ?? [],
       invitationsLoading: isLoading,
       invitationsError: error,
-      refetch: mutate,
+      refetch: revalidate,
     }),
-    [data, error, isLoading, mutate]
+    [data, error, isLoading, revalidate]
   );
 }
 
@@ -54,6 +54,7 @@ export async function resendInvitation({ tournamentId, teamId }) {
   const res = await axiosInstance.post(
     `${URL}/${tournamentId}/teams/${teamId}/invitations/resend`
   );
+  mutate((key) => typeof key === 'string' && key.includes(`${tournamentId}/invitations`));
   return res.data;
 }
 
@@ -61,5 +62,6 @@ export async function revokeInvitation({ tournamentId, teamId }) {
   const res = await axiosInstance.delete(
     `${URL}/${tournamentId}/teams/${teamId}/invitations`
   );
+  mutate((key) => typeof key === 'string' && key.includes(`${tournamentId}/invitations`));
   return res.data;
 }
