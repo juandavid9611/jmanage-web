@@ -291,7 +291,15 @@ function TeamStrip({ tournament, teams, highlightTeamId }) {
 
         {/* Divider */}
         {myTeam && (
-          <Box sx={{ width: 1, height: 32, bgcolor: (t) => alpha(t.palette.grey[500], 0.2) }} />
+          <Box
+            sx={{
+              width: '1px',
+              height: 32,
+              bgcolor: (t) => alpha(t.palette.grey[500], 0.2),
+              alignSelf: 'stretch',
+              display: { xs: 'none', sm: 'block' },
+            }}
+          />
         )}
 
         {/* Tournament info */}
