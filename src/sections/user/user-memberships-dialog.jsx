@@ -28,18 +28,14 @@ import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
-import { useAuthContext } from 'src/auth/hooks';
-
 const ROLE_OPTIONS = ['admin', 'user'];
 const ROLE_COLORS = { admin: 'info', user: 'default' };
 
 export function UserMembershipsDialog({ user, open, onClose }) {
   const { t } = useTranslation();
-  const { user: authUser } = useAuthContext();
   const { allWorkspaces } = useGetAllWorkspaces(true);
   const { memberships, membershipsLoading } = useGetUserMemberships(open ? user?.id : null);
 
-  const isSelf = authUser?.id === user?.id;
   const byWorkspace = new Map(memberships.map((m) => [m.workspace_id, m]));
 
   return (
@@ -78,7 +74,6 @@ export function UserMembershipsDialog({ user, open, onClose }) {
                 workspace={ws}
                 membership={byWorkspace.get(ws.id)}
                 userId={user.id}
-                disabled={isSelf}
               />
             ))}
           </Stack>
@@ -94,14 +89,14 @@ export function UserMembershipsDialog({ user, open, onClose }) {
   );
 }
 
-function MembershipRow({ workspace, membership, userId, disabled }) {
+function MembershipRow({ workspace, membership, userId }) {
   const { t } = useTranslation();
   const rolePopover = usePopover();
   const [busy, setBusy] = useState(false);
 
   const isMember = !!membership;
   const role = membership?.role || 'user';
-  const roleEditable = isMember && !disabled && !busy;
+  const roleEditable = isMember && !busy;
 
   const run = async (fn) => {
     setBusy(true);
@@ -115,7 +110,7 @@ function MembershipRow({ workspace, membership, userId, disabled }) {
   };
 
   const handleToggle = () => {
-    if (disabled || busy) return;
+    if (busy) return;
     if (isMember) {
       run(async () => {
         await deleteMembership(userId, workspace.id);
@@ -170,11 +165,7 @@ function MembershipRow({ workspace, membership, userId, disabled }) {
           </Label>
         )}
 
-        <Switch
-          checked={isMember}
-          onChange={handleToggle}
-          disabled={disabled || busy}
-        />
+        <Switch checked={isMember} onChange={handleToggle} disabled={busy} />
       </Stack>
 
       <CustomPopover
