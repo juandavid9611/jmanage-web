@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
-import Menu from '@mui/material/Menu';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -21,6 +20,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import LinearProgress from '@mui/material/LinearProgress';
 
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
   resendInvitation,
   revokeInvitation,
@@ -37,8 +37,7 @@ import {
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
-
-import { useAuthContext } from 'src/auth/hooks';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { TeamSetupWizard } from './team-setup-wizard';
 
@@ -58,8 +57,8 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
   const [groupSlots, setGroupSlots] = useState(2);
   const [isAssigning, setIsAssigning] = useState(false);
 
-  const { user } = useAuthContext();
-  const isAdmin = user?.accountsRoles?.[user?.activeAccountId] === 'admin';
+  const { workspaceRole } = useWorkspace();
+  const isAdmin = workspaceRole === 'admin';
   const { invitations } = useGetTournamentInvitations(isAdmin ? tournamentId : null);
 
   const isLocked = tournament?.status === 'active' || tournament?.status === 'finished';
@@ -542,12 +541,12 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
   const { players = [] } = useGetPlayers(tournamentId, team.id);
 
   // ── Invitation actions menu ──
-  const [menuAnchor, setMenuAnchor] = useState(null);
+  const popover = usePopover();
   const [invLoading, setInvLoading] = useState(false);
 
   const handleResend = useCallback(async (e) => {
     e.stopPropagation();
-    setMenuAnchor(null);
+    popover.onClose();
     setInvLoading(true);
     try {
       await resendInvitation({ tournamentId, teamId: team.id });
@@ -557,11 +556,11 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
     } finally {
       setInvLoading(false);
     }
-  }, [tournamentId, team.id]);
+  }, [tournamentId, team.id, popover]);
 
   const handleRevoke = useCallback(async (e) => {
     e.stopPropagation();
-    setMenuAnchor(null);
+    popover.onClose();
     setInvLoading(true);
     try {
       await revokeInvitation({ tournamentId, teamId: team.id });
@@ -571,7 +570,7 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
     } finally {
       setInvLoading(false);
     }
-  }, [tournamentId, team.id]);
+  }, [tournamentId, team.id, popover]);
 
   const currentGroupId = groups?.find((g) => g.teams?.some((gt) => gt.team_id === team.id))?.id || '';
   const currentGroup = groups?.find((g) => g.id === currentGroupId);
@@ -680,7 +679,7 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
                 <IconButton
                   size="small"
                   disabled={invLoading}
-                  onClick={(e) => { e.stopPropagation(); setMenuAnchor(e.currentTarget); }}
+                  onClick={(e) => { e.stopPropagation(); popover.onOpen(e); }}
                   sx={{ color: 'text.secondary' }}
                 >
                   <Iconify icon="eva:more-vertical-fill" width={14} />
@@ -690,14 +689,7 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
           )}
 
           {/* Invitation actions menu */}
-          <Menu
-            anchorEl={menuAnchor}
-            open={Boolean(menuAnchor)}
-            onClose={(e) => { if (e?.stopPropagation) e.stopPropagation(); setMenuAnchor(null); }}
-            onClick={(e) => e.stopPropagation()}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          >
+          <CustomPopover open={popover.open} anchorEl={popover.anchorEl} onClose={popover.onClose}>
             <MenuItem onClick={handleResend} sx={{ fontSize: 13 }}>
               <Iconify icon="mdi:email-sync-outline" width={16} sx={{ mr: 1 }} />
               Reenviar invitación
@@ -708,7 +700,7 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
                 Revocar invitación
               </MenuItem>
             )}
-          </Menu>
+          </CustomPopover>
         </Stack>
 
         {/* Progress summary */}
