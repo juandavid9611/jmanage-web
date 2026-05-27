@@ -61,7 +61,7 @@ export function getPhases(tournament, teams, totalMatchweeks) {
   // Configuración — maps to overview/stats
   phases.push({
     key: 'configuracion',
-    label: 'Configuración',
+    label: 'Resumen',
     sub: status === 'draft' ? 'En progreso' : 'Completo',
     state: status === 'draft' ? 'active' : 'done',
   });
@@ -120,6 +120,14 @@ export function getPhases(tournament, teams, totalMatchweeks) {
     }
   }
 
+  // Estadísticas — always available; rankings of players by goals, assists, cards
+  phases.push({
+    key: 'estadisticas',
+    label: 'Estadísticas',
+    sub: 'Rankings',
+    state: 'active',
+  });
+
   return phases;
 }
 
@@ -136,8 +144,10 @@ export function TournamentBanner({
   onActivate,
   onFinish,
   onDelete,
+  onOpenDiscipline,
   onAdvanceMatchweek,
   onNavigateEdit,
+  publicMode = false,
 }) {
   const theme = useTheme();
 
@@ -272,7 +282,8 @@ export function TournamentBanner({
               </Stack>
             )}
 
-            {/* Action Buttons */}
+            {/* Action Buttons (hidden in public/read-only mode) */}
+            {!publicMode && (
             <Stack direction="row" spacing={1} flexWrap="wrap">
               {tournament.status === 'draft' && (
                 <Tooltip
@@ -340,6 +351,17 @@ export function TournamentBanner({
                 </LoadingButton>
               )}
 
+              {onOpenDiscipline && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:card-multiple" width={16} />}
+                  onClick={onOpenDiscipline}
+                >
+                  Sanciones
+                </Button>
+              )}
+
               {tournament.status !== 'finished' && (
                 <Button
                   variant="outlined"
@@ -361,6 +383,7 @@ export function TournamentBanner({
                 Eliminar
               </Button>
             </Stack>
+            )}
           </Stack>
         </Stack>
       </Box>

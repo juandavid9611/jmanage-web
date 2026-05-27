@@ -11,10 +11,15 @@ const ROOTS = {
 
 export const paths = {
   faqs: '/faqs',
+  // INVITATION
+  invitation: {
+    accept: (token) => `/invite/${token}`,
+  },
   // PUBLIC
   publicTournaments: {
     root: '/tournaments',
     detail: (id) => `/tournaments/${id}`,
+    match: (id, matchId) => `/tournaments/${id}/matches/${matchId}`,
   },
   // AUTH
   auth: {
@@ -99,6 +104,9 @@ export const paths = {
       matches: (id) => `${ROOTS.DASHBOARD}/tournament/${id}/matches`,
       matchDetail: (tournamentId, matchId) =>
         `${ROOTS.DASHBOARD}/tournament/${tournamentId}/matches/${matchId}`,
+    },
+    teamOwner: {
+      root: `${ROOTS.DASHBOARD}/team-owner`,
     },
   },
 };

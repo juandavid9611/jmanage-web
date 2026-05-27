@@ -20,6 +20,12 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import LinearProgress from '@mui/material/LinearProgress';
 
+import { useWorkspace } from 'src/workspace/workspace-provider';
+import {
+  resendInvitation,
+  revokeInvitation,
+  useGetTournamentInvitations,
+} from 'src/actions/invitation';
 import {
   deleteTeam,
   createGroup,
@@ -31,6 +37,7 @@ import {
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { TeamSetupWizard } from './team-setup-wizard';
 
@@ -49,6 +56,10 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
   const [groupName, setGroupName] = useState('');
   const [groupSlots, setGroupSlots] = useState(2);
   const [isAssigning, setIsAssigning] = useState(false);
+
+  const { workspaceRole } = useWorkspace();
+  const isAdmin = workspaceRole === 'admin';
+  const { invitations } = useGetTournamentInvitations(isAdmin ? tournamentId : null);
 
   const isLocked = tournament?.status === 'active' || tournament?.status === 'finished';
   const totalTeams = tournament?.num_teams || teams.length;
@@ -406,6 +417,8 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
               tournamentId={tournamentId}
               groups={groups}
               isLocked={isLocked}
+              isAdmin={isAdmin}
+              invitation={invitations?.find((inv) => inv.tournament_team_id === team.id) ?? null}
               onEdit={() => setWizardMode(team)}
               onDelete={() => handleDeleteTeam(team.id)}
               onAssignGroup={handleAssignTeam}
@@ -495,11 +508,69 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
 }
 
 // ======================================================================
+// INVITATION BADGE
+// ======================================================================
+
+const INVITATION_BADGE_CONFIG = {
+  pending:  { label: 'Pendiente', color: 'warning' },
+  accepted: { label: 'Aceptada',  color: 'success' },
+  expired:  { label: 'Expirada',  color: 'default' },
+  revoked:  { label: 'Revocada',  color: 'error'   },
+};
+
+function InvitationBadge({ invitation }) {
+  if (!invitation) return null;
+  const cfg = INVITATION_BADGE_CONFIG[invitation.status];
+  if (!cfg) return null;
+  return (
+    <Chip
+      label={cfg.label}
+      size="small"
+      color={cfg.color}
+      variant="soft"
+      sx={{ height: 16, fontSize: 10, fontWeight: 700, px: 0.5 }}
+    />
+  );
+}
+
+// ======================================================================
 // TEAM OVERVIEW CARD
 // ======================================================================
 
-function TeamOverviewCard({ team, tournamentId, groups, isLocked, onEdit, onDelete, onAssignGroup }) {
+function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invitation, onEdit, onDelete, onAssignGroup }) {
   const { players = [] } = useGetPlayers(tournamentId, team.id);
+
+  // ── Invitation actions menu ──
+  const popover = usePopover();
+  const [invLoading, setInvLoading] = useState(false);
+
+  const handleResend = useCallback(async (e) => {
+    e.stopPropagation();
+    popover.onClose();
+    setInvLoading(true);
+    try {
+      await resendInvitation({ tournamentId, teamId: team.id });
+      toast.success('Invitación reenviada');
+    } catch (err) {
+      toast.error(err?.message || 'Error al reenviar invitación');
+    } finally {
+      setInvLoading(false);
+    }
+  }, [tournamentId, team.id, popover]);
+
+  const handleRevoke = useCallback(async (e) => {
+    e.stopPropagation();
+    popover.onClose();
+    setInvLoading(true);
+    try {
+      await revokeInvitation({ tournamentId, teamId: team.id });
+      toast.success('Invitación revocada');
+    } catch (err) {
+      toast.error(err?.message || 'Error al revocar invitación');
+    } finally {
+      setInvLoading(false);
+    }
+  }, [tournamentId, team.id, popover]);
 
   const currentGroupId = groups?.find((g) => g.teams?.some((gt) => gt.team_id === team.id))?.id || '';
   const currentGroup = groups?.find((g) => g.id === currentGroupId);
@@ -587,9 +658,12 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, onEdit, onDele
                 <Chip label={currentGroup.name} size="small" color="primary" variant="soft" sx={{ height: 18, fontSize: 10 }} />
               )}
             </Stack>
-            <Typography variant="caption" sx={{ color: 'text.disabled' }} noWrap>
-              {team.manager_email || `${team.name.toLowerCase().replace(/\s+/g, '.')}@sportsmanage.com`}
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }} noWrap>
+                {team.contact_email || team.manager_email || ''}
+              </Typography>
+              {isAdmin && <InvitationBadge invitation={invitation} />}
+            </Stack>
           </Box>
 
           {/* Actions */}
@@ -601,8 +675,32 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, onEdit, onDele
               <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
                 <Iconify icon="solar:trash-bin-trash-bold" width={14} />
               </IconButton>
+              {isAdmin && team.contact_email && (
+                <IconButton
+                  size="small"
+                  disabled={invLoading}
+                  onClick={(e) => { e.stopPropagation(); popover.onOpen(e); }}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <Iconify icon="eva:more-vertical-fill" width={14} />
+                </IconButton>
+              )}
             </Stack>
           )}
+
+          {/* Invitation actions menu */}
+          <CustomPopover open={popover.open} anchorEl={popover.anchorEl} onClose={popover.onClose}>
+            <MenuItem onClick={handleResend} sx={{ fontSize: 13 }}>
+              <Iconify icon="mdi:email-sync-outline" width={16} sx={{ mr: 1 }} />
+              Reenviar invitación
+            </MenuItem>
+            {invitation && invitation.status !== 'revoked' && (
+              <MenuItem onClick={handleRevoke} sx={{ fontSize: 13, color: 'error.main' }}>
+                <Iconify icon="mdi:email-remove-outline" width={16} sx={{ mr: 1 }} />
+                Revocar invitación
+              </MenuItem>
+            )}
+          </CustomPopover>
         </Stack>
 
         {/* Progress summary */}
