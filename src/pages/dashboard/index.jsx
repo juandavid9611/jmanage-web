@@ -3,9 +3,9 @@ import { Navigate } from 'react-router-dom';
 
 import { CONFIG } from 'src/config-global';
 
-import { useAuthContext } from 'src/auth/hooks';
-
 import { OverviewAppView } from 'src/sections/overview/app/view';
+
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
