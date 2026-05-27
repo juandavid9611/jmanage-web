@@ -190,5 +190,7 @@
   "membership_removed": "Categoría removida",
   "role_updated": "Rol actualizado",
   "something_went_wrong": "Algo salió mal",
-  "close": "Cerrar"
+  "close": "Cerrar",
+  "team_owner": "Dueño de equipo",
+  "coach": "Entrenador"
 }

@@ -18,6 +18,13 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { usePopover } from 'src/components/custom-popover';
 
+const ROLE_COLORS = {
+  admin: 'info',
+  user: 'default',
+  team_owner: 'warning',
+  coach: 'success',
+};
+
 // ----------------------------------------------------------------------
 
 export function UserWorkspaceCard() {
@@ -67,7 +74,7 @@ export function UserWorkspaceCard() {
               <Typography variant="subtitle1">{selectedWorkspace.name}</Typography>
             </Box>
             {selectedWorkspace.role && (
-              <Label color={selectedWorkspace.role === 'admin' ? 'info' : 'default'}>
+              <Label color={ROLE_COLORS[selectedWorkspace.role] || 'default'}>
                 {t(selectedWorkspace.role)}
               </Label>
             )}
@@ -98,7 +105,7 @@ export function UserWorkspaceCard() {
                   <Avatar src={ws.logo} alt={ws.name} sx={{ width: 32, height: 32 }} />
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>{ws.name}</Box>
                   {ws.role && (
-                    <Label color={ws.role === 'admin' ? 'info' : 'default'}>{t(ws.role)}</Label>
+                    <Label color={ROLE_COLORS[ws.role] || 'default'}>{t(ws.role)}</Label>
                   )}
                 </Stack>
               </MenuItem>

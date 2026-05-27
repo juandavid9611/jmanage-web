@@ -168,5 +168,7 @@
   "membership_removed": "Workspace removed",
   "role_updated": "Role updated",
   "something_went_wrong": "Something went wrong",
-  "close": "Close"
+  "close": "Close",
+  "team_owner": "Team Owner",
+  "coach": "Coach"
 }

@@ -28,8 +28,13 @@ import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
-const ROLE_OPTIONS = ['admin', 'user'];
-const ROLE_COLORS = { admin: 'info', user: 'default' };
+const ROLE_OPTIONS = ['admin', 'user', 'team_owner', 'coach'];
+const ROLE_COLORS = {
+  admin: 'info',
+  user: 'default',
+  team_owner: 'warning',
+  coach: 'success',
+};
 
 export function UserMembershipsDialog({ user, open, onClose }) {
   const { t } = useTranslation();

@@ -23,7 +23,12 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { UserQuickEditForm } from './user-quick-edit-form';
 import { UserMembershipsDialog } from './user-memberships-dialog';
 
-const ROLE_COLORS = { admin: 'info', user: 'default' };
+const ROLE_COLORS = {
+  admin: 'info',
+  user: 'default',
+  team_owner: 'warning',
+  coach: 'success',
+};
 
 // ----------------------------------------------------------------------
 
