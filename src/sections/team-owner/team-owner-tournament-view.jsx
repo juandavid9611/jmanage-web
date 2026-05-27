@@ -109,7 +109,7 @@ function TournamentView({ tournamentId, highlightTeamId }) {
         {/* ── RESUMEN (configuracion) ── */}
         {currentPhase === 'configuracion' && (
           <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
-            <StatsOverview tournamentId={tournamentId} tournament={tournament} publicMode />
+            <StatsOverview tournamentId={tournamentId} tournament={tournament} />
             <TournamentConfigSummary tournament={tournament} />
           </Stack>
         )}
