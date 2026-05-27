@@ -30,6 +30,7 @@ import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 import { UserWorkspaceCard } from './user-workspace-card';
+import { UserMembershipsCard } from './user-memberships-card';
 
 // // ----------------------------------------------------------------------
 
@@ -145,6 +146,7 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
       <Grid container spacing={3}>
         <Grid xs={12} md={4}>
           <UserWorkspaceCard />
+          {currentUser?.id && isAdmin && <UserMembershipsCard userId={currentUser.id} />}
           <Card sx={{ pt: 10, pb: 5, px: 3 }}>
             <Box sx={{ mb: 5 }}>
               <Field.UploadAvatar
