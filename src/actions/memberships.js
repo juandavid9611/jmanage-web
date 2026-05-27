@@ -23,6 +23,7 @@ export function useGetUserMemberships(userId) {
 function invalidate(userId) {
   mutate(`${URL}/${userId}`);
   mutate((key) => typeof key === 'string' && key.startsWith(endpoints.users));
+  mutate((key) => typeof key === 'string' && key.startsWith(endpoints.workspaces));
 }
 
 export async function updateMembershipRole(userId, workspaceId, role) {

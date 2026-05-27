@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -19,7 +21,8 @@ import { usePopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export function UserWorkspaceCard() {
-  const { selectedWorkspace, selectWorkspace, allWorkspaces } = useWorkspace();
+  const { t } = useTranslation();
+  const { selectedWorkspace, selectWorkspace, workspaces } = useWorkspace();
   const popover = usePopover();
 
   const handleSelect = (workspace) => {
@@ -65,7 +68,7 @@ export function UserWorkspaceCard() {
             </Box>
             {selectedWorkspace.role && (
               <Label color={selectedWorkspace.role === 'admin' ? 'info' : 'default'}>
-                {selectedWorkspace.role}
+                {t(selectedWorkspace.role)}
               </Label>
             )}
             <Iconify icon="eva:chevron-down-fill" width={20} sx={{ color: 'text.secondary' }} />
@@ -85,7 +88,7 @@ export function UserWorkspaceCard() {
           }}
         >
           <MenuList>
-            {allWorkspaces.map((ws) => (
+            {workspaces.map((ws) => (
               <MenuItem
                 key={ws.id}
                 selected={ws.id === selectedWorkspace?.id}
@@ -93,7 +96,10 @@ export function UserWorkspaceCard() {
               >
                 <Stack direction="row" alignItems="center" spacing={1.5} sx={{ width: '100%' }}>
                   <Avatar src={ws.logo} alt={ws.name} sx={{ width: 32, height: 32 }} />
-                  <Box sx={{ flexGrow: 1 }}>{ws.name}</Box>
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>{ws.name}</Box>
+                  {ws.role && (
+                    <Label color={ws.role === 'admin' ? 'info' : 'default'}>{t(ws.role)}</Label>
+                  )}
                 </Stack>
               </MenuItem>
             ))}
