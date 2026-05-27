@@ -1,33 +1,44 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
 import { alpha } from '@mui/material/styles';
+import MenuItem from '@mui/material/MenuItem';
 import Skeleton from '@mui/material/Skeleton';
 import Grid from '@mui/material/Unstable_Grid2';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import LoadingButton from '@mui/lab/LoadingButton';
 
 import { useGetMyTeamOwnerTeams } from 'src/actions/me';
 import { DashboardContent } from 'src/layouts/dashboard';
 import {
   useGetTeams,
+  deletePlayer,
   useGetMatches,
   useGetPlayers,
   useGetBracket,
   useGetTournament,
 } from 'src/actions/tournament';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
+import { ConfirmDialog } from 'src/components/custom-dialog';
 import { LoadingScreen } from 'src/components/loading-screen';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { MatchList } from 'src/sections/tournament/match-row';
 import { BracketView } from 'src/sections/tournament/bracket-view';
+import { StatsOverview } from 'src/sections/tournament/stats-overview';
 import { StandingsSidebar } from 'src/sections/tournament/standings-sidebar';
+import { PlayerFormDialog } from 'src/sections/tournament/player-form-dialog';
 import { MatchweekTimeline } from 'src/sections/tournament/matchweek-timeline';
 import { PlayerRankingTable } from 'src/sections/tournament/player-ranking-table';
 import { getPhases, TournamentBanner } from 'src/sections/tournament/tournament-banner';
+import { TournamentConfigSummary } from 'src/sections/tournament/tournament-config-summary';
 
 // ----------------------------------------------------------------------
 
@@ -95,6 +106,21 @@ function TournamentView({ tournamentId, highlightTeamId }) {
 
       {/* Phase content */}
       <Box sx={{ bgcolor: (t) => alpha(t.palette.grey[500], 0.02), minHeight: 400 }}>
+        {/* ── RESUMEN (configuracion) ── */}
+        {currentPhase === 'configuracion' && (
+          <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
+            <StatsOverview tournamentId={tournamentId} tournament={tournament} publicMode />
+            <TournamentConfigSummary tournament={tournament} />
+          </Stack>
+        )}
+
+        {/* ── INSCRIPCIÓN: my team roster ── */}
+        {currentPhase === 'inscripcion' && highlightTeamId && (
+          <Box sx={{ p: { xs: 2, md: 3 } }}>
+            <MyTeamRoster tournamentId={tournamentId} teamId={highlightTeamId} teams={teams} />
+          </Box>
+        )}
+
         {/* ── FASE GRUPOS: matches + standings ── */}
         {currentPhase === 'fase_grupos' && (
           <Grid container>
@@ -200,10 +226,6 @@ function TournamentView({ tournamentId, highlightTeamId }) {
           </Stack>
         )}
 
-        {/* ── MY TEAM ROSTER (always shown at bottom) ── */}
-        {highlightTeamId && (
-          <MyTeamRoster tournamentId={tournamentId} teamId={highlightTeamId} teams={teams} />
-        )}
       </Box>
     </DashboardContent>
   );
@@ -292,19 +314,112 @@ function TeamStrip({ tournament, teams, highlightTeamId }) {
 // ----------------------------------------------------------------------
 
 /**
- * My team's player roster shown as a bottom section.
+ * Single player row with three-dot menu for edit / delete.
+ */
+function PlayerRow({ player, onEdit, onDelete }) {
+  const popover = usePopover();
+
+  return (
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={1.5}
+      sx={{
+        px: 1.5,
+        py: 1,
+        borderRadius: 1,
+        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+      }}
+    >
+      <Typography variant="body2" sx={{ minWidth: 28, color: 'text.disabled' }}>
+        {player.number != null ? `#${player.number}` : '—'}
+      </Typography>
+      <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
+        {player.name}
+      </Typography>
+      {player.position && (
+        <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+          {player.position}
+        </Typography>
+      )}
+
+      <IconButton size="small" onClick={popover.onOpen}>
+        <Iconify icon="eva:more-vertical-fill" width={16} />
+      </IconButton>
+
+      <CustomPopover open={popover.open} anchorEl={popover.anchorEl} onClose={popover.onClose}>
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onEdit(player);
+          }}
+          sx={{ fontSize: 13 }}
+        >
+          <Iconify icon="solar:pen-bold" width={16} sx={{ mr: 1 }} />
+          Editar
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            popover.onClose();
+            onDelete(player);
+          }}
+          sx={{ fontSize: 13, color: 'error.main' }}
+        >
+          <Iconify icon="solar:trash-bin-trash-bold" width={16} sx={{ mr: 1 }} />
+          Eliminar
+        </MenuItem>
+      </CustomPopover>
+    </Stack>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * My team's player roster with CRUD affordances for team owners.
  */
 function MyTeamRoster({ tournamentId, teamId, teams }) {
   const myTeam = teams?.find((t) => t.id === teamId);
   const { players, playersLoading } = useGetPlayers(tournamentId, teamId);
 
+  const [addOpen, setAddOpen] = useState(false);
+  const [editPlayer, setEditPlayer] = useState(null);
+  const [deletePlayer_, setDeletePlayer_] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleEdit = useCallback((p) => setEditPlayer(p), []);
+  const handleDelete = useCallback((p) => setDeletePlayer_(p), []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deletePlayer_) return;
+    setDeleting(true);
+    try {
+      await deletePlayer(tournamentId, deletePlayer_.id);
+      toast.success('Jugador eliminado');
+      setDeletePlayer_(null);
+    } catch (err) {
+      toast.error(err?.message || 'Error al eliminar jugador');
+    } finally {
+      setDeleting(false);
+    }
+  }, [tournamentId, deletePlayer_]);
+
   if (!myTeam) return null;
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Plantel — {myTeam.name}
-      </Typography>
+    <Box>
+      {/* Header */}
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Typography variant="h6">Plantel — {myTeam.name}</Typography>
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<Iconify icon="mingcute:add-line" width={16} />}
+          onClick={() => setAddOpen(true)}
+        >
+          Agregar jugador
+        </Button>
+      </Stack>
 
       {playersLoading ? (
         <Stack spacing={0.75}>
@@ -321,33 +436,45 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
           gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
         >
           {players.map((p) => (
-            <Stack
-              key={p.id}
-              direction="row"
-              alignItems="center"
-              spacing={1.5}
-              sx={{
-                px: 1.5,
-                py: 1,
-                borderRadius: 1,
-                border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
-              }}
-            >
-              <Typography variant="body2" sx={{ minWidth: 28, color: 'text.disabled' }}>
-                {p.number != null ? `#${p.number}` : '—'}
-              </Typography>
-              <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
-                {p.name}
-              </Typography>
-              {p.position && (
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  {p.position}
-                </Typography>
-              )}
-            </Stack>
+            <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
           ))}
         </Box>
       )}
+
+      {/* Add player dialog */}
+      <PlayerFormDialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        tournamentId={tournamentId}
+        teamId={teamId}
+      />
+
+      {/* Edit player dialog */}
+      <PlayerFormDialog
+        open={!!editPlayer}
+        onClose={() => setEditPlayer(null)}
+        tournamentId={tournamentId}
+        teamId={teamId}
+        currentPlayer={editPlayer}
+      />
+
+      {/* Delete confirm dialog */}
+      <ConfirmDialog
+        open={!!deletePlayer_}
+        onClose={() => setDeletePlayer_(null)}
+        title="Eliminar jugador"
+        content={`¿Estás seguro de que deseas eliminar a ${deletePlayer_?.name}? Esta acción no se puede deshacer.`}
+        action={
+          <LoadingButton
+            variant="contained"
+            color="error"
+            loading={deleting}
+            onClick={handleConfirmDelete}
+          >
+            Eliminar
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 }
