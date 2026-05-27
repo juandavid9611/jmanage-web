@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
@@ -16,59 +15,28 @@ import IconButton from '@mui/material/IconButton';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { updateMembershipRole } from 'src/actions/memberships';
-import { useWorkspace } from 'src/workspace/workspace-provider';
-
 import { Label } from 'src/components/label';
-import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
-import { useAuthContext } from 'src/auth/hooks';
-
 import { UserQuickEditForm } from './user-quick-edit-form';
+import { UserMembershipsDialog } from './user-memberships-dialog';
 
-const ROLE_OPTIONS = ['admin', 'user'];
 const ROLE_COLORS = { admin: 'info', user: 'default' };
 
 // ----------------------------------------------------------------------
 
 export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
   const confirm = useBoolean();
-
   const popover = usePopover();
-  const rolePopover = usePopover();
-
   const quickEdit = useBoolean();
+  const membershipsDialog = useBoolean();
 
   const { t } = useTranslation();
 
-  const { user } = useAuthContext();
-  const { selectedWorkspace } = useWorkspace();
+  const role = row.role || 'user';
 
-  const [role, setRole] = useState(row.role || 'user');
-  const [updatingRole, setUpdatingRole] = useState(false);
-
-  const isSelf = user?.id === row.id;
-  const roleEditable = !isSelf && !updatingRole;
-
-  const handleRolePick = async (newRole) => {
-    rolePopover.onClose();
-    if (newRole === role) return;
-    const prevRole = role;
-    setRole(newRole);
-    setUpdatingRole(true);
-    try {
-      await updateMembershipRole(row.id, selectedWorkspace.id, newRole);
-      toast.success(t('role_updated'));
-    } catch (err) {
-      setRole(prevRole);
-      toast.error(err?.detail || t('something_went_wrong'));
-    } finally {
-      setUpdatingRole(false);
-    }
-  };
   return (
     <>
       <TableRow hover selected={selected} aria-checked={selected} tabIndex={-1}>
@@ -100,19 +68,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.eps}</TableCell>
 
         <TableCell>
-          <Label
-            variant="soft"
-            color={ROLE_COLORS[role] || 'default'}
-            onClick={roleEditable ? rolePopover.onOpen : undefined}
-            endIcon={
-              roleEditable ? <Iconify icon="eva:chevron-down-fill" width={14} /> : null
-            }
-            sx={{
-              cursor: roleEditable ? 'pointer' : 'default',
-              opacity: updatingRole ? 0.5 : 1,
-              transition: (theme) => theme.transitions.create(['opacity', 'background-color']),
-            }}
-          >
+          <Label variant="soft" color={ROLE_COLORS[role] || 'default'}>
             {t(role)}
           </Label>
         </TableCell>
@@ -151,24 +107,11 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
       <UserQuickEditForm currentUser={row} open={quickEdit.value} onClose={quickEdit.onFalse} />
 
-      <CustomPopover
-        open={rolePopover.open}
-        anchorEl={rolePopover.anchorEl}
-        onClose={rolePopover.onClose}
-        slotProps={{ arrow: { placement: 'top-center' }, paper: { sx: { minWidth: 140 } } }}
-      >
-        <MenuList>
-          {ROLE_OPTIONS.map((option) => (
-            <MenuItem
-              key={option}
-              selected={option === role}
-              onClick={() => handleRolePick(option)}
-            >
-              {t(option)}
-            </MenuItem>
-          ))}
-        </MenuList>
-      </CustomPopover>
+      <UserMembershipsDialog
+        user={row}
+        open={membershipsDialog.value}
+        onClose={membershipsDialog.onFalse}
+      />
 
       <CustomPopover
         open={popover.open}
@@ -179,13 +122,12 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         <MenuList>
           <MenuItem
             onClick={() => {
-              confirm.onTrue();
+              membershipsDialog.onTrue();
               popover.onClose();
             }}
-            sx={{ color: 'error.main' }}
           >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            {t('delete')}
+            <Iconify icon="solar:users-group-rounded-bold" />
+            {t('manage_memberships')}
           </MenuItem>
 
           <MenuItem
@@ -196,6 +138,17 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
           >
             <Iconify icon="solar:pen-bold" />
             {t('edit')}
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              confirm.onTrue();
+              popover.onClose();
+            }}
+            sx={{ color: 'error.main' }}
+          >
+            <Iconify icon="solar:trash-bin-trash-bold" />
+            {t('delete')}
           </MenuItem>
         </MenuList>
       </CustomPopover>

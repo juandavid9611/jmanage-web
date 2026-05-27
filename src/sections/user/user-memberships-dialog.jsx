@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
+import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
+import Dialog from '@mui/material/Dialog';
+import Switch from '@mui/material/Switch';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { useGetAllWorkspaces } from 'src/actions/workspaces';
@@ -31,58 +33,75 @@ import { useAuthContext } from 'src/auth/hooks';
 const ROLE_OPTIONS = ['admin', 'user'];
 const ROLE_COLORS = { admin: 'info', user: 'default' };
 
-export function UserMembershipsCard({ userId }) {
+export function UserMembershipsDialog({ user, open, onClose }) {
   const { t } = useTranslation();
   const { user: authUser } = useAuthContext();
   const { allWorkspaces } = useGetAllWorkspaces(true);
-  const { memberships, membershipsLoading } = useGetUserMemberships(userId);
+  const { memberships, membershipsLoading } = useGetUserMemberships(open ? user?.id : null);
 
-  const isSelf = authUser?.id === userId;
-  const membershipsByWorkspace = new Map(
-    memberships.map((m) => [m.workspace_id, m])
-  );
+  const isSelf = authUser?.id === user?.id;
+  const byWorkspace = new Map(memberships.map((m) => [m.workspace_id, m]));
 
   return (
-    <Card sx={{ mb: 3 }}>
-      <CardHeader
-        title={t('memberships')}
-        subheader={t('memberships_subtitle')}
-      />
-      <CardContent>
+    <Dialog
+      fullWidth
+      open={open}
+      onClose={onClose}
+      PaperProps={{ sx: { maxWidth: 520 } }}
+    >
+      <DialogTitle>{t('manage_memberships')}</DialogTitle>
+
+      <DialogContent dividers sx={{ pb: 1 }}>
+        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+          <Avatar src={user?.avatarUrl} alt={user?.name} sx={{ width: 40, height: 40 }} />
+          <Box>
+            <Typography variant="subtitle2">{user?.name}</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              {user?.email}
+            </Typography>
+          </Box>
+        </Stack>
+
         {membershipsLoading ? (
-          <Stack alignItems="center" sx={{ py: 3 }}>
+          <Stack alignItems="center" sx={{ py: 4 }}>
             <CircularProgress size={24} />
           </Stack>
+        ) : allWorkspaces.length === 0 ? (
+          <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>
+            {t('no_workspaces')}
+          </Typography>
         ) : (
-          <Stack spacing={1}>
+          <Stack divider={<Box sx={{ borderTop: (theme) => `dashed 1px ${theme.palette.divider}` }} />}>
             {allWorkspaces.map((ws) => (
               <MembershipRow
                 key={ws.id}
                 workspace={ws}
-                membership={membershipsByWorkspace.get(ws.id)}
-                userId={userId}
+                membership={byWorkspace.get(ws.id)}
+                userId={user.id}
                 disabled={isSelf}
               />
             ))}
-            {allWorkspaces.length === 0 && (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {t('no_workspaces')}
-              </Typography>
-            )}
           </Stack>
         )}
-      </CardContent>
-    </Card>
+      </DialogContent>
+
+      <DialogActions>
+        <Button variant="outlined" onClick={onClose}>
+          {t('close')}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 
 function MembershipRow({ workspace, membership, userId, disabled }) {
   const { t } = useTranslation();
   const rolePopover = usePopover();
+  const [busy, setBusy] = useState(false);
+
   const isMember = !!membership;
   const role = membership?.role || 'user';
-
-  const [busy, setBusy] = useState(false);
+  const roleEditable = isMember && !disabled && !busy;
 
   const run = async (fn) => {
     setBusy(true);
@@ -119,8 +138,6 @@ function MembershipRow({ workspace, membership, userId, disabled }) {
     });
   };
 
-  const roleEditable = isMember && !disabled && !busy;
-
   return (
     <>
       <Stack
@@ -128,17 +145,17 @@ function MembershipRow({ workspace, membership, userId, disabled }) {
         alignItems="center"
         spacing={2}
         sx={{
-          px: 1.5,
-          py: 1,
-          borderRadius: 1.5,
+          py: 1.5,
           opacity: busy ? 0.6 : 1,
           transition: (theme) => theme.transitions.create('opacity'),
         }}
       >
-        <Avatar src={workspace.logo} alt={workspace.name} sx={{ width: 36, height: 36 }} />
+        <Avatar src={workspace.logo} alt={workspace.name} sx={{ width: 32, height: 32 }} />
 
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="subtitle2">{workspace.name}</Typography>
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Typography variant="subtitle2" noWrap>
+            {workspace.name}
+          </Typography>
         </Box>
 
         {isMember && (
@@ -146,12 +163,8 @@ function MembershipRow({ workspace, membership, userId, disabled }) {
             variant="soft"
             color={ROLE_COLORS[role] || 'default'}
             onClick={roleEditable ? rolePopover.onOpen : undefined}
-            endIcon={
-              roleEditable ? <Iconify icon="eva:chevron-down-fill" width={14} /> : null
-            }
-            sx={{
-              cursor: roleEditable ? 'pointer' : 'default',
-            }}
+            endIcon={roleEditable ? <Iconify icon="eva:chevron-down-fill" width={14} /> : null}
+            sx={{ cursor: roleEditable ? 'pointer' : 'default' }}
           >
             {t(role)}
           </Label>

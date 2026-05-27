@@ -159,5 +159,14 @@
   "events": "Events",
   "monthly_players": "Monthly Players",
   "disabled": "Disabled",
-  "shirt_number": "Shirt Number"
+  "shirt_number": "Shirt Number",
+  "memberships": "Workspaces & roles",
+  "memberships_subtitle": "Manage which workspaces this user belongs to and their role in each",
+  "manage_memberships": "Manage workspaces",
+  "no_workspaces": "No workspaces available",
+  "membership_added": "Workspace added",
+  "membership_removed": "Workspace removed",
+  "role_updated": "Role updated",
+  "something_went_wrong": "Something went wrong",
+  "close": "Close"
 }
