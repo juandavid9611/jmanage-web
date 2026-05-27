@@ -90,7 +90,7 @@ function TournamentView({ tournamentId, highlightTeamId }) {
         totalMatchweeks={totalMw}
         allMatches={allMatches}
         onPhaseClick={(p) => setActivePhase(p)}
-        readOnly
+        publicMode
       />
 
       {/* Phase content */}
