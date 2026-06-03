@@ -26,8 +26,12 @@ export function useGetPublicInvitation(token) {
   );
 }
 
-export async function acceptInvitation({ token, password }) {
-  const res = await axiosInstance.post(`${PUBLIC_INVITE_URL}/${token}/accept`, { password });
+export async function acceptInvitation({ token, password, name, phoneNumber }) {
+  const res = await axiosInstance.post(`${PUBLIC_INVITE_URL}/${token}/accept`, {
+    password,
+    name,
+    phoneNumber,
+  });
   return res.data;
 }
 
