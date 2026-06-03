@@ -28,6 +28,7 @@ import {
   useGetTournament,
 } from 'src/actions/tournament';
 
+import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
@@ -344,39 +345,125 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
 
 // ----------------------------------------------------------------------
 
+const POSITION_LABEL = {
+  Goalkeeper: 'Portero',
+  Defender: 'Defensa',
+  Midfielder: 'Centrocampista',
+  Forward: 'Delantero',
+};
+const POSITION_COLOR = {
+  Goalkeeper: 'warning',
+  Defender: 'info',
+  Midfielder: 'success',
+  Forward: 'error',
+};
+
+function getInitials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 /**
- * Single player row with three-dot menu for edit / delete.
+ * Player card with avatar, jersey number, position pill, and three-dot menu.
  */
 function PlayerRow({ player, onEdit, onDelete }) {
   const popover = usePopover();
+  const hasPhoto = !!player.avatar_url;
+  const positionColor = POSITION_COLOR[player.position] || 'primary';
+  const positionLabel = POSITION_LABEL[player.position] || player.position;
 
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={1.5}
+    <Box
       sx={{
-        px: 1.5,
-        py: 1,
-        borderRadius: 1,
+        position: 'relative',
+        p: 1.5,
+        borderRadius: 1.5,
         border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+        bgcolor: 'background.paper',
+        transition: 'all 0.15s',
+        '&:hover': {
+          borderColor: (t) => alpha(t.palette.primary.main, 0.4),
+          boxShadow: (t) => t.customShadows?.z8 || '0 4px 12px rgba(0,0,0,0.06)',
+        },
       }}
     >
-      <Typography variant="body2" sx={{ minWidth: 28, color: 'text.disabled' }}>
-        {player.number != null ? `#${player.number}` : '—'}
-      </Typography>
-      <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
-        {player.name}
-      </Typography>
-      {player.position && (
-        <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-          {player.position}
-        </Typography>
-      )}
+      <Stack direction="row" alignItems="center" spacing={1.5}>
+        {/* Avatar with jersey number badge */}
+        <Box sx={{ position: 'relative', flexShrink: 0 }}>
+          <Avatar
+            src={player.avatar_url}
+            variant="rounded"
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: (t) => alpha(t.palette[positionColor].main, 0.12),
+              color: `${positionColor}.dark`,
+              fontWeight: 700,
+              fontSize: '1rem',
+            }}
+          >
+            {!hasPhoto && getInitials(player.name)}
+          </Avatar>
+          {player.number != null && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: -4,
+                right: -4,
+                minWidth: 22,
+                height: 22,
+                px: 0.6,
+                borderRadius: 1,
+                bgcolor: 'background.paper',
+                border: (t) => `1.5px solid ${t.palette.text.primary}`,
+                color: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 800,
+                fontSize: '0.7rem',
+                lineHeight: 1,
+              }}
+            >
+              {player.number}
+            </Box>
+          )}
+        </Box>
 
-      <IconButton size="small" onClick={popover.onOpen}>
-        <Iconify icon="eva:more-vertical-fill" width={16} />
-      </IconButton>
+        {/* Identity stack */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ fontWeight: 700, lineHeight: 1.2, mb: 0.5 }}
+            noWrap
+          >
+            {player.name}
+          </Typography>
+          <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.25 }}>
+            {positionLabel && (
+              <Label variant="soft" color={positionColor} sx={{ height: 20 }}>
+                {positionLabel}
+              </Label>
+            )}
+          </Stack>
+          {player.id_number && (
+            <Typography variant="caption" sx={{ color: 'text.disabled' }} noWrap>
+              ID: {player.id_number}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Actions */}
+        <IconButton
+          size="small"
+          onClick={popover.onOpen}
+          sx={{ flexShrink: 0, alignSelf: 'flex-start' }}
+        >
+          <Iconify icon="eva:more-vertical-fill" width={18} />
+        </IconButton>
+      </Stack>
 
       <CustomPopover open={popover.open} anchorEl={popover.anchorEl} onClose={popover.onClose}>
         <MenuItem
@@ -400,7 +487,7 @@ function PlayerRow({ player, onEdit, onDelete }) {
           Eliminar
         </MenuItem>
       </CustomPopover>
-    </Stack>
+    </Box>
   );
 }
 
