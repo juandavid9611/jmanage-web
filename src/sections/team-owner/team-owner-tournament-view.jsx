@@ -14,7 +14,6 @@ import Grid from '@mui/material/Unstable_Grid2';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
-import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 
 import { useCountdownDate } from 'src/hooks/use-countdown';
@@ -694,28 +693,53 @@ function RichTeamCard({ entry, onEnter }) {
     <Card>
       {/* Header */}
       <CardContent sx={{ pb: 2 }}>
-        <Stack direction="row" alignItems="flex-start" spacing={2}>
-          <Avatar
-            variant="rounded"
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          spacing={2}
+        >
+          <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
+            <Avatar
+              variant="rounded"
+              sx={{
+                width: 56,
+                height: 56,
+                bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                color: 'primary.main',
+                flexShrink: 0,
+              }}
+            >
+              <Iconify icon="mdi:shield-half-full" width={32} />
+            </Avatar>
+
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
+                {entry.team_name}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
+                Tu equipo en <strong>{entry.tournament_name}</strong>
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => onEnter(entry, 'configuracion')}
+            endIcon={<Iconify icon="solar:arrow-right-bold" width={16} />}
             sx={{
-              width: 56,
-              height: 56,
-              bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
-              color: 'primary.main',
               flexShrink: 0,
+              alignSelf: { xs: 'stretch', sm: 'center' },
+              boxShadow: 'none',
+              bgcolor: (t) => alpha(t.palette.primary.main, 0.88),
+              '&:hover': {
+                bgcolor: 'primary.main',
+                boxShadow: (t) => `0 6px 16px ${alpha(t.palette.primary.main, 0.24)}`,
+              },
             }}
           >
-            <Iconify icon="mdi:shield-half-full" width={32} />
-          </Avatar>
-
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
-              {entry.team_name}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-              Tu equipo en <strong>{entry.tournament_name}</strong>
-            </Typography>
-          </Box>
+            Entrar al torneo
+          </Button>
         </Stack>
 
         {/* Stats row */}
@@ -829,26 +853,6 @@ function RichTeamCard({ entry, onEnter }) {
         )}
       </Grid>
 
-      <Divider />
-
-      <CardActions sx={{ px: 3, py: 2, gap: 1, flexWrap: 'wrap', justifyContent: { md: 'flex-end' } }}>
-        <Button
-          variant="contained"
-          color="inherit"
-          onClick={() => onEnter(entry, 'configuracion')}
-          startIcon={<Iconify icon="solar:arrow-right-bold" width={16} />}
-        >
-          Entrar al torneo
-        </Button>
-        <Button
-          variant="outlined"
-          color="inherit"
-          onClick={() => onEnter(entry, 'inscripcion')}
-          startIcon={<Iconify icon="solar:users-group-rounded-bold" width={16} />}
-        >
-          Gestionar plantel
-        </Button>
-      </CardActions>
     </Card>
   );
 }
