@@ -205,28 +205,32 @@ export function TournamentBanner({
                 variant="overline"
                 sx={{ color: 'text.disabled', letterSpacing: 2, mb: 0.5, display: 'block' }}
               >
-                Torneo {STATUS_LABEL[tournament.status]?.toLowerCase() || ''}
+                {publicMode && tournament.status === 'draft'
+                  ? 'Torneo'
+                  : `Torneo ${STATUS_LABEL[tournament.status]?.toLowerCase() || ''}`}
               </Typography>
 
               <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 0.75 }}>
                 <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: -0.5 }}>
                   {tournament.name}
                 </Typography>
-                <Chip
-                  label={STATUS_LABEL[tournament.status] || tournament.status}
-                  color={STATUS_COLOR[tournament.status] || 'default'}
-                  size="small"
-                  sx={{
-                    fontWeight: 600,
-                    ...(tournament.status === 'active' && {
-                      animation: 'pulse 2s ease-in-out infinite',
-                      '@keyframes pulse': {
-                        '0%, 100%': { opacity: 1 },
-                        '50%': { opacity: 0.7 },
-                      },
-                    }),
-                  }}
-                />
+                {!(publicMode && tournament.status === 'draft') && (
+                  <Chip
+                    label={STATUS_LABEL[tournament.status] || tournament.status}
+                    color={STATUS_COLOR[tournament.status] || 'default'}
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      ...(tournament.status === 'active' && {
+                        animation: 'pulse 2s ease-in-out infinite',
+                        '@keyframes pulse': {
+                          '0%, 100%': { opacity: 1 },
+                          '50%': { opacity: 0.7 },
+                        },
+                      }),
+                    }}
+                  />
+                )}
               </Stack>
 
               <Stack direction="row" spacing={1.75} sx={{ color: 'text.secondary' }}>
