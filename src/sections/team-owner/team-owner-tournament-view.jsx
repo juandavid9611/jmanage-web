@@ -757,61 +757,81 @@ function RichTeamCard({ entry, onEnter }) {
 
       <Divider />
 
-      {/* Próximos pasos */}
-      <CardContent sx={{ pb: 2 }}>
-        <Typography variant="overline" sx={{ color: 'text.disabled', display: 'block', mb: 1.5 }}>
-          Próximos pasos
-        </Typography>
-        <Stack spacing={1.25}>
-          <ChecklistItem done label="Aceptaste la invitación" />
-          <ChecklistItem
-            done={rosterDone}
-            label="Confirma tu plantel"
-            hint={
-              rosterDone
-                ? `${playerCount} jugador${playerCount === 1 ? '' : 'es'} registrado${playerCount === 1 ? '' : 's'}`
-                : 'Aún no has registrado jugadores'
-            }
-            actionLabel="Registrar"
-            onAction={() => onEnter(entry, 'inscripcion')}
-          />
-          <ChecklistItem
-            done={false}
-            label="Espera el sorteo de grupos"
-            hint={drawDate ? formatDate(drawDate) : 'Pronto'}
-          />
-        </Stack>
-      </CardContent>
-
-      {otherTeams.length > 0 && (
-        <>
-          <Divider />
+      {/* Próximos pasos + Equipos participantes — side-by-side on md+ */}
+      <Grid container>
+        <Grid
+          xs={12}
+          md={otherTeams.length > 0 ? 7 : 12}
+          sx={{
+            borderRight: (t) => ({
+              md: otherTeams.length > 0 ? `1px solid ${alpha(t.palette.grey[500], 0.12)}` : 'none',
+            }),
+          }}
+        >
           <CardContent sx={{ pb: 2 }}>
-            <Typography
-              variant="overline"
-              sx={{ color: 'text.disabled', display: 'block', mb: 1 }}
-            >
-              Equipos participantes ({otherTeams.length + 1})
+            <Typography variant="overline" sx={{ color: 'text.disabled', display: 'block', mb: 1.5 }}>
+              Próximos pasos
             </Typography>
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              <Chip
-                size="small"
-                label={entry.team_name}
-                color="primary"
-                variant="filled"
-                sx={{ fontWeight: 600 }}
+            <Stack spacing={1.25}>
+              <ChecklistItem done label="Aceptaste la invitación" />
+              <ChecklistItem
+                done={rosterDone}
+                label="Confirma tu plantel"
+                hint={
+                  rosterDone
+                    ? `${playerCount} jugador${playerCount === 1 ? '' : 'es'} registrado${playerCount === 1 ? '' : 's'}`
+                    : 'Aún no has registrado jugadores'
+                }
+                actionLabel="Registrar"
+                onAction={() => onEnter(entry, 'inscripcion')}
               />
-              {otherTeams.map((t) => (
-                <Chip key={t.id} size="small" label={t.name} variant="outlined" />
-              ))}
+              <ChecklistItem
+                done={false}
+                label="Espera el sorteo de grupos"
+                hint={drawDate ? formatDate(drawDate) : 'Pronto'}
+              />
             </Stack>
           </CardContent>
-        </>
-      )}
+        </Grid>
+
+        {otherTeams.length > 0 && (
+          <Grid
+            xs={12}
+            md={5}
+            sx={{
+              borderTop: (t) => ({
+                xs: `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+                md: 'none',
+              }),
+            }}
+          >
+            <CardContent sx={{ pb: 2 }}>
+              <Typography
+                variant="overline"
+                sx={{ color: 'text.disabled', display: 'block', mb: 1 }}
+              >
+                Equipos participantes ({otherTeams.length + 1})
+              </Typography>
+              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                <Chip
+                  size="small"
+                  label={entry.team_name}
+                  color="primary"
+                  variant="filled"
+                  sx={{ fontWeight: 600 }}
+                />
+                {otherTeams.map((t) => (
+                  <Chip key={t.id} size="small" label={t.name} variant="outlined" />
+                ))}
+              </Stack>
+            </CardContent>
+          </Grid>
+        )}
+      </Grid>
 
       <Divider />
 
-      <CardActions sx={{ px: 3, py: 2, gap: 1, flexWrap: 'wrap' }}>
+      <CardActions sx={{ px: 3, py: 2, gap: 1, flexWrap: 'wrap', justifyContent: { md: 'flex-end' } }}>
         <Button
           variant="contained"
           color="inherit"
