@@ -63,7 +63,7 @@ function getDefaultPhase(tournament, teams) {
  * Inner view: shows a single tournament read-only for a team owner.
  * The owner's team is highlighted via highlightTeamId.
  */
-function TournamentView({ tournamentId, highlightTeamId, initialPhase = null }) {
+function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, onBack }) {
   const [activePhase, setActivePhase] = useState(initialPhase);
   const [selectedMw, setSelectedMw] = useState(undefined);
 
@@ -97,7 +97,12 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null }) 
   return (
     <DashboardContent maxWidth={false} disablePadding>
       {/* Team strip */}
-      <TeamStrip tournament={tournament} teams={teams} highlightTeamId={highlightTeamId} />
+      <TeamStrip
+        tournament={tournament}
+        teams={teams}
+        highlightTeamId={highlightTeamId}
+        onBack={onBack}
+      />
 
       {/* Tournament banner with phase tabs (read-only — no edit controls) */}
       <TournamentBanner
@@ -242,7 +247,7 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null }) 
 /**
  * Top strip showing the team owner's team info + tournament context.
  */
-function TeamStrip({ tournament, teams, highlightTeamId }) {
+function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
   const myTeam = teams?.find((t) => t.id === highlightTeamId);
 
   return (
@@ -255,6 +260,17 @@ function TeamStrip({ tournament, teams, highlightTeamId }) {
       }}
     >
       <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" gap={1}>
+        {onBack && (
+          <Button
+            size="small"
+            color="inherit"
+            onClick={onBack}
+            startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={18} />}
+            sx={{ mr: 1, flexShrink: 0 }}
+          >
+            Mis torneos
+          </Button>
+        )}
         {/* Team logo + name */}
         {myTeam && (
           <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -659,6 +675,7 @@ export function TeamOwnerTournamentView() {
         tournamentId={selected.entry.tournament_id}
         highlightTeamId={selected.entry.tournament_team_id}
         initialPhase={selected.initialPhase}
+        onBack={() => setSelected(null)}
       />
     );
   }
