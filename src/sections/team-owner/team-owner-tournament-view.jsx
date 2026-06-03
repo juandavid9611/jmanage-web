@@ -17,6 +17,8 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 
+import { useCountdownDate } from 'src/hooks/use-countdown';
+
 import { useGetMyTeamOwnerTeams } from 'src/actions/me';
 import { DashboardContent } from 'src/layouts/dashboard';
 import {
@@ -748,6 +750,8 @@ function RichTeamCard({ entry, onEnter }) {
         </Stack>
       </CardContent>
 
+      {startDate && <TournamentCountdown targetDate={new Date(startDate)} />}
+
       <Divider />
 
       {/* Próximos pasos */}
@@ -823,6 +827,58 @@ function RichTeamCard({ entry, onEnter }) {
         </Button>
       </CardActions>
     </Card>
+  );
+}
+
+function TournamentCountdown({ targetDate }) {
+  const isValid = targetDate instanceof Date && !Number.isNaN(targetDate.getTime());
+  const inFuture = isValid && targetDate.getTime() > Date.now();
+  const countdown = useCountdownDate(isValid ? targetDate : new Date());
+
+  if (!inFuture) return null;
+
+  return (
+    <>
+      <Divider />
+      <Box sx={{ px: 3, py: 2.5, textAlign: 'center' }}>
+        <Typography
+          variant="overline"
+          sx={{ color: 'text.disabled', letterSpacing: 2, display: 'block', mb: 1.5 }}
+        >
+          El torneo comienza en
+        </Typography>
+        <Stack
+          direction="row"
+          justifyContent="center"
+          alignItems="baseline"
+          divider={
+            <Box sx={{ mx: { xs: 1, sm: 1.5 }, color: 'text.disabled', typography: 'h4' }}>:</Box>
+          }
+          sx={{ typography: { xs: 'h4', sm: 'h3' } }}
+        >
+          <TimeBlock value={countdown.days} label="días" />
+          <TimeBlock value={countdown.hours} label="horas" />
+          <TimeBlock value={countdown.minutes} label="min" />
+          <TimeBlock value={countdown.seconds} label="seg" />
+        </Stack>
+      </Box>
+    </>
+  );
+}
+
+function TimeBlock({ value, label }) {
+  return (
+    <Box sx={{ textAlign: 'center', minWidth: 48 }}>
+      <Box sx={{ fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+        {value}
+      </Box>
+      <Typography
+        variant="caption"
+        sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}
+      >
+        {label}
+      </Typography>
+    </Box>
   );
 }
 
