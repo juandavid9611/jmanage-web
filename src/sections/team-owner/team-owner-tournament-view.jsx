@@ -28,7 +28,6 @@ import {
   useGetTournament,
 } from 'src/actions/tournament';
 
-import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
@@ -589,7 +588,6 @@ function RichTeamCard({ entry, onEnter }) {
   const { teams: tournamentTeams } = useGetTeams(entry.tournament_id);
   const { players } = useGetPlayers(entry.tournament_id, entry.tournament_team_id);
 
-  const status = tournament?.status;
   const startDate = tournament?.start_date;
   const drawDate = tournament?.group_draw_date || tournament?.rules?.group_draw_date;
   const sport = tournament?.sport;
@@ -626,12 +624,6 @@ function RichTeamCard({ entry, onEnter }) {
               Tu equipo en <strong>{entry.tournament_name}</strong>
             </Typography>
           </Box>
-
-          {status && (
-            <Label variant="soft" color={STATUS_COLORS[status] || 'default'} sx={{ flexShrink: 0 }}>
-              {STATUS_LABELS[status] || status}
-            </Label>
-          )}
         </Stack>
 
         {/* Stats row */}

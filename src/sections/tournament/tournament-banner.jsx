@@ -402,47 +402,56 @@ export function TournamentBanner({
           },
         }}
       >
-        {phases.map((phase) => (
-          <Tab
-            key={phase.key}
-            value={phase.key}
-            label={
-              <Stack alignItems="center" spacing={0.25}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: activePhase === phase.key ? 700 : 500,
-                    color:
-                      activePhase === phase.key
-                        ? 'primary.main'
-                        : phase.state === 'done'
-                          ? 'success.main'
-                          : phase.state === 'active'
-                            ? 'text.primary'
-                            : 'text.disabled',
-                  }}
-                >
-                  {phase.label}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: activePhase === phase.key ? 'primary.main' : 'text.disabled',
-                    fontSize: '0.65rem',
-                  }}
-                >
-                  {phase.sub}
-                </Typography>
-              </Stack>
-            }
-            sx={{
-              minHeight: 56,
-              textTransform: 'none',
-              minWidth: 'auto',
-              px: 2,
-            }}
-          />
-        ))}
+        {phases.map((phase) => {
+          const isLockedForUser = publicMode && phase.state === 'locked';
+          return (
+            <Tab
+              key={phase.key}
+              value={phase.key}
+              disabled={isLockedForUser}
+              label={
+                <Stack alignItems="center" spacing={0.25}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: activePhase === phase.key ? 700 : 500,
+                      color:
+                        activePhase === phase.key
+                          ? 'primary.main'
+                          : phase.state === 'done'
+                            ? 'success.main'
+                            : phase.state === 'active'
+                              ? 'text.primary'
+                              : 'text.disabled',
+                    }}
+                  >
+                    {phase.label}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: activePhase === phase.key ? 'primary.main' : 'text.disabled',
+                      fontSize: '0.65rem',
+                    }}
+                  >
+                    {phase.sub}
+                  </Typography>
+                </Stack>
+              }
+              sx={{
+                minHeight: 56,
+                textTransform: 'none',
+                minWidth: 'auto',
+                px: 2,
+                ...(isLockedForUser && {
+                  cursor: 'not-allowed',
+                  pointerEvents: 'auto',
+                  '&.Mui-disabled': { opacity: 1 },
+                }),
+              }}
+            />
+          );
+        })}
       </Tabs>
     </Box>
   );
