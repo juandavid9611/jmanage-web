@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -11,6 +12,8 @@ import Grid from '@mui/material/Unstable_Grid2';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
 
 import { useGetMyTeamOwnerTeams } from 'src/actions/me';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -23,6 +26,7 @@ import {
   useGetTournament,
 } from 'src/actions/tournament';
 
+import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
@@ -39,6 +43,8 @@ import { MatchweekTimeline } from 'src/sections/tournament/matchweek-timeline';
 import { PlayerRankingTable } from 'src/sections/tournament/player-ranking-table';
 import { getPhases, TournamentBanner } from 'src/sections/tournament/tournament-banner';
 import { TournamentConfigSummary } from 'src/sections/tournament/tournament-config-summary';
+
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -57,8 +63,8 @@ function getDefaultPhase(tournament, teams) {
  * Inner view: shows a single tournament read-only for a team owner.
  * The owner's team is highlighted via highlightTeamId.
  */
-function TournamentView({ tournamentId, highlightTeamId }) {
-  const [activePhase, setActivePhase] = useState(null);
+function TournamentView({ tournamentId, highlightTeamId, initialPhase = null }) {
+  const [activePhase, setActivePhase] = useState(initialPhase);
   const [selectedMw, setSelectedMw] = useState(undefined);
 
   const { tournament, tournamentLoading } = useGetTournament(tournamentId);
@@ -489,53 +495,138 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
 
 // ----------------------------------------------------------------------
 
+const STATUS_COLORS = {
+  draft: 'default',
+  active: 'success',
+  in_progress: 'success',
+  completed: 'info',
+  archived: 'default',
+};
+
+const STATUS_LABELS = {
+  draft: 'Borrador',
+  active: 'En progreso',
+  in_progress: 'En progreso',
+  completed: 'Finalizado',
+  archived: 'Archivado',
+};
+
 /**
- * Multi-tournament picker (shown when the user owns teams in more than one tournament).
+ * Team owner welcome landing — greeting + one card per managed team.
  */
-function TournamentPicker({ teams, onSelect }) {
+function TeamOwnerWelcome({ teams, onEnter }) {
+  const { user } = useAuthContext();
+  const firstName = user?.name?.split(' ')[0] || '';
+
   return (
     <DashboardContent>
-      <Stack spacing={3}>
-        <Typography variant="h4">Mis torneos</Typography>
+      <Stack spacing={4}>
+        <Box>
+          <Typography variant="h4" sx={{ mb: 0.5 }}>
+            Bienvenido{firstName ? `, ${firstName}` : ''} 👋
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {teams.length === 1
+              ? 'Este es el equipo que gestionas hoy.'
+              : 'Estos son los equipos que gestionas hoy.'}
+          </Typography>
+        </Box>
+
         <Box
           display="grid"
-          gap={2}
+          gap={2.5}
           gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
         >
-          {teams.map((t) => (
-            <Box
-              key={t.tournament_team_id}
-              onClick={() => onSelect(t)}
-              sx={{
-                p: 3,
-                cursor: 'pointer',
-                borderRadius: 2,
-                border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
-                bgcolor: 'background.paper',
-                transition: 'all 0.15s',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  transform: 'translateY(-2px)',
-                  boxShadow: (theme) => theme.customShadows?.z8 || '0 8px 16px 0 rgba(0,0,0,0.16)',
-                },
-              }}
-            >
-              <Stack spacing={0.5}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  {t.tournament_name}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {t.team_name}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
-                  Mi equipo
-                </Typography>
-              </Stack>
-            </Box>
+          {teams.map((entry) => (
+            <TeamCard key={entry.tournament_team_id} entry={entry} onEnter={onEnter} />
           ))}
         </Box>
       </Stack>
     </DashboardContent>
+  );
+}
+
+function TeamCard({ entry, onEnter }) {
+  const { tournament } = useGetTournament(entry.tournament_id);
+  const status = tournament?.status;
+  const startDate = tournament?.start_date;
+
+  return (
+    <Card
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'all 0.15s',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: (theme) => theme.customShadows?.z16 || '0 12px 24px 0 rgba(0,0,0,0.16)',
+        },
+      }}
+    >
+      <CardContent sx={{ flexGrow: 1, pb: 1 }}>
+        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+          <Avatar
+            variant="rounded"
+            sx={{
+              width: 48,
+              height: 48,
+              bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+              color: 'primary.main',
+            }}
+          >
+            <Iconify icon="mdi:shield-half-full" width={28} />
+          </Avatar>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
+              {entry.team_name}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
+              Mi equipo
+            </Typography>
+          </Box>
+        </Stack>
+
+        <Stack spacing={1}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
+            {entry.tournament_name}
+          </Typography>
+
+          <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+            {status && (
+              <Label variant="soft" color={STATUS_COLORS[status] || 'default'}>
+                {STATUS_LABELS[status] || status}
+              </Label>
+            )}
+            {startDate && (
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                Inicia {startDate}
+              </Typography>
+            )}
+          </Stack>
+        </Stack>
+      </CardContent>
+
+      <CardActions sx={{ px: 2, pb: 2, pt: 0, gap: 1, flexWrap: 'wrap' }}>
+        <Button
+          size="small"
+          variant="contained"
+          color="inherit"
+          onClick={() => onEnter(entry, 'configuracion')}
+          startIcon={<Iconify icon="solar:arrow-right-bold" width={16} />}
+        >
+          Entrar al torneo
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          onClick={() => onEnter(entry, 'inscripcion')}
+          startIcon={<Iconify icon="solar:users-group-rounded-bold" width={16} />}
+        >
+          Gestionar plantel
+        </Button>
+      </CardActions>
+    </Card>
   );
 }
 
@@ -545,7 +636,7 @@ function TournamentPicker({ teams, onSelect }) {
  * Root view: resolves the team owner's tournament(s) and renders the appropriate UI.
  */
 export function TeamOwnerTournamentView() {
-  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [selected, setSelected] = useState(null);
   const { teams, teamsLoading } = useGetMyTeamOwnerTeams();
 
   if (teamsLoading) return <LoadingScreen />;
@@ -562,26 +653,20 @@ export function TeamOwnerTournamentView() {
     );
   }
 
-  // Single tournament: go straight in
-  if (teams.length === 1 && !selectedEntry) {
-    const entry = teams[0];
+  if (selected) {
     return (
       <TournamentView
-        tournamentId={entry.tournament_id}
-        highlightTeamId={entry.tournament_team_id}
+        tournamentId={selected.entry.tournament_id}
+        highlightTeamId={selected.entry.tournament_team_id}
+        initialPhase={selected.initialPhase}
       />
     );
   }
 
-  // Multiple tournaments: show picker then detail
-  if (selectedEntry) {
-    return (
-      <TournamentView
-        tournamentId={selectedEntry.tournament_id}
-        highlightTeamId={selectedEntry.tournament_team_id}
-      />
-    );
-  }
-
-  return <TournamentPicker teams={teams} onSelect={setSelectedEntry} />;
+  return (
+    <TeamOwnerWelcome
+      teams={teams}
+      onEnter={(entry, initialPhase) => setSelected({ entry, initialPhase })}
+    />
+  );
 }
