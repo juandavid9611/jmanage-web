@@ -1,10 +1,12 @@
 import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import { alpha } from '@mui/material/styles';
 import MenuItem from '@mui/material/MenuItem';
 import Skeleton from '@mui/material/Skeleton';
@@ -527,16 +529,27 @@ const STATUS_LABELS = {
   archived: 'Archivado',
 };
 
+function getFirstName(user) {
+  const raw = user?.name?.trim();
+  if (raw) return raw.split(' ')[0];
+  const email = user?.email;
+  if (email) {
+    const local = email.split('@')[0]?.split('+')[0] || '';
+    if (local) return local.charAt(0).toUpperCase() + local.slice(1);
+  }
+  return '';
+}
+
 /**
- * Team owner welcome landing — greeting + one card per managed team.
+ * Team owner welcome landing — greeting + one rich card per managed team.
  */
 function TeamOwnerWelcome({ teams, onEnter }) {
   const { user } = useAuthContext();
-  const firstName = user?.name?.split(' ')[0] || '';
+  const firstName = getFirstName(user);
 
   return (
     <DashboardContent>
-      <Stack spacing={4}>
+      <Stack spacing={3}>
         <Box>
           <Typography variant="h4" sx={{ mb: 0.5 }}>
             Bienvenido{firstName ? `, ${firstName}` : ''} 👋
@@ -548,83 +561,172 @@ function TeamOwnerWelcome({ teams, onEnter }) {
           </Typography>
         </Box>
 
-        <Box
-          display="grid"
-          gap={2.5}
-          gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
-        >
+        <Stack spacing={3}>
           {teams.map((entry) => (
-            <TeamCard key={entry.tournament_team_id} entry={entry} onEnter={onEnter} />
+            <RichTeamCard key={entry.tournament_team_id} entry={entry} onEnter={onEnter} />
           ))}
-        </Box>
+        </Stack>
       </Stack>
     </DashboardContent>
   );
 }
 
-function TeamCard({ entry, onEnter }) {
+function formatDate(date) {
+  if (!date) return null;
+  try {
+    return new Date(date).toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return String(date);
+  }
+}
+
+function RichTeamCard({ entry, onEnter }) {
   const { tournament } = useGetTournament(entry.tournament_id);
+  const { teams: tournamentTeams } = useGetTeams(entry.tournament_id);
+  const { players } = useGetPlayers(entry.tournament_id, entry.tournament_team_id);
+
   const status = tournament?.status;
   const startDate = tournament?.start_date;
+  const drawDate = tournament?.group_draw_date || tournament?.rules?.group_draw_date;
+  const sport = tournament?.sport;
+  const city = tournament?.city;
+
+  const playerCount = players?.length ?? 0;
+  const rosterDone = playerCount > 0;
+
+  const otherTeams = (tournamentTeams || []).filter((t) => t.id !== entry.tournament_team_id);
 
   return (
-    <Card
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'all 0.15s',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: (theme) => theme.customShadows?.z16 || '0 12px 24px 0 rgba(0,0,0,0.16)',
-        },
-      }}
-    >
-      <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+    <Card>
+      {/* Header */}
+      <CardContent sx={{ pb: 2 }}>
+        <Stack direction="row" alignItems="flex-start" spacing={2}>
           <Avatar
             variant="rounded"
             sx={{
-              width: 48,
-              height: 48,
+              width: 56,
+              height: 56,
               bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
               color: 'primary.main',
+              flexShrink: 0,
             }}
           >
-            <Iconify icon="mdi:shield-half-full" width={28} />
+            <Iconify icon="mdi:shield-half-full" width={32} />
           </Avatar>
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
+
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
               {entry.team_name}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
-              Mi equipo
+            <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
+              Tu equipo en <strong>{entry.tournament_name}</strong>
             </Typography>
           </Box>
+
+          {status && (
+            <Label variant="soft" color={STATUS_COLORS[status] || 'default'} sx={{ flexShrink: 0 }}>
+              {STATUS_LABELS[status] || status}
+            </Label>
+          )}
         </Stack>
 
-        <Stack spacing={1}>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {entry.tournament_name}
-          </Typography>
-
-          <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-            {status && (
-              <Label variant="soft" color={STATUS_COLORS[status] || 'default'}>
-                {STATUS_LABELS[status] || status}
-              </Label>
-            )}
-            {startDate && (
-              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                Inicia {startDate}
-              </Typography>
-            )}
-          </Stack>
+        {/* Stats row */}
+        <Stack
+          direction="row"
+          spacing={3}
+          flexWrap="wrap"
+          useFlexGap
+          sx={{ mt: 2.5, color: 'text.secondary' }}
+        >
+          {sport && (
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Iconify icon="mdi:soccer" width={16} />
+              <Typography variant="body2">{sport}</Typography>
+            </Stack>
+          )}
+          {city && (
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Iconify icon="solar:map-point-bold" width={16} />
+              <Typography variant="body2">{city}</Typography>
+            </Stack>
+          )}
+          {startDate && (
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Iconify icon="solar:calendar-bold" width={16} />
+              <Typography variant="body2">Inicia {formatDate(startDate)}</Typography>
+            </Stack>
+          )}
+          {drawDate && (
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Iconify icon="mdi:dice-multiple" width={16} />
+              <Typography variant="body2">Sorteo {formatDate(drawDate)}</Typography>
+            </Stack>
+          )}
         </Stack>
       </CardContent>
 
-      <CardActions sx={{ px: 2, pb: 2, pt: 0, gap: 1, flexWrap: 'wrap' }}>
+      <Divider />
+
+      {/* Próximos pasos */}
+      <CardContent sx={{ pb: 2 }}>
+        <Typography variant="overline" sx={{ color: 'text.disabled', display: 'block', mb: 1.5 }}>
+          Próximos pasos
+        </Typography>
+        <Stack spacing={1.25}>
+          <ChecklistItem done label="Aceptaste la invitación" />
+          <ChecklistItem
+            done={rosterDone}
+            label="Confirma tu plantel"
+            hint={
+              rosterDone
+                ? `${playerCount} jugador${playerCount === 1 ? '' : 'es'} registrado${playerCount === 1 ? '' : 's'}`
+                : 'Aún no has registrado jugadores'
+            }
+            actionLabel="Registrar"
+            onAction={() => onEnter(entry, 'inscripcion')}
+          />
+          <ChecklistItem
+            done={false}
+            label="Espera el sorteo de grupos"
+            hint={drawDate ? formatDate(drawDate) : 'Pronto'}
+          />
+        </Stack>
+      </CardContent>
+
+      {otherTeams.length > 0 && (
+        <>
+          <Divider />
+          <CardContent sx={{ pb: 2 }}>
+            <Typography
+              variant="overline"
+              sx={{ color: 'text.disabled', display: 'block', mb: 1 }}
+            >
+              Equipos participantes ({otherTeams.length + 1})
+            </Typography>
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              <Chip
+                size="small"
+                label={entry.team_name}
+                color="primary"
+                variant="filled"
+                sx={{ fontWeight: 600 }}
+              />
+              {otherTeams.map((t) => (
+                <Chip key={t.id} size="small" label={t.name} variant="outlined" />
+              ))}
+            </Stack>
+          </CardContent>
+        </>
+      )}
+
+      <Divider />
+
+      <CardActions sx={{ px: 3, py: 2, gap: 1, flexWrap: 'wrap' }}>
         <Button
-          size="small"
           variant="contained"
           color="inherit"
           onClick={() => onEnter(entry, 'configuracion')}
@@ -633,7 +735,6 @@ function TeamCard({ entry, onEnter }) {
           Entrar al torneo
         </Button>
         <Button
-          size="small"
           variant="outlined"
           color="inherit"
           onClick={() => onEnter(entry, 'inscripcion')}
@@ -643,6 +744,33 @@ function TeamCard({ entry, onEnter }) {
         </Button>
       </CardActions>
     </Card>
+  );
+}
+
+function ChecklistItem({ done, label, hint, actionLabel, onAction }) {
+  return (
+    <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Iconify
+        icon={done ? 'solar:check-circle-bold' : 'solar:check-circle-line-duotone'}
+        width={20}
+        sx={{ color: done ? 'success.main' : 'text.disabled', flexShrink: 0 }}
+      />
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="body2" sx={{ fontWeight: 500, color: done ? 'text.primary' : 'text.primary' }}>
+          {label}
+        </Typography>
+        {hint && (
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {hint}
+          </Typography>
+        )}
+      </Box>
+      {!done && actionLabel && onAction && (
+        <Button size="small" color="inherit" onClick={onAction} sx={{ flexShrink: 0 }}>
+          {actionLabel}
+        </Button>
+      )}
+    </Stack>
   );
 }
 
