@@ -1,4 +1,3 @@
-import { m } from 'framer-motion';
 import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -6,6 +5,7 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
+import { alpha } from '@mui/material/styles';
 import MenuItem from '@mui/material/MenuItem';
 import Skeleton from '@mui/material/Skeleton';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -14,7 +14,6 @@ import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import { alpha, useTheme } from '@mui/material/styles';
 
 import { useGetMyTeamOwnerTeams } from 'src/actions/me';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -33,7 +32,6 @@ import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { LoadingScreen } from 'src/components/loading-screen';
-import { varFade, MotionContainer } from 'src/components/animate';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { MatchList } from 'src/sections/tournament/match-row';
@@ -77,11 +75,11 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
   const currentMw = tournament?.current_matchweek || 1;
   const totalMw =
     tournament?.rules?.total_matchweeks ||
-    (allMatches.length > 0 ? Math.max(...allMatches.map((match) => match.matchweek || 0)) : 0);
+    (allMatches.length > 0 ? Math.max(...allMatches.map((m) => m.matchweek || 0)) : 0);
   const activeMw = selectedMw === undefined ? currentMw : selectedMw;
 
   const currentMatches = useMemo(
-    () => (activeMw === null ? allMatches : allMatches.filter((match) => match.matchweek === activeMw)),
+    () => (activeMw === null ? allMatches : allMatches.filter((m) => m.matchweek === activeMw)),
     [allMatches, activeMw]
   );
 
@@ -530,113 +528,36 @@ const STATUS_LABELS = {
 };
 
 /**
- * Team owner welcome landing — animated hero + one card per managed team.
+ * Team owner welcome landing — greeting + one card per managed team.
  */
 function TeamOwnerWelcome({ teams, onEnter }) {
-  const theme = useTheme();
   const { user } = useAuthContext();
   const firstName = user?.name?.split(' ')[0] || '';
 
   return (
     <DashboardContent>
-      <Box component={MotionContainer}>
-        <Stack spacing={5}>
-          {/* Animated hero */}
-          <Stack spacing={2} alignItems="center" sx={{ textAlign: 'center', py: { xs: 2, md: 4 } }}>
-            <Box
-              component={m.div}
-              variants={varFade({ distance: 24 }).inDown}
-              sx={{ position: 'relative', mb: 1 }}
-            >
-              <Box
-                component={m.div}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-                sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  bgcolor: (t) => alpha(t.palette.warning.main, 0.12),
-                  color: 'warning.main',
-                }}
-              >
-                <Iconify icon="mdi:soccer" width={36} />
-              </Box>
-            </Box>
+      <Stack spacing={4}>
+        <Box>
+          <Typography variant="h4" sx={{ mb: 0.5 }}>
+            Bienvenido{firstName ? `, ${firstName}` : ''} 👋
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {teams.length === 1
+              ? 'Este es el equipo que gestionas hoy.'
+              : 'Estos son los equipos que gestionas hoy.'}
+          </Typography>
+        </Box>
 
-            <Box
-              component={m.div}
-              variants={varFade({ distance: 24 }).inUp}
-            >
-              <Typography
-                variant="overline"
-                sx={{ color: 'text.disabled', display: 'block', mb: 0.5 }}
-              >
-                Bienvenido{firstName ? `, ${firstName}` : ''} 👋
-              </Typography>
-              <Box
-                component="h1"
-                sx={{
-                  ...theme.typography.h3,
-                  m: 0,
-                  fontFamily: theme.typography.fontSecondaryFamily,
-                  fontSize: { xs: 28, md: 40 },
-                  lineHeight: 1.15,
-                  mb: 1,
-                }}
-              >
-                Tu torneo está cada vez{' '}
-                <Box
-                  component="span"
-                  sx={{
-                    background: `linear-gradient(120deg, ${theme.palette.warning.main}, ${theme.palette.error.main})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
-                >
-                  más cerca
-                </Box>
-              </Box>
-              <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                Vive la pasión del fútbol ⚽
-              </Typography>
-            </Box>
-          </Stack>
-
-          {/* Section heading */}
-          <Box component={m.div} variants={varFade({ distance: 16 }).inUp}>
-            <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
-              {teams.length === 1 ? 'Tu equipo' : 'Tus equipos'}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {teams.length === 1
-                ? 'Este es el equipo que gestionas hoy.'
-                : 'Estos son los equipos que gestionas hoy.'}
-            </Typography>
-          </Box>
-
-          {/* Team cards */}
-          <Box
-            display="grid"
-            gap={2.5}
-            gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
-          >
-            {teams.map((entry) => (
-              <Box
-                key={entry.tournament_team_id}
-                component={m.div}
-                variants={varFade({ distance: 24 }).inUp}
-              >
-                <TeamCard entry={entry} onEnter={onEnter} />
-              </Box>
-            ))}
-          </Box>
-        </Stack>
-      </Box>
+        <Box
+          display="grid"
+          gap={2.5}
+          gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
+        >
+          {teams.map((entry) => (
+            <TeamCard key={entry.tournament_team_id} entry={entry} onEnter={onEnter} />
+          ))}
+        </Box>
+      </Stack>
     </DashboardContent>
   );
 }
