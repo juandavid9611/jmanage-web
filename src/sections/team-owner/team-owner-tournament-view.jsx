@@ -347,6 +347,9 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
 
 // ----------------------------------------------------------------------
 
+// Welcome to Samba kickoff — Saturday 2026-06-06 18:00 local. Static for now.
+const SAMBA_KICKOFF = new Date('2026-06-06T18:00:00');
+
 const POSITION_LABEL = {
   Goalkeeper: 'Portero',
   Defender: 'Defensa',
@@ -750,7 +753,7 @@ function RichTeamCard({ entry, onEnter }) {
         </Stack>
       </CardContent>
 
-      {startDate && <TournamentCountdown targetDate={new Date(startDate)} />}
+      <TournamentCountdown targetDate={SAMBA_KICKOFF} />
 
       <Divider />
 
@@ -831,11 +834,7 @@ function RichTeamCard({ entry, onEnter }) {
 }
 
 function TournamentCountdown({ targetDate }) {
-  const isValid = targetDate instanceof Date && !Number.isNaN(targetDate.getTime());
-  const inFuture = isValid && targetDate.getTime() > Date.now();
-  const countdown = useCountdownDate(isValid ? targetDate : new Date());
-
-  if (!inFuture) return null;
+  const countdown = useCountdownDate(targetDate);
 
   return (
     <>
