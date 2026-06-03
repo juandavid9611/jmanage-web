@@ -723,18 +723,20 @@ function RichTeamCard({ entry, onEnter }) {
           </Stack>
 
           <Button
-            variant="contained"
-            color="primary"
+            disableElevation
             onClick={() => onEnter(entry, 'configuracion')}
             endIcon={<Iconify icon="solar:arrow-right-bold" width={16} />}
             sx={{
               flexShrink: 0,
               alignSelf: { xs: 'stretch', sm: 'center' },
-              boxShadow: 'none',
-              bgcolor: (t) => alpha(t.palette.primary.main, 0.88),
+              px: 2.5,
+              py: 1,
+              borderRadius: 1.5,
+              fontWeight: 700,
+              color: 'primary.dark',
+              bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
               '&:hover': {
-                bgcolor: 'primary.main',
-                boxShadow: (t) => `0 6px 16px ${alpha(t.palette.primary.main, 0.24)}`,
+                bgcolor: (t) => alpha(t.palette.primary.main, 0.2),
               },
             }}
           >
