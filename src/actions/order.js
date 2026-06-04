@@ -68,3 +68,27 @@ export async function deleteOrder(id) {
   mutate((key) => key.startsWith(URL), undefined, { revalidate: true });
   return res;
 }
+
+function syncOrderCache(id, updatedOrder) {
+  // Detail cache: replace with the server response (no revalidation).
+  mutate(`${URL}/${id}`, updatedOrder, { revalidate: false });
+  // List cache: swap the matching row in place if loaded.
+  mutate(
+    URL,
+    (orders) =>
+      Array.isArray(orders) ? orders.map((o) => (o.id === id ? updatedOrder : o)) : orders,
+    { revalidate: false }
+  );
+}
+
+export async function setOrderProviderCheck(id, checked, note) {
+  const res = await axiosInstance.post(`${URL}/${id}/provider-check`, { checked, note });
+  syncOrderCache(id, res.data);
+  return res.data;
+}
+
+export async function setOrderDeliveryCheck(id, checked, note) {
+  const res = await axiosInstance.post(`${URL}/${id}/delivery-check`, { checked, note });
+  syncOrderCache(id, res.data);
+  return res.data;
+}

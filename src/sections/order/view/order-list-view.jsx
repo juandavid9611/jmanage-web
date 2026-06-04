@@ -62,7 +62,16 @@ const TABLE_HEAD = [
   },
   { id: 'totalAmount', label: 'Price', width: 140 },
   { id: 'status', label: 'Status', width: 110 },
+  { id: 'providerCheck', label: 'Proveedor', width: 100, align: 'center' },
+  { id: 'deliveryCheck', label: 'Entregado', width: 100, align: 'center' },
   { id: '', width: 88 },
+];
+
+const OPS_OPTIONS = [
+  { value: 'all', label: 'Todas' },
+  { value: 'pendingProvider', label: 'Sin pedir a proveedor' },
+  { value: 'pendingDelivery', label: 'Sin entregar' },
+  { value: 'bothDone', label: 'Proveedor y entrega listos' },
 ];
 
 // ----------------------------------------------------------------------
@@ -87,6 +96,7 @@ export function OrderListView() {
   const filters = useSetState({
     name: '',
     status: 'all',
+    ops: 'all',
     startDate: null,
     endDate: null,
   });
@@ -105,6 +115,7 @@ export function OrderListView() {
   const canReset =
     !!filters.state.name ||
     filters.state.status !== 'all' ||
+    filters.state.ops !== 'all' ||
     (!!filters.state.startDate && !!filters.state.endDate);
 
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
@@ -209,6 +220,7 @@ export function OrderListView() {
             filters={filters}
             onResetPage={table.onResetPage}
             dateError={dateError}
+            opsOptions={OPS_OPTIONS}
           />
 
           {canReset && (
@@ -324,7 +336,7 @@ export function OrderListView() {
 }
 
 function applyFilter({ inputData, comparator, filters, dateError }) {
-  const { status, name, startDate, endDate } = filters;
+  const { status, ops, name, startDate, endDate } = filters;
 
   const stabilizedThis = inputData.map((el, index) => [el, index]);
 
@@ -347,6 +359,17 @@ function applyFilter({ inputData, comparator, filters, dateError }) {
 
   if (status !== 'all') {
     inputData = inputData.filter((order) => order.status === status);
+  }
+
+  if (ops && ops !== 'all') {
+    inputData = inputData.filter((order) => {
+      const provider = !!order.providerCheck?.checked;
+      const delivery = !!order.deliveryCheck?.checked;
+      if (ops === 'pendingProvider') return !provider;
+      if (ops === 'pendingDelivery') return !delivery;
+      if (ops === 'bothDone') return provider && delivery;
+      return true;
+    });
   }
 
   if (!dateError) {

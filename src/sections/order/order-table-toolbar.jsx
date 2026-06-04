@@ -14,7 +14,7 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-export function OrderTableToolbar({ filters, onResetPage, dateError }) {
+export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions = [] }) {
   const popover = usePopover();
 
   const handleFilterName = useCallback(
@@ -37,6 +37,14 @@ export function OrderTableToolbar({ filters, onResetPage, dateError }) {
     (newValue) => {
       onResetPage();
       filters.setState({ endDate: newValue });
+    },
+    [filters, onResetPage]
+  );
+
+  const handleFilterOps = useCallback(
+    (event) => {
+      onResetPage();
+      filters.setState({ ops: event.target.value });
     },
     [filters, onResetPage]
   );
@@ -76,6 +84,23 @@ export function OrderTableToolbar({ filters, onResetPage, dateError }) {
             },
           }}
         />
+
+        {opsOptions.length > 0 && (
+          <TextField
+            select
+            label="Operación"
+            value={filters.state.ops || 'all'}
+            onChange={handleFilterOps}
+            SelectProps={{ native: true }}
+            sx={{ maxWidth: { md: 220 }, width: 1 }}
+          >
+            {opsOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </TextField>
+        )}
 
         <Stack direction="row" alignItems="center" spacing={2} flexGrow={1} sx={{ width: 1 }}>
           <TextField

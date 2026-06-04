@@ -615,3 +615,87 @@ export function useGetPublicTopScorers(tournamentId) {
   );
 }
 
+export function useGetTeamDiscipline(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId ? `${URL}/${tournamentId}/team-discipline` : null,
+    fetcher
+  );
+
+  return useMemo(
+    () => ({
+      teamDiscipline: data || [],
+      teamDisciplineLoading: isLoading,
+      teamDisciplineError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetTeamCards(tournamentId, teamId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId && teamId ? `${URL}/${tournamentId}/teams/${teamId}/cards` : null,
+    fetcher
+  );
+
+  return useMemo(
+    () => ({
+      teamCards: data || [],
+      teamCardsLoading: isLoading,
+      teamCardsError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicBracket(tournamentId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId ? `${PUBLIC_URL}/${tournamentId}/bracket` : null,
+    publicFetcher
+  );
+
+  return useMemo(
+    () => ({
+      bracket: data,
+      bracketLoading: isLoading,
+      bracketError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicPlayers(tournamentId, teamId) {
+  const params = teamId ? { team_id: teamId } : {};
+  const { data, isLoading, error } = useSWR(
+    tournamentId ? [`${PUBLIC_URL}/${tournamentId}/players`, params] : null,
+    publicFetcher
+  );
+
+  return useMemo(
+    () => ({
+      players: data || [],
+      playersLoading: isLoading,
+      playersError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+
+export function useGetPublicMatch(tournamentId, matchId) {
+  const { data, isLoading, error } = useSWR(
+    tournamentId && matchId ? `${PUBLIC_URL}/${tournamentId}/matches/${matchId}` : null,
+    publicFetcher,
+    {
+      refreshInterval: (latestData) => (latestData?.status === 'live' ? 15000 : 0),
+    }
+  );
+
+  return useMemo(
+    () => ({
+      match: data,
+      matchLoading: isLoading,
+      matchError: error,
+    }),
+    [data, error, isLoading]
+  );
+}
+

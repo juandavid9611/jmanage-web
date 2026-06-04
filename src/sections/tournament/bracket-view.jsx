@@ -62,9 +62,19 @@ const ALPHA = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
 // ── BracketView ───────────────────────────────────────────────────────
 
-export function BracketView({ tournamentId, teams, tournament, allMatches = [] }) {
+export function BracketView({
+  tournamentId,
+  teams,
+  tournament,
+  allMatches = [],
+  readOnly = false,
+  bracket: bracketProp,
+  bracketLoading: bracketLoadingProp,
+}) {
   const navigate  = useNavigate();
-  const { bracket, bracketLoading } = useGetBracket(tournamentId);
+  const fetched = useGetBracket(readOnly ? null : tournamentId);
+  const bracket = readOnly ? bracketProp : fetched.bracket;
+  const bracketLoading = readOnly ? bracketLoadingProp : fetched.bracketLoading;
 
   const [generateDialog, setGenerateDialog] = useState({ open: false, source: null });
   const [isGenerating, setIsGenerating] = useState(false);
@@ -72,7 +82,9 @@ export function BracketView({ tournamentId, teams, tournament, allMatches = [] }
   const isHybrid  = tournament?.type === 'hybrid';
   const hasGroups = tournament?.groups?.length > 0;
   const canGenerate =
-    tournament?.status === 'active' && (tournament?.type === 'knockout' || isHybrid);
+    !readOnly &&
+    tournament?.status === 'active' &&
+    (tournament?.type === 'knockout' || isHybrid);
 
   // Build ordered round entries from bracket object
   const roundEntries = useMemo(() => {
@@ -353,7 +365,7 @@ export function BracketView({ tournamentId, teams, tournament, allMatches = [] }
                       const isFinished = !!matchup.winner_team_id;
                       const isLive     = match?.status === 'live';
                       const hasMatch   = !!matchup.match_id;
-                      const canCreate  = matchup.team1_id && matchup.team2_id && !hasMatch;
+                      const canCreate  = !readOnly && matchup.team1_id && matchup.team2_id && !hasMatch;
 
                       const shortKey = ROUND_SHORT[round.key] || round.key;
                       const matchLabel =
@@ -374,12 +386,17 @@ export function BracketView({ tournamentId, teams, tournament, allMatches = [] }
                           isLive={isLive}
                           hasMatch={hasMatch}
                           canCreate={canCreate}
-                          onNavigate={() =>
-                            navigate(
-                              paths.dashboard.tournament.matchDetail(tournamentId, matchup.match_id)
-                            )
+                          onNavigate={
+                            hasMatch
+                              ? () =>
+                                  navigate(
+                                    readOnly
+                                      ? paths.publicTournaments.match(tournamentId, matchup.match_id)
+                                      : paths.dashboard.tournament.matchDetail(tournamentId, matchup.match_id)
+                                  )
+                              : undefined
                           }
-                          onCreate={() => handleCreateMatch(round.key, mIdx, matchup)}
+                          onCreate={readOnly ? undefined : () => handleCreateMatch(round.key, mIdx, matchup)}
                         />
                       );
                     })}

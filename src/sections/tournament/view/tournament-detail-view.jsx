@@ -5,11 +5,13 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Drawer from '@mui/material/Drawer';
 import { alpha } from '@mui/material/styles';
 import Skeleton from '@mui/material/Skeleton';
 import MenuItem from '@mui/material/MenuItem';
 import Grid from '@mui/material/Unstable_Grid2';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -43,6 +45,8 @@ import { BracketView } from '../bracket-view';
 import { StatsOverview } from '../stats-overview';
 import { StandingsSidebar } from '../standings-sidebar';
 import { MatchweekTimeline } from '../matchweek-timeline';
+import { PlayerRankingTable } from '../player-ranking-table';
+import { TeamDisciplineTable } from '../team-discipline-table';
 import { getPhases, TournamentBanner } from '../tournament-banner';
 import { TournamentConfigSummary } from '../tournament-config-summary';
 
@@ -86,6 +90,7 @@ export function TournamentDetailView() {
   const [finishDialog, setFinishDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [scheduleDialog, setScheduleDialog] = useState(false);
+  const [disciplineOpen, setDisciplineOpen] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
     start_date: new Date().toISOString().split('T')[0],
     match_interval_days: 7,
@@ -243,6 +248,7 @@ export function TournamentDetailView() {
         onDelete={() => setDeleteDialog(true)}
         onAdvanceMatchweek={handleAdvanceMatchweek}
         onNavigateEdit={() => navigate(paths.dashboard.tournament.edit(id))}
+        onOpenDiscipline={() => setDisciplineOpen(true)}
       />
 
       {/* ═══ Phase Content ═══ */}
@@ -344,6 +350,7 @@ export function TournamentDetailView() {
                   }
                 />
               </Grid>
+
             </Grid>
         )}
 
@@ -352,6 +359,30 @@ export function TournamentDetailView() {
           <Box sx={{ p: { xs: 2, md: 3 } }}>
             <BracketView tournamentId={id} teams={teams} tournament={tournament} allMatches={allMatches} />
           </Box>
+        )}
+
+        {/* ── ESTADÍSTICAS: per-player rankings (goals, assists, cards) ── */}
+        {currentPhase === 'estadisticas' && (
+          <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
+            <Box>
+              <Typography variant="h6" sx={{ mb: 1.5 }}>
+                Goleadores
+              </Typography>
+              <PlayerRankingTable tournamentId={id} metric="goals" />
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ mb: 1.5 }}>
+                Asistencias
+              </Typography>
+              <PlayerRankingTable tournamentId={id} metric="assists" />
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ mb: 1.5 }}>
+                Amonestaciones
+              </Typography>
+              <PlayerRankingTable tournamentId={id} metric="cards" />
+            </Box>
+          </Stack>
         )}
       </Box>
 
@@ -477,6 +508,37 @@ export function TournamentDetailView() {
           </LoadingButton>
         </DialogActions>
       </Dialog>
+
+      {/* Discipline drawer (Sanciones) */}
+      <Drawer
+        anchor="right"
+        open={disciplineOpen}
+        onClose={() => setDisciplineOpen(false)}
+        PaperProps={{ sx: { width: { xs: '100%', sm: 520, md: 640 } } }}
+      >
+        <Box sx={{ p: 2.5, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack>
+              <Typography variant="h6">Sanciones</Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                Tarjetas por equipo, jugador y partido
+              </Typography>
+            </Stack>
+            <IconButton onClick={() => setDisciplineOpen(false)}>
+              <Iconify icon="eva:close-fill" width={20} />
+            </IconButton>
+          </Stack>
+        </Box>
+        <Box sx={{ p: 2 }}>
+          <TeamDisciplineTable
+            tournamentId={id}
+            onNavigateToMatch={(matchId) => {
+              setDisciplineOpen(false);
+              navigate(paths.dashboard.tournament.matchDetail(id, matchId));
+            }}
+          />
+        </Box>
+      </Drawer>
     </DashboardContent>
   );
 }

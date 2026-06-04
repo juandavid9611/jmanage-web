@@ -8,6 +8,12 @@ import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-r
 
 // ----------------------------------------------------------------------
 
+const OPS_LABELS = {
+  pendingProvider: 'Sin pedir a proveedor',
+  pendingDelivery: 'Sin entregar',
+  bothDone: 'Proveedor y entrega listos',
+};
+
 export function OrderTableFiltersResult({ filters, totalResults, onResetPage, sx }) {
   const handleRemoveKeyword = useCallback(() => {
     onResetPage();
@@ -17,6 +23,11 @@ export function OrderTableFiltersResult({ filters, totalResults, onResetPage, sx
   const handleRemoveStatus = useCallback(() => {
     onResetPage();
     filters.setState({ status: 'all' });
+  }, [filters, onResetPage]);
+
+  const handleRemoveOps = useCallback(() => {
+    onResetPage();
+    filters.setState({ ops: 'all' });
   }, [filters, onResetPage]);
 
   const handleRemoveDate = useCallback(() => {
@@ -37,6 +48,17 @@ export function OrderTableFiltersResult({ filters, totalResults, onResetPage, sx
           label={filters.state.status}
           onDelete={handleRemoveStatus}
           sx={{ textTransform: 'capitalize' }}
+        />
+      </FiltersBlock>
+
+      <FiltersBlock
+        label="Operación:"
+        isShow={Boolean(filters.state.ops) && filters.state.ops !== 'all'}
+      >
+        <Chip
+          {...chipProps}
+          label={OPS_LABELS[filters.state.ops] || filters.state.ops}
+          onDelete={handleRemoveOps}
         />
       </FiltersBlock>
 

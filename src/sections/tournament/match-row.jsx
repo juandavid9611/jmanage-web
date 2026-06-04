@@ -12,7 +12,7 @@ import IconButton from '@mui/material/IconButton';
 
 import { fDateTime } from 'src/utils/format-time';
 
-import { useGetMatch } from 'src/actions/tournament';
+import { useGetMatch, useGetPublicMatch } from 'src/actions/tournament';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -37,7 +37,7 @@ export const EVENT_CONFIG = {
 
 // ----------------------------------------------------------------------
 
-export function MatchRow({ match, teams, players, tournamentId, onClick, onScoreClick, expanded, onToggle }) {
+export function MatchRow({ match, teams, players, tournamentId, onClick, onScoreClick, expanded, onToggle, publicMode = false }) {
   const homeTeam = teams?.find((t) => t.id === match.home_team_id);
   const awayTeam = teams?.find((t) => t.id === match.away_team_id);
   const homeName = homeTeam?.short_name || homeTeam?.name || 'TBD';
@@ -162,7 +162,7 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
             variant="soft"
             sx={{ height: 22, fontSize: '0.65rem', fontWeight: 600 }}
           />
-          {isPending && onScoreClick && (
+          {isPending && onScoreClick && !publicMode && (
             <Button
               size="small"
               variant="contained"
@@ -207,6 +207,7 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
           homeName={homeName}
           awayName={awayName}
           players={players}
+          publicMode={publicMode}
         />
       </Collapse>
     </Box>
@@ -215,8 +216,11 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
 
 // ----------------------------------------------------------------------
 
-function MatchEventPanel({ matchId, tournamentId, homeTeamId, awayTeamId, homeName, awayName, players }) {
-  const { match, matchLoading } = useGetMatch(tournamentId, matchId);
+function MatchEventPanel({ matchId, tournamentId, homeTeamId, awayTeamId, homeName, awayName, players, publicMode = false }) {
+  const auth = useGetMatch(publicMode ? null : tournamentId, publicMode ? null : matchId);
+  const pub = useGetPublicMatch(publicMode ? tournamentId : null, publicMode ? matchId : null);
+  const match = publicMode ? pub.match : auth.match;
+  const matchLoading = publicMode ? pub.matchLoading : auth.matchLoading;
   const events = match?.events || [];
   const sorted = [...events].sort((a, b) => a.minute - b.minute);
 
@@ -376,7 +380,7 @@ export function EventBadge({ cfg, player, assist, align }) {
 
 // ----------------------------------------------------------------------
 
-export function MatchList({ matches, teams, players, tournamentId, onMatchClick, onScoreClick, grouped = true }) {
+export function MatchList({ matches, teams, players, tournamentId, onMatchClick, onScoreClick, grouped = true, publicMode = false }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const toggle = (id) => setExpandedId((prev) => (prev === id ? null : id));
@@ -395,6 +399,7 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
             onScoreClick={() => onScoreClick?.(match)}
             expanded={expandedId === match.id}
             onToggle={() => toggle(match.id)}
+            publicMode={publicMode}
           />
         ))}
         {matches.length === 0 && (
@@ -439,6 +444,7 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
               onScoreClick={() => onScoreClick?.(match)}
               expanded={expandedId === match.id}
               onToggle={() => toggle(match.id)}
+              publicMode={publicMode}
             />
           ))}
         </Stack>

@@ -1,6 +1,5 @@
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
 import Timeline from '@mui/lab/Timeline';
 import TimelineDot from '@mui/lab/TimelineDot';
 import CardHeader from '@mui/material/CardHeader';
@@ -11,6 +10,8 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
 
 import { fDateTime } from 'src/utils/format-time';
+
+import { Scrollbar } from 'src/components/scrollbar';
 
 // ----------------------------------------------------------------------
 
@@ -23,6 +24,10 @@ const EVENT_DOT_COLOR = {
   payment_canceled: 'default',
   payment_pending: 'grey',
   order_status_changed: 'secondary',
+  provider_check_on: 'success',
+  provider_check_off: 'warning',
+  delivery_check_on: 'success',
+  delivery_check_off: 'warning',
 };
 
 export function OrderDetailsHistory({ history }) {
@@ -31,7 +36,7 @@ export function OrderDetailsHistory({ history }) {
   return (
     <Card>
       <CardHeader title="Historial" />
-      <Stack spacing={3} sx={{ p: 3 }}>
+      <Scrollbar sx={{ maxHeight: 420, p: 3 }}>
         <Timeline
           sx={{ p: 0, m: 0, [`& .${timelineItemClasses.root}:before`]: { flex: 0, padding: 0 } }}
         >
@@ -55,7 +60,7 @@ export function OrderDetailsHistory({ history }) {
             );
           })}
         </Timeline>
-      </Stack>
+      </Scrollbar>
     </Card>
   );
 }
