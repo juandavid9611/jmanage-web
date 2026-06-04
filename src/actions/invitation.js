@@ -26,10 +26,16 @@ export function useGetPublicInvitation(token) {
   );
 }
 
-export async function acceptInvitation({ token, password }) {
-  const res = await axiosInstance.post(`${PUBLIC_INVITE_URL}/${token}/accept`, {
-    password,
-  });
+export async function acceptInvitation({ token, password, idToken }) {
+  // When the invitee already has a user (existing-account claim flow), pass their
+  // Cognito id_token explicitly so the public endpoint takes its authenticated branch
+  // instead of trying to create a duplicate Cognito user.
+  const config = idToken ? { headers: { Authorization: `Bearer ${idToken}` } } : undefined;
+  const res = await axiosInstance.post(
+    `${PUBLIC_INVITE_URL}/${token}/accept`,
+    { password },
+    config
+  );
   return res.data;
 }
 

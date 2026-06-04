@@ -1,6 +1,7 @@
 import { z as zod } from 'zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -105,8 +106,12 @@ function ExistingUserForm({ invitation, token }) {
   const onSubmit = handleSubmit(async (data) => {
     setErrorMsg('');
 
+    let idToken;
     try {
       await signInWithPassword({ username: data.email, password: data.password });
+      // Backend's accept() requires the `email` claim, which is only on the id_token.
+      const session = await fetchAuthSession();
+      idToken = session.tokens?.idToken?.toString();
     } catch (signInError) {
       console.error(signInError);
       setErrorMsg(signInError?.message || 'Credenciales inválidas. Verifica el correo y la contraseña.');
@@ -114,7 +119,7 @@ function ExistingUserForm({ invitation, token }) {
     }
 
     try {
-      const result = await acceptInvitation({ token });
+      const result = await acceptInvitation({ token, idToken });
       await checkUserSession?.();
       if (result?.accountId) {
         switchAccount?.(result.accountId);
