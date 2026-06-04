@@ -75,6 +75,7 @@ const TeamSchema = zod.object({
   // UI-only
   manager_name: zod.string().optional(),
   contact_email: zod.string().email().optional().or(zod.literal('')),
+  contact_phone: zod.string().optional(),
   primary_color: zod.string().optional(),
 });
 
@@ -99,9 +100,10 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
       short_name: currentTeam?.short_name || '',
       group_id: currentTeam?.group_id || '',
       seed: currentTeam?.seed || 1,
-      manager_name: '',
-      contact_email: '',
-      primary_color: COLOR_OPTIONS[0],
+      manager_name: currentTeam?.manager_name || '',
+      contact_email: currentTeam?.contact_email || '',
+      contact_phone: currentTeam?.contact_phone || '',
+      primary_color: currentTeam?.primary_color || COLOR_OPTIONS[0],
     },
     mode: 'onChange',
   });
@@ -148,6 +150,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
             seed: values.seed,
             manager_name: values.manager_name || undefined,
             contact_email: values.contact_email || undefined,
+            contact_phone: values.contact_phone || undefined,
             primary_color: values.primary_color || undefined,
           };
           const result = await createTeam(tournamentId, payload);
@@ -175,6 +178,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
             seed: values.seed,
             manager_name: values.manager_name || undefined,
             contact_email: values.contact_email || undefined,
+            contact_phone: values.contact_phone || undefined,
             primary_color: values.primary_color || undefined,
           };
           if (logoFile) {
@@ -477,9 +481,9 @@ function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChang
         </Stack>
       </Stack>
 
-      {/* Manager + Email */}
+      {/* Manager (row 1) + Email & Phone paired (row 2) */}
       <Grid container spacing={2.5} sx={{ mt: 2 }}>
-        <Grid xs={12} sm={6}>
+        <Grid xs={12}>
           <Field.Text
             name="manager_name"
             label="Director técnico / Manager"
@@ -499,6 +503,19 @@ function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChang
             InputProps={{
               startAdornment: (
                 <Iconify icon="mdi:email-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
+              ),
+            }}
+          />
+        </Grid>
+        <Grid xs={12} sm={6}>
+          <Field.Text
+            name="contact_phone"
+            label="Número de contacto"
+            placeholder="3001234567"
+            inputProps={{ autoComplete: 'tel', inputMode: 'tel' }}
+            InputProps={{
+              startAdornment: (
+                <Iconify icon="mdi:phone-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
               ),
             }}
           />

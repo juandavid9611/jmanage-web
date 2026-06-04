@@ -38,14 +38,6 @@ const ExistingUserSchema = zod.object({
 
 const NewUserSchema = zod
   .object({
-    name: zod
-      .string()
-      .min(1, { message: 'Tu nombre es requerido!' })
-      .min(2, { message: 'Tu nombre debe tener al menos 2 caracteres!' }),
-    phoneNumber: zod
-      .string()
-      .min(1, { message: 'Número de contacto es requerido!' })
-      .min(7, { message: 'El número de contacto debe tener al menos 7 dígitos!' }),
     email: zod
       .string()
       .min(1, { message: 'Correo requerido!' })
@@ -212,8 +204,6 @@ function NewUserForm({ invitation, token }) {
   const methods = useForm({
     resolver: zodResolver(NewUserSchema),
     defaultValues: {
-      name: '',
-      phoneNumber: '',
       email: invitation.email ?? '',
       password: '',
       confirmPassword: '',
@@ -232,8 +222,6 @@ function NewUserForm({ invitation, token }) {
       await acceptInvitation({
         token,
         password: data.password,
-        name: data.name,
-        phoneNumber: data.phoneNumber,
       });
     } catch (acceptError) {
       console.error(acceptError);
@@ -275,22 +263,6 @@ function NewUserForm({ invitation, token }) {
 
       <Form methods={methods} onSubmit={onSubmit}>
         <Stack spacing={3}>
-          <Field.Text
-            name="name"
-            label="Tu nombre"
-            placeholder="Cómo te van a ver en el torneo"
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ autoComplete: 'name' }}
-          />
-
-          <Field.Text
-            name="phoneNumber"
-            label="Número de contacto"
-            placeholder="3001234567"
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ autoComplete: 'tel', inputMode: 'tel' }}
-          />
-
           <Field.Text
             name="email"
             label="Correo"

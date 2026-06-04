@@ -49,12 +49,18 @@ const SPORT_ICONS = {
  * Each phase has: key, label, sub, state (done | active | locked).
  * The `key` is used for navigation — it maps to what content to show.
  */
-export function getPhases(tournament, teams, totalMatchweeks) {
+export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
   const { status, type } = tournament;
   const teamCount = teams?.length || 0;
   const totalTeams = tournament.num_teams || teamCount;
   const totalMw = totalMatchweeks ?? tournament.rules?.total_matchweeks ?? 0;
   const currentMw = tournament.current_matchweek || 0;
+
+  // For a team owner, the Inscripción tab reflects their own roster progress
+  // instead of the tournament-wide team count.
+  const inscripcionSub = myRoster
+    ? `${myRoster.count}/${myRoster.max}`
+    : `${teamCount}/${totalTeams}`;
 
   const phases = [];
 
@@ -71,14 +77,14 @@ export function getPhases(tournament, teams, totalMatchweeks) {
     phases.push({
       key: 'inscripcion',
       label: 'Inscripción',
-      sub: `${teamCount}/${totalTeams}`,
-      state: teamCount > 0 ? 'active' : 'locked',
+      sub: inscripcionSub,
+      state: (myRoster ? myRoster.count : teamCount) > 0 ? 'active' : 'locked',
     });
   } else {
     phases.push({
       key: 'inscripcion',
       label: 'Inscripción',
-      sub: `${teamCount}/${totalTeams}`,
+      sub: inscripcionSub,
       state: 'done',
     });
   }
@@ -148,6 +154,7 @@ export function TournamentBanner({
   onAdvanceMatchweek,
   onNavigateEdit,
   publicMode = false,
+  myRoster,
 }) {
   const theme = useTheme();
 
@@ -159,7 +166,7 @@ export function TournamentBanner({
   const isLeague = tournament.type === 'league';
   const isHybrid = tournament.type === 'hybrid';
 
-  const phases = getPhases(tournament, teams, totalMw);
+  const phases = getPhases(tournament, teams, totalMw, myRoster);
 
   const allGroupMatchesFinished =
     !allMatches ||
@@ -186,20 +193,22 @@ export function TournamentBanner({
         >
           {/* Left */}
           <Stack direction="row" alignItems="flex-start" spacing={2}>
-            {tournament.logo_url && (
-              <Avatar
-                src={tournament.logo_url}
-                variant="rounded"
-                sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 2,
-                  flexShrink: 0,
-                  border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
-                  mt: 0.5,
-                }}
-              />
-            )}
+            <Avatar
+              src={tournament.logo_url || undefined}
+              variant="rounded"
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: 2,
+                flexShrink: 0,
+                border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                color: 'primary.main',
+                mt: 0.5,
+              }}
+            >
+              <Iconify icon="mdi:trophy-outline" width={32} />
+            </Avatar>
             <Box>
               <Typography
                 variant="overline"

@@ -74,6 +74,8 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
   const { teams } = useGetTeams(tournamentId);
   const { matches: allMatches, matchesLoading } = useGetMatches(tournamentId);
   const { bracket, bracketLoading } = useGetBracket(tournamentId);
+  const { players: myPlayers } = useGetPlayers(tournamentId, highlightTeamId);
+  const myRoster = highlightTeamId ? { count: myPlayers?.length || 0, max: 24 } : undefined;
 
   const currentMw = tournament?.current_matchweek || 1;
   const totalMw =
@@ -116,6 +118,7 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
         allMatches={allMatches}
         onPhaseClick={(p) => setActivePhase(p)}
         publicMode
+        myRoster={myRoster}
       />
 
       {/* Phase content */}
@@ -688,6 +691,7 @@ function RichTeamCard({ entry, onEnter }) {
   const rosterDone = playerCount > 0;
 
   const otherTeams = (tournamentTeams || []).filter((t) => t.id !== entry.tournament_team_id);
+  const myTeam = (tournamentTeams || []).find((t) => t.id === entry.tournament_team_id);
 
   return (
     <Card>
@@ -699,18 +703,33 @@ function RichTeamCard({ entry, onEnter }) {
           spacing={2}
         >
           <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
-            <Avatar
-              variant="rounded"
-              sx={{
-                width: 56,
-                height: 56,
-                bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
-                color: 'primary.main',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon="mdi:shield-half-full" width={32} />
-            </Avatar>
+            <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+              <Avatar
+                variant="rounded"
+                src={myTeam?.logo_url || undefined}
+                sx={{
+                  width: 56,
+                  height: 56,
+                  bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                  color: 'primary.main',
+                }}
+              >
+                <Iconify icon="mdi:shield-half-full" width={32} />
+              </Avatar>
+              <Avatar
+                variant="rounded"
+                src={tournament?.logo_url || undefined}
+                sx={{
+                  width: 56,
+                  height: 56,
+                  bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                  color: 'primary.main',
+                  border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                }}
+              >
+                <Iconify icon="mdi:trophy-outline" width={28} />
+              </Avatar>
+            </Stack>
 
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
