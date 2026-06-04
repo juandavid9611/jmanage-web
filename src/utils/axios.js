@@ -59,6 +59,7 @@ export const endpoints = {
   files: '/files',
   tours: '/tours',
   workspaces: '/workspaces',
+  memberships: '/memberships',
   products: '/products',
   orders: '/orders',
   tournaments: '/tournaments',

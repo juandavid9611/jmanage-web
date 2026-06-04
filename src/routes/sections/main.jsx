@@ -11,6 +11,10 @@ const Page404 = lazy(() => import('src/pages/error/404'));
 // Public tournament pages
 const PublicTournamentListPage = lazy(() => import('src/pages/tournament/public-list'));
 const PublicTournamentDetailPage = lazy(() => import('src/pages/tournament/public-detail'));
+const PublicMatchDetailPage = lazy(() => import('src/pages/tournament/public-match-detail'));
+
+// Invitation
+const InvitationAcceptPage = lazy(() => import('src/pages/invitation/accept'));
 
 // ----------------------------------------------------------------------
 
@@ -28,8 +32,10 @@ export const mainRoutes = [
         children: [
           { index: true, element: <PublicTournamentListPage /> },
           { path: ':id', element: <PublicTournamentDetailPage /> },
+          { path: ':id/matches/:matchId', element: <PublicMatchDetailPage /> },
         ],
       },
+      { path: 'invite/:token', element: <InvitationAcceptPage /> },
     ],
   },
 ];

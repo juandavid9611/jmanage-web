@@ -21,17 +21,27 @@ import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { UserQuickEditForm } from './user-quick-edit-form';
+import { UserMembershipsDialog } from './user-memberships-dialog';
+
+const ROLE_COLORS = {
+  admin: 'info',
+  user: 'default',
+  team_owner: 'warning',
+  coach: 'success',
+};
 
 // ----------------------------------------------------------------------
 
 export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
   const confirm = useBoolean();
-
   const popover = usePopover();
-
   const quickEdit = useBoolean();
+  const membershipsDialog = useBoolean();
 
   const { t } = useTranslation();
+
+  const role = row.role || 'user';
+
   return (
     <>
       <TableRow hover selected={selected} aria-checked={selected} tabIndex={-1}>
@@ -61,6 +71,12 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.shirtNumber)}</TableCell>
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.eps}</TableCell>
+
+        <TableCell>
+          <Label variant="soft" color={ROLE_COLORS[role] || 'default'}>
+            {t(role)}
+          </Label>
+        </TableCell>
 
         <TableCell>
           <Label
@@ -96,6 +112,12 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
       <UserQuickEditForm currentUser={row} open={quickEdit.value} onClose={quickEdit.onFalse} />
 
+      <UserMembershipsDialog
+        user={row}
+        open={membershipsDialog.value}
+        onClose={membershipsDialog.onFalse}
+      />
+
       <CustomPopover
         open={popover.open}
         anchorEl={popover.anchorEl}
@@ -105,13 +127,12 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         <MenuList>
           <MenuItem
             onClick={() => {
-              confirm.onTrue();
+              membershipsDialog.onTrue();
               popover.onClose();
             }}
-            sx={{ color: 'error.main' }}
           >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            {t('delete')}
+            <Iconify icon="solar:users-group-rounded-bold" />
+            {t('manage_memberships')}
           </MenuItem>
 
           <MenuItem
@@ -122,6 +143,17 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
           >
             <Iconify icon="solar:pen-bold" />
             {t('edit')}
+          </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              confirm.onTrue();
+              popover.onClose();
+            }}
+            sx={{ color: 'error.main' }}
+          >
+            <Iconify icon="solar:trash-bin-trash-bold" />
+            {t('delete')}
           </MenuItem>
         </MenuList>
       </CustomPopover>

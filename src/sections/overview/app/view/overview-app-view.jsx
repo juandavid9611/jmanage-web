@@ -42,7 +42,7 @@ export function OverviewAppView() {
   const router = useRouter();
 
   const { user } = useAuthContext();
-  const { selectedWorkspace, changeWorkspaceMembership, allWorkspaces } = useWorkspace();
+  const { selectedWorkspace, selectWorkspace, allWorkspaces } = useWorkspace();
 
   const { paymentRequests } = useGetPaymentRequestsByUser(user.id);
   const { stadistics } = useGetUserAssistsStats(selectedWorkspace) || [];
@@ -170,7 +170,7 @@ export function OverviewAppView() {
     // When leaving the workspace step (step 0), commit the pending workspace change
     if (index === 0 && action === 'next' && lifecycle === 'complete' && pendingWorkspace) {
       if (pendingWorkspace.id !== selectedWorkspace?.id) {
-        changeWorkspaceMembership(pendingWorkspace);
+        selectWorkspace(pendingWorkspace);
       }
     }
     

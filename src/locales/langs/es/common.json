@@ -181,5 +181,16 @@
   "active": "Activo",
   "inactive": "Inactivo",
   "disabled": "Deshabilitado",
-  "shirt_number": "Número en la camiseta"
+  "shirt_number": "Número en la camiseta",
+  "memberships": "Categorías y roles",
+  "memberships_subtitle": "Gestiona en qué categorías participa este usuario y su rol en cada una",
+  "manage_memberships": "Gestionar categorías",
+  "no_workspaces": "No hay categorías disponibles",
+  "membership_added": "Categoría asignada",
+  "membership_removed": "Categoría removida",
+  "role_updated": "Rol actualizado",
+  "something_went_wrong": "Algo salió mal",
+  "close": "Cerrar",
+  "team_owner": "Dueño de equipo",
+  "coach": "Entrenador"
 }

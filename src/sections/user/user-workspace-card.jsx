@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -16,14 +18,22 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { usePopover } from 'src/components/custom-popover';
 
+const ROLE_COLORS = {
+  admin: 'info',
+  user: 'default',
+  team_owner: 'warning',
+  coach: 'success',
+};
+
 // ----------------------------------------------------------------------
 
 export function UserWorkspaceCard() {
-  const { selectedWorkspace, changeWorkspaceMembership, allWorkspaces } = useWorkspace();
+  const { t } = useTranslation();
+  const { selectedWorkspace, selectWorkspace, workspaces } = useWorkspace();
   const popover = usePopover();
 
   const handleSelect = (workspace) => {
-    changeWorkspaceMembership(workspace);
+    selectWorkspace(workspace);
     popover.onClose();
   };
 
@@ -64,8 +74,8 @@ export function UserWorkspaceCard() {
               <Typography variant="subtitle1">{selectedWorkspace.name}</Typography>
             </Box>
             {selectedWorkspace.role && (
-              <Label color={selectedWorkspace.role === 'admin' ? 'info' : 'default'}>
-                {selectedWorkspace.role}
+              <Label color={ROLE_COLORS[selectedWorkspace.role] || 'default'}>
+                {t(selectedWorkspace.role)}
               </Label>
             )}
             <Iconify icon="eva:chevron-down-fill" width={20} sx={{ color: 'text.secondary' }} />
@@ -85,7 +95,7 @@ export function UserWorkspaceCard() {
           }}
         >
           <MenuList>
-            {allWorkspaces.map((ws) => (
+            {workspaces.map((ws) => (
               <MenuItem
                 key={ws.id}
                 selected={ws.id === selectedWorkspace?.id}
@@ -93,7 +103,10 @@ export function UserWorkspaceCard() {
               >
                 <Stack direction="row" alignItems="center" spacing={1.5} sx={{ width: '100%' }}>
                   <Avatar src={ws.logo} alt={ws.name} sx={{ width: 32, height: 32 }} />
-                  <Box sx={{ flexGrow: 1 }}>{ws.name}</Box>
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>{ws.name}</Box>
+                  {ws.role && (
+                    <Label color={ROLE_COLORS[ws.role] || 'default'}>{t(ws.role)}</Label>
+                  )}
                 </Stack>
               </MenuItem>
             ))}

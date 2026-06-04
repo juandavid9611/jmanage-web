@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
@@ -12,10 +13,18 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
+const ROLE_COLORS = {
+  admin: 'info',
+  user: 'default',
+  team_owner: 'warning',
+  coach: 'success',
+};
+
 // ----------------------------------------------------------------------
 
 export function WorkspacesPopover({ data = [], sx, ...other }) {
   const popover = usePopover();
+  const { t } = useTranslation();
 
   const mediaQuery = 'sm';
 
@@ -28,6 +37,8 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
     },
     [popover, setSelectedWorkspace]
   );
+
+  if (!selectedWorkspace) return null;
 
   return (
     <>
@@ -59,13 +70,13 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
         </Box>
 
         <Label
-          color={selectedWorkspace?.plan === 'Free' ? 'default' : 'info'}
+          color={ROLE_COLORS[selectedWorkspace?.role] || 'default'}
           sx={{
             height: 22,
             display: { xs: 'none', [mediaQuery]: 'inline-flex' },
           }}
         >
-          {selectedWorkspace?.role}
+          {selectedWorkspace?.role ? t(selectedWorkspace.role) : ''}
         </Label>
 
         <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
@@ -91,7 +102,9 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
                 {option.name}
               </Box>
 
-              <Label color={option.role === 'admin' ? 'info' : 'default'}>{option.role}</Label>
+              <Label color={ROLE_COLORS[option.role] || 'default'}>
+                {option.role ? t(option.role) : ''}
+              </Label>
             </MenuItem>
           ))}
         </MenuList>
