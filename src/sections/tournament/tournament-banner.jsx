@@ -49,19 +49,25 @@ const SPORT_ICONS = {
  * Each phase has: key, label, sub, state (done | active | locked).
  * The `key` is used for navigation — it maps to what content to show.
  */
-export function getPhases(tournament, teams, totalMatchweeks) {
+export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
   const { status, type } = tournament;
   const teamCount = teams?.length || 0;
   const totalTeams = tournament.num_teams || teamCount;
   const totalMw = totalMatchweeks ?? tournament.rules?.total_matchweeks ?? 0;
   const currentMw = tournament.current_matchweek || 0;
 
+  // For a team owner, the Inscripción tab reflects their own roster progress
+  // instead of the tournament-wide team count.
+  const inscripcionSub = myRoster
+    ? `${myRoster.count}/${myRoster.max}`
+    : `${teamCount}/${totalTeams}`;
+
   const phases = [];
 
   // Configuración — maps to overview/stats
   phases.push({
     key: 'configuracion',
-    label: 'Configuración',
+    label: 'Resumen',
     sub: status === 'draft' ? 'En progreso' : 'Completo',
     state: status === 'draft' ? 'active' : 'done',
   });
@@ -71,14 +77,14 @@ export function getPhases(tournament, teams, totalMatchweeks) {
     phases.push({
       key: 'inscripcion',
       label: 'Inscripción',
-      sub: `${teamCount}/${totalTeams}`,
-      state: teamCount > 0 ? 'active' : 'locked',
+      sub: inscripcionSub,
+      state: (myRoster ? myRoster.count : teamCount) > 0 ? 'active' : 'locked',
     });
   } else {
     phases.push({
       key: 'inscripcion',
       label: 'Inscripción',
-      sub: `${teamCount}/${totalTeams}`,
+      sub: inscripcionSub,
       state: 'done',
     });
   }
@@ -120,6 +126,14 @@ export function getPhases(tournament, teams, totalMatchweeks) {
     }
   }
 
+  // Estadísticas — always available; rankings of players by goals, assists, cards
+  phases.push({
+    key: 'estadisticas',
+    label: 'Estadísticas',
+    sub: 'Rankings',
+    state: 'active',
+  });
+
   return phases;
 }
 
@@ -136,8 +150,11 @@ export function TournamentBanner({
   onActivate,
   onFinish,
   onDelete,
+  onOpenDiscipline,
   onAdvanceMatchweek,
   onNavigateEdit,
+  publicMode = false,
+  myRoster,
 }) {
   const theme = useTheme();
 
@@ -149,7 +166,7 @@ export function TournamentBanner({
   const isLeague = tournament.type === 'league';
   const isHybrid = tournament.type === 'hybrid';
 
-  const phases = getPhases(tournament, teams, totalMw);
+  const phases = getPhases(tournament, teams, totalMw, myRoster);
 
   const allGroupMatchesFinished =
     !allMatches ||
@@ -176,47 +193,53 @@ export function TournamentBanner({
         >
           {/* Left */}
           <Stack direction="row" alignItems="flex-start" spacing={2}>
-            {tournament.logo_url && (
-              <Avatar
-                src={tournament.logo_url}
-                variant="rounded"
-                sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 2,
-                  flexShrink: 0,
-                  border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
-                  mt: 0.5,
-                }}
-              />
-            )}
+            <Avatar
+              src={tournament.logo_url || undefined}
+              variant="rounded"
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: 2,
+                flexShrink: 0,
+                border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                color: 'primary.main',
+                mt: 0.5,
+              }}
+            >
+              <Iconify icon="mdi:trophy-outline" width={32} />
+            </Avatar>
             <Box>
               <Typography
                 variant="overline"
                 sx={{ color: 'text.disabled', letterSpacing: 2, mb: 0.5, display: 'block' }}
               >
-                Torneo {STATUS_LABEL[tournament.status]?.toLowerCase() || ''}
+                {publicMode && tournament.status === 'draft'
+                  ? 'Torneo'
+                  : `Torneo ${STATUS_LABEL[tournament.status]?.toLowerCase() || ''}`}
               </Typography>
 
               <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 0.75 }}>
                 <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: -0.5 }}>
                   {tournament.name}
                 </Typography>
-                <Chip
-                  label={STATUS_LABEL[tournament.status] || tournament.status}
-                  color={STATUS_COLOR[tournament.status] || 'default'}
-                  size="small"
-                  sx={{
-                    fontWeight: 600,
-                    ...(tournament.status === 'active' && {
-                      animation: 'pulse 2s ease-in-out infinite',
-                      '@keyframes pulse': {
-                        '0%, 100%': { opacity: 1 },
-                        '50%': { opacity: 0.7 },
-                      },
-                    }),
-                  }}
-                />
+                {!(publicMode && tournament.status === 'draft') && (
+                  <Chip
+                    label={STATUS_LABEL[tournament.status] || tournament.status}
+                    color={STATUS_COLOR[tournament.status] || 'default'}
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      ...(tournament.status === 'active' && {
+                        animation: 'pulse 2s ease-in-out infinite',
+                        '@keyframes pulse': {
+                          '0%, 100%': { opacity: 1 },
+                          '50%': { opacity: 0.7 },
+                        },
+                      }),
+                    }}
+                  />
+                )}
               </Stack>
 
               <Stack direction="row" spacing={1.75} sx={{ color: 'text.secondary' }}>
@@ -272,7 +295,8 @@ export function TournamentBanner({
               </Stack>
             )}
 
-            {/* Action Buttons */}
+            {/* Action Buttons (hidden in public/read-only mode) */}
+            {!publicMode && (
             <Stack direction="row" spacing={1} flexWrap="wrap">
               {tournament.status === 'draft' && (
                 <Tooltip
@@ -340,6 +364,17 @@ export function TournamentBanner({
                 </LoadingButton>
               )}
 
+              {onOpenDiscipline && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:card-multiple" width={16} />}
+                  onClick={onOpenDiscipline}
+                >
+                  Sanciones
+                </Button>
+              )}
+
               {tournament.status !== 'finished' && (
                 <Button
                   variant="outlined"
@@ -361,6 +396,7 @@ export function TournamentBanner({
                 Eliminar
               </Button>
             </Stack>
+            )}
           </Stack>
         </Stack>
       </Box>
@@ -379,47 +415,56 @@ export function TournamentBanner({
           },
         }}
       >
-        {phases.map((phase) => (
-          <Tab
-            key={phase.key}
-            value={phase.key}
-            label={
-              <Stack alignItems="center" spacing={0.25}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: activePhase === phase.key ? 700 : 500,
-                    color:
-                      activePhase === phase.key
-                        ? 'primary.main'
-                        : phase.state === 'done'
-                          ? 'success.main'
-                          : phase.state === 'active'
-                            ? 'text.primary'
-                            : 'text.disabled',
-                  }}
-                >
-                  {phase.label}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: activePhase === phase.key ? 'primary.main' : 'text.disabled',
-                    fontSize: '0.65rem',
-                  }}
-                >
-                  {phase.sub}
-                </Typography>
-              </Stack>
-            }
-            sx={{
-              minHeight: 56,
-              textTransform: 'none',
-              minWidth: 'auto',
-              px: 2,
-            }}
-          />
-        ))}
+        {phases.map((phase) => {
+          const isLockedForUser = publicMode && phase.state === 'locked';
+          return (
+            <Tab
+              key={phase.key}
+              value={phase.key}
+              disabled={isLockedForUser}
+              label={
+                <Stack alignItems="center" spacing={0.25}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: activePhase === phase.key ? 700 : 500,
+                      color:
+                        activePhase === phase.key
+                          ? 'primary.main'
+                          : phase.state === 'done'
+                            ? 'success.main'
+                            : phase.state === 'active'
+                              ? 'text.primary'
+                              : 'text.disabled',
+                    }}
+                  >
+                    {phase.label}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: activePhase === phase.key ? 'primary.main' : 'text.disabled',
+                      fontSize: '0.65rem',
+                    }}
+                  >
+                    {phase.sub}
+                  </Typography>
+                </Stack>
+              }
+              sx={{
+                minHeight: 56,
+                textTransform: 'none',
+                minWidth: 'auto',
+                px: 2,
+                ...(isLockedForUser && {
+                  cursor: 'not-allowed',
+                  pointerEvents: 'auto',
+                  '&.Mui-disabled': { opacity: 1 },
+                }),
+              }}
+            />
+          );
+        })}
       </Tabs>
     </Box>
   );

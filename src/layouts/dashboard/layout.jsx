@@ -23,6 +23,7 @@ import { NavHorizontal } from './nav-horizontal';
 import { _account } from '../config-nav-account';
 import { HeaderBase } from '../core/header-base';
 import { LayoutSection } from '../core/layout-section';
+import { teamOwnerNavData } from '../config-nav-team-owner';
 import { navData as dashboardNavData } from '../config-nav-dashboard';
 
 // ----------------------------------------------------------------------
@@ -38,17 +39,19 @@ export function DashboardLayout({ sx, children, data }) {
 
   const layoutQuery = 'lg';
 
-  const navData = data?.nav ?? dashboardNavData;
+  const { user } = useAuthContext();
+
+  const { workspaces } = useWorkspace();
+
+  const activeRole = user?.accountsRoles?.[user?.activeAccountId];
+  const defaultNavData = activeRole === 'team_owner' ? teamOwnerNavData : dashboardNavData;
+  const navData = data?.nav ?? defaultNavData;
 
   const isNavMini = settings.navLayout === 'mini';
 
   const isNavHorizontal = settings.navLayout === 'horizontal';
 
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
-
-  const { user } = useAuthContext();
-
-  const { workspaces } = useWorkspace();
 
   return (
     <>

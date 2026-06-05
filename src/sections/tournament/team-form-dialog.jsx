@@ -40,6 +40,7 @@ const TeamSchema = zod.object({
   // UI-only fields (not sent to API)
   manager_name: zod.string().optional(),
   contact_email: zod.string().email().optional().or(zod.literal('')),
+  contact_phone: zod.string().optional(),
   primary_color: zod.string().optional(),
 });
 
@@ -56,6 +57,7 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
     seed: 1,
     manager_name: '',
     contact_email: '',
+    contact_phone: '',
     primary_color: COLOR_OPTIONS[0],
   };
 
@@ -84,6 +86,7 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
         seed: currentTeam?.seed || 1,
         manager_name: currentTeam?.manager_name || '',
         contact_email: currentTeam?.contact_email || '',
+        contact_phone: currentTeam?.contact_phone || '',
         primary_color: currentTeam?.primary_color || COLOR_OPTIONS[0],
       });
       setLogoFile(null);
@@ -116,6 +119,7 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
         seed: data.seed,
         manager_name: data.manager_name,
         contact_email: data.contact_email,
+        contact_phone: data.contact_phone,
         primary_color: data.primary_color,
       };
 
@@ -264,7 +268,7 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
           {/* ── Section 2: Información ── */}
           <FormSection number="02" title="Información">
             <Grid container spacing={2.5}>
-              <Grid xs={12} sm={6}>
+              <Grid xs={12}>
                 <Field.Text
                   name="manager_name"
                   label="Director técnico / Manager"
@@ -284,6 +288,19 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
                   InputProps={{
                     startAdornment: (
                       <Iconify icon="mdi:email-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid xs={12} sm={6}>
+                <Field.Text
+                  name="contact_phone"
+                  label="Número de contacto"
+                  placeholder="3001234567"
+                  inputProps={{ autoComplete: 'tel', inputMode: 'tel' }}
+                  InputProps={{
+                    startAdornment: (
+                      <Iconify icon="mdi:phone-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
                     ),
                   }}
                 />

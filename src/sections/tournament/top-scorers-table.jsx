@@ -9,14 +9,16 @@ import TableHead from '@mui/material/TableHead';
 import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 
-import { useGetTopScorers } from 'src/actions/tournament';
+import { useGetTopScorers, useGetPublicTopScorers } from 'src/actions/tournament';
 
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function TopScorersTable({ tournamentId }) {
-  const { scorers, scorersLoading } = useGetTopScorers(tournamentId);
+export function TopScorersTable({ tournamentId, publicMode = false }) {
+  const auth = useGetTopScorers(publicMode ? null : tournamentId);
+  const pub = useGetPublicTopScorers(publicMode ? tournamentId : null);
+  const { scorers, scorersLoading } = publicMode ? pub : auth;
 
   return (
     <Card>

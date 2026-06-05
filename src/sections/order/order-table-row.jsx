@@ -98,6 +98,28 @@ export function OrderTableRow({ row, selected, onViewRow, onSelectRow, onDeleteR
         </Label>
       </TableCell>
 
+      <TableCell align="center">
+        <Iconify
+          icon={
+            row.providerCheck?.checked
+              ? 'eva:checkmark-circle-2-fill'
+              : 'eva:radio-button-off-outline'
+          }
+          sx={{ color: row.providerCheck?.checked ? 'success.main' : 'text.disabled' }}
+        />
+      </TableCell>
+
+      <TableCell align="center">
+        <Iconify
+          icon={
+            row.deliveryCheck?.checked
+              ? 'eva:checkmark-circle-2-fill'
+              : 'eva:radio-button-off-outline'
+          }
+          sx={{ color: row.deliveryCheck?.checked ? 'success.main' : 'text.disabled' }}
+        />
+      </TableCell>
+
       <TableCell align="right" sx={{ px: 1, whiteSpace: 'nowrap' }}>
         <IconButton
           color={collapse.value ? 'inherit' : 'default'}
@@ -116,7 +138,7 @@ export function OrderTableRow({ row, selected, onViewRow, onSelectRow, onDeleteR
 
   const renderSecondary = (
     <TableRow>
-      <TableCell sx={{ p: 0, border: 'none' }} colSpan={8}>
+      <TableCell sx={{ p: 0, border: 'none' }} colSpan={10}>
         <Collapse
           in={collapse.value}
           timeout="auto"

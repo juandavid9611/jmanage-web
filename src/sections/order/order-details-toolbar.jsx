@@ -1,5 +1,7 @@
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
+import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
@@ -15,6 +17,36 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
+function checkTooltip(check, fallback) {
+  if (!check?.checkedAt) return fallback;
+  const by = check.checkedBy ? ` · ${check.checkedBy}` : '';
+  return `${fDateTime(check.checkedAt)}${by}`;
+}
+
+function CheckButton({ icon, label, check, onToggle, fallbackTooltip }) {
+  const isOn = Boolean(check?.checked);
+  return (
+    <Tooltip title={checkTooltip(check, fallbackTooltip)} placement="top" arrow>
+      <Button
+        size="medium"
+        color={isOn ? 'success' : 'inherit'}
+        variant={isOn ? 'soft' : 'outlined'}
+        startIcon={<Iconify icon={icon} />}
+        endIcon={
+          <Iconify
+            icon={isOn ? 'eva:checkmark-circle-2-fill' : 'eva:radio-button-off-outline'}
+            sx={{ opacity: isOn ? 1 : 0.5 }}
+          />
+        }
+        onClick={() => onToggle?.(!isOn)}
+        aria-pressed={isOn}
+      >
+        {label}
+      </Button>
+    </Tooltip>
+  );
+}
+
 export function OrderDetailsToolbar({
   status,
   backLink,
@@ -22,6 +54,10 @@ export function OrderDetailsToolbar({
   orderNumber,
   statusOptions,
   onChangeStatus,
+  providerCheck,
+  deliveryCheck,
+  onToggleProviderCheck,
+  onToggleDeliveryCheck,
 }) {
   const popover = usePopover();
 
@@ -61,7 +97,26 @@ export function OrderDetailsToolbar({
           direction="row"
           alignItems="center"
           justifyContent="flex-end"
+          flexWrap="wrap"
         >
+          <CheckButton
+            icon="solar:bag-check-bold"
+            label="Pedido a proveedor"
+            check={providerCheck}
+            onToggle={onToggleProviderCheck}
+            fallbackTooltip="Marca cuando el pedido al proveedor esté hecho"
+          />
+
+          <CheckButton
+            icon="solar:delivery-bold"
+            label="Entregado"
+            check={deliveryCheck}
+            onToggle={onToggleDeliveryCheck}
+            fallbackTooltip="Marca cuando se haya entregado al cliente"
+          />
+
+          <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
+
           <Button
             color="inherit"
             variant="outlined"

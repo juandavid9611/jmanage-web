@@ -9,7 +9,12 @@ import { alpha } from '@mui/material/styles';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
-import { useGetGroups, useGetAllStandings } from 'src/actions/tournament';
+import {
+  useGetGroups,
+  useGetPublicGroups,
+  useGetAllStandings,
+  useGetPublicStandings,
+} from 'src/actions/tournament';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -32,9 +37,14 @@ const GRID_TEMPLATE = COLS.map((c) => c.fixed).join(' ');
 
 // ----------------------------------------------------------------------
 
-export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMatches, onViewAll, onNextAction, currentMatchweek, totalMatchweeks }) {
-  const { groups } = useGetGroups(tournamentId);
-  const { allStandings, allStandingsLoading } = useGetAllStandings(tournamentId);
+export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMatches, onViewAll, onNextAction, currentMatchweek, totalMatchweeks, publicMode = false }) {
+  const authGroups = useGetGroups(publicMode ? null : tournamentId);
+  const pubGroups = useGetPublicGroups(publicMode ? tournamentId : null);
+  const { groups } = publicMode ? pubGroups : authGroups;
+
+  const authStandings = useGetAllStandings(publicMode ? null : tournamentId);
+  const pubStandings = useGetPublicStandings(publicMode ? tournamentId : null);
+  const { allStandings, allStandingsLoading } = publicMode ? pubStandings : authStandings;
 
   const liveTeamIds = useMemo(() => {
     if (!allMatches) return new Set();

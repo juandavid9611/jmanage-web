@@ -7,9 +7,10 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
-import { updateOrder } from 'src/actions/order';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { updateOrder, setOrderDeliveryCheck, setOrderProviderCheck } from 'src/actions/order';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { SplashScreen } from 'src/components/loading-screen';
@@ -24,18 +25,54 @@ import { OrderDetailsHistory } from '../order-details-history';
 
 export function OrderDetailsView({ order, loading, error }) {
   const [status, setStatus] = useState(order?.status);
+  const [providerCheck, setProviderCheck] = useState(order?.providerCheck || null);
+  const [deliveryCheck, setDeliveryCheck] = useState(order?.deliveryCheck || null);
 
   const handleChangeStatus = useCallback(
     async (newValue) => {
+      const previous = status;
       try {
         setStatus(newValue);
         await updateOrder(order.id, { status: newValue });
       } catch (err) {
         console.error(err);
-        setStatus(order?.status);
+        setStatus(previous);
+        toast.error(err?.detail || 'No se pudo actualizar el estado');
       }
     },
-    [order?.id, order?.status]
+    [order?.id, status]
+  );
+
+  const handleToggleProviderCheck = useCallback(
+    async (checked) => {
+      const previous = providerCheck;
+      setProviderCheck({ checked, checkedAt: new Date().toISOString(), checkedBy: 'me' });
+      try {
+        const updated = await setOrderProviderCheck(order.id, checked);
+        setProviderCheck(updated.providerCheck || null);
+      } catch (err) {
+        console.error(err);
+        setProviderCheck(previous);
+        toast.error(err?.detail || 'No se pudo guardar el cambio');
+      }
+    },
+    [order?.id, providerCheck]
+  );
+
+  const handleToggleDeliveryCheck = useCallback(
+    async (checked) => {
+      const previous = deliveryCheck;
+      setDeliveryCheck({ checked, checkedAt: new Date().toISOString(), checkedBy: 'me' });
+      try {
+        const updated = await setOrderDeliveryCheck(order.id, checked);
+        setDeliveryCheck(updated.deliveryCheck || null);
+      } catch (err) {
+        console.error(err);
+        setDeliveryCheck(previous);
+        toast.error(err?.detail || 'No se pudo guardar el cambio');
+      }
+    },
+    [order?.id, deliveryCheck]
   );
 
   if (loading) {
@@ -73,6 +110,10 @@ export function OrderDetailsView({ order, loading, error }) {
         status={status}
         onChangeStatus={handleChangeStatus}
         statusOptions={ORDER_STATUS_OPTIONS}
+        providerCheck={providerCheck}
+        deliveryCheck={deliveryCheck}
+        onToggleProviderCheck={handleToggleProviderCheck}
+        onToggleDeliveryCheck={handleToggleDeliveryCheck}
       />
 
       <Grid container spacing={3}>

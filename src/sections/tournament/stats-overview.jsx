@@ -5,7 +5,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
 
-import { useGetStats } from 'src/actions/tournament';
+import { useGetStats, useGetPublicStats } from 'src/actions/tournament';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -24,8 +24,10 @@ const STAT_TILES = [
 
 // ----------------------------------------------------------------------
 
-export function StatsOverview({ tournamentId, tournament }) {
-  const { stats, statsLoading } = useGetStats(tournamentId);
+export function StatsOverview({ tournamentId, tournament, publicMode = false }) {
+  const auth = useGetStats(publicMode ? null : tournamentId);
+  const pub = useGetPublicStats(publicMode ? tournamentId : null);
+  const { stats, statsLoading } = publicMode ? pub : auth;
 
   const champion = stats?.champion || null;
 
