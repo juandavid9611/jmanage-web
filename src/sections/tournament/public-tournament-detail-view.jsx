@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -65,8 +65,7 @@ function getDefaultPhase(tournament, teams) {
 
 export function PublicTournamentDetailView({ id }) {
   const navigate = useNavigate();
-  const [activePhase, setActivePhase] = useState(null);
-  const [selectedMw, setSelectedMw] = useState(undefined);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [openTeamId, setOpenTeamId] = useState(null);
 
   const { tournament, tournamentLoading } = useGetPublicTournament(id);
@@ -75,6 +74,12 @@ export function PublicTournamentDetailView({ id }) {
   const { matches: allMatches, matchesLoading } = useGetPublicMatches(id);
   const { bracket, bracketLoading } = useGetPublicBracket(id);
 
+  // URL-synced phase/matchweek so each step is shareable.
+  // ?phase=<key> · ?mw=<n>|all (mw=all means "all matchweeks"; omitted means "current")
+  const phaseParam = searchParams.get('phase');
+  const mwParam = searchParams.get('mw');
+
+  const selectedMw = mwParam === 'all' ? null : mwParam !== null ? Number(mwParam) : undefined;
   const currentMw = tournament?.current_matchweek || 1;
   const totalMw =
     tournament?.rules?.total_matchweeks ||
@@ -87,7 +92,39 @@ export function PublicTournamentDetailView({ id }) {
   );
 
   const currentPhase =
-    activePhase || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
+    phaseParam || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
+
+  const setActivePhase = useCallback(
+    (phase) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('phase', phase);
+          // Reset matchweek when switching phases — it only makes sense within fase_grupos.
+          next.delete('mw');
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
+
+  const setSelectedMw = useCallback(
+    (mw) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (mw === null) next.set('mw', 'all');
+          else if (mw === undefined) next.delete('mw');
+          else next.set('mw', String(mw));
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
 
   const isLeague = tournament?.type === 'league';
   const isHybrid = tournament?.type === 'hybrid';
