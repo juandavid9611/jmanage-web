@@ -356,6 +356,7 @@ const POSITION_LABEL = {
   Midfielder: 'Centrocampista',
   Forward: 'Delantero',
 };
+const POSITION_ORDER = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 const POSITION_COLOR = {
   Goalkeeper: 'warning',
   Defender: 'info',
@@ -553,15 +554,60 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
       ) : !players?.length ? (
         <EmptyContent title="Sin jugadores registrados" sx={{ py: 4 }} />
       ) : (
-        <Box
-          display="grid"
-          gap={1}
-          gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
-        >
-          {players.map((p) => (
-            <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
-          ))}
-        </Box>
+        <Stack spacing={3}>
+          {POSITION_ORDER.map((position) => {
+            const group = players.filter((p) => p.position === position);
+            if (group.length === 0) return null;
+            return (
+              <Box key={position}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    {POSITION_LABEL[position]}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {group.length}
+                  </Typography>
+                  <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.12) }} />
+                </Stack>
+                <Box
+                  display="grid"
+                  gap={1}
+                  gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
+                >
+                  {group.map((p) => (
+                    <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
+                  ))}
+                </Box>
+              </Box>
+            );
+          })}
+          {(() => {
+            const other = players.filter((p) => !POSITION_ORDER.includes(p.position));
+            if (other.length === 0) return null;
+            return (
+              <Box>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Sin posición
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {other.length}
+                  </Typography>
+                  <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.12) }} />
+                </Stack>
+                <Box
+                  display="grid"
+                  gap={1}
+                  gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
+                >
+                  {other.map((p) => (
+                    <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
+                  ))}
+                </Box>
+              </Box>
+            );
+          })()}
+        </Stack>
       )}
 
       {/* Add player dialog */}
