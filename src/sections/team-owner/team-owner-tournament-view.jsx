@@ -75,7 +75,7 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
   const { matches: allMatches, matchesLoading } = useGetMatches(tournamentId);
   const { bracket, bracketLoading } = useGetBracket(tournamentId);
   const { players: myPlayers } = useGetPlayers(tournamentId, highlightTeamId);
-  const myRoster = highlightTeamId ? { count: myPlayers?.length || 0, max: 24 } : undefined;
+  const myRoster = highlightTeamId ? { count: myPlayers?.length || 0, max: 30 } : undefined;
 
   const currentMw = tournament?.current_matchweek || 1;
   const totalMw =
@@ -348,9 +348,6 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
 }
 
 // ----------------------------------------------------------------------
-
-// Welcome to Samba kickoff — Saturday 2026-06-06 18:00 local. Static for now.
-const SAMBA_KICKOFF = new Date('2026-06-06T18:00:00');
 
 const POSITION_LABEL = {
   Goalkeeper: 'Portero',
@@ -798,7 +795,9 @@ function RichTeamCard({ entry, onEnter }) {
         </Stack>
       </CardContent>
 
-      <TournamentCountdown targetDate={SAMBA_KICKOFF} />
+      {startDate && new Date(startDate) > new Date() && (
+        <TournamentCountdown targetDate={new Date(startDate)} />
+      )}
 
       <Divider />
 

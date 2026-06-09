@@ -73,12 +73,21 @@ export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
   });
 
   // Inscripción — maps to teams + scorers
-  if (status === 'draft') {
+  if (myRoster) {
+    // Team-owner view: tab is actionable as long as their roster isn't full,
+    // independent of tournament status (owners can still add players after kickoff).
     phases.push({
       key: 'inscripcion',
       label: 'Inscripción',
       sub: inscripcionSub,
-      state: (myRoster ? myRoster.count : teamCount) > 0 ? 'active' : 'locked',
+      state: myRoster.count >= myRoster.max ? 'done' : 'active',
+    });
+  } else if (status === 'draft') {
+    phases.push({
+      key: 'inscripcion',
+      label: 'Inscripción',
+      sub: inscripcionSub,
+      state: teamCount > 0 ? 'active' : 'locked',
     });
   } else {
     phases.push({
