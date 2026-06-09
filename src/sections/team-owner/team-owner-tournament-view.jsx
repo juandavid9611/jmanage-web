@@ -101,7 +101,7 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
   }
 
   return (
-    <DashboardContent maxWidth={false} disablePadding>
+    <DashboardContent maxWidth={false} sx={{ p: { xs: 0, md: 0 } }}>
       {/* Team strip */}
       <TeamStrip
         tournament={tournament}
