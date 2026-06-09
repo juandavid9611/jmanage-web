@@ -70,6 +70,7 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
 
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoError, setPhotoError] = useState(false);
 
   const defaultValues = {
     name: '',
@@ -102,6 +103,7 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
       });
       setPhotoFile(null);
       setPhotoPreview(currentPlayer?.avatar_url || null);
+      setPhotoError(false);
     }
   }, [open, currentPlayer, reset]);
 
@@ -110,6 +112,7 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
     if (!file) return;
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
+    setPhotoError(false);
     e.target.value = '';
   };
 
@@ -119,6 +122,10 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
   };
 
   const onSubmit = handleSubmit(async (data) => {
+    if (!photoPreview) {
+      setPhotoError(true);
+      return;
+    }
     try {
       const payload = {
         ...data,
@@ -193,7 +200,10 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
                     fontWeight: 700,
                     bgcolor: 'primary.main',
                     cursor: 'pointer',
-                    border: (t) => `2px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                    border: (t) =>
+                      photoError
+                        ? `2px solid ${t.palette.error.main}`
+                        : `2px solid ${alpha(t.palette.grey[500], 0.16)}`,
                     '&:hover': { opacity: 0.8 },
                     transition: 'opacity 0.2s',
                   }}
@@ -256,8 +266,17 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
             {/* Name field */}
             <Box sx={{ flex: 1 }}>
               <Field.Text name="name" label="Nombre completo" required />
-              <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, display: 'block' }}>
-                Haz clic en el avatar para subir una foto
+              <Typography
+                variant="caption"
+                sx={{
+                  color: photoError ? 'error.main' : 'text.disabled',
+                  mt: 0.5,
+                  display: 'block',
+                }}
+              >
+                {photoError
+                  ? 'La foto es obligatoria — haz clic en el avatar'
+                  : 'Haz clic en el avatar para subir una foto (obligatoria)'}
               </Typography>
             </Box>
           </Box>
