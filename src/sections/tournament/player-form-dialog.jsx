@@ -39,13 +39,17 @@ const POSITION_OPTIONS = [
 const PlayerSchema = zod.object({
   name: zod.string().min(1, 'El nombre es obligatorio'),
   number: zod.coerce
-    .number()
+    .number({ invalid_type_error: 'El número de camiseta es obligatorio' })
     .int('Debe ser un número entero')
-    .min(1, 'Debe ser mayor a 0')
-    .optional()
-    .or(zod.literal('')),
-  position: zod.string().optional(),
-  id_number: zod.string().optional(),
+    .min(1, 'Debe ser mayor a 0'),
+  position: zod
+    .string()
+    .min(1, 'La posición es obligatoria')
+    .refine(
+      (v) => ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].includes(v),
+      { message: 'Selecciona una posición válida' }
+    ),
+  id_number: zod.string().min(1, 'El número de identificación es obligatorio'),
 });
 
 // ----------------------------------------------------------------------
@@ -265,18 +269,19 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
               label="Nº de identificación"
               placeholder="Ej. 1234567890"
               helperText="Cédula o documento"
+              required
             />
             <Field.Text
               name="number"
               label="Número de camiseta"
               type="number"
               helperText="Dorsal del jugador"
+              required
             />
           </Box>
 
           {/* Position */}
-          <Field.Select name="position" label="Posición">
-            <MenuItem value="">Sin posición</MenuItem>
+          <Field.Select name="position" label="Posición" required>
             {POSITION_OPTIONS.map((opt) => (
               <MenuItem key={opt.value} value={opt.value}>
                 {opt.label}
