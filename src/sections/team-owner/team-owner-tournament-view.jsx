@@ -15,6 +15,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import CardContent from '@mui/material/CardContent';
+import LinearProgress from '@mui/material/LinearProgress';
 
 import { useCountdownDate } from 'src/hooks/use-countdown';
 
@@ -75,7 +76,7 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
   const { matches: allMatches, matchesLoading } = useGetMatches(tournamentId);
   const { bracket, bracketLoading } = useGetBracket(tournamentId);
   const { players: myPlayers } = useGetPlayers(tournamentId, highlightTeamId);
-  const myRoster = highlightTeamId ? { count: myPlayers?.length || 0, max: 24 } : undefined;
+  const myRoster = highlightTeamId ? { count: myPlayers?.length || 0, max: 30 } : undefined;
 
   const currentMw = tournament?.current_matchweek || 1;
   const totalMw =
@@ -100,7 +101,7 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
   }
 
   return (
-    <DashboardContent maxWidth={false} disablePadding>
+    <DashboardContent maxWidth={false} sx={{ p: { xs: 0, md: 0 } }}>
       {/* Team strip */}
       <TeamStrip
         tournament={tournament}
@@ -349,15 +350,13 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
 
 // ----------------------------------------------------------------------
 
-// Welcome to Samba kickoff — Saturday 2026-06-06 18:00 local. Static for now.
-const SAMBA_KICKOFF = new Date('2026-06-06T18:00:00');
-
 const POSITION_LABEL = {
   Goalkeeper: 'Portero',
   Defender: 'Defensa',
   Midfielder: 'Centrocampista',
   Forward: 'Delantero',
 };
+const POSITION_ORDER = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 const POSITION_COLOR = {
   Goalkeeper: 'warning',
   Defender: 'info',
@@ -555,15 +554,60 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
       ) : !players?.length ? (
         <EmptyContent title="Sin jugadores registrados" sx={{ py: 4 }} />
       ) : (
-        <Box
-          display="grid"
-          gap={1}
-          gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
-        >
-          {players.map((p) => (
-            <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
-          ))}
-        </Box>
+        <Stack spacing={3}>
+          {POSITION_ORDER.map((position) => {
+            const group = players.filter((p) => p.position === position);
+            if (group.length === 0) return null;
+            return (
+              <Box key={position}>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    {POSITION_LABEL[position]}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {group.length}
+                  </Typography>
+                  <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.12) }} />
+                </Stack>
+                <Box
+                  display="grid"
+                  gap={1}
+                  gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
+                >
+                  {group.map((p) => (
+                    <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
+                  ))}
+                </Box>
+              </Box>
+            );
+          })}
+          {(() => {
+            const other = players.filter((p) => !POSITION_ORDER.includes(p.position));
+            if (other.length === 0) return null;
+            return (
+              <Box>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Sin posición
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {other.length}
+                  </Typography>
+                  <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.12) }} />
+                </Stack>
+                <Box
+                  display="grid"
+                  gap={1}
+                  gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
+                >
+                  {other.map((p) => (
+                    <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
+                  ))}
+                </Box>
+              </Box>
+            );
+          })()}
+        </Stack>
       )}
 
       {/* Add player dialog */}
@@ -688,7 +732,8 @@ function RichTeamCard({ entry, onEnter }) {
   const city = tournament?.city;
 
   const playerCount = players?.length ?? 0;
-  const rosterDone = playerCount > 0;
+  const ROSTER_MAX = 30;
+  const rosterDone = playerCount >= ROSTER_MAX;
 
   const otherTeams = (tournamentTeams || []).filter((t) => t.id !== entry.tournament_team_id);
   const myTeam = (tournamentTeams || []).find((t) => t.id === entry.tournament_team_id);
@@ -798,7 +843,9 @@ function RichTeamCard({ entry, onEnter }) {
         </Stack>
       </CardContent>
 
-      <TournamentCountdown targetDate={SAMBA_KICKOFF} />
+      {startDate && new Date(startDate) > new Date() && (
+        <TournamentCountdown targetDate={new Date(startDate)} />
+      )}
 
       <Divider />
 
@@ -822,13 +869,10 @@ function RichTeamCard({ entry, onEnter }) {
               <ChecklistItem
                 done={rosterDone}
                 label="Confirma tu plantel"
-                hint={
-                  rosterDone
-                    ? `${playerCount} jugador${playerCount === 1 ? '' : 'es'} registrado${playerCount === 1 ? '' : 's'}`
-                    : 'Aún no has registrado jugadores'
-                }
-                actionLabel="Registrar"
-                onAction={() => onEnter(entry, 'inscripcion')}
+                hint={`${playerCount}/${ROSTER_MAX} jugadores`}
+                progress={{ value: playerCount, max: ROSTER_MAX }}
+                actionLabel={rosterDone ? undefined : 'Registrar'}
+                onAction={rosterDone ? undefined : () => onEnter(entry, 'inscripcion')}
               />
               <ChecklistItem
                 done={false}
@@ -926,22 +970,41 @@ function TimeBlock({ value, label }) {
   );
 }
 
-function ChecklistItem({ done, label, hint, actionLabel, onAction }) {
+function ChecklistItem({ done, label, hint, actionLabel, onAction, progress }) {
+  const pct = progress
+    ? Math.min(100, Math.round((progress.value / progress.max) * 100))
+    : null;
   return (
-    <Stack direction="row" alignItems="center" spacing={1.5}>
+    <Stack direction="row" alignItems={progress ? 'flex-start' : 'center'} spacing={1.5}>
       <Iconify
         icon={done ? 'solar:check-circle-bold' : 'solar:check-circle-line-duotone'}
         width={20}
-        sx={{ color: done ? 'success.main' : 'text.disabled', flexShrink: 0 }}
+        sx={{ color: done ? 'success.main' : 'text.disabled', flexShrink: 0, mt: progress ? 0.25 : 0 }}
       />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="body2" sx={{ fontWeight: 500, color: done ? 'text.primary' : 'text.primary' }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {label}
         </Typography>
         {hint && (
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             {hint}
           </Typography>
+        )}
+        {progress && (
+          <LinearProgress
+            variant="determinate"
+            value={pct}
+            sx={{
+              mt: 0.75,
+              height: 6,
+              borderRadius: 1,
+              bgcolor: (t) => alpha(t.palette.grey[500], 0.12),
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 1,
+                bgcolor: done ? 'success.main' : 'primary.main',
+              },
+            }}
+          />
         )}
       </Box>
       {!done && actionLabel && onAction && (

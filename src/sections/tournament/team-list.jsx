@@ -592,8 +592,8 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
       key: 'roster',
       label: 'Plantilla',
       icon: 'mdi:account-group-outline',
-      done: players.length >= 11,
-      detail: `${players.length}/11 jugadores`,
+      done: players.length >= 30,
+      detail: `${players.length}/30 jugadores`,
     },
     {
       key: 'documents',
