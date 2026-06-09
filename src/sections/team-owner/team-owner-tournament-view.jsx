@@ -15,6 +15,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import CardContent from '@mui/material/CardContent';
+import LinearProgress from '@mui/material/LinearProgress';
 
 import { useCountdownDate } from 'src/hooks/use-countdown';
 
@@ -685,7 +686,8 @@ function RichTeamCard({ entry, onEnter }) {
   const city = tournament?.city;
 
   const playerCount = players?.length ?? 0;
-  const rosterDone = playerCount > 0;
+  const ROSTER_MAX = 30;
+  const rosterDone = playerCount >= ROSTER_MAX;
 
   const otherTeams = (tournamentTeams || []).filter((t) => t.id !== entry.tournament_team_id);
   const myTeam = (tournamentTeams || []).find((t) => t.id === entry.tournament_team_id);
@@ -821,13 +823,10 @@ function RichTeamCard({ entry, onEnter }) {
               <ChecklistItem
                 done={rosterDone}
                 label="Confirma tu plantel"
-                hint={
-                  rosterDone
-                    ? `${playerCount} jugador${playerCount === 1 ? '' : 'es'} registrado${playerCount === 1 ? '' : 's'}`
-                    : 'Aún no has registrado jugadores'
-                }
-                actionLabel="Registrar"
-                onAction={() => onEnter(entry, 'inscripcion')}
+                hint={`${playerCount}/${ROSTER_MAX} jugadores`}
+                progress={{ value: playerCount, max: ROSTER_MAX }}
+                actionLabel={rosterDone ? undefined : 'Registrar'}
+                onAction={rosterDone ? undefined : () => onEnter(entry, 'inscripcion')}
               />
               <ChecklistItem
                 done={false}
@@ -925,22 +924,41 @@ function TimeBlock({ value, label }) {
   );
 }
 
-function ChecklistItem({ done, label, hint, actionLabel, onAction }) {
+function ChecklistItem({ done, label, hint, actionLabel, onAction, progress }) {
+  const pct = progress
+    ? Math.min(100, Math.round((progress.value / progress.max) * 100))
+    : null;
   return (
-    <Stack direction="row" alignItems="center" spacing={1.5}>
+    <Stack direction="row" alignItems={progress ? 'flex-start' : 'center'} spacing={1.5}>
       <Iconify
         icon={done ? 'solar:check-circle-bold' : 'solar:check-circle-line-duotone'}
         width={20}
-        sx={{ color: done ? 'success.main' : 'text.disabled', flexShrink: 0 }}
+        sx={{ color: done ? 'success.main' : 'text.disabled', flexShrink: 0, mt: progress ? 0.25 : 0 }}
       />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="body2" sx={{ fontWeight: 500, color: done ? 'text.primary' : 'text.primary' }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {label}
         </Typography>
         {hint && (
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             {hint}
           </Typography>
+        )}
+        {progress && (
+          <LinearProgress
+            variant="determinate"
+            value={pct}
+            sx={{
+              mt: 0.75,
+              height: 6,
+              borderRadius: 1,
+              bgcolor: (t) => alpha(t.palette.grey[500], 0.12),
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 1,
+                bgcolor: done ? 'success.main' : 'primary.main',
+              },
+            }}
+          />
         )}
       </Box>
       {!done && actionLabel && onAction && (
