@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
@@ -118,6 +119,13 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
         {/* Teams + score */}
         <Box>
           <Stack direction="row" alignItems="center" spacing={1}>
+            <Avatar
+              src={homeTeam?.logo_url || undefined}
+              variant="rounded"
+              sx={{ width: 20, height: 20, fontSize: '0.55rem' }}
+            >
+              {!homeTeam?.logo_url && homeName.slice(0, 2)}
+            </Avatar>
             <Typography variant="subtitle2" sx={{ fontWeight: 700, letterSpacing: -0.2 }}>
               {homeName}
             </Typography>
@@ -144,6 +152,13 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
             <Typography variant="subtitle2" sx={{ fontWeight: 700, letterSpacing: -0.2 }}>
               {awayName}
             </Typography>
+            <Avatar
+              src={awayTeam?.logo_url || undefined}
+              variant="rounded"
+              sx={{ width: 20, height: 20, fontSize: '0.55rem' }}
+            >
+              {!awayTeam?.logo_url && awayName.slice(0, 2)}
+            </Avatar>
           </Stack>
 
           <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.25 }}>
