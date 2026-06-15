@@ -346,6 +346,48 @@ export function MatchDetailView() {
             </Button>
           )}
 
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="solar:download-minimalistic-bold" width={16} />}
+            onClick={() => {
+              const esc = (s) => {
+                const v = String(s ?? '');
+                return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+              };
+              const rosterFor = (teamId) =>
+                (players || []).filter((p) => p.team_id === teamId);
+              const rows = [
+                ['Equipo', 'Jugador', 'Identificación', 'Camiseta', 'Posición'].join(','),
+                ...rosterFor(match.home_team_id).map((p) =>
+                  [homeTeam?.name || homeName, p.name, p.id_number || '', p.number ?? '', p.position || '']
+                    .map(esc)
+                    .join(',')
+                ),
+                ...rosterFor(match.away_team_id).map((p) =>
+                  [awayTeam?.name || awayName, p.name, p.id_number || '', p.number ?? '', p.position || '']
+                    .map(esc)
+                    .join(',')
+                ),
+              ];
+              // U+FEFF BOM so Excel auto-detects UTF-8.
+              const BOM = String.fromCharCode(0xfeff);
+              const blob = new Blob([`${BOM}${rows.join('\n')}`], {
+                type: 'text/csv;charset=utf-8',
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `plantillas-${homeName}-vs-${awayName}.csv`.replace(/\s+/g, '_');
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Descargar plantillas
+          </Button>
+
           {isFinished && match.round && (
             <Button
               variant="contained"
