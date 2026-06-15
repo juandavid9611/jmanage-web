@@ -5,7 +5,6 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Tooltip from '@mui/material/Tooltip';
 import { alpha } from '@mui/material/styles';
 import Collapse from '@mui/material/Collapse';
 import Skeleton from '@mui/material/Skeleton';
@@ -49,40 +48,6 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
   const isLive     = match.status === 'live';
   const isPending  = match.status === 'scheduled';
 
-  const handleDownloadRoster = (e) => {
-    e.stopPropagation();
-    const esc = (s) => {
-      const v = String(s ?? '');
-      return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
-    };
-    const rosterFor = (teamId) => (players || []).filter((p) => p.team_id === teamId);
-    const rows = [
-      ['Equipo', 'Jugador', 'Identificación', 'Camiseta', 'Posición'].join(','),
-      ...rosterFor(match.home_team_id).map((p) =>
-        [homeTeam?.name || homeName, p.name, p.id_number || '', p.number ?? '', p.position || '']
-          .map(esc)
-          .join(',')
-      ),
-      ...rosterFor(match.away_team_id).map((p) =>
-        [awayTeam?.name || awayName, p.name, p.id_number || '', p.number ?? '', p.position || '']
-          .map(esc)
-          .join(',')
-      ),
-    ];
-    // U+FEFF BOM so Excel auto-detects UTF-8 (otherwise tildes/ñ render mojibake).
-    const BOM = String.fromCharCode(0xfeff);
-    const csv = `${BOM}${rows.join('\n')}`;
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `plantillas-${homeName}-vs-${awayName}.csv`.replace(/\s+/g, '_');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const badge = STATUS_BADGE[match.status] || STATUS_BADGE.scheduled;
 
   return (
@@ -107,9 +72,7 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
         onClick={onClick}
         sx={{
           display: 'grid',
-          gridTemplateColumns: publicMode
-            ? '52px 1fr auto 32px'
-            : '52px 1fr auto auto 32px',
+          gridTemplateColumns: '52px 1fr auto 32px',
           alignItems: 'center',
           gap: 1.5,
           px: 2,
@@ -235,19 +198,6 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
             </Button>
           )}
         </Stack>
-
-        {/* Download both rosters (admin-only) */}
-        {!publicMode && (
-          <Tooltip title="Descargar plantillas (CSV)">
-            <IconButton
-              size="small"
-              onClick={handleDownloadRoster}
-              sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}
-            >
-              <Iconify icon="solar:download-minimalistic-bold" width={18} />
-            </IconButton>
-          </Tooltip>
-        )}
 
         {/* Expand toggle */}
         <IconButton
