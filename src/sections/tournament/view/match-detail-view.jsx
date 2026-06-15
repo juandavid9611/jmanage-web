@@ -355,17 +355,23 @@ export function MatchDetailView() {
                 const v = String(s ?? '');
                 return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
               };
+              const POSITION_ES = {
+                Goalkeeper: 'Portero',
+                Defender: 'Defensa',
+                Midfielder: 'Centrocampista',
+                Forward: 'Delantero',
+              };
               const rosterFor = (teamId) =>
                 (players || []).filter((p) => p.team_id === teamId);
               const rows = [
                 ['Equipo', 'Jugador', 'Identificación', 'Camiseta', 'Posición'].join(','),
                 ...rosterFor(match.home_team_id).map((p) =>
-                  [homeTeam?.name || homeName, p.name, p.id_number || '', p.number ?? '', p.position || '']
+                  [homeTeam?.name || homeName, p.name, p.id_number || '', p.number ?? '', POSITION_ES[p.position] || p.position || '']
                     .map(esc)
                     .join(',')
                 ),
                 ...rosterFor(match.away_team_id).map((p) =>
-                  [awayTeam?.name || awayName, p.name, p.id_number || '', p.number ?? '', p.position || '']
+                  [awayTeam?.name || awayName, p.name, p.id_number || '', p.number ?? '', POSITION_ES[p.position] || p.position || '']
                     .map(esc)
                     .join(',')
                 ),
