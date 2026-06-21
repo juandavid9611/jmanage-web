@@ -1,20 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Dialog from '@mui/material/Dialog';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import { alpha } from '@mui/material/styles';
 import Collapse from '@mui/material/Collapse';
 import Skeleton from '@mui/material/Skeleton';
+import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import LoadingButton from '@mui/lab/LoadingButton';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
 
 import { fDateTime } from 'src/utils/format-time';
 
-import { useGetMatch, useGetPublicMatch } from 'src/actions/tournament';
+import { useGetMatch, updateMatch, useGetPublicMatch } from 'src/actions/tournament';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
@@ -38,7 +45,7 @@ export const EVENT_CONFIG = {
 
 // ----------------------------------------------------------------------
 
-export function MatchRow({ match, teams, players, tournamentId, onClick, onScoreClick, expanded, onToggle, publicMode = false }) {
+export function MatchRow({ match, teams, players, tournamentId, onClick, onScoreClick, onEditSchedule, expanded, onToggle, publicMode = false }) {
   const homeTeam = teams?.find((t) => t.id === match.home_team_id);
   const awayTeam = teams?.find((t) => t.id === match.away_team_id);
   const homeName = homeTeam?.short_name || homeTeam?.name || 'TBD';
@@ -196,6 +203,15 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
             >
               Ver
             </Button>
+          )}
+          {onEditSchedule && !publicMode && (
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onEditSchedule(match); }}
+              sx={{ color: 'text.disabled', '&:hover': { color: 'text.primary' } }}
+            >
+              <Iconify icon="mdi:calendar-edit" width={15} />
+            </IconButton>
           )}
         </Stack>
 
@@ -478,5 +494,82 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
         </Typography>
       )}
     </Box>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [venue, setVenue] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!match) return;
+    const dt = match.date ? new Date(match.date) : new Date();
+    setDate(dt.toISOString().slice(0, 10));
+    setTime(dt.toISOString().slice(11, 16));
+    setVenue(match.venue || '');
+  }, [match]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await updateMatch(tournamentId, match.id, {
+        date: `${date}T${time}:00.000Z`,
+        venue,
+      });
+      toast.success('Horario actualizado');
+      onClose();
+    } catch (err) {
+      toast.error(err.message || 'Error al guardar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle>Horario y Sede</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <TextField
+            label="Fecha"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Hora"
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Sede"
+            value={venue}
+            onChange={(e) => setVenue(e.target.value)}
+            fullWidth
+            placeholder="Nombre del estadio o cancha"
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancelar</Button>
+        <LoadingButton
+          variant="contained"
+          loading={saving}
+          disabled={!date || !time}
+          onClick={handleSave}
+        >
+          Guardar
+        </LoadingButton>
+      </DialogActions>
+    </Dialog>
   );
 }
