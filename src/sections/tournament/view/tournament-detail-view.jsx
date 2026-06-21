@@ -22,6 +22,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import { paths } from 'src/routes/paths';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
   useGetTeams,
   useGetStats,
@@ -82,6 +83,9 @@ export function TournamentDetailView() {
   const { stats } = useGetStats(id);
   const { matches: allMatches, matchesLoading } = useGetMatches(id);
   const { players } = useGetPlayers(id);
+
+  const { workspaceRole } = useWorkspace();
+  const isAdmin = workspaceRole === 'admin';
 
   const [activePhase, setActivePhase] = useState(null);
   const [selectedMatchweek, setSelectedMatchweek] = useState(undefined);
@@ -328,7 +332,7 @@ export function TournamentDetailView() {
                     tournamentId={id}
                     grouped
                     onMatchClick={handleMatchClick}
-                    onScoreClick={handleScoreClick}
+                    onScoreClick={isAdmin ? handleScoreClick : undefined}
                   />
                 )}
               </Box>
@@ -344,7 +348,7 @@ export function TournamentDetailView() {
                   currentMatchweek={currentMw}
                   totalMatchweeks={totalMw}
                   onNextAction={
-                    nextPendingMatch
+                    isAdmin && nextPendingMatch
                       ? () => handleScoreClick(nextPendingMatch)
                       : undefined
                   }
@@ -357,7 +361,7 @@ export function TournamentDetailView() {
         {/* ── KNOCKOUT PHASES: Bracket view ── */}
         {isKnockoutPhase && (
           <Box sx={{ p: { xs: 2, md: 3 } }}>
-            <BracketView tournamentId={id} teams={teams} tournament={tournament} allMatches={allMatches} />
+            <BracketView tournamentId={id} teams={teams} tournament={tournament} allMatches={allMatches} readOnly={!isAdmin} />
           </Box>
         )}
 
