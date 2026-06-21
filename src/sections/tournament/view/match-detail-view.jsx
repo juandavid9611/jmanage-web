@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -17,7 +16,6 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 
 import { paths } from 'src/routes/paths';
 
@@ -40,7 +38,7 @@ import { Iconify } from 'src/components/iconify';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { EventBadge, EVENT_CONFIG } from '../match-row';
+import { EventBadge, EVENT_CONFIG, MatchScheduleDialog } from '../match-row';
 
 // ----------------------------------------------------------------------
 
@@ -88,18 +86,10 @@ export function MatchDetailView() {
   });
 
   const [notes, setNotes] = useState('');
-  const [scheduleEditOpen, setScheduleEditOpen] = useState(false);
-  const [scheduleDateTime, setScheduleDateTime] = useState(null);
-  const [scheduleVenue, setScheduleVenue] = useState('');
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
 
   useEffect(() => {
     if (match) setNotes(match.notes || '');
-  }, [match]);
-
-  useEffect(() => {
-    if (!match) return;
-    setScheduleDateTime(match.date ? dayjs(match.date) : null);
-    setScheduleVenue(match.venue || '');
   }, [match]);
 
   if (matchLoading) return <LoadingScreen />;
@@ -133,22 +123,6 @@ export function MatchDetailView() {
       );
     } catch (error) {
       toast.error(error.message || 'Error');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSaveSchedule = async () => {
-    try {
-      setIsSubmitting(true);
-      await updateMatch(tournamentId, matchId, {
-        date: scheduleDateTime?.toISOString(),
-        venue: scheduleVenue,
-      });
-      toast.success('Horario actualizado');
-      setScheduleEditOpen(false);
-    } catch (err) {
-      toast.error(err.message || 'Error al guardar');
     } finally {
       setIsSubmitting(false);
     }
@@ -330,65 +304,16 @@ export function MatchDetailView() {
                   📍 {match.venue}
                 </Typography>
               )}
-              {isAdmin && !scheduleEditOpen && (
+              {isAdmin && (
                 <IconButton
                   size="small"
-                  onClick={() => setScheduleEditOpen(true)}
+                  onClick={() => setScheduleDialogOpen(true)}
                   sx={{ opacity: 0.4, '&:hover': { opacity: 1 }, p: 0.25 }}
                 >
                   <Iconify icon="mdi:pencil" width={13} />
                 </IconButton>
               )}
             </Stack>
-
-            {/* Inline schedule edit panel */}
-            {scheduleEditOpen && (
-              <Stack
-                spacing={1.5}
-                sx={{
-                  mt: 1.5,
-                  p: 2,
-                  width: '100%',
-                  maxWidth: 320,
-                  borderRadius: 1.5,
-                  bgcolor: (t) => t.palette.background.neutral,
-                }}
-              >
-                <MobileDateTimePicker
-                  label="Fecha y hora"
-                  value={scheduleDateTime}
-                  onChange={setScheduleDateTime}
-                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                />
-                <TextField
-                  label="Sede"
-                  size="small"
-                  value={scheduleVenue}
-                  onChange={(e) => setScheduleVenue(e.target.value)}
-                  placeholder="Estadio o cancha"
-                  fullWidth
-                />
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button
-                    size="small"
-                    variant="soft"
-                    color="inherit"
-                    onClick={() => setScheduleEditOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <LoadingButton
-                    size="small"
-                    variant="contained"
-                    loading={isSubmitting}
-                    disabled={!scheduleDateTime || !scheduleDateTime.isValid()}
-                    onClick={handleSaveSchedule}
-                  >
-                    Guardar
-                  </LoadingButton>
-                </Stack>
-              </Stack>
-            )}
           </Stack>
 
           {/* Away */}
@@ -685,6 +610,13 @@ export function MatchDetailView() {
       </Box>
 
       {/* ── Add Event Dialog ───────────────────────────────────────── */}
+      <MatchScheduleDialog
+        open={scheduleDialogOpen}
+        match={match}
+        tournamentId={tournamentId}
+        onClose={() => setScheduleDialogOpen(false)}
+      />
+
       <Dialog open={eventDialog} onClose={() => setEventDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Registrar Evento</DialogTitle>
         <DialogContent>
