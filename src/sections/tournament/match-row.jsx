@@ -511,9 +511,11 @@ export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
     setDate(dt.toISOString().slice(0, 10));
     setTime(dt.toISOString().slice(11, 16));
     setVenue(match.venue || '');
-  }, [match]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match?.id, open]);
 
   const handleSave = async () => {
+    if (!match) return;
     try {
       setSaving(true);
       await updateMatch(tournamentId, match.id, {
