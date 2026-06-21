@@ -19,6 +19,8 @@ import DialogActions from '@mui/material/DialogActions';
 
 import { paths } from 'src/routes/paths';
 
+import { fDateTime } from 'src/utils/format-time';
+
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
@@ -288,7 +290,7 @@ export function MatchDetailView() {
             />
 
             {/* Meta row */}
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5 }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5, flexWrap: 'wrap' }}>
               {match.matchweek && (
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                   Jornada {match.matchweek}
@@ -299,10 +301,21 @@ export function MatchDetailView() {
                   {match.round}
                 </Typography>
               )}
+              {match.date && (
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Iconify icon="solar:calendar-date-bold" width={13} sx={{ color: 'text.disabled' }} />
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {fDateTime(match.date, 'DD MMM YYYY · HH:mm')}
+                  </Typography>
+                </Stack>
+              )}
               {match.venue && (
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  📍 {match.venue}
-                </Typography>
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Iconify icon="solar:map-point-bold" width={13} sx={{ color: 'text.disabled' }} />
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {match.venue}
+                  </Typography>
+                </Stack>
               )}
               {isAdmin && (
                 <IconButton

@@ -115,7 +115,7 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
             </Stack>
           ) : (
             <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem', color: 'text.secondary' }}>
-              {match.date ? fDateTime(match.date, 'HH:mm') : '--:--'}
+              {match.date ? fDateTime(match.date, 'DD MMM · HH:mm') : '--:--'}
             </Typography>
           )}
           {match.venue && (
