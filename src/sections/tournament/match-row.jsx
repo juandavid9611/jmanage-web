@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
@@ -16,6 +17,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 
 import { fDateTime } from 'src/utils/format-time';
 
@@ -502,31 +504,23 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
 // ----------------------------------------------------------------------
 
 export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [datetime, setDatetime] = useState(null);
   const [venue, setVenue] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!match) return;
-    if (match.date) {
-      const dt = new Date(match.date);
-      setDate(dt.toISOString().slice(0, 10));
-      setTime(dt.toISOString().slice(11, 16));
-    } else {
-      setDate('');
-      setTime('');
-    }
+    setDatetime(match.date ? dayjs(match.date) : null);
     setVenue(match.venue || '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.id, open]);
 
   const handleSave = async () => {
-    if (!match) return;
+    if (!match || !datetime) return;
     try {
       setSaving(true);
       await updateMatch(tournamentId, match.id, {
-        date: `${date}T${time}:00.000Z`,
+        date: datetime.toISOString(),
         venue,
       });
       toast.success('Horario actualizado');
@@ -543,21 +537,11 @@ export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
       <DialogTitle>Horario y Sede</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField
-            label="Fecha"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Hora"
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
+          <MobileDateTimePicker
+            label="Fecha y hora"
+            value={datetime}
+            onChange={setDatetime}
+            slotProps={{ textField: { fullWidth: true } }}
           />
           <TextField
             label="Sede"
@@ -569,11 +553,11 @@ export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button variant="soft" color="inherit" onClick={onClose}>Cancelar</Button>
         <LoadingButton
           variant="contained"
           loading={saving}
-          disabled={!date || !time}
+          disabled={!datetime || !datetime.isValid()}
           onClick={handleSave}
         >
           Guardar

@@ -37,6 +37,19 @@ React 18 + Vite SPA, based on Minimal UI Kit v6.0.1. Auth via AWS Amplify + Cogn
 
 Users belong to accounts; accounts contain workspaces. `WorkspaceProvider` manages the active workspace selection. Most API calls include workspace context. Switching workspaces updates local state and calls the backend via `updateMyWorkspace()`.
 
+## UI Quality Standards
+
+This app is built on **Minimal UI Kit v6.0.1** — always use its components, never raw HTML or native browser inputs.
+
+**Non-negotiable rules:**
+- **Date/time input:** Always use `MobileDateTimePicker` or `DatePicker` from `@mui/x-date-pickers` with `dayjs` — never `<input type="date">` or `<input type="time">`, which render as ugly native browser chrome.
+- **Form fields:** Use `TextField` with `size="small"` for compact UIs; check `src/components/hook-form/` for RHF wrappers (`Field.Text`, `Field.MobileDateTimePicker`, etc.) when inside `react-hook-form` contexts.
+- **Button variants:** Use `variant="soft"` for secondary/cancel actions (Minimal theme pattern). Use `variant="contained"` for primary. Avoid plain `variant="text"` for button pairs.
+- **Neutral backgrounds:** Use `bgcolor: (t) => t.palette.background.neutral` for subtle container backgrounds (not grey hardcoded values).
+- **Check existing patterns first:** Before implementing any UI element, grep `src/sections/` for existing usage. Almost everything you need already exists: dialogs, drawers, inline edits, date pickers, selects, etc.
+- **Responsive by default:** Never put multiple inline fields in a cramped horizontal `Stack` inside a narrow container. Stack vertically with `spacing` for edit forms; use `flexWrap: 'wrap'` in `sx` (not as a direct prop) only when genuinely needed.
+- **No emoji icons in UI** — use `<Iconify icon="...">` from `src/components/iconify` for all icons. Browse icons at `https://icon-sets.iconify.design`.
+
 ## Env vars (`.env`)
 
 | Variable | Purpose |

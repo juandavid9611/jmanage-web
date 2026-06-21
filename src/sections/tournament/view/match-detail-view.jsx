@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -16,6 +17,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 
 import { paths } from 'src/routes/paths';
 
@@ -87,8 +89,7 @@ export function MatchDetailView() {
 
   const [notes, setNotes] = useState('');
   const [scheduleEditOpen, setScheduleEditOpen] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState('');
-  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduleDateTime, setScheduleDateTime] = useState(null);
   const [scheduleVenue, setScheduleVenue] = useState('');
 
   useEffect(() => {
@@ -97,14 +98,7 @@ export function MatchDetailView() {
 
   useEffect(() => {
     if (!match) return;
-    if (match.date) {
-      const dt = new Date(match.date);
-      setScheduleDate(dt.toISOString().slice(0, 10));
-      setScheduleTime(dt.toISOString().slice(11, 16));
-    } else {
-      setScheduleDate('');
-      setScheduleTime('');
-    }
+    setScheduleDateTime(match.date ? dayjs(match.date) : null);
     setScheduleVenue(match.venue || '');
   }, [match]);
 
@@ -148,7 +142,7 @@ export function MatchDetailView() {
     try {
       setIsSubmitting(true);
       await updateMatch(tournamentId, matchId, {
-        date: `${scheduleDate}T${scheduleTime}:00.000Z`,
+        date: scheduleDateTime?.toISOString(),
         venue: scheduleVenue,
       });
       toast.success('Horario actualizado');
@@ -320,25 +314,51 @@ export function MatchDetailView() {
             />
 
             {/* Meta row */}
-            {scheduleEditOpen ? (
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexWrap: 'wrap' }}>
-                <TextField
-                  label="Fecha"
-                  type="date"
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5 }}>
+              {match.matchweek && (
+                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                  Jornada {match.matchweek}
+                </Typography>
+              )}
+              {match.round && (
+                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                  {match.round}
+                </Typography>
+              )}
+              {match.venue && (
+                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                  📍 {match.venue}
+                </Typography>
+              )}
+              {isAdmin && !scheduleEditOpen && (
+                <IconButton
                   size="small"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ width: 150 }}
-                />
-                <TextField
-                  label="Hora"
-                  type="time"
-                  size="small"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ width: 120 }}
+                  onClick={() => setScheduleEditOpen(true)}
+                  sx={{ opacity: 0.4, '&:hover': { opacity: 1 }, p: 0.25 }}
+                >
+                  <Iconify icon="mdi:pencil" width={13} />
+                </IconButton>
+              )}
+            </Stack>
+
+            {/* Inline schedule edit panel */}
+            {scheduleEditOpen && (
+              <Stack
+                spacing={1.5}
+                sx={{
+                  mt: 1.5,
+                  p: 2,
+                  width: '100%',
+                  maxWidth: 320,
+                  borderRadius: 1.5,
+                  bgcolor: (t) => t.palette.background.neutral,
+                }}
+              >
+                <MobileDateTimePicker
+                  label="Fecha y hora"
+                  value={scheduleDateTime}
+                  onChange={setScheduleDateTime}
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
                 />
                 <TextField
                   label="Sede"
@@ -346,47 +366,27 @@ export function MatchDetailView() {
                   value={scheduleVenue}
                   onChange={(e) => setScheduleVenue(e.target.value)}
                   placeholder="Estadio o cancha"
-                  sx={{ width: 200 }}
+                  fullWidth
                 />
-                <LoadingButton
-                  size="small"
-                  variant="contained"
-                  loading={isSubmitting}
-                  disabled={!scheduleDate || !scheduleTime}
-                  onClick={handleSaveSchedule}
-                >
-                  Guardar
-                </LoadingButton>
-                <Button size="small" onClick={() => setScheduleEditOpen(false)}>
-                  Cancelar
-                </Button>
-              </Stack>
-            ) : (
-              <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5 }}>
-                {match.matchweek && (
-                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    Jornada {match.matchweek}
-                  </Typography>
-                )}
-                {match.round && (
-                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {match.round}
-                  </Typography>
-                )}
-                {match.venue && (
-                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    📍 {match.venue}
-                  </Typography>
-                )}
-                {isAdmin && (
-                  <IconButton
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Button
                     size="small"
-                    onClick={() => setScheduleEditOpen(true)}
-                    sx={{ opacity: 0.4, '&:hover': { opacity: 1 }, p: 0.25 }}
+                    variant="soft"
+                    color="inherit"
+                    onClick={() => setScheduleEditOpen(false)}
                   >
-                    <Iconify icon="mdi:pencil" width={13} />
-                  </IconButton>
-                )}
+                    Cancelar
+                  </Button>
+                  <LoadingButton
+                    size="small"
+                    variant="contained"
+                    loading={isSubmitting}
+                    disabled={!scheduleDateTime || !scheduleDateTime.isValid()}
+                    onClick={handleSaveSchedule}
+                  >
+                    Guardar
+                  </LoadingButton>
+                </Stack>
               </Stack>
             )}
           </Stack>
