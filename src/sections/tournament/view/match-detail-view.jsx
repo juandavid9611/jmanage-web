@@ -97,9 +97,14 @@ export function MatchDetailView() {
 
   useEffect(() => {
     if (!match) return;
-    const dt = match.date ? new Date(match.date) : new Date();
-    setScheduleDate(dt.toISOString().slice(0, 10));
-    setScheduleTime(dt.toISOString().slice(11, 16));
+    if (match.date) {
+      const dt = new Date(match.date);
+      setScheduleDate(dt.toISOString().slice(0, 10));
+      setScheduleTime(dt.toISOString().slice(11, 16));
+    } else {
+      setScheduleDate('');
+      setScheduleTime('');
+    }
     setScheduleVenue(match.venue || '');
   }, [match]);
 
@@ -316,7 +321,7 @@ export function MatchDetailView() {
 
             {/* Meta row */}
             {scheduleEditOpen ? (
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }} flexWrap="wrap">
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5, flexWrap: 'wrap' }}>
                 <TextField
                   label="Fecha"
                   type="date"

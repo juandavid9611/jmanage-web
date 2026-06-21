@@ -411,7 +411,7 @@ export function EventBadge({ cfg, player, assist, align }) {
 
 // ----------------------------------------------------------------------
 
-export function MatchList({ matches, teams, players, tournamentId, onMatchClick, onScoreClick, grouped = true, publicMode = false }) {
+export function MatchList({ matches, teams, players, tournamentId, onMatchClick, onScoreClick, onEditSchedule, grouped = true, publicMode = false }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const toggle = (id) => setExpandedId((prev) => (prev === id ? null : id));
@@ -428,6 +428,7 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
             tournamentId={tournamentId}
             onClick={() => onMatchClick?.(match)}
             onScoreClick={() => onScoreClick?.(match)}
+            onEditSchedule={onEditSchedule}
             expanded={expandedId === match.id}
             onToggle={() => toggle(match.id)}
             publicMode={publicMode}
@@ -473,6 +474,7 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
               tournamentId={tournamentId}
               onClick={() => onMatchClick?.(match)}
               onScoreClick={() => onScoreClick?.(match)}
+              onEditSchedule={onEditSchedule}
               expanded={expandedId === match.id}
               onToggle={() => toggle(match.id)}
               publicMode={publicMode}
@@ -507,9 +509,14 @@ export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
 
   useEffect(() => {
     if (!match) return;
-    const dt = match.date ? new Date(match.date) : new Date();
-    setDate(dt.toISOString().slice(0, 10));
-    setTime(dt.toISOString().slice(11, 16));
+    if (match.date) {
+      const dt = new Date(match.date);
+      setDate(dt.toISOString().slice(0, 10));
+      setTime(dt.toISOString().slice(11, 16));
+    } else {
+      setDate('');
+      setTime('');
+    }
     setVenue(match.venue || '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.id, open]);
