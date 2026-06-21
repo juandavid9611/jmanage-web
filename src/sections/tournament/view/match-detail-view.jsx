@@ -163,13 +163,26 @@ export function MatchDetailView() {
   const handleCreateCharges = async () => {
     try {
       setChargesLoading(true);
-      const { created, skipped, skipped_already_charged: alreadyCharged } = await createMatchCharges(tournamentId, matchId);
-      if (created === 0 && alreadyCharged > 0) {
-        toast.info('Cobros ya existentes para este partido');
-      } else if (created === 0) {
+      const {
+        created,
+        card_events_found: cardEventsFound,
+        skipped_already_charged: alreadyCharged,
+        skipped_no_email: noEmail,
+        skipped_fee_zero: feeZero,
+      } = await createMatchCharges(tournamentId, matchId);
+
+      if (created > 0) {
+        toast.success(`${created} cobro${created !== 1 ? 's' : ''} generado${created !== 1 ? 's' : ''}`);
+      } else if (cardEventsFound === 0) {
+        toast.info('Este partido no tiene eventos de tarjeta registrados');
+      } else if (alreadyCharged > 0 && alreadyCharged === cardEventsFound) {
+        toast.info('Los cobros de este partido ya fueron generados');
+      } else if (noEmail > 0) {
+        toast.warning('No se generaron cobros — los equipos no tienen email de contacto configurado');
+      } else if (feeZero > 0) {
         toast.warning('No se generaron cobros — verifica que las tarifas de tarjetas estén configuradas en el torneo');
       } else {
-        toast.success(`${created} cobro${created !== 1 ? 's' : ''} generado${created !== 1 ? 's' : ''}`);
+        toast.warning('No se generaron cobros');
       }
     } catch (err) {
       toast.error(err.message || 'Error al generar cobros');
