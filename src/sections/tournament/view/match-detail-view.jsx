@@ -163,9 +163,11 @@ export function MatchDetailView() {
   const handleCreateCharges = async () => {
     try {
       setChargesLoading(true);
-      const { created, skipped } = await createMatchCharges(tournamentId, matchId);
-      if (created === 0) {
+      const { created, skipped, skipped_already_charged: alreadyCharged } = await createMatchCharges(tournamentId, matchId);
+      if (created === 0 && alreadyCharged > 0) {
         toast.info('Cobros ya existentes para este partido');
+      } else if (created === 0) {
+        toast.warning('No se generaron cobros — verifica que las tarifas de tarjetas estén configuradas en el torneo');
       } else {
         toast.success(`${created} cobro${created !== 1 ? 's' : ''} generado${created !== 1 ? 's' : ''}`);
       }
