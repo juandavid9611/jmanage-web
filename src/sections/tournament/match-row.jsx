@@ -1,15 +1,15 @@
 import { useState } from 'react';
 
-import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import { alpha } from '@mui/material/styles';
 import Collapse from '@mui/material/Collapse';
 import Skeleton from '@mui/material/Skeleton';
-import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
 
 import { fDateTime } from 'src/utils/format-time';
 
