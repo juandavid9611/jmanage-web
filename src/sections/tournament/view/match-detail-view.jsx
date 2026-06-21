@@ -33,6 +33,7 @@ import {
   useGetTournament,
   createMatchEvent,
   deleteMatchEvent,
+  createMatchCharges,
 } from 'src/actions/tournament';
 
 import { toast } from 'src/components/snackbar';
@@ -89,6 +90,7 @@ export function MatchDetailView() {
 
   const [notes, setNotes] = useState('');
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [chargesLoading, setChargesLoading] = useState(false);
 
   useEffect(() => {
     if (match) setNotes(match.notes || '');
@@ -151,6 +153,22 @@ export function MatchDetailView() {
       navigate(paths.dashboard.tournament.details(tournamentId));
     } catch (error) {
       toast.error('Error al eliminar');
+    }
+  };
+
+  const handleCreateCharges = async () => {
+    try {
+      setChargesLoading(true);
+      const { created, skipped } = await createMatchCharges(tournamentId, matchId);
+      if (created === 0) {
+        toast.info('Cobros ya existentes para este partido');
+      } else {
+        toast.success(`${created} cobro${created !== 1 ? 's' : ''} generado${created !== 1 ? 's' : ''}`);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Error al generar cobros');
+    } finally {
+      setChargesLoading(false);
     }
   };
 
@@ -447,6 +465,19 @@ export function MatchDetailView() {
                 : awayTeam?.short_name}
               )
             </Button>
+          )}
+
+          {isAdmin && tournament?.payments_enabled && isFinished && (
+            <LoadingButton
+              size="small"
+              variant="soft"
+              color="warning"
+              loading={chargesLoading}
+              startIcon={<Iconify icon="solar:dollar-minimalistic-bold" width={16} />}
+              onClick={handleCreateCharges}
+            >
+              Generar Cobros
+            </LoadingButton>
           )}
 
           <Box sx={{ flex: 1 }} />
