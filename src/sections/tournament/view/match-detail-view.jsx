@@ -41,6 +41,8 @@ import { Iconify } from 'src/components/iconify';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { EventBadge, EVENT_CONFIG, MatchScheduleDialog } from '../match-row';
 
 // ----------------------------------------------------------------------
@@ -76,7 +78,9 @@ export function MatchDetailView() {
   const { players } = useGetPlayers(tournamentId);
 
   const { workspaceRole } = useWorkspace();
-  const isAdmin = workspaceRole === 'admin';
+  const { user } = useAuthContext();
+  const isAccountAdmin = user?.accountsRoles?.[user?.activeAccountId] === 'admin';
+  const isAdmin = workspaceRole === 'admin' || isAccountAdmin;
 
   const [eventDialog, setEventDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

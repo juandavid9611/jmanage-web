@@ -49,6 +49,7 @@ const TournamentSchema = zod.object({
   season: zod.string().optional(),
   type: zod.enum(['league', 'knockout', 'hybrid']),
   is_public: zod.boolean().optional(),
+  payments_enabled: zod.boolean().optional(),
   num_teams: zod.coerce.number().int().min(2).optional().or(zod.literal('')),
   description: zod.string().optional(),
   location: zod.string().optional(),
@@ -86,6 +87,7 @@ export function TournamentNewEditForm({ currentTournament }) {
     season: currentTournament?.season || '',
     type: currentTournament?.type || 'league',
     is_public: currentTournament?.is_public ?? false,
+    payments_enabled: currentTournament?.payments_enabled ?? false,
     num_teams: currentTournament?.num_teams || '',
     description: currentTournament?.description || '',
     location: currentTournament?.location || '',
@@ -312,6 +314,14 @@ export function TournamentNewEditForm({ currentTournament }) {
                     name="is_public"
                     label="Torneo público"
                     helperText="Visible sin iniciar sesión"
+                  />
+                </Grid>
+
+                <Grid xs={12} sm={4}>
+                  <Field.Switch
+                    name="payments_enabled"
+                    label="Pagos habilitados"
+                    helperText="Permite cobros por tarjetas"
                   />
                 </Grid>
               </Grid>
