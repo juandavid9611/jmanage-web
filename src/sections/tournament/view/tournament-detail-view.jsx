@@ -41,12 +41,12 @@ import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 
 import { TeamList } from '../team-list';
-import { MatchList } from '../match-row';
 import { BracketView } from '../bracket-view';
 import { StatsOverview } from '../stats-overview';
 import { StandingsSidebar } from '../standings-sidebar';
 import { MatchweekTimeline } from '../matchweek-timeline';
 import { PlayerRankingTable } from '../player-ranking-table';
+import { MatchList, MatchScheduleDialog } from '../match-row';
 import { TeamDisciplineTable } from '../team-discipline-table';
 import { getPhases, TournamentBanner } from '../tournament-banner';
 import { TournamentConfigSummary } from '../tournament-config-summary';
@@ -95,6 +95,7 @@ export function TournamentDetailView() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [scheduleDialog, setScheduleDialog] = useState(false);
   const [disciplineOpen, setDisciplineOpen] = useState(false);
+  const [scheduleMatch, setScheduleMatch] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
     start_date: new Date().toISOString().split('T')[0],
     match_interval_days: 7,
@@ -333,6 +334,7 @@ export function TournamentDetailView() {
                     grouped
                     onMatchClick={handleMatchClick}
                     onScoreClick={isAdmin ? handleScoreClick : undefined}
+                    onEditSchedule={isAdmin ? (m) => setScheduleMatch(m) : undefined}
                   />
                 )}
               </Box>
@@ -512,6 +514,14 @@ export function TournamentDetailView() {
           </LoadingButton>
         </DialogActions>
       </Dialog>
+
+      {/* Match Schedule Dialog */}
+      <MatchScheduleDialog
+        open={!!scheduleMatch}
+        match={scheduleMatch}
+        tournamentId={id}
+        onClose={() => setScheduleMatch(null)}
+      />
 
       {/* Discipline drawer (Sanciones) */}
       <Drawer
