@@ -20,6 +20,7 @@ import DialogActions from '@mui/material/DialogActions';
 import { paths } from 'src/routes/paths';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
   useGetMatch,
   useGetTeams,
@@ -71,6 +72,9 @@ export function MatchDetailView() {
   const { teams } = useGetTeams(tournamentId);
   const { players } = useGetPlayers(tournamentId);
 
+  const { workspaceRole } = useWorkspace();
+  const isAdmin = workspaceRole === 'admin';
+
   const [eventDialog, setEventDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [eventForm, setEventForm] = useState({
@@ -82,9 +86,21 @@ export function MatchDetailView() {
   });
 
   const [notes, setNotes] = useState('');
+  const [scheduleEditOpen, setScheduleEditOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduleVenue, setScheduleVenue] = useState('');
 
   useEffect(() => {
     if (match) setNotes(match.notes || '');
+  }, [match]);
+
+  useEffect(() => {
+    if (!match) return;
+    const dt = match.date ? new Date(match.date) : new Date();
+    setScheduleDate(dt.toISOString().slice(0, 10));
+    setScheduleTime(dt.toISOString().slice(11, 16));
+    setScheduleVenue(match.venue || '');
   }, [match]);
 
   if (matchLoading) return <LoadingScreen />;
@@ -118,6 +134,22 @@ export function MatchDetailView() {
       );
     } catch (error) {
       toast.error(error.message || 'Error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveSchedule = async () => {
+    try {
+      setIsSubmitting(true);
+      await updateMatch(tournamentId, matchId, {
+        date: `${scheduleDate}T${scheduleTime}:00.000Z`,
+        venue: scheduleVenue,
+      });
+      toast.success('Horario actualizado');
+      setScheduleEditOpen(false);
+    } catch (err) {
+      toast.error(err.message || 'Error al guardar');
     } finally {
       setIsSubmitting(false);
     }
@@ -283,23 +315,75 @@ export function MatchDetailView() {
             />
 
             {/* Meta row */}
-            <Stack direction="row" spacing={1.5} sx={{ mt: 0.5 }}>
-              {match.matchweek && (
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  Jornada {match.matchweek}
-                </Typography>
-              )}
-              {match.round && (
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  {match.round}
-                </Typography>
-              )}
-              {match.venue && (
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  📍 {match.venue}
-                </Typography>
-              )}
-            </Stack>
+            {scheduleEditOpen ? (
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }} flexWrap="wrap">
+                <TextField
+                  label="Fecha"
+                  type="date"
+                  size="small"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ width: 150 }}
+                />
+                <TextField
+                  label="Hora"
+                  type="time"
+                  size="small"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ width: 120 }}
+                />
+                <TextField
+                  label="Sede"
+                  size="small"
+                  value={scheduleVenue}
+                  onChange={(e) => setScheduleVenue(e.target.value)}
+                  placeholder="Estadio o cancha"
+                  sx={{ width: 200 }}
+                />
+                <LoadingButton
+                  size="small"
+                  variant="contained"
+                  loading={isSubmitting}
+                  disabled={!scheduleDate || !scheduleTime}
+                  onClick={handleSaveSchedule}
+                >
+                  Guardar
+                </LoadingButton>
+                <Button size="small" onClick={() => setScheduleEditOpen(false)}>
+                  Cancelar
+                </Button>
+              </Stack>
+            ) : (
+              <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5 }}>
+                {match.matchweek && (
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    Jornada {match.matchweek}
+                  </Typography>
+                )}
+                {match.round && (
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {match.round}
+                  </Typography>
+                )}
+                {match.venue && (
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    📍 {match.venue}
+                  </Typography>
+                )}
+                {isAdmin && (
+                  <IconButton
+                    size="small"
+                    onClick={() => setScheduleEditOpen(true)}
+                    sx={{ opacity: 0.4, '&:hover': { opacity: 1 }, p: 0.25 }}
+                  >
+                    <Iconify icon="mdi:pencil" width={13} />
+                  </IconButton>
+                )}
+              </Stack>
+            )}
           </Stack>
 
           {/* Away */}
