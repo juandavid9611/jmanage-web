@@ -167,7 +167,6 @@ export function MatchDetailView() {
         created,
         card_events_found: cardEventsFound,
         skipped_already_charged: alreadyCharged,
-        skipped_no_email: noEmail,
         skipped_fee_zero: feeZero,
       } = await createMatchCharges(tournamentId, matchId);
 
@@ -177,8 +176,6 @@ export function MatchDetailView() {
         toast.info('Este partido no tiene eventos de tarjeta registrados');
       } else if (alreadyCharged > 0 && alreadyCharged === cardEventsFound) {
         toast.info('Los cobros de este partido ya fueron generados');
-      } else if (noEmail > 0) {
-        toast.warning('No se generaron cobros — los equipos no tienen email de contacto configurado');
       } else if (feeZero > 0) {
         toast.warning('No se generaron cobros — verifica que las tarifas de tarjetas estén configuradas en el torneo');
       } else {
