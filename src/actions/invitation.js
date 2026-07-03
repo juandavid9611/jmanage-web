@@ -73,3 +73,10 @@ export async function revokeInvitation({ tournamentId, teamId }) {
   mutate((key) => typeof key === 'string' && key.includes(`${tournamentId}/invitations`));
   return res.data;
 }
+
+// ── Admin Invitations (auth required) ─────────────────────────────────
+
+export async function createAdminInvitation({ email }) {
+  const res = await axiosInstance.post('/admin-invitations', { email });
+  return res.data;
+}
