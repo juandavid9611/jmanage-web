@@ -699,3 +699,11 @@ export function useGetPublicMatch(tournamentId, matchId) {
   );
 }
 
+export async function createMatchCharges(tournamentId, matchId) {
+  const res = await axiosInstance.post(`${endpoints.paymentRequests}/tournament-match-charges`, {
+    tournamentId,
+    matchId,
+  });
+  return res.data;
+}
+

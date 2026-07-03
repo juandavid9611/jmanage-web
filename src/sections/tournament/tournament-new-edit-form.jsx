@@ -49,6 +49,7 @@ const TournamentSchema = zod.object({
   season: zod.string().optional(),
   type: zod.enum(['league', 'knockout', 'hybrid']),
   is_public: zod.boolean().optional(),
+  payments_enabled: zod.boolean().optional(),
   num_teams: zod.coerce.number().int().min(2).optional().or(zod.literal('')),
   description: zod.string().optional(),
   location: zod.string().optional(),
@@ -60,6 +61,8 @@ const TournamentSchema = zod.object({
     points_per_loss: zod.coerce.number().int().min(0, 'Debe ser 0 o más'),
     total_matchweeks: zod.coerce.number().int().min(1, 'Debe ser al menos 1'),
     legs: zod.coerce.number().int().refine((v) => v === 1 || v === 2, { message: 'Debe ser 1 o 2' }),
+    yellow_card_fee: zod.coerce.number().int().min(0).optional().or(zod.literal('')),
+    red_card_fee: zod.coerce.number().int().min(0).optional().or(zod.literal('')),
   }),
 });
 
@@ -86,6 +89,7 @@ export function TournamentNewEditForm({ currentTournament }) {
     season: currentTournament?.season || '',
     type: currentTournament?.type || 'league',
     is_public: currentTournament?.is_public ?? false,
+    payments_enabled: currentTournament?.payments_enabled ?? false,
     num_teams: currentTournament?.num_teams || '',
     description: currentTournament?.description || '',
     location: currentTournament?.location || '',
@@ -97,6 +101,8 @@ export function TournamentNewEditForm({ currentTournament }) {
       points_per_loss: currentTournament?.rules?.points_per_loss ?? 0,
       total_matchweeks: currentTournament?.rules?.total_matchweeks ?? 6,
       legs: currentTournament?.rules?.legs ?? 1,
+      yellow_card_fee: currentTournament?.rules?.yellow_card_fee ?? '',
+      red_card_fee: currentTournament?.rules?.red_card_fee ?? '',
     },
   };
 
@@ -113,6 +119,7 @@ export function TournamentNewEditForm({ currentTournament }) {
 
   const tournamentType = watch('type');
   const nameValue = watch('name');
+  const paymentsEnabled = watch('payments_enabled');
   const showLeagueRules = tournamentType === 'league' || tournamentType === 'hybrid';
   const showMatchweeks = tournamentType === 'league';
 
@@ -314,6 +321,14 @@ export function TournamentNewEditForm({ currentTournament }) {
                     helperText="Visible sin iniciar sesión"
                   />
                 </Grid>
+
+                <Grid xs={12} sm={4}>
+                  <Field.Switch
+                    name="payments_enabled"
+                    label="Pagos habilitados"
+                    helperText="Permite cobros por tarjetas"
+                  />
+                </Grid>
               </Grid>
 
               <Grid container spacing={2}>
@@ -366,6 +381,23 @@ export function TournamentNewEditForm({ currentTournament }) {
                     </MenuItem>
                   ))}
                 </Field.Select>
+
+                {paymentsEnabled && (
+                  <>
+                    <Field.Text
+                      name="rules.yellow_card_fee"
+                      label="Multa Amarilla"
+                      type="number"
+                      InputProps={{ inputProps: { min: 0 } }}
+                    />
+                    <Field.Text
+                      name="rules.red_card_fee"
+                      label="Multa Roja / Doble Amarilla"
+                      type="number"
+                      InputProps={{ inputProps: { min: 0 } }}
+                    />
+                  </>
+                )}
               </Stack>
             </Card>
           )}

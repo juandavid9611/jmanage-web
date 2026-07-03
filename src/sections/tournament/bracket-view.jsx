@@ -386,6 +386,7 @@ export function BracketView({
                           isLive={isLive}
                           hasMatch={hasMatch}
                           canCreate={canCreate}
+                          readOnly={readOnly}
                           onNavigate={
                             hasMatch
                               ? () =>
@@ -581,6 +582,7 @@ function MatchCard({
   isLive,
   hasMatch,
   canCreate,
+  readOnly = false,
   onNavigate,
   onCreate,
 }) {
@@ -699,7 +701,7 @@ function MatchCard({
         <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem' }}>
           {footer || '—'}
         </Typography>
-        {hasMatch && (
+        {hasMatch && !readOnly && (
           <Button
             size="small"
             variant={isFinished ? 'soft' : 'contained'}

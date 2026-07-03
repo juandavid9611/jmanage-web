@@ -19,7 +19,10 @@ import DialogActions from '@mui/material/DialogActions';
 
 import { paths } from 'src/routes/paths';
 
+import { fDateTime } from 'src/utils/format-time';
+
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
   useGetMatch,
   useGetTeams,
@@ -30,6 +33,7 @@ import {
   useGetTournament,
   createMatchEvent,
   deleteMatchEvent,
+  createMatchCharges,
 } from 'src/actions/tournament';
 
 import { toast } from 'src/components/snackbar';
@@ -37,7 +41,9 @@ import { Iconify } from 'src/components/iconify';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { EventBadge, EVENT_CONFIG } from '../match-row';
+import { useAuthContext } from 'src/auth/hooks';
+
+import { EventBadge, EVENT_CONFIG, MatchScheduleDialog } from '../match-row';
 
 // ----------------------------------------------------------------------
 
@@ -71,6 +77,11 @@ export function MatchDetailView() {
   const { teams } = useGetTeams(tournamentId);
   const { players } = useGetPlayers(tournamentId);
 
+  const { workspaceRole } = useWorkspace();
+  const { user } = useAuthContext();
+  const isAccountAdmin = user?.accountsRoles?.[user?.activeAccountId] === 'admin';
+  const isAdmin = workspaceRole === 'admin' || isAccountAdmin;
+
   const [eventDialog, setEventDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [eventForm, setEventForm] = useState({
@@ -82,6 +93,8 @@ export function MatchDetailView() {
   });
 
   const [notes, setNotes] = useState('');
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [chargesLoading, setChargesLoading] = useState(false);
 
   useEffect(() => {
     if (match) setNotes(match.notes || '');
@@ -144,6 +157,40 @@ export function MatchDetailView() {
       navigate(paths.dashboard.tournament.details(tournamentId));
     } catch (error) {
       toast.error('Error al eliminar');
+    }
+  };
+
+  const handleCreateCharges = async () => {
+    try {
+      setChargesLoading(true);
+      const {
+        created,
+        card_events_found: cardEventsFound,
+        skipped_already_charged: alreadyCharged,
+        skipped_no_team: noTeam,
+        skipped_no_manager: noManager,
+        skipped_fee_zero: feeZero,
+      } = await createMatchCharges(tournamentId, matchId);
+
+      if (created > 0) {
+        toast.success(`${created} cobro${created !== 1 ? 's' : ''} generado${created !== 1 ? 's' : ''}`);
+      } else if (cardEventsFound === 0) {
+        toast.info('Este partido no tiene eventos de tarjeta registrados');
+      } else if (alreadyCharged > 0 && alreadyCharged === cardEventsFound) {
+        toast.info('Los cobros de este partido ya fueron generados');
+      } else if (noManager > 0) {
+        toast.warning('No se generaron cobros — los equipos no tienen un usuario registrado como manager');
+      } else if (noTeam > 0) {
+        toast.warning('No se generaron cobros — no se encontraron los equipos de los eventos');
+      } else if (feeZero > 0) {
+        toast.warning('No se generaron cobros — verifica que las tarifas de tarjetas estén configuradas en el torneo');
+      } else {
+        toast.warning('No se generaron cobros');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Error al generar cobros');
+    } finally {
+      setChargesLoading(false);
     }
   };
 
@@ -283,7 +330,7 @@ export function MatchDetailView() {
             />
 
             {/* Meta row */}
-            <Stack direction="row" spacing={1.5} sx={{ mt: 0.5 }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5, flexWrap: 'wrap' }}>
               {match.matchweek && (
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                   Jornada {match.matchweek}
@@ -294,10 +341,30 @@ export function MatchDetailView() {
                   {match.round}
                 </Typography>
               )}
+              {match.date && (
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Iconify icon="solar:calendar-date-bold" width={13} sx={{ color: 'text.disabled' }} />
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {fDateTime(match.date, 'DD MMM YYYY · HH:mm')}
+                  </Typography>
+                </Stack>
+              )}
               {match.venue && (
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  📍 {match.venue}
-                </Typography>
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Iconify icon="solar:map-point-bold" width={13} sx={{ color: 'text.disabled' }} />
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {match.venue}
+                  </Typography>
+                </Stack>
+              )}
+              {isAdmin && (
+                <IconButton
+                  size="small"
+                  onClick={() => setScheduleDialogOpen(true)}
+                  sx={{ opacity: 0.4, '&:hover': { opacity: 1 }, p: 0.25 }}
+                >
+                  <Iconify icon="mdi:pencil" width={13} />
+                </IconButton>
               )}
             </Stack>
           </Stack>
@@ -420,6 +487,19 @@ export function MatchDetailView() {
                 : awayTeam?.short_name}
               )
             </Button>
+          )}
+
+          {isAdmin && tournament?.payments_enabled && isFinished && (
+            <LoadingButton
+              size="small"
+              variant="soft"
+              color="warning"
+              loading={chargesLoading}
+              startIcon={<Iconify icon="solar:dollar-minimalistic-bold" width={16} />}
+              onClick={handleCreateCharges}
+            >
+              Generar Cobros
+            </LoadingButton>
           )}
 
           <Box sx={{ flex: 1 }} />
@@ -596,6 +676,13 @@ export function MatchDetailView() {
       </Box>
 
       {/* ── Add Event Dialog ───────────────────────────────────────── */}
+      <MatchScheduleDialog
+        open={scheduleDialogOpen}
+        match={match}
+        tournamentId={tournamentId}
+        onClose={() => setScheduleDialogOpen(false)}
+      />
+
       <Dialog open={eventDialog} onClose={() => setEventDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Registrar Evento</DialogTitle>
         <DialogContent>

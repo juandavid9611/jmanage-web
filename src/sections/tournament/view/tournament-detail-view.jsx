@@ -22,6 +22,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import { paths } from 'src/routes/paths';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
   useGetTeams,
   useGetStats,
@@ -40,12 +41,12 @@ import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 
 import { TeamList } from '../team-list';
-import { MatchList } from '../match-row';
 import { BracketView } from '../bracket-view';
 import { StatsOverview } from '../stats-overview';
 import { StandingsSidebar } from '../standings-sidebar';
 import { MatchweekTimeline } from '../matchweek-timeline';
 import { PlayerRankingTable } from '../player-ranking-table';
+import { MatchList, MatchScheduleDialog } from '../match-row';
 import { TeamDisciplineTable } from '../team-discipline-table';
 import { getPhases, TournamentBanner } from '../tournament-banner';
 import { TournamentConfigSummary } from '../tournament-config-summary';
@@ -83,6 +84,9 @@ export function TournamentDetailView() {
   const { matches: allMatches, matchesLoading } = useGetMatches(id);
   const { players } = useGetPlayers(id);
 
+  const { workspaceRole } = useWorkspace();
+  const isAdmin = workspaceRole === 'admin';
+
   const [activePhase, setActivePhase] = useState(null);
   const [selectedMatchweek, setSelectedMatchweek] = useState(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,6 +95,7 @@ export function TournamentDetailView() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [scheduleDialog, setScheduleDialog] = useState(false);
   const [disciplineOpen, setDisciplineOpen] = useState(false);
+  const [scheduleMatch, setScheduleMatch] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
     start_date: new Date().toISOString().split('T')[0],
     match_interval_days: 7,
@@ -328,7 +333,8 @@ export function TournamentDetailView() {
                     tournamentId={id}
                     grouped
                     onMatchClick={handleMatchClick}
-                    onScoreClick={handleScoreClick}
+                    onScoreClick={isAdmin ? handleScoreClick : undefined}
+                    onEditSchedule={isAdmin ? (m) => setScheduleMatch(m) : undefined}
                   />
                 )}
               </Box>
@@ -344,7 +350,7 @@ export function TournamentDetailView() {
                   currentMatchweek={currentMw}
                   totalMatchweeks={totalMw}
                   onNextAction={
-                    nextPendingMatch
+                    isAdmin && nextPendingMatch
                       ? () => handleScoreClick(nextPendingMatch)
                       : undefined
                   }
@@ -357,7 +363,7 @@ export function TournamentDetailView() {
         {/* ── KNOCKOUT PHASES: Bracket view ── */}
         {isKnockoutPhase && (
           <Box sx={{ p: { xs: 2, md: 3 } }}>
-            <BracketView tournamentId={id} teams={teams} tournament={tournament} allMatches={allMatches} />
+            <BracketView tournamentId={id} teams={teams} tournament={tournament} allMatches={allMatches} readOnly={!isAdmin} />
           </Box>
         )}
 
@@ -508,6 +514,14 @@ export function TournamentDetailView() {
           </LoadingButton>
         </DialogActions>
       </Dialog>
+
+      {/* Match Schedule Dialog */}
+      <MatchScheduleDialog
+        open={!!scheduleMatch}
+        match={scheduleMatch}
+        tournamentId={id}
+        onClose={() => setScheduleMatch(null)}
+      />
 
       {/* Discipline drawer (Sanciones) */}
       <Drawer

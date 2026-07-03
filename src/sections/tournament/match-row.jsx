@@ -1,20 +1,29 @@
-import { useState } from 'react';
+import dayjs from 'dayjs';
+import { useState, useEffect } from 'react';
 
-import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Dialog from '@mui/material/Dialog';
+import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import { alpha } from '@mui/material/styles';
 import Collapse from '@mui/material/Collapse';
 import Skeleton from '@mui/material/Skeleton';
-import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import LoadingButton from '@mui/lab/LoadingButton';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import { MobileDateTimePicker } from '@mui/x-date-pickers/MobileDateTimePicker';
 
 import { fDateTime } from 'src/utils/format-time';
 
-import { useGetMatch, useGetPublicMatch } from 'src/actions/tournament';
+import { useGetMatch, updateMatch, useGetPublicMatch } from 'src/actions/tournament';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
@@ -38,7 +47,7 @@ export const EVENT_CONFIG = {
 
 // ----------------------------------------------------------------------
 
-export function MatchRow({ match, teams, players, tournamentId, onClick, onScoreClick, expanded, onToggle, publicMode = false }) {
+export function MatchRow({ match, teams, players, tournamentId, onClick, onScoreClick, onEditSchedule, expanded, onToggle, publicMode = false }) {
   const homeTeam = teams?.find((t) => t.id === match.home_team_id);
   const awayTeam = teams?.find((t) => t.id === match.away_team_id);
   const homeName = homeTeam?.short_name || homeTeam?.name || 'TBD';
@@ -106,7 +115,7 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
             </Stack>
           ) : (
             <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem', color: 'text.secondary' }}>
-              {match.date ? fDateTime(match.date, 'HH:mm') : '--:--'}
+              {match.date ? fDateTime(match.date, 'DD MMM · HH:mm') : '--:--'}
             </Typography>
           )}
           {match.venue && (
@@ -196,6 +205,15 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
             >
               Ver
             </Button>
+          )}
+          {onEditSchedule && !publicMode && (
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onEditSchedule(match); }}
+              sx={{ color: 'text.disabled', '&:hover': { color: 'text.primary' } }}
+            >
+              <Iconify icon="mdi:calendar-edit" width={15} />
+            </IconButton>
           )}
         </Stack>
 
@@ -395,7 +413,7 @@ export function EventBadge({ cfg, player, assist, align }) {
 
 // ----------------------------------------------------------------------
 
-export function MatchList({ matches, teams, players, tournamentId, onMatchClick, onScoreClick, grouped = true, publicMode = false }) {
+export function MatchList({ matches, teams, players, tournamentId, onMatchClick, onScoreClick, onEditSchedule, grouped = true, publicMode = false }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const toggle = (id) => setExpandedId((prev) => (prev === id ? null : id));
@@ -412,6 +430,7 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
             tournamentId={tournamentId}
             onClick={() => onMatchClick?.(match)}
             onScoreClick={() => onScoreClick?.(match)}
+            onEditSchedule={onEditSchedule}
             expanded={expandedId === match.id}
             onToggle={() => toggle(match.id)}
             publicMode={publicMode}
@@ -457,6 +476,7 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
               tournamentId={tournamentId}
               onClick={() => onMatchClick?.(match)}
               onScoreClick={() => onScoreClick?.(match)}
+              onEditSchedule={onEditSchedule}
               expanded={expandedId === match.id}
               onToggle={() => toggle(match.id)}
               publicMode={publicMode}
@@ -478,5 +498,71 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
         </Typography>
       )}
     </Box>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
+  const [datetime, setDatetime] = useState(null);
+  const [venue, setVenue] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!match) return;
+    setDatetime(match.date ? dayjs(match.date) : null);
+    setVenue(match.venue || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match?.id, open]);
+
+  const handleSave = async () => {
+    if (!match || !datetime) return;
+    try {
+      setSaving(true);
+      await updateMatch(tournamentId, match.id, {
+        date: datetime.toISOString(),
+        venue,
+      });
+      toast.success('Horario actualizado');
+      onClose();
+    } catch (err) {
+      toast.error(err.message || 'Error al guardar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle>Horario y Sede</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <MobileDateTimePicker
+            label="Fecha y hora"
+            value={datetime}
+            onChange={setDatetime}
+            slotProps={{ textField: { fullWidth: true } }}
+          />
+          <TextField
+            label="Sede"
+            value={venue}
+            onChange={(e) => setVenue(e.target.value)}
+            fullWidth
+            placeholder="Nombre del estadio o cancha"
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button variant="soft" color="inherit" onClick={onClose}>Cancelar</Button>
+        <LoadingButton
+          variant="contained"
+          loading={saving}
+          disabled={!datetime || !datetime.isValid()}
+          onClick={handleSave}
+        >
+          Guardar
+        </LoadingButton>
+      </DialogActions>
+    </Dialog>
   );
 }

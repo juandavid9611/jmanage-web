@@ -44,6 +44,7 @@ import {
 
 import { UserTableRow } from '../user-table-row';
 import { UserTableToolbar } from '../user-table-toolbar';
+import { AdminInviteDialog } from '../admin-invite-dialog';
 import { UserTableFiltersResult } from '../user-table-filters-result';
 
 // ----------------------------------------------------------------------
@@ -69,6 +70,7 @@ export function UserListView() {
   const router = useRouter();
 
   const confirm = useBoolean();
+  const adminInviteDialog = useBoolean();
 
   const [tableData, setTableData] = useState([]);
 
@@ -149,6 +151,15 @@ export function UserListView() {
             { name: t('user'), href: paths.dashboard.admin.user.root },
             { name: t('list') },
           ]}
+          action={
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={adminInviteDialog.onTrue}
+            >
+              Crear administrador
+            </Button>
+          }
           sx={{
             mb: { xs: 3, md: 5 },
           }}
@@ -318,6 +329,8 @@ export function UserListView() {
           </Button>
         }
       />
+
+      <AdminInviteDialog open={adminInviteDialog.value} onClose={adminInviteDialog.onFalse} />
     </>
   );
 }
