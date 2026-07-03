@@ -40,6 +40,8 @@ import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { TeamList } from '../team-list';
 import { BracketView } from '../bracket-view';
 import { StatsOverview } from '../stats-overview';
@@ -48,8 +50,10 @@ import { MatchweekTimeline } from '../matchweek-timeline';
 import { PlayerRankingTable } from '../player-ranking-table';
 import { MatchList, MatchScheduleDialog } from '../match-row';
 import { TeamDisciplineTable } from '../team-discipline-table';
+import { TournamentUsersTable } from '../tournament-users-table';
 import { getPhases, TournamentBanner } from '../tournament-banner';
 import { TournamentConfigSummary } from '../tournament-config-summary';
+import { TournamentPaymentsTable } from '../tournament-payments-table';
 
 // ----------------------------------------------------------------------
 
@@ -77,8 +81,9 @@ export function TournamentDetailView() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const { user } = useAuthContext();
   const { tournament, tournamentLoading } = useGetTournament(id);
-  const { teams } = useGetTeams(id);
+  const { teams, teamsLoading } = useGetTeams(id);
   const { groups } = useGetGroups(id);
   const { stats } = useGetStats(id);
   const { matches: allMatches, matchesLoading } = useGetMatches(id);
@@ -86,6 +91,11 @@ export function TournamentDetailView() {
 
   const { workspaceRole } = useWorkspace();
   const isAdmin = workspaceRole === 'admin';
+  // GET /payment_requests is gated by ACCOUNT role, not workspace role (unlike the
+  // workspace-scoped mutations below), so it needs the same account-role fallback
+  // used for the account-role-gated "Generar Cobros" endpoint in match-detail-view.jsx.
+  const isAccountAdmin = user?.accountsRoles?.[user?.activeAccountId] === 'admin';
+  const canViewTournamentPayments = isAdmin || isAccountAdmin;
 
   const [activePhase, setActivePhase] = useState(null);
   const [selectedMatchweek, setSelectedMatchweek] = useState(undefined);
@@ -95,6 +105,8 @@ export function TournamentDetailView() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [scheduleDialog, setScheduleDialog] = useState(false);
   const [disciplineOpen, setDisciplineOpen] = useState(false);
+  const [paymentsOpen, setPaymentsOpen] = useState(false);
+  const [usersOpen, setUsersOpen] = useState(false);
   const [scheduleMatch, setScheduleMatch] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
     start_date: new Date().toISOString().split('T')[0],
@@ -104,7 +116,8 @@ export function TournamentDetailView() {
   });
 
   // Resolve active phase (lazy init after tournament loads)
-  const currentPhase = activePhase || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
+  const currentPhase =
+    activePhase || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
 
   // Derive current matchweek
   const currentMw = tournament?.current_matchweek || 1;
@@ -122,7 +135,10 @@ export function TournamentDetailView() {
 
   // Next pending match for sidebar action
   const nextPendingMatch = useMemo(
-    () => allMatches.find((m) => m.matchweek === currentMw && m.status !== 'finished' && m.status !== 'cancelled'),
+    () =>
+      allMatches.find(
+        (m) => m.matchweek === currentMw && m.status !== 'finished' && m.status !== 'cancelled'
+      ),
     [allMatches, currentMw]
   );
 
@@ -172,9 +188,7 @@ export function TournamentDetailView() {
         const mwMatches = res.data || [];
         const unfinished = mwMatches.filter((m) => m.status !== 'finished');
         if (unfinished.length > 0) {
-          toast.error(
-            `Faltan ${unfinished.length} partido(s) por finalizar en Jornada ${mw}`
-          );
+          toast.error(`Faltan ${unfinished.length} partido(s) por finalizar en Jornada ${mw}`);
           return;
         }
       }
@@ -254,11 +268,12 @@ export function TournamentDetailView() {
         onAdvanceMatchweek={handleAdvanceMatchweek}
         onNavigateEdit={() => navigate(paths.dashboard.tournament.edit(id))}
         onOpenDiscipline={() => setDisciplineOpen(true)}
+        onOpenPayments={canViewTournamentPayments ? () => setPaymentsOpen(true) : undefined}
+        onOpenUsers={canViewTournamentPayments ? () => setUsersOpen(true) : undefined}
       />
 
       {/* ═══ Phase Content ═══ */}
       <Box sx={{ bgcolor: (t) => alpha(t.palette.grey[500], 0.02), minHeight: 400 }}>
-
         {/* ── CONFIGURACIÓN: Tournament overview, stats ── */}
         {currentPhase === 'configuracion' && (
           <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
@@ -299,7 +314,9 @@ export function TournamentDetailView() {
                   <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
                     {activeMw === null ? 'Todos los partidos' : `Jornada ${activeMw}`}
                   </Typography>
-                  <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.08) }} />
+                  <Box
+                    sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.08) }}
+                  />
                 </Stack>
 
                 {matchesLoading ? (
@@ -340,30 +357,33 @@ export function TournamentDetailView() {
               </Box>
             </Grid>
 
-              {/* Right: standings */}
-              <Grid xs={12} md={6}>
-                <StandingsSidebar
-                  tournamentId={id}
-                  teams={teams}
-                  allMatches={allMatches}
-                  nextPendingMatch={nextPendingMatch}
-                  currentMatchweek={currentMw}
-                  totalMatchweeks={totalMw}
-                  onNextAction={
-                    isAdmin && nextPendingMatch
-                      ? () => handleScoreClick(nextPendingMatch)
-                      : undefined
-                  }
-                />
-              </Grid>
-
+            {/* Right: standings */}
+            <Grid xs={12} md={6}>
+              <StandingsSidebar
+                tournamentId={id}
+                teams={teams}
+                allMatches={allMatches}
+                nextPendingMatch={nextPendingMatch}
+                currentMatchweek={currentMw}
+                totalMatchweeks={totalMw}
+                onNextAction={
+                  isAdmin && nextPendingMatch ? () => handleScoreClick(nextPendingMatch) : undefined
+                }
+              />
             </Grid>
+          </Grid>
         )}
 
         {/* ── KNOCKOUT PHASES: Bracket view ── */}
         {isKnockoutPhase && (
           <Box sx={{ p: { xs: 2, md: 3 } }}>
-            <BracketView tournamentId={id} teams={teams} tournament={tournament} allMatches={allMatches} readOnly={!isAdmin} />
+            <BracketView
+              tournamentId={id}
+              teams={teams}
+              tournament={tournament}
+              allMatches={allMatches}
+              readOnly={!isAdmin}
+            />
           </Box>
         )}
 
@@ -395,12 +415,17 @@ export function TournamentDetailView() {
       {/* ═══ Dialogs ═══ */}
 
       {/* Activate confirmation */}
-      <Dialog open={activateDialog} onClose={() => setActivateDialog(false)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={activateDialog}
+        onClose={() => setActivateDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>Activar Torneo</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Al activar el torneo no podrás agregar ni eliminar equipos. ¿Confirmas que deseas activar{' '}
-            <strong>{tournament.name}</strong>?
+            Al activar el torneo no podrás agregar ni eliminar equipos. ¿Confirmas que deseas
+            activar <strong>{tournament.name}</strong>?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -421,8 +446,8 @@ export function TournamentDetailView() {
         <DialogTitle>Finalizar Torneo</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Esto marcará el torneo como <strong>Finalizado</strong>. Podrás reabrirlo si es necesario.
-            ¿Confirmas?
+            Esto marcará el torneo como <strong>Finalizado</strong>. Podrás reabrirlo si es
+            necesario. ¿Confirmas?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -461,7 +486,12 @@ export function TournamentDetailView() {
       </Dialog>
 
       {/* Schedule Generation Dialog */}
-      <Dialog open={scheduleDialog} onClose={() => setScheduleDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={scheduleDialog}
+        onClose={() => setScheduleDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Generar Calendario</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -509,7 +539,11 @@ export function TournamentDetailView() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setScheduleDialog(false)}>Cancelar</Button>
-          <LoadingButton variant="contained" loading={isSubmitting} onClick={handleGenerateSchedule}>
+          <LoadingButton
+            variant="contained"
+            loading={isSubmitting}
+            onClick={handleGenerateSchedule}
+          >
             Generar
           </LoadingButton>
         </DialogActions>
@@ -551,6 +585,56 @@ export function TournamentDetailView() {
               navigate(paths.dashboard.tournament.matchDetail(id, matchId));
             }}
           />
+        </Box>
+      </Drawer>
+
+      {/* Pagos drawer — payment requests generated for this tournament */}
+      <Drawer
+        anchor="right"
+        open={paymentsOpen}
+        onClose={() => setPaymentsOpen(false)}
+        PaperProps={{ sx: { width: { xs: '100%', sm: 520, md: 640 } } }}
+      >
+        <Box sx={{ p: 2.5, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack>
+              <Typography variant="h6">Pagos</Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                Cobros generados para este torneo
+              </Typography>
+            </Stack>
+            <IconButton onClick={() => setPaymentsOpen(false)}>
+              <Iconify icon="eva:close-fill" width={20} />
+            </IconButton>
+          </Stack>
+        </Box>
+        <Box sx={{ p: 2 }}>
+          <TournamentPaymentsTable tournamentId={id} />
+        </Box>
+      </Drawer>
+
+      {/* Usuarios drawer — team managers/contacts billed by this tournament */}
+      <Drawer
+        anchor="right"
+        open={usersOpen}
+        onClose={() => setUsersOpen(false)}
+        PaperProps={{ sx: { width: { xs: '100%', sm: 520, md: 640 } } }}
+      >
+        <Box sx={{ p: 2.5, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack>
+              <Typography variant="h6">Usuarios</Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                Encargados de equipo del torneo
+              </Typography>
+            </Stack>
+            <IconButton onClick={() => setUsersOpen(false)}>
+              <Iconify icon="eva:close-fill" width={20} />
+            </IconButton>
+          </Stack>
+        </Box>
+        <Box sx={{ p: 2 }}>
+          <TournamentUsersTable teams={teams} teamsLoading={teamsLoading} />
         </Box>
       </Drawer>
     </DashboardContent>
