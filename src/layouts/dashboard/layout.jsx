@@ -44,7 +44,9 @@ export function DashboardLayout({ sx, children, data }) {
   const { workspaces } = useWorkspace();
 
   const activeRole = user?.accountsRoles?.[user?.activeAccountId];
-  const defaultNavData = activeRole === 'team_owner' ? teamOwnerNavData : dashboardNavData;
+  const activeAccountType = user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club';
+  const defaultNavData =
+    activeRole === 'team_owner' ? teamOwnerNavData : filterClubOnlyNav(dashboardNavData, activeAccountType);
   const navData = data?.nav ?? defaultNavData;
 
   const isNavMini = settings.navLayout === 'mini';
@@ -198,6 +200,16 @@ export function DashboardLayout({ sx, children, data }) {
       </LayoutSection>
     </>
   );
+}
+
+// ----------------------------------------------------------------------
+
+function filterClubOnlyNav(navGroups, accountType) {
+  if (accountType !== 'tournament') return navGroups;
+  return navGroups.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !item.clubOnly),
+  }));
 }
 
 // ----------------------------------------------------------------------
