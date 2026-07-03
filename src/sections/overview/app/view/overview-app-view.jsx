@@ -44,20 +44,32 @@ export function OverviewAppView() {
   const { user } = useAuthContext();
   const { selectedWorkspace, selectWorkspace, allWorkspaces } = useWorkspace();
 
+  // Tournament accounts don't have the club league features (calendar, voting,
+  // late-arrival points, workspace goals/assists) — mirrors filterClubOnlyNav
+  // in src/layouts/dashboard/layout.jsx.
+  const accountType = user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club';
+  const isTournamentAccount = accountType === 'tournament';
+
   const { paymentRequests } = useGetPaymentRequestsByUser(user.id);
-  const { stadistics } = useGetUserAssistsStats(selectedWorkspace) || [];
-  const { events } = useGetEvents(selectedWorkspace);
-  const { topGoalsAndAssists } = useGetTopGoalsAndAssists(selectedWorkspace) || [];
+  const { stadistics } =
+    useGetUserAssistsStats(isTournamentAccount ? null : selectedWorkspace) || [];
+  const { events } = useGetEvents(isTournamentAccount ? null : selectedWorkspace);
+  const { topGoalsAndAssists } =
+    useGetTopGoalsAndAssists(isTournamentAccount ? null : selectedWorkspace) || [];
 
   const pendingOrOverduePaymentRequests = paymentRequests?.filter(
     (request) => request.status === 'pending' || request.status === 'overdue'
   );
 
   // Fast-path: same browser already has the flag
-  const [hasSeenTour, setHasSeenTour] = useState(() => !!localStorage.getItem('documents-feature-seen'));
+  const [hasSeenTour, setHasSeenTour] = useState(
+    () => !!localStorage.getItem('documents-feature-seen')
+  );
 
   // Only hit the API when the local flag is absent (new browser / incognito)
-  const { tourPreferences, tourPrefsLoading } = useGetTourPreferences(!hasSeenTour ? user.id : null);
+  const { tourPreferences, tourPrefsLoading } = useGetTourPreferences(
+    !hasSeenTour ? user.id : null
+  );
 
   const [tourHelpers, setTourHelpers] = useState(null);
   const [pendingWorkspace, setPendingWorkspace] = useState(null);
@@ -96,7 +108,7 @@ export function OverviewAppView() {
       hideCloseButton: true,
       content: (
         <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-          ¡Hemos agregado una potente función de Documentos! Ahora puedes ver todos los documentos 
+          ¡Hemos agregado una potente función de Documentos! Ahora puedes ver todos los documentos
           de tu Club al instante.
         </Box>
       ),
@@ -138,8 +150,8 @@ export function OverviewAppView() {
       placement: 'center',
       content: (
         <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-          Haz clic en &quot;Documentos&quot; en la barra lateral para comenzar a gestionar tus archivos. ¡Prueba
-          ver un PDF o descargar un archivo!
+          Haz clic en &quot;Documentos&quot; en la barra lateral para comenzar a gestionar tus
+          archivos. ¡Prueba ver un PDF o descargar un archivo!
         </Box>
       ),
     },
@@ -173,7 +185,7 @@ export function OverviewAppView() {
         selectWorkspace(pendingWorkspace);
       }
     }
-    
+
     // When tour completes, 'reset' action fires (before 'stop')
     if (action === 'reset') {
       localStorage.setItem('documents-feature-seen', 'true');
@@ -181,7 +193,7 @@ export function OverviewAppView() {
       markTourSeen(user.id, 'documents-feature');
       router.push(paths.dashboard.guide);
     }
-    
+
     walktour.onCallback(data);
   };
 
@@ -201,88 +213,90 @@ export function OverviewAppView() {
         disableBeacon
         disableOverlayClose
       />
-    <DashboardContent maxWidth="xl">
-      <Grid container spacing={3}>
-        {/* Votaciones Banner */}
-        <Grid xs={12}>
-          <Alert
-            severity="primary"
-            variant="standard"
-            icon={<Iconify icon="mdi:vote" width={24} />}
-            action={
-              <Button
-                color="primary"
-                size="small"
-                variant="outlined"
-                onClick={() => router.push(paths.dashboard.votaciones.root)}
-                endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
-                sx={{ whiteSpace: 'nowrap' }}
+      <DashboardContent maxWidth="xl">
+        <Grid container spacing={3}>
+          {/* Votaciones Banner */}
+          {!isTournamentAccount && (
+            <Grid xs={12}>
+              <Alert
+                severity="primary"
+                variant="standard"
+                icon={<Iconify icon="mdi:vote" width={24} />}
+                action={
+                  <Button
+                    color="primary"
+                    size="small"
+                    variant="outlined"
+                    onClick={() => router.push(paths.dashboard.votaciones.root)}
+                    endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
+                    sx={{ whiteSpace: 'nowrap' }}
+                  >
+                    Vota ya
+                  </Button>
+                }
+                sx={{
+                  alignItems: 'center',
+                  bgcolor: 'primary.lighter',
+                  color: 'primary.darker',
+                }}
               >
-                Vota ya
-              </Button>
-            }
-            sx={{ 
-              alignItems: 'center', 
-              bgcolor: 'primary.lighter',
-              color: 'primary.darker',
-            }}
-          >
-            ¡Participa en las votaciones activas de tu club y haz escuchar tu voz!
-          </Alert>
-        </Grid>
-
-        {/* Welcome / hero */}
-        <Grid xs={12} md={6}>
-          <AppWelcome
-            title={`${t('welcome_back')} ${user?.displayName}`}
-            description={t('we_re_vittoria')}
-          />
-        </Grid>
-
-        {/* Pending / overdue payments */}
-        <Grid xs={12} md={6}>
-          <AppNewInvoice
-            title="Pagos pendientes o vencidos"
-            tableData={pendingOrOverduePaymentRequests}
-            headLabel={[
-              { id: 'status', label: 'Estado' }, 
-              { id: 'totalAmount', label: 'Monto' },
-              { id: 'concept', label: 'Concepto' },
-              { id: 'dueDate', label: 'Vencimiento' },
-              { id: 'id', label: 'ID Pago' },
-            ]}
-          />
-        </Grid>
-
-        {/* Next events + upload voucher */}
-        <Grid xs={12} md={4}>
-          <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-            <NextEvents title={t('next_events')} list={events} />
-            <FileUpgrade userId={user.id} />
-          </Box>
-        </Grid>
-
-        {/* Featured content + stats */}
-        <Grid xs={12} md={8}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* <AppFeatured list={_appFeatured} /> */}
-
-            <Grid container spacing={3}>
-              <Grid xs={12} md={6}>
-                <CourseWidgetSummary title="Puntos llegadas tarde" list={stadistics} />
-              </Grid>
-
-              <Grid xs={12} md={6}>
-                <AppTopAuthors
-                  title={`${t('goals_and_assits')} ${selectedWorkspace?.name}`}
-                  list={orderBy(topGoalsAndAssists, ['goals'], ['desc']).slice(0, 3)}
-                />
-              </Grid>
+                ¡Participa en las votaciones activas de tu club y haz escuchar tu voz!
+              </Alert>
             </Grid>
-          </Box>
+          )}
+
+          {/* Welcome / hero */}
+          <Grid xs={12} md={6}>
+            <AppWelcome
+              title={`${t('welcome_back')} ${user?.displayName}`}
+              description={t('we_re_vittoria')}
+            />
+          </Grid>
+
+          {/* Pending / overdue payments */}
+          <Grid xs={12} md={6}>
+            <AppNewInvoice
+              title="Pagos pendientes o vencidos"
+              tableData={pendingOrOverduePaymentRequests}
+              headLabel={[
+                { id: 'status', label: 'Estado' },
+                { id: 'totalAmount', label: 'Monto' },
+                { id: 'concept', label: 'Concepto' },
+                { id: 'dueDate', label: 'Vencimiento' },
+                { id: 'id', label: 'ID Pago' },
+              ]}
+            />
+          </Grid>
+
+          {/* Next events + upload voucher */}
+          <Grid xs={12} md={isTournamentAccount ? 6 : 4}>
+            <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
+              {!isTournamentAccount && <NextEvents title={t('next_events')} list={events} />}
+              <FileUpgrade userId={user.id} />
+            </Box>
+          </Grid>
+
+          {/* Featured content + stats (club league only — tournaments have their own stats page) */}
+          {!isTournamentAccount && (
+            <Grid xs={12} md={8}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Grid container spacing={3}>
+                  <Grid xs={12} md={6}>
+                    <CourseWidgetSummary title="Puntos llegadas tarde" list={stadistics} />
+                  </Grid>
+
+                  <Grid xs={12} md={6}>
+                    <AppTopAuthors
+                      title={`${t('goals_and_assits')} ${selectedWorkspace?.name}`}
+                      list={orderBy(topGoalsAndAssists, ['goals'], ['desc']).slice(0, 3)}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            </Grid>
+          )}
         </Grid>
-      </Grid>
-    </DashboardContent>
+      </DashboardContent>
     </>
   );
 }

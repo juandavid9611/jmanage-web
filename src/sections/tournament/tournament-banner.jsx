@@ -122,8 +122,7 @@ export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
       // For knockout-only: always accessible once active.
       // For hybrid: only after all group-stage jornadas are done.
       const groupsDone = type === 'knockout' || (totalMw > 0 && currentMw >= totalMw);
-      const bracketGenerated =
-        tournament.bracket && Object.keys(tournament.bracket).length > 0;
+      const bracketGenerated = tournament.bracket && Object.keys(tournament.bracket).length > 0;
       phases.push({
         key: 'eliminatorias',
         label: 'Fase Final',
@@ -160,6 +159,8 @@ export function TournamentBanner({
   onFinish,
   onDelete,
   onOpenDiscipline,
+  onOpenPayments,
+  onOpenUsers,
   onAdvanceMatchweek,
   onNavigateEdit,
   publicMode = false,
@@ -178,9 +179,7 @@ export function TournamentBanner({
   const phases = getPhases(tournament, teams, totalMw, myRoster);
 
   const allGroupMatchesFinished =
-    !allMatches ||
-    allMatches.length === 0 ||
-    allMatches.every((m) => m.status === 'finished');
+    !allMatches || allMatches.length === 0 || allMatches.every((m) => m.status === 'finished');
 
   const hasBracket = tournament.bracket && Object.keys(tournament.bracket).length > 0;
 
@@ -306,105 +305,135 @@ export function TournamentBanner({
 
             {/* Action Buttons (hidden in public/read-only mode) */}
             {!publicMode && (
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {tournament.status === 'draft' && (
-                <Tooltip
-                  title={!canActivate ? 'Se necesitan al menos 2 equipos' : ''}
-                  arrow
-                >
-                  <span>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {tournament.status === 'draft' && (
+                  <Tooltip title={!canActivate ? 'Se necesitan al menos 2 equipos' : ''} arrow>
+                    <span>
+                      <LoadingButton
+                        variant="contained"
+                        color="success"
+                        size="small"
+                        startIcon={<Iconify icon="mdi:play" width={16} />}
+                        loading={isSubmitting}
+                        onClick={onActivate}
+                        disabled={!canActivate}
+                      >
+                        Activar
+                      </LoadingButton>
+                    </span>
+                  </Tooltip>
+                )}
+
+                {tournament.status === 'active' &&
+                  (isLeague || isHybrid) &&
+                  totalMw > 0 &&
+                  currentMw < totalMw && (
                     <LoadingButton
-                      variant="contained"
-                      color="success"
+                      variant="outlined"
                       size="small"
-                      startIcon={<Iconify icon="mdi:play" width={16} />}
+                      startIcon={<Iconify icon="mdi:skip-next" width={16} />}
                       loading={isSubmitting}
-                      onClick={onActivate}
-                      disabled={!canActivate}
+                      onClick={onAdvanceMatchweek}
                     >
-                      Activar
+                      Avanzar Jornada
                     </LoadingButton>
-                  </span>
-                </Tooltip>
-              )}
+                  )}
 
-              {tournament.status === 'active' && (isLeague || isHybrid) && totalMw > 0 && currentMw < totalMw && (
-                <LoadingButton
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Iconify icon="mdi:skip-next" width={16} />}
-                  loading={isSubmitting}
-                  onClick={onAdvanceMatchweek}
-                >
-                  Avanzar Jornada
-                </LoadingButton>
-              )}
-
-              {isHybrid && tournament.status === 'active' && totalMw > 0 && currentMw >= totalMw && !hasBracket && (
-                <Tooltip
-                  title={!allGroupMatchesFinished ? 'Hay partidos pendientes en la fase de grupos' : ''}
-                  arrow
-                >
-                  <span>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      size="small"
-                      startIcon={<Iconify icon="mdi:tournament" width={16} />}
-                      disabled={!allGroupMatchesFinished}
-                      onClick={() => onPhaseClick?.('eliminatorias')}
+                {isHybrid &&
+                  tournament.status === 'active' &&
+                  totalMw > 0 &&
+                  currentMw >= totalMw &&
+                  !hasBracket && (
+                    <Tooltip
+                      title={
+                        !allGroupMatchesFinished
+                          ? 'Hay partidos pendientes en la fase de grupos'
+                          : ''
+                      }
+                      arrow
                     >
-                      Iniciar Fase Final
-                    </Button>
-                  </span>
-                </Tooltip>
-              )}
+                      <span>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          startIcon={<Iconify icon="mdi:tournament" width={16} />}
+                          disabled={!allGroupMatchesFinished}
+                          onClick={() => onPhaseClick?.('eliminatorias')}
+                        >
+                          Iniciar Fase Final
+                        </Button>
+                      </span>
+                    </Tooltip>
+                  )}
 
-              {tournament.status === 'active' && (
-                <LoadingButton
-                  variant="outlined"
-                  color="info"
-                  size="small"
-                  startIcon={<Iconify icon="mdi:flag-checkered" width={16} />}
-                  loading={isSubmitting}
-                  onClick={onFinish}
-                >
-                  Finalizar
-                </LoadingButton>
-              )}
+                {tournament.status === 'active' && (
+                  <LoadingButton
+                    variant="outlined"
+                    color="info"
+                    size="small"
+                    startIcon={<Iconify icon="mdi:flag-checkered" width={16} />}
+                    loading={isSubmitting}
+                    onClick={onFinish}
+                  >
+                    Finalizar
+                  </LoadingButton>
+                )}
 
-              {onOpenDiscipline && (
+                {onOpenDiscipline && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Iconify icon="mdi:card-multiple" width={16} />}
+                    onClick={onOpenDiscipline}
+                  >
+                    Sanciones
+                  </Button>
+                )}
+
+                {onOpenPayments && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Iconify icon="solar:dollar-minimalistic-bold" width={16} />}
+                    onClick={onOpenPayments}
+                  >
+                    Pagos
+                  </Button>
+                )}
+
+                {onOpenUsers && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Iconify icon="mdi:account-group-outline" width={16} />}
+                    onClick={onOpenUsers}
+                  >
+                    Usuarios
+                  </Button>
+                )}
+
+                {tournament.status !== 'finished' && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Iconify icon="solar:pen-bold" width={16} />}
+                    onClick={onNavigateEdit}
+                  >
+                    Editar
+                  </Button>
+                )}
+
                 <Button
-                  variant="outlined"
+                  variant="soft"
+                  color="error"
                   size="small"
-                  startIcon={<Iconify icon="mdi:card-multiple" width={16} />}
-                  onClick={onOpenDiscipline}
+                  startIcon={<Iconify icon="solar:trash-bin-trash-bold" width={16} />}
+                  onClick={onDelete}
                 >
-                  Sanciones
+                  Eliminar
                 </Button>
-              )}
-
-              {tournament.status !== 'finished' && (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Iconify icon="solar:pen-bold" width={16} />}
-                  onClick={onNavigateEdit}
-                >
-                  Editar
-                </Button>
-              )}
-
-              <Button
-                variant="soft"
-                color="error"
-                size="small"
-                startIcon={<Iconify icon="solar:trash-bin-trash-bold" width={16} />}
-                onClick={onDelete}
-              >
-                Eliminar
-              </Button>
-            </Stack>
+              </Stack>
             )}
           </Stack>
         </Stack>
