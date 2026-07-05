@@ -136,6 +136,18 @@ export function MatchDetailView() {
     }
   };
 
+  const handleReopen = async () => {
+    try {
+      setIsSubmitting(true);
+      await updateMatch(tournamentId, matchId, { status: 'live' });
+      toast.success('Partido reabierto');
+    } catch (error) {
+      toast.error(error.message || 'Error al reabrir el partido');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleAddEvent = async () => {
     try {
       setIsSubmitting(true);
@@ -400,6 +412,17 @@ export function MatchDetailView() {
               onClick={handleStatusTransition}
             >
               {statusAction.label}
+            </LoadingButton>
+          )}
+          {isAdmin && isFinished && (
+            <LoadingButton
+              variant="outlined"
+              size="small"
+              startIcon={<Iconify icon="mdi:refresh" width={16} />}
+              loading={isSubmitting}
+              onClick={handleReopen}
+            >
+              Reabrir Partido
             </LoadingButton>
           )}
           {(isLive || isFinished) && (
