@@ -138,17 +138,19 @@ export function InvoiceTableRow({
         slotProps={{ arrow: { placement: 'right-top' } }}
       >
         <MenuList>
-          <MenuItem
-            onClick={() => {
-              onEditRow();
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:pen-bold" />
-            {t('edit')}
-          </MenuItem>
+          {onEditRow && (
+            <MenuItem
+              onClick={() => {
+                onEditRow();
+                popover.onClose();
+              }}
+            >
+              <Iconify icon="solar:pen-bold" />
+              {t('edit')}
+            </MenuItem>
+          )}
 
-          <Divider sx={{ borderStyle: 'dashed' }} />
+          {onEditRow && <Divider sx={{ borderStyle: 'dashed' }} />}
 
           <MenuItem
             onClick={() => {
