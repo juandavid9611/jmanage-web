@@ -34,7 +34,7 @@ export function UserTableFiltersResult({ filters, onResetPage, totalResults, sx 
 
   return (
     <FiltersResult totalResults={totalResults} onReset={handleReset} sx={sx}>
-      <FiltersBlock label="Status:" isShow={filters.state.status !== 'all'}>
+      <FiltersBlock label="Estado:" isShow={filters.state.status !== 'all'}>
         <Chip
           {...chipProps}
           label={filters.state.status}
@@ -43,13 +43,13 @@ export function UserTableFiltersResult({ filters, onResetPage, totalResults, sx 
         />
       </FiltersBlock>
 
-      <FiltersBlock label="Group:" isShow={!!filters.state.group.length}>
+      <FiltersBlock label="Grupo:" isShow={!!filters.state.group.length}>
         {filters.state.group.map((item) => (
           <Chip {...chipProps} key={item} label={item} onDelete={() => handleRemoveGroup(item)} />
         ))}
       </FiltersBlock>
 
-      <FiltersBlock label="Keyword:" isShow={!!filters.state.name}>
+      <FiltersBlock label="Palabra clave:" isShow={!!filters.state.name}>
         <Chip {...chipProps} label={filters.state.name} onDelete={handleRemoveKeyword} />
       </FiltersBlock>
     </FiltersResult>

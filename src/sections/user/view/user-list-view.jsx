@@ -49,7 +49,7 @@ import { UserTableFiltersResult } from '../user-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
+const STATUS_OPTIONS = [{ value: 'all', label: 'all' }, ...USER_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
   { id: '', width: 88 },
@@ -100,7 +100,7 @@ export function UserListView() {
       deleteUser(id);
       const deleteRow = tableData.filter((row) => row.id !== id);
 
-      toast.success('Delete success!');
+      toast.success('¡Eliminado con éxito!');
 
       setTableData(deleteRow);
 
@@ -112,7 +112,7 @@ export function UserListView() {
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
 
-    toast.success('Delete success!');
+    toast.success('¡Eliminado con éxito!');
 
     setTableData(deleteRows);
 
@@ -233,7 +233,7 @@ export function UserListView() {
                 )
               }
               action={
-                <Tooltip title="Delete">
+                <Tooltip title={t('delete')}>
                   <IconButton color="primary" onClick={confirm.onTrue}>
                     <Iconify icon="solar:trash-bin-trash-bold" />
                   </IconButton>
@@ -309,7 +309,7 @@ export function UserListView() {
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
+        title={t('delete')}
         content={
           <>
             {t('delete_confirmation')} <strong> {table.selected.length} </strong>{' '}
