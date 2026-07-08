@@ -159,7 +159,6 @@ export function TournamentBanner({
   onFinish,
   onDelete,
   onOpenDiscipline,
-  onOpenPayments,
   onOpenUsers,
   onAdvanceMatchweek,
   onNavigateEdit,
@@ -388,17 +387,6 @@ export function TournamentBanner({
                     onClick={onOpenDiscipline}
                   >
                     Sanciones
-                  </Button>
-                )}
-
-                {onOpenPayments && (
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<Iconify icon="solar:dollar-minimalistic-bold" width={16} />}
-                    onClick={onOpenPayments}
-                  >
-                    Pagos
                   </Button>
                 )}
 

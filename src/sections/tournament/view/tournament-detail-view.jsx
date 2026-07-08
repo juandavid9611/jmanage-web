@@ -53,7 +53,6 @@ import { TeamDisciplineTable } from '../team-discipline-table';
 import { TournamentUsersTable } from '../tournament-users-table';
 import { getPhases, TournamentBanner } from '../tournament-banner';
 import { TournamentConfigSummary } from '../tournament-config-summary';
-import { TournamentPaymentsTable } from '../tournament-payments-table';
 
 // ----------------------------------------------------------------------
 
@@ -105,7 +104,6 @@ export function TournamentDetailView() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [scheduleDialog, setScheduleDialog] = useState(false);
   const [disciplineOpen, setDisciplineOpen] = useState(false);
-  const [paymentsOpen, setPaymentsOpen] = useState(false);
   const [usersOpen, setUsersOpen] = useState(false);
   const [scheduleMatch, setScheduleMatch] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
@@ -268,7 +266,6 @@ export function TournamentDetailView() {
         onAdvanceMatchweek={handleAdvanceMatchweek}
         onNavigateEdit={() => navigate(paths.dashboard.tournament.edit(id))}
         onOpenDiscipline={() => setDisciplineOpen(true)}
-        onOpenPayments={canViewTournamentPayments ? () => setPaymentsOpen(true) : undefined}
         onOpenUsers={canViewTournamentPayments ? () => setUsersOpen(true) : undefined}
       />
 
@@ -585,31 +582,6 @@ export function TournamentDetailView() {
               navigate(paths.dashboard.tournament.matchDetail(id, matchId));
             }}
           />
-        </Box>
-      </Drawer>
-
-      {/* Pagos drawer — payment requests generated for this tournament */}
-      <Drawer
-        anchor="right"
-        open={paymentsOpen}
-        onClose={() => setPaymentsOpen(false)}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 520, md: 640 } } }}
-      >
-        <Box sx={{ p: 2.5, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Stack>
-              <Typography variant="h6">Pagos</Typography>
-              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                Cobros generados para este torneo
-              </Typography>
-            </Stack>
-            <IconButton onClick={() => setPaymentsOpen(false)}>
-              <Iconify icon="eva:close-fill" width={20} />
-            </IconButton>
-          </Stack>
-        </Box>
-        <Box sx={{ p: 2 }}>
-          <TournamentPaymentsTable tournamentId={id} />
         </Box>
       </Drawer>
 
