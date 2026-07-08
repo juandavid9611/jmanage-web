@@ -166,8 +166,8 @@ export function InvoiceTableRow({
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
-        content="Are you sure want to delete?"
+        title={t('delete')}
+        content={`${t('delete_confirmation')} este pago?`}
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
             {t('delete')}

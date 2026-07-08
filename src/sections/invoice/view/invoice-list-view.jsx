@@ -348,25 +348,25 @@ export function InvoiceListView() {
               }}
               action={
                 <Stack direction="row">
-                  <Tooltip title="Sent">
+                  <Tooltip title="Enviado">
                     <IconButton color="primary">
                       <Iconify icon="iconamoon:send-fill" />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Download">
+                  <Tooltip title="Descargar">
                     <IconButton color="primary">
                       <Iconify icon="eva:download-outline" />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Print">
+                  <Tooltip title="Imprimir">
                     <IconButton color="primary">
                       <Iconify icon="solar:printer-minimalistic-bold" />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Delete">
+                  <Tooltip title={t('delete')}>
                     <IconButton color="primary" onClick={confirm.onTrue}>
                       <Iconify icon="solar:trash-bin-trash-bold" />
                     </IconButton>
@@ -437,10 +437,11 @@ export function InvoiceListView() {
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
+        title={t('delete')}
         content={
           <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> items?
+            {t('delete_confirmation')} <strong> {table.selected.length} </strong>{' '}
+            {t('delete_confirmation_2')}
           </>
         }
         action={
@@ -452,7 +453,7 @@ export function InvoiceListView() {
               confirm.onFalse();
             }}
           >
-            Delete
+            {t('delete')}
           </Button>
         }
       />

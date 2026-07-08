@@ -44,19 +44,23 @@ import { InvoiceNewEditStatusDate } from './invoice-new-edit-status-date';
 
 export const NewInvoiceSchema = zod
   .object({
-    concept: zod.string().min(1, { message: 'Concept is required!' }),
-    description: zod.string().min(1, { message: 'Description is required!' }),
-    createDate: schemaHelper.date({ message: { required_error: 'Create date is required!' } }),
-    dueDate: schemaHelper.date({ message: { required_error: 'Due date is required!' } }),
-    status: zod.string().min(1, { message: 'Status is required!' }),
-    category: zod.string().min(1, { message: 'Category is required!' }),
-    group: zod.string().min(1, { message: 'Group is required!' }),
-    paymentRequestTo: zod.any().array().min(1, { message: 'Payment request to is required!' }),
-    userPrice: zod.number().min(1, { message: 'User price must be more than 0' }),
+    concept: zod.string().min(1, { message: '¡El concepto es requerido!' }),
+    description: zod.string().min(1, { message: '¡La descripción es requerida!' }),
+    createDate: schemaHelper.date({
+      message: { required_error: '¡La fecha de creación es requerida!' },
+    }),
+    dueDate: schemaHelper.date({
+      message: { required_error: '¡La fecha de vencimiento es requerida!' },
+    }),
+    status: zod.string().min(1, { message: '¡El estado es requerido!' }),
+    category: zod.string().min(1, { message: '¡La categoría es requerida!' }),
+    group: zod.string().min(1, { message: '¡El grupo es requerido!' }),
+    paymentRequestTo: zod.any().array().min(1, { message: '¡El destinatario es requerido!' }),
+    userPrice: zod.number().min(1, { message: '¡El monto debe ser mayor a 0!' }),
     overduePrice: zod.number(),
   })
   .refine((data) => !fIsAfter(data.createDate, data.dueDate), {
-    message: 'Due date cannot be earlier than create date!',
+    message: '¡La fecha de vencimiento no puede ser anterior a la fecha de creación!',
     path: ['dueDate'],
   });
 
@@ -130,11 +134,16 @@ export function InvoiceNewEditForm({ currentInvoice }) {
 
     try {
       if (currentInvoice) {
-        await updatePaymentRequest(currentInvoice.id, data, selectedWorkspace?.id, currentInvoice.orderId);
-        toast.success('Update success!');
+        await updatePaymentRequest(
+          currentInvoice.id,
+          data,
+          selectedWorkspace?.id,
+          currentInvoice.orderId
+        );
+        toast.success('¡Actualizado con éxito!');
       } else {
         await createPaymentRequests(data, selectedWorkspace?.id);
-        toast.success('Create success!');
+        toast.success('¡Creado con éxito!');
       }
     } catch (error) {
       toast.error(error.message);
@@ -147,7 +156,11 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       // Step 4: Wait for all uploads to complete
       try {
         // Step 2: Request pre-signed URLs for each file from the backend
-        const response = await generatePresignedUrls(values.id, values.images, selectedWorkspace?.id);
+        const response = await generatePresignedUrls(
+          values.id,
+          values.images,
+          selectedWorkspace?.id
+        );
 
         // Step 3: Upload each file to its respective pre-signed URL
         const uploadPromises = values.images.map((file) => {
@@ -157,15 +170,20 @@ export function InvoiceNewEditForm({ currentInvoice }) {
 
         const allPromises = Promise.all(uploadPromises);
         toast.promise(allPromises, {
-          loading: 'Loading...',
-          success: () => 'All files uploaded successfully',
-          error: 'File upload failed',
+          loading: 'Cargando...',
+          success: () => 'Todos los archivos se subieron correctamente',
+          error: 'Error al subir el archivo',
         });
         const file_names = values.images.map((file) => file.name);
-        await requestPaymentRequestApproval(values.id, file_names, selectedWorkspace?.id, currentInvoice?.orderId);
+        await requestPaymentRequestApproval(
+          values.id,
+          file_names,
+          selectedWorkspace?.id,
+          currentInvoice?.orderId
+        );
         router.push(paths.dashboard.user.invoice.invoiceList);
       } catch (error) {
-        console.error('File upload failed', error);
+        console.error('Error al subir el archivo', error);
       }
     },
     [values.images, values.id, router, selectedWorkspace?.id, currentInvoice?.orderId]
@@ -255,9 +273,19 @@ export function InvoiceNewEditForm({ currentInvoice }) {
                   InputLabelProps={{ shrink: true }}
                   disabled={isUser}
                 >
-                  {['Entrenos', 'Sansiones', 'Indumentarias', 'Torneos'].map((category) => (
-                    <MenuItem key={category} value={category} sx={{ textTransform: 'capitalize' }}>
-                      {t(category)}
+                  {[
+                    { value: 'Entrenos', label: 'Entrenos' },
+                    { value: 'Sansiones', label: 'Sansiones' },
+                    { value: 'Indumentarias', label: 'Indumentarias' },
+                    { value: 'Torneos', label: 'Torneos' },
+                    { value: 'tournament_fine', label: 'Sanciones' },
+                  ].map((category) => (
+                    <MenuItem
+                      key={category.value}
+                      value={category.value}
+                      sx={{ textTransform: 'capitalize' }}
+                    >
+                      {category.label}
                     </MenuItem>
                   ))}
                 </Field.Select>
