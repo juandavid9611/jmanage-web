@@ -425,7 +425,7 @@ export function MatchDetailView() {
               Reabrir Partido
             </LoadingButton>
           )}
-          {(isLive || isFinished) && (
+          {isLive && (
             <Button
               variant="outlined"
               size="small"
@@ -598,7 +598,7 @@ export function MatchDetailView() {
                   ? players?.find((p) => p.id === event.assist_player_id)
                   : null;
 
-                const editable = isLive || isFinished;
+                const editable = isLive;
 
                 const eventContent = (
                   <Stack
