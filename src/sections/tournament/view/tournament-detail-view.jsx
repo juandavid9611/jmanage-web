@@ -266,11 +266,6 @@ export function TournamentDetailView() {
         onAdvanceMatchweek={handleAdvanceMatchweek}
         onNavigateEdit={() => navigate(paths.dashboard.tournament.edit(id))}
         onOpenDiscipline={() => setDisciplineOpen(true)}
-        onOpenPayments={
-          canViewTournamentPayments
-            ? () => navigate(paths.dashboard.tournament.payments(id))
-            : undefined
-        }
         onOpenUsers={canViewTournamentPayments ? () => setUsersOpen(true) : undefined}
       />
 

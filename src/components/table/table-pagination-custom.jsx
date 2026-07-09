@@ -16,6 +16,8 @@ export function TablePaginationCustom({
     <Box sx={{ position: 'relative', ...sx }}>
       <TablePagination
         rowsPerPageOptions={rowsPerPageOptions}
+        labelRowsPerPage="Filas por página:"
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
         component="div"
         {...other}
         sx={{ borderTopColor: 'transparent' }}
@@ -23,7 +25,7 @@ export function TablePaginationCustom({
 
       {onChangeDense && (
         <FormControlLabel
-          label="Dense"
+          label="Compacto"
           control={<Switch name="dense" checked={dense} onChange={onChangeDense} />}
           sx={{
             pl: 2,

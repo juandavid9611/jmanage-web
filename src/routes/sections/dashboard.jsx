@@ -60,7 +60,6 @@ const TournamentCreatePage = lazy(() => import('src/pages/dashboard/tournament/n
 const TournamentDetailsPage = lazy(() => import('src/pages/dashboard/tournament/details'));
 const TournamentEditPage = lazy(() => import('src/pages/dashboard/tournament/edit'));
 const TournamentMatchDetailPage = lazy(() => import('src/pages/dashboard/tournament/match-detail'));
-const TournamentPaymentsPage = lazy(() => import('src/pages/dashboard/tournament/payments'));
 // Team Owner
 const TeamOwnerPage = lazy(() => import('src/pages/team-owner'));
 // ----------------------------------------------------------------------
@@ -171,7 +170,6 @@ export const dashboardRoutes = [
           { path: ':id', element: <TournamentDetailsPage /> },
           { path: ':id/edit', element: <TournamentEditPage /> },
           { path: ':id/matches/:matchId', element: <TournamentMatchDetailPage /> },
-          { path: ':id/payments', element: <TournamentPaymentsPage /> },
         ],
       },
       { path: 'team-owner', element: <TeamOwnerPage /> },

@@ -44,9 +44,12 @@ export function DashboardLayout({ sx, children, data }) {
   const { workspaces } = useWorkspace();
 
   const activeRole = user?.accountsRoles?.[user?.activeAccountId];
-  const activeAccountType = user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club';
+  const activeAccountType =
+    user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club';
   const defaultNavData =
-    activeRole === 'team_owner' ? teamOwnerNavData : filterClubOnlyNav(dashboardNavData, activeAccountType);
+    activeRole === 'team_owner'
+      ? teamOwnerNavData
+      : filterClubOnlyNav(dashboardNavData, activeAccountType);
   const navData = data?.nav ?? defaultNavData;
 
   const isNavMini = settings.navLayout === 'mini';
@@ -88,6 +91,7 @@ export function DashboardLayout({ sx, children, data }) {
               signIn: false,
               purchase: false,
               helpLink: false,
+              localization: false,
             }}
             slots={{
               topArea: (

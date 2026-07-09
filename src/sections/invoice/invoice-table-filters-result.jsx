@@ -38,13 +38,13 @@ export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, 
 
   return (
     <FiltersResult totalResults={totalResults} onReset={filters.onResetState} sx={sx}>
-      <FiltersBlock label="Service:" isShow={!!filters.state.service.length}>
+      <FiltersBlock label="Servicio:" isShow={!!filters.state.service.length}>
         {filters.state.service.map((item) => (
           <Chip {...chipProps} key={item} label={item} onDelete={() => handleRemoveService(item)} />
         ))}
       </FiltersBlock>
 
-      <FiltersBlock label="Status:" isShow={filters.state.status !== 'all'}>
+      <FiltersBlock label="Estado:" isShow={filters.state.status !== 'all'}>
         <Chip
           {...chipProps}
           label={t(filters.state.status)}
@@ -54,7 +54,7 @@ export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, 
       </FiltersBlock>
 
       <FiltersBlock
-        label="Date:"
+        label="Fecha:"
         isShow={Boolean(filters.state.startDate && filters.state.endDate)}
       >
         <Chip
@@ -64,7 +64,7 @@ export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, 
         />
       </FiltersBlock>
 
-      <FiltersBlock label="Keyword:" isShow={!!filters.state.name}>
+      <FiltersBlock label="Palabra clave:" isShow={!!filters.state.name}>
         <Chip {...chipProps} label={filters.state.name} onDelete={handleRemoveKeyword} />
       </FiltersBlock>
     </FiltersResult>

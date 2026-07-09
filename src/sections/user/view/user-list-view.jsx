@@ -19,9 +19,9 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { deleteUser, useGetUsers } from 'src/actions/user';
 import { GROUP_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 import { useWorkspace } from 'src/workspace/workspace-provider';
+import { deleteUser, useGetUsers, useGetTeamOwnerTeams } from 'src/actions/user';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -42,6 +42,8 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { UserTableRow } from '../user-table-row';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { AdminInviteDialog } from '../admin-invite-dialog';
@@ -49,9 +51,10 @@ import { UserTableFiltersResult } from '../user-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
+const STATUS_OPTIONS = [{ value: 'all', label: 'all' }, ...USER_STATUS_OPTIONS];
 
-const TABLE_HEAD = [
+// Club accounts: club-membership fields (identity card, jersey number, EPS).
+const CLUB_TABLE_HEAD = [
   { id: '', width: 88 },
   { id: 'name', label: 'name' },
   { id: 'phoneNumber', label: 'phone_number', width: 180 },
@@ -60,6 +63,18 @@ const TABLE_HEAD = [
   { id: 'eps', label: 'eps', width: 180 },
   { id: 'role', label: 'role', width: 100 },
   { id: 'confirmationStatus', label: 'status', width: 100 },
+];
+
+// Tournament accounts: "users" are mostly team owners/managers — club-membership
+// fields (identity card, jersey number, EPS, phone) don't apply; show which team
+// instead. Trailing blank entry matches the row's unlabeled actions column.
+const TOURNAMENT_TABLE_HEAD = [
+  { id: '', width: 88 },
+  { id: 'name', label: 'name' },
+  { id: 'team', label: 'team', width: 260 },
+  { id: 'role', label: 'role', width: 100 },
+  { id: 'confirmationStatus', label: 'status', width: 100 },
+  { id: '', width: 88 },
 ];
 
 // ----------------------------------------------------------------------
@@ -74,9 +89,22 @@ export function UserListView() {
 
   const [tableData, setTableData] = useState([]);
 
+  const { user } = useAuthContext();
   const { selectedWorkspace } = useWorkspace();
 
+  const isTournamentAccount =
+    (user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club') === 'tournament';
+
   const { users, usersLoading, usersEmpty } = useGetUsers(selectedWorkspace, true);
+  const { teamOwnerTeams } = useGetTeamOwnerTeams(isTournamentAccount);
+
+  const teamNamesByUserId = teamOwnerTeams.reduce((acc, item) => {
+    const key = item.owner_user_id;
+    acc[key] = acc[key] ? `${acc[key]}, ${item.team_name}` : item.team_name;
+    return acc;
+  }, {});
+
+  const tableHead = isTournamentAccount ? TOURNAMENT_TABLE_HEAD : CLUB_TABLE_HEAD;
 
   const filters = useSetState({ name: '', group: [], status: 'all' });
 
@@ -100,7 +128,7 @@ export function UserListView() {
       deleteUser(id);
       const deleteRow = tableData.filter((row) => row.id !== id);
 
-      toast.success('Delete success!');
+      toast.success('¡Eliminado con éxito!');
 
       setTableData(deleteRow);
 
@@ -112,7 +140,7 @@ export function UserListView() {
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
 
-    toast.success('Delete success!');
+    toast.success('¡Eliminado con éxito!');
 
     setTableData(deleteRows);
 
@@ -194,10 +222,10 @@ export function UserListView() {
                     }
                   >
                     {['confirmed', 'pending', 'disabled'].includes(tab.value)
-                      ? users.filter((user) =>
-                          user.status === 'active'
-                            ? user.confirmationStatus === tab.value
-                            : user.status === tab.value
+                      ? users.filter((u) =>
+                          u.status === 'active'
+                            ? u.confirmationStatus === tab.value
+                            : u.status === tab.value
                         ).length
                       : tableData.length}
                   </Label>
@@ -233,7 +261,7 @@ export function UserListView() {
                 )
               }
               action={
-                <Tooltip title="Delete">
+                <Tooltip title={t('delete')}>
                   <IconButton color="primary" onClick={confirm.onTrue}>
                     <Iconify icon="solar:trash-bin-trash-bold" />
                   </IconButton>
@@ -246,7 +274,7 @@ export function UserListView() {
                 <TableHeadCustom
                   order={table.order}
                   orderBy={table.orderBy}
-                  headLabel={TABLE_HEAD}
+                  headLabel={tableHead}
                   rowCount={tableData.length}
                   numSelected={table.selected.length}
                   onSort={table.onSort}
@@ -278,6 +306,8 @@ export function UserListView() {
                             onSelectRow={() => table.onSelectRow(row.id)}
                             onDeleteRow={() => handleDeleteRow(row.id)}
                             onEditRow={() => handleEditRow(row.id)}
+                            teamName={isTournamentAccount ? teamNamesByUserId[row.id] : undefined}
+                            isTournamentAccount={isTournamentAccount}
                           />
                         ))}
                     </>
@@ -309,7 +339,7 @@ export function UserListView() {
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
+        title={t('delete')}
         content={
           <>
             {t('delete_confirmation')} <strong> {table.selected.length} </strong>{' '}

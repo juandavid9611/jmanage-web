@@ -138,19 +138,17 @@ export function InvoiceTableRow({
         slotProps={{ arrow: { placement: 'right-top' } }}
       >
         <MenuList>
-          {onEditRow && (
-            <MenuItem
-              onClick={() => {
-                onEditRow();
-                popover.onClose();
-              }}
-            >
-              <Iconify icon="solar:pen-bold" />
-              {t('edit')}
-            </MenuItem>
-          )}
+          <MenuItem
+            onClick={() => {
+              onEditRow();
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="solar:pen-bold" />
+            {t('edit')}
+          </MenuItem>
 
-          {onEditRow && <Divider sx={{ borderStyle: 'dashed' }} />}
+          <Divider sx={{ borderStyle: 'dashed' }} />
 
           <MenuItem
             onClick={() => {
@@ -168,8 +166,8 @@ export function InvoiceTableRow({
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
-        content="Are you sure want to delete?"
+        title={t('delete')}
+        content={`${t('delete_confirmation')} este pago?`}
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
             {t('delete')}
