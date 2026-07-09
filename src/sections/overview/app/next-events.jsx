@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
@@ -25,6 +27,7 @@ import { useAuthContext } from 'src/auth/hooks';
 // ----------------------------------------------------------------------
 
 export function NextEvents({ title, list, ...other }) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
   const limit_time = new Date();
@@ -45,14 +48,14 @@ export function NextEvents({ title, list, ...other }) {
       <Divider sx={{ borderStyle: 'dashed' }} />
 
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ typography: 'caption', color: 'text.secondary' }}>Quorum de 22 personas</Box>
+        <Box sx={{ typography: 'caption', color: 'text.secondary' }}>{t('label_quorum_of_22')}</Box>
         <Button
           size="medium"
           color="inherit"
           endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
           onClick={() => router.push(paths.dashboard.calendar)}
         >
-          Inscribirme
+          {t('label_sign_up')}
         </Button>
       </Box>
     </Card>
@@ -60,6 +63,7 @@ export function NextEvents({ title, list, ...other }) {
 }
 
 function Item({ item, sx, ...other }) {
+  const { t } = useTranslation();
   const participantsCount = Object.entries(item.participants || {}).length || 0;
   const percent = (participantsCount / 20) * 100;
 
@@ -73,7 +77,7 @@ function Item({ item, sx, ...other }) {
 
   const onCopyParticipants = () => {
     if (!item.participants || Object.keys(item.participants).length === 0) {
-      toast.error('No hay participantes para copiar.');
+      toast.error(t('label_no_participants_to_copy'));
       return;
     }
 
@@ -88,7 +92,7 @@ function Item({ item, sx, ...other }) {
 ${formattedParticipants}`;
 
     copy(textToCopy);
-    toast.success('Participantes copiados!');
+    toast.success(t('label_participants_copied'));
   };
 
   return (
@@ -183,7 +187,7 @@ ${formattedParticipants}`;
         <Box sx={{ p: 2, width: 280 }}>
           <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ width: 1 }}>
             <Typography variant="subtitle1" gutterBottom>
-              Participantes
+              {t('label_participants')}
             </Typography>
             <IconButton onClick={() => onCopyParticipants()}>
               <Iconify icon="eva:copy-fill" width={24} />
