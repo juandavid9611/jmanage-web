@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -41,14 +42,15 @@ import { useAuthContext } from 'src/auth/hooks';
 // ----------------------------------------------------------------------
 
 const PODIUM_COLORS = {
-  0: { border: '#FFD700', label: '🥇 1°' },
-  1: { border: '#C0C0C0', label: '🥈 2°' },
-  2: { border: '#CD7F32', label: '🥉 3°' },
+  0: { border: '#FFD700', emoji: '🥇', ordinal: 'label_ordinal_1st' },
+  1: { border: '#C0C0C0', emoji: '🥈', ordinal: 'label_ordinal_2nd' },
+  2: { border: '#CD7F32', emoji: '🥉', ordinal: 'label_ordinal_3rd' },
 };
 
 // ----------------------------------------------------------------------
 
 export function VotationDetailView() {
+  const { t } = useTranslation();
   const { votationId } = useParams();
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -58,7 +60,10 @@ export function VotationDetailView() {
 
   const confirmDelete = useBoolean();
 
-  const { votation, votationLoading, revalidate } = useGetVotation(votationId, selectedWorkspace?.id);
+  const { votation, votationLoading, revalidate } = useGetVotation(
+    votationId,
+    selectedWorkspace?.id
+  );
 
   const monthLabelText = state?.monthLabel || votation?.month || '';
 
@@ -68,9 +73,7 @@ export function VotationDetailView() {
 
   const getVotesForCandidate = useCallback(
     (candidateId) =>
-      votation
-        ? Object.values(votation.votes || {}).filter((v) => v === candidateId).length
-        : 0,
+      votation ? Object.values(votation.votes || {}).filter((v) => v === candidateId).length : 0,
     [votation]
   );
 
@@ -78,7 +81,9 @@ export function VotationDetailView() {
 
   const voterMap = useMemo(() => {
     const map = {};
-    (users || []).forEach((u) => { map[u.id] = u; });
+    (users || []).forEach((u) => {
+      map[u.id] = u;
+    });
     return map;
   }, [users]);
 
@@ -103,12 +108,12 @@ export function VotationDetailView() {
       try {
         await apiCastVote(votationId, candidateId, selectedWorkspace?.id);
         await revalidate();
-        toast.success(myVote ? 'Voto actualizado' : 'Voto registrado');
+        toast.success(myVote ? t('label_vote_updated') : t('label_vote_registered'));
       } catch {
-        toast.error('Error al registrar el voto');
+        toast.error(t('label_error_registering_vote'));
       }
     },
-    [votation, myVote, votationId, selectedWorkspace?.id, revalidate]
+    [votation, myVote, votationId, selectedWorkspace?.id, revalidate, t]
   );
 
   const handleClose = useCallback(async () => {
@@ -116,38 +121,38 @@ export function VotationDetailView() {
     try {
       await apiCloseVotation(votationId, selectedWorkspace?.id);
       await revalidate();
-      toast.success('Votación cerrada');
+      toast.success(t('label_votation_closed'));
     } catch {
-      toast.error('Error al cerrar la votación');
+      toast.error(t('label_error_closing_votation'));
     }
-  }, [votation, votationId, selectedWorkspace?.id, revalidate]);
+  }, [votation, votationId, selectedWorkspace?.id, revalidate, t]);
 
   const handleCreateTiebreaker = useCallback(async () => {
     try {
       const created = await apiCreateTiebreaker(votationId, selectedWorkspace?.id);
-      toast.success('Ronda de desempate creada');
+      toast.success(t('label_tiebreaker_round_created'));
       navigate(paths.dashboard.votaciones.detail(created.id));
     } catch {
-      toast.error('Error al crear la ronda de desempate');
+      toast.error(t('label_error_creating_tiebreaker'));
     }
-  }, [votationId, selectedWorkspace?.id, navigate]);
+  }, [votationId, selectedWorkspace?.id, navigate, t]);
 
   const handleDelete = useCallback(async () => {
     try {
       await apiDeleteVotation(votationId, selectedWorkspace?.id);
-      toast.success('Votación eliminada');
+      toast.success(t('label_votation_deleted'));
       navigate(paths.dashboard.votaciones.root);
     } catch {
-      toast.error('Error al eliminar la votación');
+      toast.error(t('label_error_deleting_votation'));
     } finally {
       confirmDelete.onFalse();
     }
-  }, [votationId, selectedWorkspace?.id, navigate, confirmDelete]);
+  }, [votationId, selectedWorkspace?.id, navigate, confirmDelete, t]);
 
   if (votationLoading) {
     return (
       <DashboardContent>
-        <EmptyContent title="Cargando votación..." sx={{ py: 8 }} />
+        <EmptyContent title={t('label_loading_votation')} sx={{ py: 8 }} />
       </DashboardContent>
     );
   }
@@ -155,7 +160,7 @@ export function VotationDetailView() {
   if (!votation) {
     return (
       <DashboardContent>
-        <EmptyContent title="Votación no encontrada" sx={{ py: 8 }} />
+        <EmptyContent title={t('label_votation_not_found')} sx={{ py: 8 }} />
       </DashboardContent>
     );
   }
@@ -178,10 +183,10 @@ export function VotationDetailView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading={`Jugador del mes — ${monthLabelText}`}
+        heading={`${t('label_player_of_the_month')} — ${monthLabelText}`}
         links={[
-          { name: 'Votaciones', href: paths.dashboard.votaciones.root },
-          { name: 'Votación' },
+          { name: t('label_votations'), href: paths.dashboard.votaciones.root },
+          { name: t('label_votation') },
         ]}
         action={
           isAdmin ? (
@@ -194,7 +199,7 @@ export function VotationDetailView() {
                   startIcon={<Iconify icon="solar:lock-bold" />}
                   onClick={handleClose}
                 >
-                  Cerrar Votación
+                  {t('label_close_votation')}
                 </Button>
               )}
               <Button
@@ -204,7 +209,7 @@ export function VotationDetailView() {
                 startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
                 onClick={confirmDelete.onTrue}
               >
-                Eliminar
+                {t('delete')}
               </Button>
             </Stack>
           ) : null
@@ -222,20 +227,28 @@ export function VotationDetailView() {
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            border: (t) => `1px solid ${alpha(t.palette.info.main, 0.24)}`,
-            bgcolor: (t) => alpha(t.palette.info.main, 0.04),
+            border: (theme) => `1px solid ${alpha(theme.palette.info.main, 0.24)}`,
+            bgcolor: (theme) => alpha(theme.palette.info.main, 0.04),
             cursor: 'pointer',
           }}
           onClick={() => navigate(paths.dashboard.votaciones.detail(votation.parent_votation_id))}
         >
-          <Iconify icon="solar:info-circle-bold" width={16} sx={{ color: 'info.main', flexShrink: 0 }} />
+          <Iconify
+            icon="solar:info-circle-bold"
+            width={16}
+            sx={{ color: 'info.main', flexShrink: 0 }}
+          />
           <Typography variant="body2" sx={{ color: 'info.main', fontWeight: 600 }}>
-            Ronda de desempate
+            {t('label_tiebreaker_round')}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            · Ver votación original
+            · {t('label_view_original_votation')}
           </Typography>
-          <Iconify icon="eva:arrow-ios-forward-fill" width={16} sx={{ color: 'text.disabled', ml: 'auto' }} />
+          <Iconify
+            icon="eva:arrow-ios-forward-fill"
+            width={16}
+            sx={{ color: 'text.disabled', ml: 'auto' }}
+          />
         </Card>
       )}
 
@@ -245,19 +258,26 @@ export function VotationDetailView() {
           color={isOpen ? 'success' : isTied ? 'warning' : 'default'}
           sx={{ fontSize: '0.75rem', px: 1.5, py: 0.75 }}
         >
-          {isOpen ? 'Abierta' : isTied ? 'Empate' : 'Cerrada'}
+          {t(
+            isOpen
+              ? 'label_open_singular'
+              : isTied
+                ? 'label_match_result_draw'
+                : 'label_closed_singular'
+          )}
         </Label>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Asistencia mínima: <strong>{votation.min_pct}%</strong>
+          {t('label_minimum_attendance_colon')} <strong>{votation.min_pct}%</strong>
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {totalVotes} {totalVotes === 1 ? 'voto' : 'votos'} registrados
+          {totalVotes} {totalVotes === 1 ? t('label_vote_singular') : t('label_votes_plural')}{' '}
+          {t('label_registered_plural')}
         </Typography>
         {myVote && (
           <Stack direction="row" alignItems="center" spacing={0.75}>
             <Iconify icon="eva:checkmark-circle-2-fill" width={16} sx={{ color: 'success.main' }} />
             <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 600 }}>
-              Tu voto ha sido registrado
+              {t('label_your_vote_registered')}
             </Typography>
           </Stack>
         )}
@@ -292,7 +312,7 @@ export function VotationDetailView() {
       {showResults && sortedCandidates.length > 0 && (
         <Box sx={{ mb: 5 }}>
           <Typography variant="h6" sx={{ mb: 3, color: 'text.secondary' }}>
-            Resultados
+            {t('label_results')}
           </Typography>
 
           <Grid container spacing={3} alignItems="stretch">
@@ -309,7 +329,13 @@ export function VotationDetailView() {
                         <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 0.75 }}>
                           <Typography
                             variant="caption"
-                            sx={{ width: 20, fontWeight: 700, color: 'text.disabled', flexShrink: 0, textAlign: 'right' }}
+                            sx={{
+                              width: 20,
+                              fontWeight: 700,
+                              color: 'text.disabled',
+                              flexShrink: 0,
+                              textAlign: 'right',
+                            }}
                           >
                             {idx + 1}
                           </Typography>
@@ -325,9 +351,13 @@ export function VotationDetailView() {
                               {candidate.name}
                             </Typography>
                             <Stack direction="row" spacing={1.5}>
-                              <Tooltip title="Asistencia entrenamientos">
+                              <Tooltip title={t('label_attendance_trainings')}>
                                 <Stack direction="row" alignItems="center" spacing={0.4}>
-                                  <Iconify icon="solar:dumbbell-bold" width={12} sx={{ color: 'text.disabled' }} />
+                                  <Iconify
+                                    icon="solar:dumbbell-bold"
+                                    width={12}
+                                    sx={{ color: 'text.disabled' }}
+                                  />
                                   <Typography
                                     variant="caption"
                                     sx={{
@@ -346,9 +376,13 @@ export function VotationDetailView() {
                                 </Stack>
                               </Tooltip>
                               {candidate.match_pct != null && (
-                                <Tooltip title="Asistencia partidos">
+                                <Tooltip title={t('label_attendance_matches')}>
                                   <Stack direction="row" alignItems="center" spacing={0.4}>
-                                    <Iconify icon="solar:football-bold" width={12} sx={{ color: 'text.disabled' }} />
+                                    <Iconify
+                                      icon="solar:football-bold"
+                                      width={12}
+                                      sx={{ color: 'text.disabled' }}
+                                    />
                                     <Typography
                                       variant="caption"
                                       sx={{
@@ -369,11 +403,24 @@ export function VotationDetailView() {
                               )}
                             </Stack>
                           </Box>
-                          <Typography variant="caption" fontWeight={700} sx={{ flexShrink: 0, color: isWinnerRow ? 'warning.main' : 'text.secondary' }}>
-                            {votes} {votes === 1 ? 'voto' : 'votos'} · {pct}%
+                          <Typography
+                            variant="caption"
+                            fontWeight={700}
+                            sx={{
+                              flexShrink: 0,
+                              color: isWinnerRow ? 'warning.main' : 'text.secondary',
+                            }}
+                          >
+                            {votes}{' '}
+                            {votes === 1 ? t('label_vote_singular') : t('label_votes_plural')} ·{' '}
+                            {pct}%
                           </Typography>
                           {isWinnerRow && (
-                            <Iconify icon="solar:cup-star-bold" width={16} sx={{ color: 'warning.main', flexShrink: 0 }} />
+                            <Iconify
+                              icon="solar:cup-star-bold"
+                              width={16}
+                              sx={{ color: 'warning.main', flexShrink: 0 }}
+                            />
                           )}
                         </Stack>
                         <Box sx={{ pl: '44px' }}>
@@ -384,12 +431,10 @@ export function VotationDetailView() {
                             sx={{
                               height: 8,
                               borderRadius: 1,
-                              bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+                              bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
                             }}
                           />
-                          {isAdmin && (
-                            <VoterChips voters={getVotersForCandidate(candidate.id)} />
-                          )}
+                          {isAdmin && <VoterChips voters={getVotersForCandidate(candidate.id)} />}
                         </Box>
                       </Box>
                     );
@@ -419,7 +464,7 @@ export function VotationDetailView() {
       {showResults && remainingCandidates.length > 0 && (
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
-            Otros candidatos
+            {t('label_other_candidates')}
           </Typography>
           <Grid container spacing={2}>
             {remainingCandidates.map((candidate) => {
@@ -479,11 +524,11 @@ export function VotationDetailView() {
       <ConfirmDialog
         open={confirmDelete.value}
         onClose={confirmDelete.onFalse}
-        title="Eliminar votación"
-        content="¿Eliminar esta votación? Esta acción no se puede deshacer."
+        title={t('label_delete_votation')}
+        content={t('label_delete_this_votation_confirm')}
         action={
           <Button variant="contained" color="error" onClick={handleDelete}>
-            Eliminar
+            {t('delete')}
           </Button>
         }
       />
@@ -494,19 +539,17 @@ export function VotationDetailView() {
 // ----------------------------------------------------------------------
 
 function PodiumView({ candidates, getVotes, totalVotes, getCandidateAvatar }) {
+  const { t } = useTranslation();
   // Olympic order: 2nd | 1st | 3rd
-  const order = candidates.length >= 3
-    ? [candidates[1], candidates[0], candidates[2]]
-    : candidates.length === 2
-      ? [candidates[1], candidates[0]]
-      : [candidates[0]];
+  const order =
+    candidates.length >= 3
+      ? [candidates[1], candidates[0], candidates[2]]
+      : candidates.length === 2
+        ? [candidates[1], candidates[0]]
+        : [candidates[0]];
 
   const heights = { 0: 180, 1: 140, 2: 110 };
-  const orderMap = candidates.length >= 3
-    ? [1, 0, 2]
-    : candidates.length === 2
-      ? [1, 0]
-      : [0];
+  const orderMap = candidates.length >= 3 ? [1, 0, 2] : candidates.length === 2 ? [1, 0] : [0];
 
   return (
     <Stack direction="row" alignItems="flex-end" justifyContent="center" spacing={2} sx={{ py: 2 }}>
@@ -540,11 +583,16 @@ function PodiumView({ candidates, getVotes, totalVotes, getCandidateAvatar }) {
               >
                 {candidate.name?.charAt(0)}
               </Avatar>
-              <Typography variant={rankIdx === 0 ? 'subtitle1' : 'body2'} fontWeight={700} textAlign="center" sx={{ px: 0.5 }}>
+              <Typography
+                variant={rankIdx === 0 ? 'subtitle1' : 'body2'}
+                fontWeight={700}
+                textAlign="center"
+                sx={{ px: 0.5 }}
+              >
                 {candidate.name}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {votes} voto{votes !== 1 ? 's' : ''} · {pct}%
+                {votes} {votes === 1 ? t('label_vote_singular') : t('label_votes_plural')} · {pct}%
               </Typography>
             </Stack>
 
@@ -554,7 +602,7 @@ function PodiumView({ candidates, getVotes, totalVotes, getCandidateAvatar }) {
                 width: '100%',
                 height: podiumHeight,
                 borderRadius: '8px 8px 0 0',
-                background: (t) =>
+                background: (theme) =>
                   `linear-gradient(180deg, ${alpha(podiumColor.border, 0.18)} 0%, ${alpha(podiumColor.border, 0.08)} 100%)`,
                 border: `2px solid ${alpha(podiumColor.border, 0.4)}`,
                 display: 'flex',
@@ -562,8 +610,11 @@ function PodiumView({ candidates, getVotes, totalVotes, getCandidateAvatar }) {
                 justifyContent: 'center',
               }}
             >
-              <Typography variant={rankIdx === 0 ? 'h4' : 'h5'} sx={{ color: podiumColor.border, fontWeight: 800 }}>
-                {podiumColor.label}
+              <Typography
+                variant={rankIdx === 0 ? 'h4' : 'h5'}
+                sx={{ color: podiumColor.border, fontWeight: 800 }}
+              >
+                {podiumColor.emoji} {t(podiumColor.ordinal)}
               </Typography>
             </Box>
           </Stack>
@@ -590,11 +641,15 @@ function AttendanceRow({ icon, label, pct }) {
           flex: 1,
           height: 5,
           borderRadius: 1,
-          bgcolor: (t) => alpha(t.palette.grey[500], 0.1),
+          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.1),
           '& .MuiLinearProgress-bar': { bgcolor: color },
         }}
       />
-      <Typography variant="caption" fontWeight={700} sx={{ color, width: 34, textAlign: 'right', flexShrink: 0 }}>
+      <Typography
+        variant="caption"
+        fontWeight={700}
+        sx={{ color, width: 34, textAlign: 'right', flexShrink: 0 }}
+      >
         {pct}%
       </Typography>
     </Stack>
@@ -608,14 +663,31 @@ function StatChip({ icon, label, value, color = 'text.secondary' }) {
       <Typography variant="caption" fontWeight={700} sx={{ color }}>
         {value}
       </Typography>
-      <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem', lineHeight: 1 }}>
+      <Typography
+        variant="caption"
+        sx={{ color: 'text.disabled', fontSize: '0.6rem', lineHeight: 1 }}
+      >
         {label}
       </Typography>
     </Stack>
   );
 }
 
-function CandidateCard({ candidate, avatarSrc, votes, voteBarWidth, isWinner, isMyVote, isClosed, isOpen, isAdmin, myVote, onVote, voters }) {
+function CandidateCard({
+  candidate,
+  avatarSrc,
+  votes,
+  voteBarWidth,
+  isWinner,
+  isMyVote,
+  isClosed,
+  isOpen,
+  isAdmin,
+  myVote,
+  onVote,
+  voters,
+}) {
+  const { t } = useTranslation();
   const matchPct = candidate.match_pct ?? 0;
   const mvpCount = candidate.mvp ?? 0;
 
@@ -623,27 +695,29 @@ function CandidateCard({ candidate, avatarSrc, votes, voteBarWidth, isWinner, is
     <Card
       sx={{
         p: 2.5,
-        border: (t) =>
+        border: (theme) =>
           `1.5px solid ${
             isWinner
-              ? t.palette.warning.main
+              ? theme.palette.warning.main
               : isMyVote
-                ? t.palette.primary.main
-                : alpha(t.palette.grey[500], 0.12)
+                ? theme.palette.primary.main
+                : alpha(theme.palette.grey[500], 0.12)
           }`,
-        boxShadow: isWinner ? (t) => `0 0 0 4px ${alpha(t.palette.warning.main, 0.08)}` : 'none',
+        boxShadow: isWinner
+          ? (theme) => `0 0 0 4px ${alpha(theme.palette.warning.main, 0.08)}`
+          : 'none',
         position: 'relative',
         transition: 'all 0.2s',
       }}
     >
       {isWinner && (
         <Box sx={{ position: 'absolute', top: 10, right: 10 }}>
-          <Label color="warning">Ganador</Label>
+          <Label color="warning">{t('label_winner')}</Label>
         </Box>
       )}
       {isMyVote && !isWinner && (
         <Box sx={{ position: 'absolute', top: 10, right: 10 }}>
-          <Label color="primary">Tu voto</Label>
+          <Label color="primary">{t('label_your_vote')}</Label>
         </Box>
       )}
 
@@ -657,21 +731,38 @@ function CandidateCard({ candidate, avatarSrc, votes, voteBarWidth, isWinner, is
           >
             {candidate.name?.charAt(0)}
           </Avatar>
-          <Typography variant="subtitle1" noWrap fontWeight={700} sx={{ pr: isWinner || isMyVote ? 5 : 0 }}>
+          <Typography
+            variant="subtitle1"
+            noWrap
+            fontWeight={700}
+            sx={{ pr: isWinner || isMyVote ? 5 : 0 }}
+          >
             {candidate.name}
           </Typography>
         </Stack>
 
         {/* Attendance rows */}
         <Stack spacing={0.6}>
-          <AttendanceRow icon="solar:dumbbell-bold" label="Entrenamientos" pct={candidate.training_pct} />
-          <AttendanceRow icon="solar:running-round-bold" label="Partidos" pct={matchPct} />
+          <AttendanceRow
+            icon="solar:dumbbell-bold"
+            label={t('label_trainings')}
+            pct={candidate.training_pct}
+          />
+          <AttendanceRow icon="solar:running-round-bold" label={t('word_matches')} pct={matchPct} />
         </Stack>
 
         {/* Performance stats */}
         <Stack direction="row" spacing={1.5} sx={{ pt: 0.25 }}>
-          <StatChip icon="solar:football-bold" label="Goles" value={candidate.goals || 0} />
-          <StatChip icon="mdi:shoe-cleat" label="Asist." value={candidate.assists || 0} />
+          <StatChip
+            icon="solar:football-bold"
+            label={t('word_goals')}
+            value={candidate.goals || 0}
+          />
+          <StatChip
+            icon="mdi:shoe-cleat"
+            label={t('label_assists_abbr_cap')}
+            value={candidate.assists || 0}
+          />
           {mvpCount > 0 && (
             <StatChip
               icon="solar:medal-ribbons-star-bold"
@@ -689,7 +780,7 @@ function CandidateCard({ candidate, avatarSrc, votes, voteBarWidth, isWinner, is
           <Box>
             <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Votos
+                {t('label_votes')}
               </Typography>
               <Typography variant="caption" fontWeight={700}>
                 {votes}
@@ -702,7 +793,7 @@ function CandidateCard({ candidate, avatarSrc, votes, voteBarWidth, isWinner, is
               sx={{
                 height: 6,
                 borderRadius: 1,
-                bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+                bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
               }}
             />
             {isAdmin && <VoterChips voters={voters} />}
@@ -726,7 +817,7 @@ function CandidateCard({ candidate, avatarSrc, votes, voteBarWidth, isWinner, is
               )
             }
           >
-            {isMyVote ? 'Votado' : 'Votar'}
+            {isMyVote ? t('label_voted') : t('label_vote_verb')}
           </Button>
         )}
       </Stack>
@@ -736,7 +827,15 @@ function CandidateCard({ candidate, avatarSrc, votes, voteBarWidth, isWinner, is
 
 // ----------------------------------------------------------------------
 
-function TieBanner({ votation, candidates, getVotes, isAdmin, onCreateTiebreaker, onViewTiebreaker }) {
+function TieBanner({
+  votation,
+  candidates,
+  getVotes,
+  isAdmin,
+  onCreateTiebreaker,
+  onViewTiebreaker,
+}) {
+  const { t } = useTranslation();
   const votes = candidates.length > 0 ? getVotes(candidates[0].id) : 0;
   const hasTiebreaker = !!votation.tiebreaker_votation_id;
 
@@ -745,17 +844,29 @@ function TieBanner({ votation, candidates, getVotes, isAdmin, onCreateTiebreaker
       sx={{
         mb: 4,
         p: 3,
-        background: (t) =>
-          `linear-gradient(135deg, ${alpha(t.palette.warning.main, 0.08)} 0%, ${alpha(t.palette.warning.light, 0.04)} 100%)`,
-        border: (t) => `1px solid ${alpha(t.palette.warning.main, 0.24)}`,
+        background: (theme) =>
+          `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.08)} 0%, ${alpha(theme.palette.warning.light, 0.04)} 100%)`,
+        border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.24)}`,
       }}
     >
-      <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ sm: 'center' }} spacing={2} justifyContent="space-between">
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        alignItems={{ sm: 'center' }}
+        spacing={2}
+        justifyContent="space-between"
+      >
         <Stack direction="row" alignItems="center" spacing={2}>
-          <Iconify icon="solar:danger-triangle-bold" width={36} sx={{ color: 'warning.main', flexShrink: 0 }} />
+          <Iconify
+            icon="solar:danger-triangle-bold"
+            width={36}
+            sx={{ color: 'warning.main', flexShrink: 0 }}
+          />
           <Box>
-            <Typography variant="overline" sx={{ color: 'warning.main', letterSpacing: 1.5, lineHeight: 1 }}>
-              Empate — Desempate necesario
+            <Typography
+              variant="overline"
+              sx={{ color: 'warning.main', letterSpacing: 1.5, lineHeight: 1 }}
+            >
+              {t('label_tie_tiebreaker_needed')}
             </Typography>
             <Stack direction="row" spacing={1.5} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
               {candidates.map((c) => (
@@ -767,15 +878,17 @@ function TieBanner({ votation, candidates, getVotes, isAdmin, onCreateTiebreaker
                       width: 32,
                       height: 32,
                       fontSize: '0.8rem',
-                      border: (t) => `2px solid ${t.palette.warning.main}`,
+                      border: (theme) => `2px solid ${theme.palette.warning.main}`,
                     }}
                   >
                     {c.name?.charAt(0)}
                   </Avatar>
                   <Box>
-                    <Typography variant="body2" fontWeight={700}>{c.name}</Typography>
+                    <Typography variant="body2" fontWeight={700}>
+                      {c.name}
+                    </Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      {votes} {votes === 1 ? 'voto' : 'votos'}
+                      {votes} {votes === 1 ? t('label_vote_singular') : t('label_votes_plural')}
                     </Typography>
                   </Box>
                 </Stack>
@@ -793,19 +906,21 @@ function TieBanner({ votation, candidates, getVotes, isAdmin, onCreateTiebreaker
             onClick={onViewTiebreaker}
             sx={{ flexShrink: 0 }}
           >
-            Ver desempate
+            {t('label_view_tiebreaker')}
           </Button>
-        ) : isAdmin && (
-          <Button
-            variant="contained"
-            color="warning"
-            size="small"
-            startIcon={<Iconify icon="solar:cup-star-bold" />}
-            onClick={onCreateTiebreaker}
-            sx={{ flexShrink: 0 }}
-          >
-            Iniciar desempate
-          </Button>
+        ) : (
+          isAdmin && (
+            <Button
+              variant="contained"
+              color="warning"
+              size="small"
+              startIcon={<Iconify icon="solar:cup-star-bold" />}
+              onClick={onCreateTiebreaker}
+              sx={{ flexShrink: 0 }}
+            >
+              {t('label_start_tiebreaker')}
+            </Button>
+          )
         )}
       </Stack>
     </Card>
@@ -836,6 +951,7 @@ function VoterChips({ voters }) {
 // ----------------------------------------------------------------------
 
 function WinnerBanner({ winner, votes, totalVotes }) {
+  const { t } = useTranslation();
   if (!winner) return null;
 
   return (
@@ -843,13 +959,17 @@ function WinnerBanner({ winner, votes, totalVotes }) {
       sx={{
         mb: 4,
         p: 3,
-        background: (t) =>
-          `linear-gradient(135deg, ${alpha(t.palette.warning.main, 0.08)} 0%, ${alpha(t.palette.warning.light, 0.04)} 100%)`,
-        border: (t) => `1px solid ${alpha(t.palette.warning.main, 0.24)}`,
+        background: (theme) =>
+          `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.08)} 0%, ${alpha(theme.palette.warning.light, 0.04)} 100%)`,
+        border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.24)}`,
       }}
     >
       <Stack direction="row" alignItems="center" spacing={2.5}>
-        <Iconify icon="solar:cup-star-bold" width={40} sx={{ color: 'warning.main', flexShrink: 0 }} />
+        <Iconify
+          icon="solar:cup-star-bold"
+          width={40}
+          sx={{ color: 'warning.main', flexShrink: 0 }}
+        />
 
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
           <Avatar
@@ -860,21 +980,25 @@ function WinnerBanner({ winner, votes, totalVotes }) {
               height: 56,
               fontSize: '1.3rem',
               flexShrink: 0,
-              border: (t) => `2px solid ${t.palette.warning.main}`,
+              border: (theme) => `2px solid ${theme.palette.warning.main}`,
             }}
           >
             {winner.name?.charAt(0)}
           </Avatar>
           <Box>
-            <Typography variant="overline" sx={{ color: 'warning.main', letterSpacing: 1.5, lineHeight: 1 }}>
-              Jugador del mes
+            <Typography
+              variant="overline"
+              sx={{ color: 'warning.main', letterSpacing: 1.5, lineHeight: 1 }}
+            >
+              {t('label_player_of_the_month')}
             </Typography>
             <Typography variant="h4" fontWeight={700}>
               {winner.name}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-              {votes} de {totalVotes} {totalVotes === 1 ? 'voto' : 'votos'} ·{' '}
-              {winner.training_pct}% asistencia
+              {votes} {t('label_of')} {totalVotes}{' '}
+              {totalVotes === 1 ? t('label_vote_singular') : t('label_votes_plural')} ·{' '}
+              {winner.training_pct}% {t('word_attendance')}
             </Typography>
           </Box>
         </Stack>

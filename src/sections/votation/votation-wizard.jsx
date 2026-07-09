@@ -1,6 +1,7 @@
 import { z as zod } from 'zod';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState, useCallback } from 'react';
@@ -31,21 +32,36 @@ import { VotationCreationStepper } from './votation-creation-stepper';
 
 // ----------------------------------------------------------------------
 
+// values below are i18n keys, resolved via t() at render time.
 const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+  'month_jan_full',
+  'month_feb_full',
+  'month_mar_full',
+  'month_apr_full',
+  'month_may_full',
+  'month_jun_full',
+  'month_jul_full',
+  'month_aug_full',
+  'month_sep_full',
+  'month_oct_full',
+  'month_nov_full',
+  'month_dec_full',
 ];
 
+// label values below are i18n keys, resolved via t() at render time; `key` is a real
+// data-matching identifier (indexes stepValues) and must stay unchanged.
 const STEPS = [
-  { key: 'config', label: 'Configuración', number: '01' },
-  { key: 'candidatos', label: 'Candidatos', number: '02' },
-  { key: 'confirmar', label: 'Confirmar', number: '03' },
+  { key: 'config', label: 'label_step_config', number: '01' },
+  { key: 'candidatos', label: 'label_candidates', number: '02' },
+  { key: 'confirmar', label: 'label_confirm', number: '03' },
 ];
 
-const WizardSchema = zod.object({
-  month: zod.string().min(1, 'Selecciona un mes'),
-  min_pct: zod.coerce.number().int().min(0).max(100),
-});
+function getWizardSchema(t) {
+  return zod.object({
+    month: zod.string().min(1, t('label_select_a_month')),
+    min_pct: zod.coerce.number().int().min(0).max(100),
+  });
+}
 
 function getDateParts(startDate) {
   if (!startDate) return null;
@@ -60,6 +76,7 @@ function getDateParts(startDate) {
 // ----------------------------------------------------------------------
 
 export function VotationWizard() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
   const { selectedWorkspace } = useWorkspace();
@@ -72,17 +89,19 @@ export function VotationWizard() {
   const monthOptions = useMemo(() => {
     const seen = new Set();
     const options = [];
-    tours.forEach((t) => {
-      const d = t.available?.startDate ? new Date(t.available.startDate) : null;
+    tours.forEach((tour) => {
+      const d = tour.available?.startDate ? new Date(tour.available.startDate) : null;
       if (!d) return;
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       if (!seen.has(key)) {
         seen.add(key);
-        options.push({ value: key, label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}` });
+        options.push({ value: key, label: `${t(MONTH_NAMES[d.getMonth()])} ${d.getFullYear()}` });
       }
     });
     return options.sort((a, b) => a.value.localeCompare(b.value));
-  }, [tours]);
+  }, [tours, t]);
+
+  const WizardSchema = useMemo(() => getWizardSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(WizardSchema),
@@ -90,7 +109,12 @@ export function VotationWizard() {
     mode: 'onChange',
   });
 
-  const { watch, trigger, handleSubmit, formState: { isSubmitting } } = methods;
+  const {
+    watch,
+    trigger,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = methods;
   const values = watch();
 
   const eligibleCount = candidates.filter((c) => c.eligible).length;
@@ -126,14 +150,14 @@ export function VotationWizard() {
         );
         setCandidates(computed);
       } catch {
-        toast.error('Error al obtener candidatos');
+        toast.error(t('label_error_fetching_candidates'));
         return;
       } finally {
         setLoadingPreview(false);
       }
     }
     setActiveStep((prev) => Math.min(prev + 1, STEPS.length - 1));
-  }, [activeStep, trigger, selectedWorkspace?.id, values.month, values.min_pct]);
+  }, [activeStep, trigger, selectedWorkspace?.id, values.month, values.min_pct, t]);
 
   const handleBack = useCallback(() => {
     setActiveStep((prev) => Math.max(prev - 1, 0));
@@ -152,36 +176,38 @@ export function VotationWizard() {
         workspace_id: selectedWorkspace?.id,
         month: data.month,
         min_pct: data.min_pct,
-        candidates: candidates.filter((c) => c.eligible).map((c) => ({
-          id: c.id,
-          name: c.name,
-          avatar_url: c.avatar_url,
-          training_pct: c.training_pct,
-          match_pct: c.match_pct ?? 0,
-          goals: c.goals || 0,
-          assists: c.assists || 0,
-          mvp: c.mvp || 0,
-          eligible: true,
-        })),
+        candidates: candidates
+          .filter((c) => c.eligible)
+          .map((c) => ({
+            id: c.id,
+            name: c.name,
+            avatar_url: c.avatar_url,
+            training_pct: c.training_pct,
+            match_pct: c.match_pct ?? 0,
+            goals: c.goals || 0,
+            assists: c.assists || 0,
+            mvp: c.mvp || 0,
+            eligible: true,
+          })),
       };
       const created = await createVotation(payload, selectedWorkspace?.id);
-      toast.success('¡Votación abierta exitosamente!');
+      toast.success(t('label_votation_opened_successfully'));
       // Pass month label via state since the API doesn't store it
       navigate(paths.dashboard.votaciones.detail(created.id), {
         state: { votationId: created.id, monthLabel },
       });
     } catch (error) {
-      toast.error('Error al abrir la votación');
+      toast.error(t('label_error_opening_votation'));
     }
   });
 
   // Stepper step values for the sidebar
   const stepValues = {
     config: values.month
-      ? `${monthOptions.find((o) => o.value === values.month)?.label || values.month} · min ${values.min_pct}%`
+      ? `${monthOptions.find((o) => o.value === values.month)?.label || values.month} · ${t('word_min')} ${values.min_pct}%`
       : '—',
-    candidatos: candidates.length > 0 ? `${eligibleCount} elegibles` : '—',
-    confirmar: eligibleCount > 0 ? 'Listo' : '—',
+    candidatos: candidates.length > 0 ? `${eligibleCount} ${t('label_eligible_plural')}` : '—',
+    confirmar: eligibleCount > 0 ? t('label_ready') : '—',
   };
 
   return (
@@ -224,28 +250,22 @@ export function VotationWizard() {
               variant="overline"
               sx={{ color: 'primary.main', letterSpacing: 2, mb: 1, display: 'block' }}
             >
-              Nueva votación
+              {t('label_new_votation_overline')}
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-              Jugador del mes.
+              {t('label_player_of_the_month_period')}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 520 }}>
-              Selecciona el mes y el umbral mínimo de asistencia. El sistema calculará los candidatos
-              automáticamente a partir de los datos de entrenamiento.
+              {t('label_wizard_intro_body')}
             </Typography>
           </Box>
 
           {/* Step 1 — Config */}
-          {activeStep === 0 && (
-            <StepConfig monthOptions={monthOptions} />
-          )}
+          {activeStep === 0 && <StepConfig monthOptions={monthOptions} />}
 
           {/* Step 2 — Candidates */}
           {activeStep === 1 && (
-            <StepCandidates
-              candidates={candidates}
-              onToggle={handleToggleEligible}
-            />
+            <StepCandidates candidates={candidates} onToggle={handleToggleEligible} />
           )}
 
           {/* Step 3 — Confirm */}
@@ -265,7 +285,7 @@ export function VotationWizard() {
               disabled={activeStep === 0}
               startIcon={<Iconify icon="eva:arrow-back-fill" />}
             >
-              Anterior
+              {t('label_previous')}
             </Button>
 
             {activeStep < STEPS.length - 1 ? (
@@ -274,7 +294,7 @@ export function VotationWizard() {
                 onClick={handleNext}
                 endIcon={<Iconify icon="eva:arrow-forward-fill" />}
               >
-                Siguiente
+                {t('label_next')}
               </Button>
             ) : (
               <LoadingButton
@@ -285,7 +305,7 @@ export function VotationWizard() {
                 disabled={eligibleCount === 0}
                 startIcon={<Iconify icon="solar:cup-star-bold" />}
               >
-                Abrir Votación
+                {t('label_open_votation')}
               </LoadingButton>
             )}
           </Stack>
@@ -298,16 +318,17 @@ export function VotationWizard() {
 // ----------------------------------------------------------------------
 
 function StepConfig({ monthOptions }) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={3} sx={{ maxWidth: 480 }}>
       <Box>
         <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
-          Mes de evaluación
+          {t('label_evaluation_month')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-          Se calcularán las asistencias de entrenamiento en este mes.
+          {t('label_training_attendance_calculated_note')}
         </Typography>
-        <Field.Select name="month" label="Mes" size="medium">
+        <Field.Select name="month" label={t('label_month')} size="medium">
           {monthOptions.map((opt) => (
             <MenuItem key={opt.value} value={opt.value}>
               {opt.label}
@@ -318,14 +339,14 @@ function StepConfig({ monthOptions }) {
 
       <Box>
         <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
-          Asistencia mínima
+          {t('label_minimum_attendance')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-          Solo los jugadores con este % de asistencia o más serán candidatos.
+          {t('label_min_attendance_candidates_note')}
         </Typography>
         <Field.Text
           name="min_pct"
-          label="Asistencia mínima (%)"
+          label={t('label_minimum_attendance_pct')}
           type="number"
           size="medium"
           inputProps={{ min: 0, max: 100 }}
@@ -339,22 +360,27 @@ function StepConfig({ monthOptions }) {
 // ----------------------------------------------------------------------
 
 function StepCandidates({ candidates, onToggle }) {
+  const { t } = useTranslation();
   if (candidates.length === 0) {
     return (
       <Box
         sx={{
           py: 8,
           textAlign: 'center',
-          border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.2)}`,
+          border: (theme) => `1px dashed ${alpha(theme.palette.grey[500], 0.2)}`,
           borderRadius: 2,
         }}
       >
-        <Iconify icon="solar:users-group-rounded-bold" width={48} sx={{ color: 'text.disabled', mb: 2 }} />
+        <Iconify
+          icon="solar:users-group-rounded-bold"
+          width={48}
+          sx={{ color: 'text.disabled', mb: 2 }}
+        />
         <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-          Sin candidatos
+          {t('label_no_candidates')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.disabled', mt: 0.5 }}>
-          Ningún jugador alcanzó el umbral mínimo de asistencia. Vuelve atrás y ajusta los parámetros.
+          {t('label_no_candidates_body')}
         </Typography>
       </Box>
     );
@@ -363,8 +389,8 @@ function StepCandidates({ candidates, onToggle }) {
   return (
     <Box>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-        {candidates.filter((c) => c.eligible).length} de {candidates.length} candidatos elegibles.
-        Desactiva los jugadores que no deben participar.
+        {candidates.filter((c) => c.eligible).length} {t('label_of')} {candidates.length}{' '}
+        {t('label_eligible_candidates')}. {t('label_deactivate_players_note')}
       </Typography>
       <Grid container spacing={2}>
         {candidates.map((candidate) => (
@@ -384,7 +410,10 @@ function WizardAttendanceRow({ icon, label, pct }) {
   return (
     <Stack direction="row" alignItems="center" spacing={0.75}>
       <Iconify icon={icon} width={13} sx={{ color: 'text.disabled', flexShrink: 0 }} />
-      <Typography variant="caption" sx={{ color: 'text.secondary', width: 88, flexShrink: 0, fontSize: '0.7rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ color: 'text.secondary', width: 88, flexShrink: 0, fontSize: '0.7rem' }}
+      >
         {label}
       </Typography>
       <Box sx={{ flex: 1 }}>
@@ -396,10 +425,22 @@ function WizardAttendanceRow({ icon, label, pct }) {
             overflow: 'hidden',
           }}
         >
-          <Box sx={{ width: `${pct}%`, height: '100%', bgcolor: color, borderRadius: 1, transition: 'width 0.4s' }} />
+          <Box
+            sx={{
+              width: `${pct}%`,
+              height: '100%',
+              bgcolor: color,
+              borderRadius: 1,
+              transition: 'width 0.4s',
+            }}
+          />
         </Box>
       </Box>
-      <Typography variant="caption" fontWeight={700} sx={{ color, width: 30, textAlign: 'right', flexShrink: 0, fontSize: '0.7rem' }}>
+      <Typography
+        variant="caption"
+        fontWeight={700}
+        sx={{ color, width: 30, textAlign: 'right', flexShrink: 0, fontSize: '0.7rem' }}
+      >
         {pct}%
       </Typography>
     </Stack>
@@ -413,7 +454,10 @@ function WizardStatChip({ icon, label, value, color = 'text.secondary' }) {
       <Typography variant="caption" fontWeight={700} sx={{ color, fontSize: '0.7rem' }}>
         {value}
       </Typography>
-      <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.58rem', lineHeight: 1 }}>
+      <Typography
+        variant="caption"
+        sx={{ color: 'text.disabled', fontSize: '0.58rem', lineHeight: 1 }}
+      >
         {label}
       </Typography>
     </Stack>
@@ -421,16 +465,17 @@ function WizardStatChip({ icon, label, value, color = 'text.secondary' }) {
 }
 
 function CandidateCard({ candidate, onToggle }) {
+  const { t } = useTranslation();
   return (
     <Card
       sx={{
         p: 2.5,
-        border: (t) =>
-          `1px solid ${candidate.eligible ? alpha(t.palette.primary.main, 0.2) : alpha(t.palette.grey[500], 0.12)}`,
+        border: (theme) =>
+          `1px solid ${candidate.eligible ? alpha(theme.palette.primary.main, 0.2) : alpha(theme.palette.grey[500], 0.12)}`,
         opacity: candidate.eligible ? 1 : 0.45,
         transition: 'all 0.2s',
         cursor: 'pointer',
-        '&:hover': { borderColor: (t) => alpha(t.palette.primary.main, 0.4) },
+        '&:hover': { borderColor: (theme) => alpha(theme.palette.primary.main, 0.4) },
       }}
       onClick={() => onToggle(candidate.id)}
     >
@@ -452,24 +497,53 @@ function CandidateCard({ candidate, onToggle }) {
             {candidate.name}
           </Typography>
           {candidate.eligible ? (
-            <Iconify icon="eva:checkmark-circle-2-fill" width={18} sx={{ color: 'primary.main', flexShrink: 0 }} />
+            <Iconify
+              icon="eva:checkmark-circle-2-fill"
+              width={18}
+              sx={{ color: 'primary.main', flexShrink: 0 }}
+            />
           ) : (
-            <Iconify icon="solar:close-circle-bold" width={18} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+            <Iconify
+              icon="solar:close-circle-bold"
+              width={18}
+              sx={{ color: 'text.disabled', flexShrink: 0 }}
+            />
           )}
         </Stack>
 
         {/* Attendance rows */}
         <Stack spacing={0.5}>
-          <WizardAttendanceRow icon="solar:dumbbell-bold" label="Entrenamientos" pct={candidate.training_pct} />
-          <WizardAttendanceRow icon="solar:running-round-bold" label="Partidos" pct={candidate.match_pct ?? 0} />
+          <WizardAttendanceRow
+            icon="solar:dumbbell-bold"
+            label={t('label_trainings')}
+            pct={candidate.training_pct}
+          />
+          <WizardAttendanceRow
+            icon="solar:running-round-bold"
+            label={t('word_matches')}
+            pct={candidate.match_pct ?? 0}
+          />
         </Stack>
 
         {/* Performance stats */}
         <Stack direction="row" spacing={1.5}>
-          <WizardStatChip icon="solar:football-bold" label="Goles" value={candidate.goals || 0} />
-          <WizardStatChip icon="mdi:shoe-cleat" label="Asist." value={candidate.assists || 0} />
+          <WizardStatChip
+            icon="solar:football-bold"
+            label={t('word_goals')}
+            value={candidate.goals || 0}
+          />
+          <WizardStatChip
+            icon="mdi:shoe-cleat"
+            label={t('label_assists_abbr_cap')}
+            value={candidate.assists || 0}
+          />
           {(candidate.mvp ?? 0) > 0 && (
-            <WizardStatChip icon="solar:medal-ribbons-star-bold" label="MVP" value={candidate.mvp} color="warning.main" />
+            <WizardStatChip
+              icon="solar:medal-ribbons-star-bold"
+              label="MVP"
+              value={candidate.mvp}
+              color="warning.main"
+            />
           )}
         </Stack>
       </Stack>
@@ -480,6 +554,7 @@ function CandidateCard({ candidate, onToggle }) {
 // ----------------------------------------------------------------------
 
 function StepConfirm({ monthLabel, minPct, candidates }) {
+  const { t } = useTranslation();
   const eligible = candidates.filter((c) => c.eligible);
 
   return (
@@ -487,26 +562,45 @@ function StepConfirm({ monthLabel, minPct, candidates }) {
       <Card
         sx={{
           p: 3,
-          border: (t) => `1px solid ${alpha(t.palette.primary.main, 0.16)}`,
-          bgcolor: (t) => alpha(t.palette.primary.main, 0.02),
+          border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
         }}
       >
-        <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary', letterSpacing: 0.5, fontSize: '0.7rem', textTransform: 'uppercase' }}>
-          Resumen de la votación
+        <Typography
+          variant="subtitle2"
+          sx={{
+            mb: 2,
+            color: 'text.secondary',
+            letterSpacing: 0.5,
+            fontSize: '0.7rem',
+            textTransform: 'uppercase',
+          }}
+        >
+          {t('label_votation_summary')}
         </Typography>
 
         <Stack spacing={1.5}>
           <Stack direction="row" justifyContent="space-between">
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>Mes</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>{monthLabel}</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {t('label_month')}
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {monthLabel}
+            </Typography>
           </Stack>
           <Stack direction="row" justifyContent="space-between">
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>Asistencia mínima</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>{minPct}%</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {t('label_minimum_attendance')}
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {minPct}%
+            </Typography>
           </Stack>
           <Divider />
           <Stack direction="row" justifyContent="space-between">
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>Candidatos elegibles</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {t('label_eligible_candidates')}
+            </Typography>
             <Label color="primary">{eligible.length}</Label>
           </Stack>
         </Stack>
@@ -515,21 +609,31 @@ function StepConfirm({ monthLabel, minPct, candidates }) {
       {eligible.length > 0 && (
         <Box>
           <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-            Candidatos que participarán
+            {t('label_participating_candidates')}
           </Typography>
           <Stack spacing={1}>
             {eligible.map((c) => (
               <Stack key={c.id} direction="row" alignItems="center" spacing={1.5}>
-                <Avatar src={c.avatar_url} alt={c.name} sx={{ width: 32, height: 32, fontSize: '0.8rem' }}>
+                <Avatar
+                  src={c.avatar_url}
+                  alt={c.name}
+                  sx={{ width: 32, height: 32, fontSize: '0.8rem' }}
+                >
                   {c.name?.charAt(0)}
                 </Avatar>
-                <Typography variant="body2" sx={{ flex: 1 }}>{c.name}</Typography>
+                <Typography variant="body2" sx={{ flex: 1 }}>
+                  {c.name}
+                </Typography>
                 <Typography
                   variant="caption"
                   sx={{
                     fontWeight: 700,
                     color:
-                      c.training_pct >= 80 ? 'success.main' : c.training_pct >= 50 ? 'warning.main' : 'error.main',
+                      c.training_pct >= 80
+                        ? 'success.main'
+                        : c.training_pct >= 50
+                          ? 'warning.main'
+                          : 'error.main',
                   }}
                 >
                   {c.training_pct}%
@@ -545,12 +649,12 @@ function StepConfirm({ monthLabel, minPct, candidates }) {
           sx={{
             p: 3,
             textAlign: 'center',
-            border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.2)}`,
+            border: (theme) => `1px dashed ${alpha(theme.palette.grey[500], 0.2)}`,
             borderRadius: 2,
           }}
         >
           <Typography variant="body2" sx={{ color: 'text.disabled' }}>
-            No hay candidatos elegibles. Vuelve al paso anterior y activa al menos un candidato.
+            {t('label_no_eligible_candidates_note')}
           </Typography>
         </Box>
       )}
