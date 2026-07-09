@@ -616,5 +616,18 @@
   "nav_account_settings": "Configuración de cuenta",
   "label_unread": "Sin leer",
   "label_mark_all_read": "Marcar todas como leídas",
-  "label_no_notifications": "Sin notificaciones"
+  "label_no_notifications": "Sin notificaciones",
+  "nav_documents": "Documentos",
+  "nav_matches": "Partidos",
+  "nav_performance": "Rendimiento",
+  "nav_scorers_and_assists": "Goleadores y asistencias",
+  "nav_getting_started_guide": "Guía de inicio",
+  "nav_trainings": "Entrenamientos",
+  "nav_votes": "Votaciones",
+  "nav_administration": "Administración",
+  "nav_total_payments": "Pagos Totales",
+  "nav_products": "Productos",
+  "nav_orders": "Ordenes",
+  "nav_my_tournament": "Mi torneo",
+  "nav_overview": "Resumen"
 }

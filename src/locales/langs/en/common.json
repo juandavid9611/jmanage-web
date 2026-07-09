@@ -616,5 +616,18 @@
   "nav_account_settings": "Account settings",
   "label_unread": "Unread",
   "label_mark_all_read": "Mark all as read",
-  "label_no_notifications": "No notifications"
+  "label_no_notifications": "No notifications",
+  "nav_documents": "Documents",
+  "nav_matches": "Matches",
+  "nav_performance": "Performance",
+  "nav_scorers_and_assists": "Scorers and Assists",
+  "nav_getting_started_guide": "Getting Started Guide",
+  "nav_trainings": "Trainings",
+  "nav_votes": "Votes",
+  "nav_administration": "Administration",
+  "nav_total_payments": "Total Payments",
+  "nav_products": "Products",
+  "nav_orders": "Orders",
+  "nav_my_tournament": "My Tournament",
+  "nav_overview": "Overview"
 }
