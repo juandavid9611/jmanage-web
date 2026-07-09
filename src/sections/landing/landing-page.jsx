@@ -108,7 +108,12 @@ const CLUB_FEATURES = [
 ];
 
 const FEAT_TABS = [
-  { key: 'tournaments', label: 'tournaments', icon: 'solar:cup-star-bold-duotone', color: 'primary' },
+  {
+    key: 'tournaments',
+    label: 'tournaments',
+    icon: 'solar:cup-star-bold-duotone',
+    color: 'primary',
+  },
   { key: 'clubs', label: 'clubs', icon: 'solar:shield-bold-duotone', color: 'info' },
 ];
 
@@ -375,8 +380,18 @@ function HeroDashboardTournament() {
       >
         {[
           { label: 'word_teams', value: '16', icon: 'solar:shield-bold-duotone', color: 'primary' },
-          { label: 'word_matches', value: '48', icon: 'solar:football-bold-duotone', color: 'info' },
-          { label: 'word_goals', value: '127', icon: 'solar:cup-star-bold-duotone', color: 'warning' },
+          {
+            label: 'word_matches',
+            value: '48',
+            icon: 'solar:football-bold-duotone',
+            color: 'info',
+          },
+          {
+            label: 'word_goals',
+            value: '127',
+            icon: 'solar:cup-star-bold-duotone',
+            color: 'warning',
+          },
           {
             label: 'word_players',
             value: '224',
@@ -769,14 +784,24 @@ function HeroDashboardClub() {
             icon: 'solar:users-group-rounded-bold-duotone',
             color: 'info',
           },
-          { label: 'label_dues_ok', value: '20', icon: 'solar:card-bold-duotone', color: 'success' },
+          {
+            label: 'label_dues_ok',
+            value: '20',
+            icon: 'solar:card-bold-duotone',
+            color: 'success',
+          },
           {
             label: 'word_attendance',
             value: '87%',
             icon: 'solar:chart-bold-duotone',
             color: 'warning',
           },
-          { label: 'word_matches', value: '8', icon: 'solar:football-bold-duotone', color: 'primary' },
+          {
+            label: 'word_matches',
+            value: '8',
+            icon: 'solar:football-bold-duotone',
+            color: 'primary',
+          },
         ].map((s, i) => (
           <Box
             key={s.label}
@@ -1074,17 +1099,18 @@ function FloatingCard({ src, altText, sx }) {
 // ─── TOURNAMENT LIFECYCLE STEP PREVIEW CARDS ────────────────────────
 
 function ConfigPreview({ theme }) {
+  const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
   const [typedName, setTypedName] = useState('');
   const [teamCount, setTeamCount] = useState(0);
   const [groupCount, setGroupCount] = useState(0);
   const [tieBreakers, setTieBreakers] = useState([
-    { id: 'dg', label: 'Diferencia goles' },
-    { id: 'gf', label: 'Goles a favor' },
-    { id: 'rp', label: 'Resultado particular' },
+    { id: 'dg', label: 'tiebreaker_goal_diff' },
+    { id: 'gf', label: 'tiebreaker_goals_for' },
+    { id: 'rp', label: 'tiebreaker_head_to_head' },
   ]);
 
-  const FULL_NAME = 'Copa Verano 2025';
+  const FULL_NAME = 'Copa Verano 2026';
 
   useEffect(() => {
     if (activeStep === 0) {
@@ -1143,18 +1169,18 @@ function ConfigPreview({ theme }) {
     if (activeStep === 3) {
       const timer = setTimeout(() => {
         setTieBreakers([
-          { id: 'gf', label: 'Goles a favor' },
-          { id: 'dg', label: 'Diferencia goles' },
-          { id: 'rp', label: 'Resultado particular' },
+          { id: 'gf', label: 'tiebreaker_goals_for' },
+          { id: 'dg', label: 'tiebreaker_goal_diff' },
+          { id: 'rp', label: 'tiebreaker_head_to_head' },
         ]);
       }, 700);
       return () => clearTimeout(timer);
     }
     if (activeStep < 3) {
       setTieBreakers([
-        { id: 'dg', label: 'Diferencia goles' },
-        { id: 'gf', label: 'Goles a favor' },
-        { id: 'rp', label: 'Resultado particular' },
+        { id: 'dg', label: 'tiebreaker_goal_diff' },
+        { id: 'gf', label: 'tiebreaker_goals_for' },
+        { id: 'rp', label: 'tiebreaker_head_to_head' },
       ]);
     }
     return undefined;
@@ -1169,11 +1195,26 @@ function ConfigPreview({ theme }) {
   }, []);
 
   const CONFIG_SUBSTEPS = [
-    { key: 'identidad', label: 'Identidad', icon: 'mdi:shield-account-outline', color: 'primary' },
-    { key: 'formato', label: 'Formato', icon: 'mdi:tournament', color: 'info' },
-    { key: 'puntuacion', label: 'Puntuación', icon: 'mdi:numeric-3-box-outline', color: 'warning' },
-    { key: 'desempates', label: 'Desempates', icon: 'mdi:format-list-numbered', color: 'error' },
-    { key: 'opciones', label: 'Opciones', icon: 'mdi:cog-outline', color: 'success' },
+    {
+      key: 'identidad',
+      label: 'word_identity',
+      icon: 'mdi:shield-account-outline',
+      color: 'primary',
+    },
+    { key: 'formato', label: 'word_format', icon: 'mdi:tournament', color: 'info' },
+    {
+      key: 'puntuacion',
+      label: 'word_scoring',
+      icon: 'mdi:numeric-3-box-outline',
+      color: 'warning',
+    },
+    {
+      key: 'desempates',
+      label: 'word_tiebreakers',
+      icon: 'mdi:format-list-numbered',
+      color: 'error',
+    },
+    { key: 'opciones', label: 'word_options', icon: 'mdi:cog-outline', color: 'success' },
   ];
 
   const getVisibility = (stepIndex) => ({
@@ -1237,7 +1278,7 @@ function ConfigPreview({ theme }) {
                   }}
                   noWrap
                 >
-                  {sub.label}
+                  {t(sub.label)}
                 </Typography>
               </Stack>
               {idx < CONFIG_SUBSTEPS.length - 1 && (
@@ -1330,7 +1371,7 @@ function ConfigPreview({ theme }) {
                   transition: 'opacity 0.3s',
                 }}
               >
-                <Iconify icon="mdi:soccer" width={14} /> Fútbol
+                <Iconify icon="mdi:soccer" width={14} /> {t('word_soccer')}
                 <Box component="span" sx={{ mx: 0.5 }}>
                   •
                 </Box>
@@ -1398,7 +1439,7 @@ function ConfigPreview({ theme }) {
                     textAlign: 'center',
                   }}
                 >
-                  LIGA
+                  {t('word_league_upper')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1409,9 +1450,9 @@ function ConfigPreview({ theme }) {
                     lineHeight: 1.1,
                   }}
                 >
-                  Todos vs
+                  {t('word_all_vs')}
                   <br />
-                  Todos
+                  {t('all')}
                 </Typography>
               </Stack>
             </Box>
@@ -1462,7 +1503,7 @@ function ConfigPreview({ theme }) {
                     textAlign: 'center',
                   }}
                 >
-                  GRUPOS
+                  {t('word_groups_upper')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1473,9 +1514,9 @@ function ConfigPreview({ theme }) {
                     lineHeight: 1.1,
                   }}
                 >
-                  Fases
+                  {t('word_phases')}
                   <br />
-                  Clasif.
+                  {t('word_qualif_abbr')}
                 </Typography>
               </Stack>
             </Box>
@@ -1526,7 +1567,7 @@ function ConfigPreview({ theme }) {
                     textAlign: 'center',
                   }}
                 >
-                  GRUPOS + KO
+                  {t('word_groups_ko_upper')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1537,8 +1578,9 @@ function ConfigPreview({ theme }) {
                     lineHeight: 1.1,
                   }}
                 >
-                  Grupos y<br />
-                  Fase Final
+                  {t('word_groups_and')}
+                  <br />
+                  {t('word_final_phase')}
                 </Typography>
               </Stack>
             </Box>
@@ -1567,7 +1609,7 @@ function ConfigPreview({ theme }) {
             >
               <Iconify icon="mdi:shield-outline" width={16} sx={{ color: 'info.main' }} />
               <Typography variant="subtitle2" sx={{ color: 'info.dark' }}>
-                {teamCount} Equipos
+                {teamCount} {t('word_teams')}
               </Typography>
             </Box>
             <Box
@@ -1588,7 +1630,9 @@ function ConfigPreview({ theme }) {
                 width={16}
                 sx={{ color: 'text.secondary' }}
               />
-              <Typography variant="subtitle2">{activeStep >= 1 ? groupCount : 0} Grupos</Typography>
+              <Typography variant="subtitle2">
+                {activeStep >= 1 ? groupCount : 0} {t('word_groups')}
+              </Typography>
             </Box>
           </Stack>
         </Card>
@@ -1611,7 +1655,7 @@ function ConfigPreview({ theme }) {
               variant="caption"
               sx={{ fontWeight: 700, color: 'warning.main', display: 'block', mb: 1.5 }}
             >
-              PUNTUACIÓN
+              {t('word_scoring_upper')}
             </Typography>
             <Stack
               direction="row"
@@ -1634,7 +1678,7 @@ function ConfigPreview({ theme }) {
                     variant="caption"
                     sx={{ color: 'success.main', fontWeight: 700, fontSize: '0.6rem' }}
                   >
-                    V
+                    {t('result_win_abbr')}
                   </Typography>
                 </Box>
                 <Typography variant="subtitle2">
@@ -1643,7 +1687,7 @@ function ConfigPreview({ theme }) {
                     component="span"
                     sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 400 }}
                   >
-                    pts
+                    {t('word_pts_abbr')}
                   </Box>
                 </Typography>
               </Stack>
@@ -1663,7 +1707,7 @@ function ConfigPreview({ theme }) {
                     variant="caption"
                     sx={{ color: 'warning.main', fontWeight: 700, fontSize: '0.6rem' }}
                   >
-                    E
+                    {t('result_draw_abbr')}
                   </Typography>
                 </Box>
                 <Typography variant="subtitle2">
@@ -1672,7 +1716,7 @@ function ConfigPreview({ theme }) {
                     component="span"
                     sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 400 }}
                   >
-                    pt
+                    {t('word_pt_abbr')}
                   </Box>
                 </Typography>
               </Stack>
@@ -1692,7 +1736,7 @@ function ConfigPreview({ theme }) {
                     variant="caption"
                     sx={{ color: 'error.main', fontWeight: 700, fontSize: '0.6rem' }}
                   >
-                    D
+                    {t('result_loss_abbr')}
                   </Typography>
                 </Box>
                 <Typography variant="subtitle2">
@@ -1701,7 +1745,7 @@ function ConfigPreview({ theme }) {
                     component="span"
                     sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 400 }}
                   >
-                    pts
+                    {t('word_pts_abbr')}
                   </Box>
                 </Typography>
               </Stack>
@@ -1722,7 +1766,7 @@ function ConfigPreview({ theme }) {
               variant="caption"
               sx={{ fontWeight: 700, color: 'info.main', display: 'block', mb: 1 }}
             >
-              DESEMPATES
+              {t('word_tiebreakers_upper')}
             </Typography>
             <Stack spacing={0.75}>
               <AnimatePresence mode="popLayout">
@@ -1768,7 +1812,7 @@ function ConfigPreview({ theme }) {
                           fontWeight: i === 0 && activeStep >= 3 ? 700 : 400,
                         }}
                       >
-                        {rule.label}
+                        {t(rule.label)}
                       </Typography>
                       {i === 0 && activeStep >= 3 && (
                         <Iconify
@@ -1806,12 +1850,12 @@ function ConfigPreview({ theme }) {
               variant="caption"
               sx={{ fontWeight: 700, color: 'success.main', display: 'block', mb: 1 }}
             >
-              OPCIONES
+              {t('word_options_upper')}
             </Typography>
             <Stack spacing={0.5}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>
-                  Inscripción abierta
+                  {t('option_open_registration')}
                 </Typography>
                 <Iconify
                   icon={activeStep >= 4 ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off'}
@@ -1824,7 +1868,7 @@ function ConfigPreview({ theme }) {
               </Stack>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>
-                  Notificaciones push
+                  {t('option_push_notifications')}
                 </Typography>
                 <Iconify
                   icon={activeStep >= 5 ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off'}
@@ -1837,7 +1881,7 @@ function ConfigPreview({ theme }) {
               </Stack>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>
-                  Visibilidad pública
+                  {t('option_public_visibility')}
                 </Typography>
                 <Iconify
                   icon={activeStep >= 6 ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off'}
@@ -1857,6 +1901,7 @@ function ConfigPreview({ theme }) {
 }
 
 function TeamsPreview() {
+  const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
   const [typedName, setTypedName] = useState('');
   const [playerCount, setPlayerCount] = useState(0);
@@ -1919,25 +1964,25 @@ function TeamsPreview() {
   const TEAM_SUBSTEPS = [
     {
       key: 'identidad',
-      label: 'Identidad',
+      label: 'word_identity',
       icon: 'mdi:shield-account-outline',
       color: 'primary',
     },
     {
       key: 'plantilla',
-      label: 'Plantilla',
+      label: 'word_roster',
       icon: 'mdi:account-group-outline',
       color: 'info',
     },
     {
       key: 'documentos',
-      label: 'Documentos',
+      label: 'feat_documents_title',
       icon: 'mdi:file-document-check-outline',
       color: 'warning',
     },
     {
       key: 'reglamento',
-      label: 'Reglamento',
+      label: 'word_rules',
       icon: 'mdi:gavel',
       color: 'error',
     },
@@ -2001,7 +2046,7 @@ function TeamsPreview() {
                   }}
                   noWrap
                 >
-                  {sub.label}
+                  {t(sub.label)}
                 </Typography>
               </Stack>
               {idx < TEAM_SUBSTEPS.length - 1 && (
@@ -2099,7 +2144,7 @@ function TeamsPreview() {
                   sx={{ height: 16, fontSize: '0.55rem' }}
                 />
                 <Chip
-                  label="Seed 1"
+                  label={`${t('word_seed')} 1`}
                   size="small"
                   variant="soft"
                   color="primary"
@@ -2135,15 +2180,30 @@ function TeamsPreview() {
               variant="caption"
               sx={{ fontWeight: 600, color: 'info.main', fontSize: '0.65rem' }}
             >
-              {playerCount} jugadores
+              {playerCount} {t('word_players_lowercase')}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={0.75}>
             {[
-              { pos: 'POR', count: posCounts.POR, icon: 'mdi:hand-back-right' },
-              { pos: 'DEF', count: posCounts.DEF, icon: 'mdi:shield-outline' },
-              { pos: 'MED', count: posCounts.MED, icon: 'mdi:strategy' },
-              { pos: 'DEL', count: posCounts.DEL, icon: 'mdi:soccer' },
+              {
+                pos: 'POR',
+                label: 'position_gk_abbr',
+                count: posCounts.POR,
+                icon: 'mdi:hand-back-right',
+              },
+              {
+                pos: 'DEF',
+                label: 'position_def_abbr',
+                count: posCounts.DEF,
+                icon: 'mdi:shield-outline',
+              },
+              {
+                pos: 'MED',
+                label: 'position_mid_abbr',
+                count: posCounts.MED,
+                icon: 'mdi:strategy',
+              },
+              { pos: 'DEL', label: 'position_fwd_abbr', count: posCounts.DEL, icon: 'mdi:soccer' },
             ].map((p) => (
               <Card
                 key={p.pos}
@@ -2177,7 +2237,7 @@ function TeamsPreview() {
                   {p.count}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.55rem' }}>
-                  {p.pos}
+                  {t(p.label)}
                 </Typography>
               </Card>
             ))}
@@ -2200,17 +2260,25 @@ function TeamsPreview() {
               variant="caption"
               sx={{ fontWeight: 700, color: 'warning.main', display: 'block', mb: 1 }}
             >
-              DOCUMENTOS
+              {t('word_documents_upper')}
             </Typography>
             <Stack spacing={0.5}>
               {[
                 {
-                  label: 'Identificación',
+                  label: 'word_identification',
                   icon: 'mdi:card-account-details-outline',
                   baseDone: true,
                 },
-                { label: 'Póliza seguro', icon: 'mdi:shield-check-outline', baseDone: true },
-                { label: 'Cert. médicos', icon: 'mdi:hospital-box-outline', baseDone: false },
+                {
+                  label: 'word_insurance_policy',
+                  icon: 'mdi:shield-check-outline',
+                  baseDone: true,
+                },
+                {
+                  label: 'word_medical_certs',
+                  icon: 'mdi:hospital-box-outline',
+                  baseDone: false,
+                },
               ].map((doc, idx) => {
                 // The later docs only get checked near the end of the step
                 const isChecked = doc.baseDone || activeStep > 2;
@@ -2244,7 +2312,7 @@ function TeamsPreview() {
                       }}
                       noWrap
                     >
-                      {doc.label}
+                      {t(doc.label)}
                     </Typography>
                   </Stack>
                 );
@@ -2269,7 +2337,7 @@ function TeamsPreview() {
               variant="caption"
               sx={{ fontWeight: 700, color: 'success.dark', display: 'block', mb: 1 }}
             >
-              REGLAMENTO
+              {t('word_rules_upper')}
             </Typography>
             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Stack alignItems="center" spacing={0.5}>
@@ -2306,7 +2374,7 @@ function TeamsPreview() {
                     transition: 'color 0.3s',
                   }}
                 >
-                  {activeStep > 3 ? 'Aceptado' : 'Pendiente'}
+                  {activeStep > 3 ? t('word_accepted') : t('pending')}
                 </Typography>
               </Stack>
             </Box>
@@ -2318,6 +2386,7 @@ function TeamsPreview() {
 }
 
 function GroupsPreview() {
+  const { t } = useTranslation();
   const [phase, setPhase] = useState('generating'); // 'generating' | 'live'
   const [matchA, setMatchA] = useState('0_0');
   const [matchB, setMatchB] = useState('0_0');
@@ -2421,10 +2490,10 @@ function GroupsPreview() {
               }}
             />
             <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 800 }}>
-              Generando Grupos
+              {t('label_generating_groups')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-              Sorteando 16 equipos automáticamente...
+              {t('label_drawing_teams')}
             </Typography>
           </Stack>
 
@@ -2495,13 +2564,13 @@ function GroupsPreview() {
           spacing={2.5}
         >
           <GroupCard
-            name="Grupo A"
+            name={`${t('word_group')} A`}
             match={{ home: 'SportsManagement FC', away: 'Inter Club', score: matchA }}
             standings={getStandings(matchA === '1_0', 'A')}
             color="warning.main"
           />
           <GroupCard
-            name="Grupo B"
+            name={`${t('word_group')} B`}
             match={{ home: 'Galaxy XI', away: 'Titans FC', score: matchB }}
             standings={getStandings(matchB === '1_0', 'B')}
             color="info.main"
@@ -2623,7 +2692,7 @@ function GroupCard({ name, match, standings, color }) {
                   }}
                 >
                   <Chip
-                    label="¡GOL!"
+                    label={t('word_goal_upper')}
                     size="small"
                     color="success"
                     sx={{ height: 14, fontSize: '0.45rem', fontWeight: 800, px: 0.25 }}
@@ -2693,18 +2762,24 @@ function GroupCard({ name, match, standings, color }) {
             bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.03),
           }}
         >
-          {['Equipo', 'PG', 'PE', 'PP', 'PTS'].map((h) => (
+          {[
+            'table_header_team',
+            'table_header_wins_abbr',
+            'table_header_draws_abbr',
+            'table_header_losses_abbr',
+            'table_header_points_abbr',
+          ].map((h) => (
             <Typography
               key={h}
               variant="caption"
               sx={{
                 fontSize: '0.55rem',
-                fontWeight: h === 'PTS' ? 700 : 500,
+                fontWeight: h === 'table_header_points_abbr' ? 700 : 500,
                 color: 'text.disabled',
-                textAlign: h === 'Equipo' ? 'left' : 'center',
+                textAlign: h === 'table_header_team' ? 'left' : 'center',
               }}
             >
-              {h}
+              {t(h)}
             </Typography>
           ))}
         </Box>
@@ -2775,7 +2850,7 @@ function GroupCard({ name, match, standings, color }) {
 
 const SF1 = {
   home: 'SportsManagement FC',
-  away: 'Titanes',
+  away: 'Titans FC',
   scoreH: 2,
   scoreA: 0,
   mvp: 'T. Müller',
@@ -2889,6 +2964,7 @@ const MVPBadge = ({ name, show }) => (
 );
 
 const NodeCard = ({ match, index, revealedCount }) => {
+  const { t } = useTranslation();
   const isRevealing = revealedCount === index;
   const isRevealed = revealedCount >= index;
   const isWinner = match.home === CHAMP && isRevealed;
@@ -2897,7 +2973,7 @@ const NodeCard = ({ match, index, revealedCount }) => {
   return (
     <Box sx={{ width: '100%', px: 0.5, position: 'relative' }}>
       <Tooltip
-        title={isRevealed ? `Tiros: 12 - Posesión: 54%` : ''}
+        title={isRevealed ? `${t('word_shots')}: 12 - ${t('word_possession')}: 54%` : ''}
         arrow
         placement="top"
         slotProps={{ tooltip: { sx: { bgcolor: 'common.black', fontSize: '0.6rem' } } }}
@@ -3065,6 +3141,7 @@ const NodeCard = ({ match, index, revealedCount }) => {
 
 // (Skipping to the relevant KnockoutPreview section in this chunk)
 function KnockoutPreview() {
+  const { t } = useTranslation();
   const [revealedCount, setRevealedCount] = useState(0);
 
   useEffect(() => {
@@ -3094,7 +3171,7 @@ function KnockoutPreview() {
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
         <Iconify icon="solar:route-bold-duotone" width={18} sx={{ color: 'success.main' }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-          Fase Final
+          {t('word_final_phase')}
         </Typography>
       </Stack>
 
@@ -3165,7 +3242,8 @@ function KnockoutPreview() {
                 borderTopRightRadius: 6,
                 opacity: 0,
                 transition: 'all 0.4s',
-                boxShadow: (th) => `0 -2px 8px ${varAlpha(th.vars.palette.warning.mainChannel, 0.4)}`,
+                boxShadow: (th) =>
+                  `0 -2px 8px ${varAlpha(th.vars.palette.warning.mainChannel, 0.4)}`,
               }}
             />
           )}
@@ -3200,7 +3278,8 @@ function KnockoutPreview() {
                 borderBottom: '2px solid',
                 borderColor: 'warning.main',
                 mt: '-1px',
-                boxShadow: (th) => `2px 0 8px ${varAlpha(th.vars.palette.warning.mainChannel, 0.4)}`,
+                boxShadow: (th) =>
+                  `2px 0 8px ${varAlpha(th.vars.palette.warning.mainChannel, 0.4)}`,
               }}
             />
           )}
@@ -3236,7 +3315,8 @@ function KnockoutPreview() {
                 borderBottom: '2px solid',
                 borderColor: 'warning.main',
                 mt: '-1px',
-                boxShadow: (th) => `0 4px 12px ${varAlpha(th.vars.palette.warning.mainChannel, 0.5)}`,
+                boxShadow: (th) =>
+                  `0 4px 12px ${varAlpha(th.vars.palette.warning.mainChannel, 0.5)}`,
               }}
             />
           )}
@@ -3293,7 +3373,7 @@ function KnockoutPreview() {
                     letterSpacing: 1,
                   }}
                 >
-                  ¡Campeón!
+                  {t('label_champion')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -3335,6 +3415,7 @@ const PAYMENT_MEMBERS = [
 ];
 
 function PaymentsPreview() {
+  const { t } = useTranslation();
   const [paidCount, setPaidCount] = useState(0);
 
   useEffect(() => {
@@ -3359,7 +3440,7 @@ function PaymentsPreview() {
             fontSize: '0.65rem',
           }}
         >
-          Cuota Mensual · Abril 2026
+          {`${t('label_monthly_dues')} · ${t('month_apr_abbr')} 2026`}
         </Typography>
         <Box
           sx={{
@@ -3374,7 +3455,7 @@ function PaymentsPreview() {
             variant="caption"
             sx={{ color: 'success.main', fontWeight: 700, fontSize: '0.65rem' }}
           >
-            ${total.toLocaleString()} recaudados
+            {`$${total.toLocaleString()} ${t('word_collected')}`}
           </Typography>
         </Box>
       </Stack>
@@ -3498,17 +3579,41 @@ function PaymentsPreview() {
   );
 }
 
-const CALENDAR_DAYS_HEADER = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+// weekday/label values below are i18n keys, resolved via t() at render time.
+const CALENDAR_DAYS_HEADER = [
+  'weekday_mon_abbr',
+  'weekday_tue_abbr',
+  'weekday_wed_abbr',
+  'weekday_thu_abbr',
+  'weekday_fri_abbr',
+  'weekday_sat_abbr',
+  'weekday_sun_abbr',
+];
 const CALENDAR_EVENTS = [
-  { day: 7, type: 'training', label: 'Entrenamiento', color: 'info', time: '18:00' },
-  { day: 10, type: 'match', label: 'vs Águilas FC', color: 'error', time: '16:00' },
-  { day: 14, type: 'training', label: 'Entrenamiento', color: 'info', time: '18:00' },
-  { day: 17, type: 'match', label: 'vs Rayo Azul', color: 'error', time: '15:00' },
-  { day: 21, type: 'training', label: 'Entrenamiento', color: 'info', time: '18:00' },
-  { day: 24, type: 'event', label: 'Reunión directiva', color: 'warning', time: '19:30' },
+  { day: 7, type: 'training', label: 'label_training', color: 'info', time: '18:00' },
+  {
+    day: 10,
+    type: 'match',
+    label: 'word_match_vs',
+    opponent: 'Águilas FC',
+    color: 'error',
+    time: '16:00',
+  },
+  { day: 14, type: 'training', label: 'label_training', color: 'info', time: '18:00' },
+  {
+    day: 17,
+    type: 'match',
+    label: 'word_match_vs',
+    opponent: 'Rayo Azul',
+    color: 'error',
+    time: '15:00',
+  },
+  { day: 21, type: 'training', label: 'label_training', color: 'info', time: '18:00' },
+  { day: 24, type: 'event', label: 'label_board_meeting', color: 'warning', time: '19:30' },
 ];
 
 function CalendarPreview() {
+  const { t } = useTranslation();
   const [revealedEvents, setRevealedEvents] = useState(0);
 
   useEffect(() => {
@@ -3531,7 +3636,7 @@ function CalendarPreview() {
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.8rem' }}>
-          Abril 2026
+          {`${t('month_apr_full')} 2026`}
         </Typography>
         <Stack direction="row" spacing={0.5}>
           <Iconify icon="eva:arrow-ios-back-fill" width={16} sx={{ color: 'text.disabled' }} />
@@ -3551,7 +3656,7 @@ function CalendarPreview() {
               fontWeight: 600,
             }}
           >
-            {d}
+            {t(d)}
           </Typography>
         ))}
       </Box>
@@ -3653,15 +3758,19 @@ function CalendarPreview() {
                   sx={{ fontWeight: 600, fontSize: '0.65rem', display: 'block' }}
                   noWrap
                 >
-                  {ev.label}
+                  {ev.opponent ? `${t(ev.label)} ${ev.opponent}` : t(ev.label)}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.55rem' }}>
-                  Día {ev.day} · {ev.time}
+                  {`${t('word_day')} ${ev.day} · ${ev.time}`}
                 </Typography>
               </Box>
               <Chip
                 label={
-                  ev.type === 'match' ? 'PARTIDO' : ev.type === 'training' ? 'ENTREN.' : 'EVENTO'
+                  ev.type === 'match'
+                    ? t('word_match_abbr')
+                    : ev.type === 'training'
+                      ? t('word_training_abbr')
+                      : t('word_event_abbr')
                 }
                 size="small"
                 color={ev.color}
@@ -3677,15 +3786,16 @@ function CalendarPreview() {
 }
 
 const ASSISTS_PLAYERS = [
-  { name: 'Carlos Mendoza', pos: 'POR', avatar: 'CM' },
-  { name: 'Luis García', pos: 'DEF', avatar: 'LG' },
-  { name: 'Pedro Torres', pos: 'DEF', avatar: 'PT' },
-  { name: 'Juan Ramírez', pos: 'MED', avatar: 'JR' },
-  { name: 'Diego López', pos: 'MED', avatar: 'DL' },
-  { name: 'Miguel Ángel', pos: 'DEL', avatar: 'MA' },
+  { name: 'Carlos Mendoza', pos: 'position_gk_abbr', avatar: 'CM' },
+  { name: 'Luis García', pos: 'position_def_abbr', avatar: 'LG' },
+  { name: 'Pedro Torres', pos: 'position_def_abbr', avatar: 'PT' },
+  { name: 'Juan Ramírez', pos: 'position_mid_abbr', avatar: 'JR' },
+  { name: 'Diego López', pos: 'position_mid_abbr', avatar: 'DL' },
+  { name: 'Miguel Ángel', pos: 'position_fwd_abbr', avatar: 'MA' },
 ];
 
 function AssistsPreview() {
+  const { t } = useTranslation();
   const [markedCount, setMarkedCount] = useState(0);
 
   useEffect(() => {
@@ -3703,10 +3813,10 @@ function AssistsPreview() {
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.25 }}>
         <Stack>
           <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.8rem' }}>
-            Entrenamiento · Martes
+            {`${t('label_training')} · ${t('weekday_tuesday')}`}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem' }}>
-            7 Abril 2026 · 18:00
+            {`7 ${t('month_apr_full')} 2026 · 18:00`}
           </Typography>
         </Stack>
         <Box sx={{ textAlign: 'center' }}>
@@ -3722,7 +3832,7 @@ function AssistsPreview() {
             {pct}%
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.55rem' }}>
-            asistencia
+            {t('word_attendance_lowercase')}
           </Typography>
         </Box>
       </Stack>
@@ -3801,7 +3911,7 @@ function AssistsPreview() {
                 {player.name}
               </Typography>
               <Chip
-                label={player.pos}
+                label={t(player.pos)}
                 size="small"
                 variant="soft"
                 color={isPresent ? 'success' : 'default'}
@@ -3841,13 +3951,26 @@ function AssistsPreview() {
 }
 
 const SHOP_PRODUCTS = [
-  { name: 'Camiseta Local', price: 85000, icon: 'mdi:tshirt-crew', color: 'primary', stock: 24 },
-  { name: 'Short Oficial', price: 45000, icon: 'mdi:human-male', color: 'info', stock: 18 },
-  { name: 'Medias Club', price: 15000, icon: 'mdi:shoe-cleat', color: 'warning', stock: 42 },
-  { name: 'Chaqueta Banca', price: 120000, icon: 'mdi:jacket', color: 'success', stock: 8 },
+  {
+    name: 'product_home_jersey',
+    price: 85000,
+    icon: 'mdi:tshirt-crew',
+    color: 'primary',
+    stock: 24,
+  },
+  {
+    name: 'product_official_shorts',
+    price: 45000,
+    icon: 'mdi:human-male',
+    color: 'info',
+    stock: 18,
+  },
+  { name: 'product_club_socks', price: 15000, icon: 'mdi:shoe-cleat', color: 'warning', stock: 42 },
+  { name: 'product_bench_jacket', price: 120000, icon: 'mdi:jacket', color: 'success', stock: 8 },
 ];
 
 function ShopPreview() {
+  const { t } = useTranslation();
   const [cartCount, setCartCount] = useState(0);
   const [activeProduct, setActiveProduct] = useState(0);
 
@@ -3878,12 +4001,12 @@ function ShopPreview() {
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="solar:bag-bold-duotone" width={18} sx={{ color: 'primary.main' }} />
           <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>
-            Carrito del Club
+            {t('label_club_cart')}
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Chip
-            label={`${cartCount} items`}
+            label={`${cartCount} ${t('word_items')}`}
             size="small"
             color="primary"
             variant="soft"
@@ -3963,7 +4086,7 @@ function ShopPreview() {
                 }}
                 noWrap
               >
-                {product.name}
+                {t(product.name)}
               </Typography>
               <Typography
                 variant="caption"
@@ -3975,7 +4098,7 @@ function ShopPreview() {
                 variant="caption"
                 sx={{ display: 'block', color: 'text.disabled', fontSize: '0.55rem' }}
               >
-                Stock: {product.stock}
+                {`${t('word_stock')}: ${product.stock}`}
               </Typography>
             </Card>
           );
@@ -3986,14 +4109,25 @@ function ShopPreview() {
 }
 
 const CLUB_DOCS = [
-  { name: 'Contrato temporada', icon: 'mdi:file-sign', color: 'primary', size: '245 KB' },
-  { name: 'Fichas médicas', icon: 'mdi:hospital-box-outline', color: 'error', size: '1.2 MB' },
-  { name: 'Reglamento interno', icon: 'mdi:gavel', color: 'warning', size: '88 KB' },
-  { name: 'Póliza de seguro', icon: 'mdi:shield-check-outline', color: 'success', size: '420 KB' },
-  { name: 'Licencias jugadores', icon: 'mdi:card-account-details', color: 'info', size: '3.1 MB' },
+  { name: 'doc_season_contract', icon: 'mdi:file-sign', color: 'primary', size: '245 KB' },
+  { name: 'doc_medical_records', icon: 'mdi:hospital-box-outline', color: 'error', size: '1.2 MB' },
+  { name: 'doc_internal_bylaws', icon: 'mdi:gavel', color: 'warning', size: '88 KB' },
+  {
+    name: 'word_insurance_policy',
+    icon: 'mdi:shield-check-outline',
+    color: 'success',
+    size: '420 KB',
+  },
+  {
+    name: 'doc_player_licenses',
+    icon: 'mdi:card-account-details',
+    color: 'info',
+    size: '3.1 MB',
+  },
 ];
 
 function DocumentsPreview() {
+  const { t } = useTranslation();
   const [uploadProgress, setUploadProgress] = useState(0);
   const [verifiedCount, setVerifiedCount] = useState(0);
 
@@ -4035,7 +4169,7 @@ function DocumentsPreview() {
           variant="caption"
           sx={{ display: 'block', fontWeight: 600, fontSize: '0.65rem', mb: 0.75 }}
         >
-          Subiendo documento...
+          {t('label_uploading_document')}
         </Typography>
         <Box
           sx={{
@@ -4053,7 +4187,7 @@ function DocumentsPreview() {
           />
         </Box>
         <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem' }}>
-          {uploadProgress}% completado
+          {`${uploadProgress}% ${t('word_completed')}`}
         </Typography>
       </Box>
 
@@ -4099,7 +4233,7 @@ function DocumentsPreview() {
                   sx={{ fontWeight: isVerified ? 600 : 400, fontSize: '0.68rem', display: 'block' }}
                   noWrap
                 >
-                  {doc.name}
+                  {t(doc.name)}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.55rem' }}>
                   {doc.size}
@@ -4115,7 +4249,7 @@ function DocumentsPreview() {
                     transition={{ type: 'spring', damping: 12 }}
                   >
                     <Chip
-                      label="Verificado"
+                      label={t('word_verified')}
                       size="small"
                       color={doc.color}
                       variant="soft"
@@ -4125,7 +4259,7 @@ function DocumentsPreview() {
                 ) : (
                   <Box component={m.div} key="pending">
                     <Chip
-                      label="Pendiente"
+                      label={t('pending')}
                       size="small"
                       variant="soft"
                       sx={{ height: 16, fontSize: '0.5rem', fontWeight: 600 }}
@@ -4142,9 +4276,30 @@ function DocumentsPreview() {
 }
 
 const CLUB_MATCHES = [
-  { date: 'Sáb 10 Abr', time: '16:00', opponent: 'Águilas FC', venue: 'Estadio El Campin' },
-  { date: 'Sáb 17 Abr', time: '15:00', opponent: 'Rayo Azul', venue: 'Cancha Norte' },
-  { date: 'Dom 24 Abr', time: '11:00', opponent: 'Inter Club', venue: 'Campo Sur' },
+  {
+    dayAbbr: 'day_sat_abbr',
+    day: 10,
+    monthAbbr: 'month_apr_abbr',
+    time: '16:00',
+    opponent: 'Águilas FC',
+    venue: 'Estadio El Campin',
+  },
+  {
+    dayAbbr: 'day_sat_abbr',
+    day: 17,
+    monthAbbr: 'month_apr_abbr',
+    time: '15:00',
+    opponent: 'Rayo Azul',
+    venue: 'Cancha Norte',
+  },
+  {
+    dayAbbr: 'day_sun_abbr',
+    day: 24,
+    monthAbbr: 'month_apr_abbr',
+    time: '11:00',
+    opponent: 'Inter Club',
+    venue: 'Campo Sur',
+  },
 ];
 const CLUB_SQUAD = [
   'C. Mendoza',
@@ -4161,6 +4316,7 @@ const CLUB_SQUAD = [
 ];
 
 function ClubMatchesPreview() {
+  const { t } = useTranslation();
   const [activeMatch, setActiveMatch] = useState(0);
   const [convocados, setConvocados] = useState(0);
 
@@ -4219,7 +4375,7 @@ function ClubMatchesPreview() {
                 display: 'block',
               }}
             >
-              {mt.date.split(' ')[0]}
+              {t(mt.dayAbbr)}
             </Typography>
             <Typography
               variant="caption"
@@ -4264,10 +4420,10 @@ function ClubMatchesPreview() {
                 variant="caption"
                 sx={{ fontWeight: 600, fontSize: '0.65rem', color: 'error.main' }}
               >
-                {match.date} · {match.time}
+                {`${t(match.dayAbbr)} ${match.day} ${t(match.monthAbbr)} · ${match.time}`}
               </Typography>
               <Chip
-                label="PRÓXIMO"
+                label={t('word_upcoming_upper')}
                 size="small"
                 color="error"
                 variant="soft"
@@ -4342,7 +4498,7 @@ function ClubMatchesPreview() {
                 textTransform: 'uppercase',
               }}
             >
-              Convocatoria
+              {t('word_call_up')}
             </Typography>
             <Typography
               variant="caption"
@@ -4575,7 +4731,8 @@ export function LandingPage() {
                   sx={{
                     borderRadius: 3,
                     overflow: 'hidden',
-                    border: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
+                    border: (th) =>
+                      `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
                     boxShadow: (th) =>
                       `0 32px 64px -12px ${varAlpha(th.vars.palette.common.blackChannel, 0.22)}`,
                   }}
@@ -4877,7 +5034,8 @@ export function LandingPage() {
                                 width: 28,
                                 height: 28,
                                 borderRadius: 1,
-                                bgcolor: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.12),
+                                bgcolor: (th) =>
+                                  varAlpha(th.vars.palette.primary.mainChannel, 0.12),
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -5370,7 +5528,8 @@ export function LandingPage() {
                                         : varAlpha(th.vars.palette.grey['500Channel'], 0.24)
                                     }`,
                                   bgcolor: isDone
-                                    ? (th) => varAlpha(th.vars.palette[step.color].mainChannel, 0.12)
+                                    ? (th) =>
+                                        varAlpha(th.vars.palette[step.color].mainChannel, 0.12)
                                     : 'transparent',
                                   color:
                                     isDone || isActive ? `${step.color}.main` : 'text.disabled',
@@ -5590,7 +5749,8 @@ export function LandingPage() {
                                   border: (th) =>
                                     `2px solid ${isDone || isActive ? th.palette[step.color].main : varAlpha(th.vars.palette.grey['500Channel'], 0.24)}`,
                                   bgcolor: isDone
-                                    ? (th) => varAlpha(th.vars.palette[step.color].mainChannel, 0.12)
+                                    ? (th) =>
+                                        varAlpha(th.vars.palette[step.color].mainChannel, 0.12)
                                     : 'transparent',
                                   color:
                                     isDone || isActive ? `${step.color}.main` : 'text.disabled',
@@ -5977,7 +6137,8 @@ export function LandingPage() {
                     borderRadius: 4,
                     background: (th) =>
                       `linear-gradient(135deg, ${varAlpha(th.vars.palette.primary.mainChannel, 0.08)} 0%, ${varAlpha(th.vars.palette.info.mainChannel, 0.08)} 100%)`,
-                    border: (th) => `1px solid ${varAlpha(th.vars.palette.primary.mainChannel, 0.2)}`,
+                    border: (th) =>
+                      `1px solid ${varAlpha(th.vars.palette.primary.mainChannel, 0.2)}`,
                     position: 'relative',
                     overflow: 'hidden',
                   }}
