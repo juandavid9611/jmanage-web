@@ -1,7 +1,8 @@
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
-import { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRef, useMemo, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -28,23 +29,35 @@ import { Form, Field } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 const COLOR_OPTIONS = [
-  '#1A7F4B', '#1D4ED8', '#DC2626', '#D97706',
-  '#7C3AED', '#0891B2', '#18181A', '#BE185D',
+  '#1A7F4B',
+  '#1D4ED8',
+  '#DC2626',
+  '#D97706',
+  '#7C3AED',
+  '#0891B2',
+  '#18181A',
+  '#BE185D',
 ];
 
-const TeamSchema = zod.object({
-  name: zod.string().min(1, 'El nombre es obligatorio'),
-  short_name: zod.string().max(3, 'Máximo 3 caracteres').optional(),
-  group_id: zod.string().optional(),
-  seed: zod.coerce.number().int().min(1).optional(),
-  // UI-only fields (not sent to API)
-  manager_name: zod.string().optional(),
-  contact_email: zod.string().email().optional().or(zod.literal('')),
-  contact_phone: zod.string().optional(),
-  primary_color: zod.string().optional(),
-});
+function getTeamSchema(t) {
+  return zod.object({
+    name: zod.string().min(1, { message: t('name_required') }),
+    short_name: zod
+      .string()
+      .max(3, { message: t('label_max_3_characters') })
+      .optional(),
+    group_id: zod.string().optional(),
+    seed: zod.coerce.number().int().min(1).optional(),
+    // UI-only fields (not sent to API)
+    manager_name: zod.string().optional(),
+    contact_email: zod.string().email().optional().or(zod.literal('')),
+    contact_phone: zod.string().optional(),
+    primary_color: zod.string().optional(),
+  });
+}
 
 export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, groups }) {
+  const { t } = useTranslation();
   const isEdit = !!currentTeam;
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
@@ -60,6 +73,8 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
     contact_phone: '',
     primary_color: COLOR_OPTIONS[0],
   };
+
+  const TeamSchema = useMemo(() => getTeamSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(TeamSchema),
@@ -131,18 +146,18 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
           payload.logo_url = '';
         }
         await updateTeam(tournamentId, currentTeam.id, payload);
-        toast.success('Equipo actualizado');
+        toast.success(t('label_team_updated'));
       } else {
         const team = await createTeam(tournamentId, payload);
         if (logoFile) {
           const key = await uploadLogoToS3(team.id, logoFile);
           await updateTeam(tournamentId, team.id, { logo_url: key });
         }
-        toast.success('Equipo creado');
+        toast.success(t('label_team_created'));
       }
       onClose();
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     }
   });
 
@@ -154,12 +169,10 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
         <DialogTitle sx={{ pb: 1 }}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <Iconify icon="mdi:shield-half-full" width={24} />
-            <span>{isEdit ? 'Editar Equipo' : 'Registrar Equipo'}</span>
+            <span>{isEdit ? t('label_edit_team') : t('label_register_team')}</span>
           </Stack>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-            {isEdit
-              ? 'Actualiza la información del equipo.'
-              : 'Completa la información para inscribir un nuevo equipo al torneo.'}
+            {isEdit ? t('label_update_team_info_hint') : t('label_complete_team_info_hint')}
           </Typography>
         </DialogTitle>
 
@@ -172,7 +185,7 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
             onChange={handleFileChange}
           />
           {/* ── Section 1: Identidad ── */}
-          <FormSection number="01" title="Identidad del equipo">
+          <FormSection number="01" title={t('label_team_identity')}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
               {/* Logo upload area */}
               <Stack alignItems="center" spacing={1.5} sx={{ minWidth: 140 }}>
@@ -185,7 +198,7 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
                     fontWeight: 700,
                     bgcolor: values.primary_color || COLOR_OPTIONS[0],
                     color: 'common.white',
-                    border: (t) => `3px solid ${alpha(t.palette.grey[500], 0.12)}`,
+                    border: (theme) => `3px solid ${alpha(theme.palette.grey[500], 0.12)}`,
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     '&:hover': {
@@ -204,7 +217,7 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
                   onClick={handleLogoSelect}
                   sx={{ fontSize: 11 }}
                 >
-                  Subir logo
+                  {t('label_upload_logo')}
                 </Button>
               </Stack>
 
@@ -212,8 +225,8 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
               <Stack spacing={2.5} sx={{ flex: 1 }}>
                 <Field.Text
                   name="name"
-                  label="Nombre del equipo"
-                  placeholder="Ej. Real Bogotá FC"
+                  label={t('label_team_name')}
+                  placeholder={t('label_team_name_example')}
                   required
                 />
 
@@ -221,25 +234,28 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
                   <Grid xs={12} sm={6}>
                     <Field.Text
                       name="short_name"
-                      label="Abreviatura"
+                      label={t('label_abbreviation')}
                       placeholder="RBG"
-                      helperText="Máximo 3 caracteres"
+                      helperText={t('label_max_3_characters')}
                     />
                   </Grid>
                   <Grid xs={12} sm={6}>
                     <Field.Text
                       name="seed"
-                      label="Seed"
+                      label={t('label_seed')}
                       type="number"
-                      helperText="Posición para el sorteo"
+                      helperText={t('label_seed_position_hint')}
                     />
                   </Grid>
                 </Grid>
 
                 {/* Color picker */}
                 <Box>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block' }}>
-                    Color del equipo
+                  <Typography
+                    variant="caption"
+                    sx={{ color: 'text.secondary', mb: 1, display: 'block' }}
+                  >
+                    {t('label_team_color')}
                   </Typography>
                   <Stack direction="row" spacing={1}>
                     {COLOR_OPTIONS.map((color) => (
@@ -250,10 +266,12 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
                           width: 28,
                           height: 28,
                           bgcolor: color,
-                          border: values.primary_color === color
-                            ? '2.5px solid'
-                            : '2.5px solid transparent',
-                          borderColor: values.primary_color === color ? 'text.primary' : 'transparent',
+                          border:
+                            values.primary_color === color
+                              ? '2.5px solid'
+                              : '2.5px solid transparent',
+                          borderColor:
+                            values.primary_color === color ? 'text.primary' : 'transparent',
                           borderRadius: '50%',
                           '&:hover': { bgcolor: color, opacity: 0.8 },
                         }}
@@ -266,16 +284,20 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
           </FormSection>
 
           {/* ── Section 2: Información ── */}
-          <FormSection number="02" title="Información">
+          <FormSection number="02" title={t('label_information')}>
             <Grid container spacing={2.5}>
               <Grid xs={12}>
                 <Field.Text
                   name="manager_name"
-                  label="Director técnico / Manager"
-                  placeholder="Nombre del DT"
+                  label={t('label_manager_or_coach')}
+                  placeholder={t('label_coach_name_placeholder')}
                   InputProps={{
                     startAdornment: (
-                      <Iconify icon="mdi:account-tie" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
+                      <Iconify
+                        icon="mdi:account-tie"
+                        width={20}
+                        sx={{ mr: 1, color: 'text.disabled' }}
+                      />
                     ),
                   }}
                 />
@@ -283,11 +305,15 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
               <Grid xs={12} sm={6}>
                 <Field.Text
                   name="contact_email"
-                  label="Email de contacto"
+                  label={t('label_contact_email')}
                   placeholder="dt@equipo.com"
                   InputProps={{
                     startAdornment: (
-                      <Iconify icon="mdi:email-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
+                      <Iconify
+                        icon="mdi:email-outline"
+                        width={20}
+                        sx={{ mr: 1, color: 'text.disabled' }}
+                      />
                     ),
                   }}
                 />
@@ -295,12 +321,16 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
               <Grid xs={12} sm={6}>
                 <Field.Text
                   name="contact_phone"
-                  label="Número de contacto"
+                  label={t('label_contact_phone')}
                   placeholder="3001234567"
                   inputProps={{ autoComplete: 'tel', inputMode: 'tel' }}
                   InputProps={{
                     startAdornment: (
-                      <Iconify icon="mdi:phone-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
+                      <Iconify
+                        icon="mdi:phone-outline"
+                        width={20}
+                        sx={{ mr: 1, color: 'text.disabled' }}
+                      />
                     ),
                   }}
                 />
@@ -308,8 +338,8 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
 
               {groups?.length > 0 && (
                 <Grid xs={12} sm={6}>
-                  <Field.Select name="group_id" label="Grupo">
-                    <MenuItem value="">Sin grupo</MenuItem>
+                  <Field.Select name="group_id" label={t('label_group')}>
+                    <MenuItem value="">{t('label_no_group')}</MenuItem>
                     {groups.map((g) => (
                       <MenuItem key={g.id} value={g.id}>
                         {g.name}
@@ -324,15 +354,17 @@ export function TeamFormDialog({ open, onClose, tournamentId, currentTeam, group
 
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button variant="outlined" color="inherit" onClick={onClose}>
-            Cancelar
+            {t('cancel')}
           </Button>
           <LoadingButton
             type="submit"
             variant="contained"
             loading={isSubmitting}
-            startIcon={<Iconify icon={isEdit ? 'eva:checkmark-circle-2-fill' : 'mingcute:add-line'} />}
+            startIcon={
+              <Iconify icon={isEdit ? 'eva:checkmark-circle-2-fill' : 'mingcute:add-line'} />
+            }
           >
-            {isEdit ? 'Guardar cambios' : 'Registrar equipo'}
+            {isEdit ? t('label_save_changes') : t('label_register_team')}
           </LoadingButton>
         </DialogActions>
       </Form>
@@ -348,9 +380,9 @@ function FormSection({ number, title, children }) {
       sx={{
         mb: 2.5,
         p: 3,
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
         boxShadow: 'none',
-        bgcolor: (t) => alpha(t.palette.background.paper, 0.6),
+        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2.5 }}>
@@ -362,7 +394,7 @@ function FormSection({ number, title, children }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
             color: 'primary.main',
             fontSize: 11,
             fontWeight: 600,
@@ -373,7 +405,12 @@ function FormSection({ number, title, children }) {
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {title}
         </Typography>
-        <Box sx={{ flex: 1, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }} />
+        <Box
+          sx={{
+            flex: 1,
+            borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+          }}
+        />
       </Stack>
       {children}
     </Card>

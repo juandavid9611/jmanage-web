@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
@@ -7,24 +9,37 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function TournamentCreationStepper({ steps, activeStep, unlockedSteps, values, onStepClick }) {
+export function TournamentCreationStepper({
+  steps,
+  activeStep,
+  unlockedSteps,
+  values,
+  onStepClick,
+}) {
+  const { t } = useTranslation();
   // Derive step summary values from form state
   const getStepValue = (stepKey) => {
     switch (stepKey) {
       case 'identity':
         return values.name || '—';
       case 'format': {
-        const labels = { hybrid: 'Grupos + KO', league: 'Liga', knockout: 'Knockout' };
+        const labels = {
+          hybrid: t('label_format_abbr_hybrid'),
+          league: t('label_format_abbr_league'),
+          knockout: t('label_format_abbr_knockout'),
+        };
         return labels[values.type] || '—';
       }
       case 'scoring':
         return `${values.rules?.points_per_win ?? 3}-${values.rules?.points_per_draw ?? 1}-${values.rules?.points_per_loss ?? 0}`;
       case 'tiebreakers':
-        return values.tiebreaker_order?.length ? `${values.tiebreaker_order.length} criterios` : '—';
+        return values.tiebreaker_order?.length
+          ? `${values.tiebreaker_order.length} ${t('label_criteria_plural')}`
+          : '—';
       case 'options': {
         const opts = values.options || {};
         const count = Object.values(opts).filter(Boolean).length;
-        return `${count} activas`;
+        return `${count} ${t('label_active_fem_plural')}`;
       }
       default:
         return '—';
@@ -57,7 +72,7 @@ export function TournamentCreationStepper({ steps, activeStep, unlockedSteps, va
           mb: 2,
         }}
       >
-        Nuevo torneo
+        {t('label_new_tournament')}
       </Typography>
 
       <Stack spacing={0.25} sx={{ flex: 1 }}>
@@ -80,13 +95,13 @@ export function TournamentCreationStepper({ steps, activeStep, unlockedSteps, va
                   cursor: isLocked ? 'not-allowed' : 'pointer',
                   opacity: isLocked ? 0.35 : 1,
                   bgcolor: isActive
-                    ? (t) => alpha(t.palette.primary.main, 0.06)
+                    ? (theme) => alpha(theme.palette.primary.main, 0.06)
                     : 'transparent',
                   transition: 'all 0.2s',
                   '&:hover': {
                     bgcolor: isLocked
                       ? 'transparent'
-                      : (t) => alpha(t.palette.primary.main, 0.04),
+                      : (theme) => alpha(theme.palette.primary.main, 0.04),
                   },
                 }}
               >
@@ -103,29 +118,22 @@ export function TournamentCreationStepper({ steps, activeStep, unlockedSteps, va
                     fontFamily: 'monospace',
                     fontWeight: 600,
                     flexShrink: 0,
-                    border: (t) =>
+                    border: (theme) =>
                       `1.5px solid ${
                         isDone || isActive
-                          ? t.palette.primary.main
-                          : alpha(t.palette.grey[500], 0.24)
+                          ? theme.palette.primary.main
+                          : alpha(theme.palette.grey[500], 0.24)
                       }`,
                     bgcolor: isDone
-                      ? (t) => alpha(t.palette.primary.main, 0.1)
+                      ? (theme) => alpha(theme.palette.primary.main, 0.1)
                       : 'transparent',
-                    color:
-                      isDone || isActive
-                        ? 'primary.main'
-                        : 'text.disabled',
+                    color: isDone || isActive ? 'primary.main' : 'text.disabled',
                     ...(isActive && {
-                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.primary.main, 0.08)}`,
+                      boxShadow: (theme) => `0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`,
                     }),
                   }}
                 >
-                  {isDone ? (
-                    <Iconify icon="eva:checkmark-fill" width={14} />
-                  ) : (
-                    step.number
-                  )}
+                  {isDone ? <Iconify icon="eva:checkmark-fill" width={14} /> : step.number}
                 </Box>
 
                 {/* Step content */}
@@ -137,7 +145,7 @@ export function TournamentCreationStepper({ steps, activeStep, unlockedSteps, va
                       color: isActive || isDone ? 'text.primary' : 'text.secondary',
                     }}
                   >
-                    {step.label}
+                    {t(step.label)}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -163,8 +171,8 @@ export function TournamentCreationStepper({ steps, activeStep, unlockedSteps, va
                     height: 12,
                     ml: '26px',
                     bgcolor: isDone
-                      ? (t) => alpha(t.palette.primary.main, 0.2)
-                      : (t) => alpha(t.palette.grey[500], 0.12),
+                      ? (theme) => alpha(theme.palette.primary.main, 0.2)
+                      : (theme) => alpha(theme.palette.grey[500], 0.12),
                     transition: 'background-color 0.3s',
                   }}
                 />

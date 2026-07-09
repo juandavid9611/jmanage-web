@@ -49,12 +49,13 @@ const POSITION_LABEL = {
   Defender: 'position_defenders',
   Midfielder: 'position_midfielders',
   Forward: 'position_forwards',
+  Other: 'label_position_other',
 };
 
 // ----------------------------------------------------------------------
 
-function getDefaultPhase(tournament, teams) {
-  const phases = getPhases(tournament, teams);
+function getDefaultPhase(tournament, teams, t) {
+  const phases = getPhases(tournament, teams, undefined, undefined, t);
   const active = phases.find((p) => p.state === 'active');
   if (active) return active.key;
   const lastDone = [...phases].reverse().find((p) => p.state === 'done');
@@ -94,7 +95,7 @@ export function PublicTournamentDetailView({ id }) {
   );
 
   const currentPhase =
-    phaseParam || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
+    phaseParam || (tournament ? getDefaultPhase(tournament, teams, t) : 'configuracion');
 
   const setActivePhase = useCallback(
     (phase) => {

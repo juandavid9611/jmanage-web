@@ -1,7 +1,8 @@
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
-import { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRef, useMemo, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
@@ -17,11 +18,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 
-import {
-  createPlayer,
-  updatePlayer,
-  getPlayerAvatarUploadUrl,
-} from 'src/actions/tournament';
+import { createPlayer, updatePlayer, getPlayerAvatarUploadUrl } from 'src/actions/tournament';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -29,28 +26,30 @@ import { Form, Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const POSITION_OPTIONS = [
-  { value: 'Goalkeeper', label: 'Portero' },
-  { value: 'Defender', label: 'Defensa' },
-  { value: 'Midfielder', label: 'Centrocampista' },
-  { value: 'Forward', label: 'Delantero' },
+  { value: 'Goalkeeper', label: 'label_position_goalkeeper' },
+  { value: 'Defender', label: 'label_position_defender' },
+  { value: 'Midfielder', label: 'label_position_midfielder' },
+  { value: 'Forward', label: 'label_position_forward' },
 ];
 
-const PlayerSchema = zod.object({
-  name: zod.string().min(1, 'El nombre es obligatorio'),
-  number: zod.coerce
-    .number({ invalid_type_error: 'El número de camiseta es obligatorio' })
-    .int('Debe ser un número entero')
-    .min(1, 'Debe ser mayor a 0'),
-  position: zod
-    .string()
-    .min(1, 'La posición es obligatoria')
-    .refine(
-      (v) => ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].includes(v),
-      { message: 'Selecciona una posición válida' }
-    ),
-  id_number: zod.string().min(1, 'El número de identificación es obligatorio'),
-});
+function getPlayerSchema(t) {
+  return zod.object({
+    name: zod.string().min(1, { message: t('name_required') }),
+    number: zod.coerce
+      .number({ invalid_type_error: t('label_jersey_number_required') })
+      .int(t('label_must_be_integer'))
+      .min(1, { message: t('label_must_be_greater_than_0') }),
+    position: zod
+      .string()
+      .min(1, { message: t('label_position_required') })
+      .refine((v) => ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].includes(v), {
+        message: t('label_select_valid_position'),
+      }),
+    id_number: zod.string().min(1, { message: t('label_id_number_required') }),
+  });
+}
 
 // ----------------------------------------------------------------------
 
@@ -65,6 +64,7 @@ async function uploadAvatarToS3(file, presignedUrl) {
 // ----------------------------------------------------------------------
 
 export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentPlayer }) {
+  const { t } = useTranslation();
   const isEdit = !!currentPlayer;
   const fileInputRef = useRef(null);
 
@@ -78,6 +78,8 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
     position: '',
     id_number: '',
   };
+
+  const PlayerSchema = useMemo(() => getPlayerSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(PlayerSchema),
@@ -148,7 +150,7 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
           payload.avatar_url = '';
         }
         await updatePlayer(tournamentId, currentPlayer.id, payload);
-        toast.success('Jugador actualizado');
+        toast.success(t('label_player_updated'));
       } else {
         // Create player first (no photo yet)
         const created = await createPlayer(tournamentId, teamId, payload);
@@ -166,14 +168,14 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
             await updatePlayer(tournamentId, created.id, { avatar_url: key });
           } catch {
             // Photo upload failed — player was created, just warn
-            toast.warning('Jugador creado, pero la foto no pudo subirse');
+            toast.warning(t('label_player_created_but_photo_upload_failed'));
           }
         }
-        toast.success('Jugador creado');
+        toast.success(t('label_player_created'));
       }
       onClose();
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     }
   });
 
@@ -182,14 +184,14 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <Form methods={methods} onSubmit={onSubmit}>
-        <DialogTitle>{isEdit ? 'Editar Jugador' : 'Agregar Jugador'}</DialogTitle>
+        <DialogTitle>{isEdit ? t('label_edit_player') : t('label_add_player')}</DialogTitle>
 
         <DialogContent>
           {/* Photo + name row */}
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5, mt: 1, mb: 3 }}>
             {/* Avatar picker */}
             <Box sx={{ position: 'relative', flexShrink: 0 }}>
-              <Tooltip title="Cambiar foto">
+              <Tooltip title={t('label_change_photo')}>
                 <Avatar
                   src={photoPreview || undefined}
                   onClick={() => fileInputRef.current?.click()}
@@ -200,10 +202,10 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
                     fontWeight: 700,
                     bgcolor: 'primary.main',
                     cursor: 'pointer',
-                    border: (t) =>
+                    border: (theme) =>
                       photoError
-                        ? `2px solid ${t.palette.error.main}`
-                        : `2px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                        ? `2px solid ${theme.palette.error.main}`
+                        : `2px solid ${alpha(theme.palette.grey[500], 0.16)}`,
                     '&:hover': { opacity: 0.8 },
                     transition: 'opacity 0.2s',
                   }}
@@ -265,7 +267,7 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
 
             {/* Name field */}
             <Box sx={{ flex: 1 }}>
-              <Field.Text name="name" label="Nombre completo" required />
+              <Field.Text name="name" label={t('label_full_name')} required />
               <Typography
                 variant="caption"
                 sx={{
@@ -275,8 +277,8 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
                 }}
               >
                 {photoError
-                  ? 'La foto es obligatoria — haz clic en el avatar'
-                  : 'Haz clic en el avatar para subir una foto (obligatoria)'}
+                  ? t('label_photo_required_click_avatar')
+                  : t('label_click_avatar_to_upload_photo')}
               </Typography>
             </Box>
           </Box>
@@ -285,34 +287,34 @@ export function PlayerFormDialog({ open, onClose, tournamentId, teamId, currentP
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
             <Field.Text
               name="id_number"
-              label="Nº de identificación"
-              placeholder="Ej. 1234567890"
-              helperText="Cédula o documento"
+              label={t('label_id_number')}
+              placeholder={t('label_id_number_example')}
+              helperText={t('label_id_document_hint')}
               required
             />
             <Field.Text
               name="number"
-              label="Número de camiseta"
+              label={t('label_jersey_number')}
               type="number"
-              helperText="Dorsal del jugador"
+              helperText={t('label_player_jersey_hint')}
               required
             />
           </Box>
 
           {/* Position */}
-          <Field.Select name="position" label="Posición" required>
+          <Field.Select name="position" label={t('label_position')} required>
             {POSITION_OPTIONS.map((opt) => (
               <MenuItem key={opt.value} value={opt.value}>
-                {opt.label}
+                {t(opt.label)}
               </MenuItem>
             ))}
           </Field.Select>
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={onClose}>Cancelar</Button>
+          <Button onClick={onClose}>{t('cancel')}</Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            {isEdit ? 'Guardar' : 'Crear'}
+            {isEdit ? t('label_save') : t('label_create')}
           </LoadingButton>
         </DialogActions>
       </Form>

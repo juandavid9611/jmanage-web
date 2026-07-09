@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -21,13 +22,15 @@ import { EmptyContent } from 'src/components/empty-content';
 
 // ----------------------------------------------------------------------
 
+// short values below are i18n keys, resolved via t() at render time.
 const CARD_META = {
-  yellow_card: { color: 'warning', short: 'A' },
-  second_yellow: { color: 'warning', short: '2A' },
-  red_card: { color: 'error', short: 'R' },
+  yellow_card: { color: 'warning', short: 'label_card_abbr_yellow' },
+  second_yellow: { color: 'warning', short: 'label_card_abbr_second_yellow' },
+  red_card: { color: 'error', short: 'label_card_abbr_red' },
 };
 
 export function TeamDisciplineTable({ tournamentId, onNavigateToMatch }) {
+  const { t } = useTranslation();
   const { teamDiscipline, teamDisciplineLoading } = useGetTeamDiscipline(tournamentId);
 
   if (teamDisciplineLoading) {
@@ -41,7 +44,7 @@ export function TeamDisciplineTable({ tournamentId, onNavigateToMatch }) {
   }
 
   if (!teamDiscipline?.length) {
-    return <EmptyContent title="Sin tarjetas todavía" sx={{ py: 6 }} />;
+    return <EmptyContent title={t('label_no_cards_yet')} sx={{ py: 6 }} />;
   }
 
   return (
@@ -78,7 +81,7 @@ function TeamRow({ team, tournamentId, onNavigateToMatch }) {
     <Box
       sx={{
         bgcolor: 'background.paper',
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
         borderRadius: 1,
         overflow: 'hidden',
       }}
@@ -93,7 +96,7 @@ function TeamRow({ team, tournamentId, onNavigateToMatch }) {
           px: 2,
           py: 1.25,
           cursor: hasAny ? 'pointer' : 'default',
-          '&:hover': hasAny ? { bgcolor: (t) => alpha(t.palette.grey[500], 0.03) } : {},
+          '&:hover': hasAny ? { bgcolor: (theme) => alpha(theme.palette.grey[500], 0.03) } : {},
         }}
       >
         <Stack direction="row" alignItems="center" spacing={1.25}>
@@ -105,7 +108,7 @@ function TeamRow({ team, tournamentId, onNavigateToMatch }) {
                 width: 28,
                 height: 28,
                 borderRadius: 1,
-                bgcolor: (t) => alpha(t.palette.grey[500], 0.12),
+                bgcolor: (theme) => alpha(theme.palette.grey[500], 0.12),
               }}
             />
           )}
@@ -133,18 +136,15 @@ function TeamRow({ team, tournamentId, onNavigateToMatch }) {
           disabled={!hasAny}
           sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}
         >
-          <Iconify
-            icon={open ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'}
-            width={18}
-          />
+          <Iconify icon={open ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} width={18} />
         </IconButton>
       </Box>
 
       <Collapse in={open && hasAny} unmountOnExit>
         <Box
           sx={{
-            borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
-            bgcolor: (t) => alpha(t.palette.grey[500], 0.02),
+            borderTop: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
+            bgcolor: (theme) => alpha(theme.palette.grey[500], 0.02),
             px: 1.5,
             py: 1,
           }}
@@ -180,7 +180,7 @@ function PlayerRow({ player, cards, cardsLoading, tournamentId, onNavigateToMatc
         px: 1,
         py: 0.75,
         borderRadius: 0.75,
-        '&:hover': { bgcolor: (t) => alpha(t.palette.grey[500], 0.04) },
+        '&:hover': { bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04) },
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -231,10 +231,11 @@ function CardCountChip({ count, kind }) {
 }
 
 function CardChip({ card, tournamentId, onNavigateToMatch }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const meta = CARD_META[card.type] || CARD_META.yellow_card;
-  const mwLabel = card.matchweek != null ? `J${card.matchweek}` : null;
-  const vsLabel = card.opponent_name ? `vs ${card.opponent_name}` : '';
+  const mwLabel = card.matchweek != null ? `${t('label_matchday_abbr')}${card.matchweek}` : null;
+  const vsLabel = card.opponent_name ? `${t('label_vs')} ${card.opponent_name}` : '';
   const title = [mwLabel, card.match_label, vsLabel].filter(Boolean).join(' · ');
 
   const handleClick = () => {

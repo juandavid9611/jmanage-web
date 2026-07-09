@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
@@ -24,43 +25,52 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
+// title/label values below are i18n keys, resolved via t() at render time.
 const METRICS = {
   goals: {
-    title: 'Goleadores',
+    title: 'label_top_scorers',
     icon: 'mdi:soccer',
     iconColor: 'warning.main',
-    emptyText: 'Sin goles registrados aún',
+    emptyText: 'label_no_goals_recorded_yet',
     sortKey: (s) => s.goals || 0,
     isVisible: (s) => (s.goals || 0) > 0 || (s.penalties || 0) > 0,
     columns: [
-      { label: 'Goles', icon: 'mdi:soccer', key: 'goals', primary: true },
-      { label: 'Penales', icon: 'mdi:target', key: 'penalties' },
+      { label: 'word_goals', icon: 'mdi:soccer', key: 'goals', primary: true },
+      { label: 'label_penalties', icon: 'mdi:target', key: 'penalties' },
     ],
   },
   assists: {
-    title: 'Asistencias',
+    title: 'label_assists',
     icon: 'mdi:shoe-cleat',
     iconColor: 'info.main',
-    emptyText: 'Sin asistencias registradas aún',
+    emptyText: 'label_no_assists_recorded_yet',
     sortKey: (s) => s.assists || 0,
     isVisible: (s) => (s.assists || 0) > 0,
-    columns: [
-      { label: 'Asistencias', icon: 'mdi:shoe-cleat', key: 'assists', primary: true },
-    ],
+    columns: [{ label: 'label_assists', icon: 'mdi:shoe-cleat', key: 'assists', primary: true }],
   },
   cards: {
-    title: 'Amonestaciones',
+    title: 'label_disciplinary_record',
     icon: 'mdi:card',
     iconColor: 'warning.main',
-    emptyText: 'Sin tarjetas registradas aún',
+    emptyText: 'label_no_cards_recorded_yet',
     // Sort by red first (heavier), then yellow
     sortKey: (s) => (s.red_cards || 0) * 100 + (s.yellow_cards || 0),
     isVisible: (s) => (s.yellow_cards || 0) > 0 || (s.red_cards || 0) > 0,
     columns: [
-      { label: 'Amarillas', icon: 'mdi:card', iconColor: 'warning.main', key: 'yellow_cards' },
-      { label: 'Rojas', icon: 'mdi:card', iconColor: 'error.main', key: 'red_cards' },
       {
-        label: 'Total',
+        label: 'label_yellow_cards_plural_short',
+        icon: 'mdi:card',
+        iconColor: 'warning.main',
+        key: 'yellow_cards',
+      },
+      {
+        label: 'label_red_cards_plural_short',
+        icon: 'mdi:card',
+        iconColor: 'error.main',
+        key: 'red_cards',
+      },
+      {
+        label: 'label_total',
         key: '_total',
         derive: (s) => (s.yellow_cards || 0) + (s.red_cards || 0),
         primary: true,
@@ -77,6 +87,7 @@ export function PlayerRankingTable({
   limit = 50,
   publicMode = false,
 }) {
+  const { t } = useTranslation();
   const meta = METRICS[metric] || METRICS.goals;
 
   const authPlayers = useGetPlayers(publicMode ? null : tournamentId);
@@ -88,7 +99,7 @@ export function PlayerRankingTable({
   const { teams } = publicMode ? pubTeams : authTeams;
 
   const rows = useMemo(() => {
-    const teamLookup = new Map((teams || []).map((t) => [t.id, t]));
+    const teamLookup = new Map((teams || []).map((team) => [team.id, team]));
     return (players || [])
       .map((p) => ({
         player_id: p.id,
@@ -112,11 +123,11 @@ export function PlayerRankingTable({
           <TableHead>
             <TableRow>
               <TableCell width={50}>#</TableCell>
-              <TableCell>Jugador</TableCell>
-              <TableCell>Equipo</TableCell>
+              <TableCell>{t('label_player_singular')}</TableCell>
+              <TableCell>{t('team')}</TableCell>
               {meta.columns.map((col) => (
                 <TableCell key={col.label} align="center">
-                  <Tooltip title={col.label}>
+                  <Tooltip title={t(col.label)}>
                     <Stack
                       direction="row"
                       alignItems="center"
@@ -128,11 +139,12 @@ export function PlayerRankingTable({
                           icon={col.icon}
                           width={16}
                           sx={{
-                            color: col.iconColor || (col.muted ? 'text.disabled' : 'text.secondary'),
+                            color:
+                              col.iconColor || (col.muted ? 'text.disabled' : 'text.secondary'),
                           }}
                         />
                       )}
-                      <Typography variant="caption">{col.label}</Typography>
+                      <Typography variant="caption">{t(col.label)}</Typography>
                     </Stack>
                   </Tooltip>
                 </TableCell>
@@ -155,13 +167,9 @@ export function PlayerRankingTable({
               <TableRow>
                 <TableCell colSpan={3 + meta.columns.length} sx={{ py: 0, border: 0 }}>
                   <Stack alignItems="center" spacing={1} sx={{ py: 5 }}>
-                    <Iconify
-                      icon={meta.icon}
-                      width={32}
-                      sx={{ color: 'text.disabled' }}
-                    />
+                    <Iconify icon={meta.icon} width={32} sx={{ color: 'text.disabled' }} />
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {meta.emptyText}
+                      {t(meta.emptyText)}
                     </Typography>
                   </Stack>
                 </TableCell>

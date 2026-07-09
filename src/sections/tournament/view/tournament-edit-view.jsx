@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { paths } from 'src/routes/paths';
 
@@ -13,6 +14,7 @@ import { TournamentNewEditForm } from '../tournament-new-edit-form';
 // ----------------------------------------------------------------------
 
 export function TournamentEditView() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { tournament, tournamentLoading } = useGetTournament(id);
 
@@ -21,10 +23,10 @@ export function TournamentEditView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Editar Torneo"
+        heading={t('label_edit_tournament')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Torneos', href: paths.dashboard.tournament.root },
+          { name: t('label_dashboard'), href: paths.dashboard.root },
+          { name: t('tournaments'), href: paths.dashboard.tournament.root },
           { name: tournament?.name || '' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

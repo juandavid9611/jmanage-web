@@ -1,7 +1,8 @@
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
-import { useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRef, useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -17,6 +18,8 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { alpha, useTheme } from '@mui/material/styles';
 import LinearProgress from '@mui/material/LinearProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
+
+import { fDate } from 'src/utils/format-time';
 
 import {
   createTeam,
@@ -41,15 +44,22 @@ import { PlayerFormDialog } from './player-form-dialog';
 // ======================================================================
 
 const COLOR_OPTIONS = [
-  '#1A7F4B', '#1D4ED8', '#DC2626', '#D97706',
-  '#7C3AED', '#0891B2', '#18181A', '#BE185D',
+  '#1A7F4B',
+  '#1D4ED8',
+  '#DC2626',
+  '#D97706',
+  '#7C3AED',
+  '#0891B2',
+  '#18181A',
+  '#BE185D',
 ];
 
+// label values below are i18n keys, resolved via t() at render time.
 const POSITION_LABELS = {
-  Goalkeeper: 'POR',
-  Defender: 'DEF',
-  Midfielder: 'MED',
-  Forward: 'DEL',
+  Goalkeeper: 'label_position_abbr_goalkeeper',
+  Defender: 'label_position_abbr_defender',
+  Midfielder: 'label_position_abbr_midfielder',
+  Forward: 'label_position_abbr_forward',
 };
 
 const POSITION_ICONS = {
@@ -60,30 +70,37 @@ const POSITION_ICONS = {
 };
 
 const STEPS = [
-  { key: 'identity', label: 'Identidad', number: '01' },
-  { key: 'roster', label: 'Plantilla', number: '02' },
-  { key: 'documents', label: 'Documentos', number: '03' },
-  { key: 'rules', label: 'Reglamento', number: '04' },
-  { key: 'review', label: 'Revisión', number: '05' },
+  { key: 'identity', label: 'label_step_identity', number: '01' },
+  { key: 'roster', label: 'label_squad', number: '02' },
+  { key: 'documents', label: 'label_documents', number: '03' },
+  { key: 'rules', label: 'label_rules', number: '04' },
+  { key: 'review', label: 'label_step_review', number: '05' },
 ];
 
-const TeamSchema = zod.object({
-  name: zod.string().min(1, 'El nombre es obligatorio'),
-  short_name: zod.string().max(3, 'Máximo 3 caracteres').optional().or(zod.literal('')),
-  group_id: zod.string().optional(),
-  seed: zod.coerce.number().int().min(1).optional(),
-  // UI-only
-  manager_name: zod.string().optional(),
-  contact_email: zod.string().email().optional().or(zod.literal('')),
-  contact_phone: zod.string().optional(),
-  primary_color: zod.string().optional(),
-});
+function getTeamSchema(t) {
+  return zod.object({
+    name: zod.string().min(1, { message: t('name_required') }),
+    short_name: zod
+      .string()
+      .max(3, { message: t('label_max_3_characters') })
+      .optional()
+      .or(zod.literal('')),
+    group_id: zod.string().optional(),
+    seed: zod.coerce.number().int().min(1).optional(),
+    // UI-only
+    manager_name: zod.string().optional(),
+    contact_email: zod.string().email().optional().or(zod.literal('')),
+    contact_phone: zod.string().optional(),
+    primary_color: zod.string().optional(),
+  });
+}
 
 // ======================================================================
 // MAIN WIZARD
 // ======================================================================
 
 export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete }) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isEdit = !!currentTeam;
   const [activeStep, setActiveStep] = useState(0);
@@ -92,6 +109,8 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(currentTeam?.logo_url || null);
   const logoInputRef = useRef(null);
+
+  const TeamSchema = useMemo(() => getTeamSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(TeamSchema),
@@ -125,7 +144,12 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
 
   // Derive unlocked steps — all steps unlocked once team has a name
   const unlockedSteps = new Set([0]);
-  if (values.name) { unlockedSteps.add(1); unlockedSteps.add(2); unlockedSteps.add(3); unlockedSteps.add(4); }
+  if (values.name) {
+    unlockedSteps.add(1);
+    unlockedSteps.add(2);
+    unlockedSteps.add(3);
+    unlockedSteps.add(4);
+  }
 
   const handleStepClick = useCallback(
     (step) => {
@@ -157,16 +181,25 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
           setTeamId(result.id);
           if (logoFile) {
             try {
-              const { key, url } = await getTeamLogoUploadUrl(tournamentId, result.id, logoFile.name, logoFile.type);
-              await fetch(url, { method: 'PUT', body: logoFile, headers: { 'Content-Type': logoFile.type } });
+              const { key, url } = await getTeamLogoUploadUrl(
+                tournamentId,
+                result.id,
+                logoFile.name,
+                logoFile.type
+              );
+              await fetch(url, {
+                method: 'PUT',
+                body: logoFile,
+                headers: { 'Content-Type': logoFile.type },
+              });
               await updateTeam(tournamentId, result.id, { logo_url: key });
             } catch {
               // best-effort
             }
           }
-          toast.success('Equipo creado — ahora agrega jugadores');
+          toast.success(t('label_team_created_now_add_players'));
         } catch (error) {
-          toast.error(error.message || 'Error al crear equipo');
+          toast.error(error.message || t('label_error_creating_team'));
           return;
         }
       } else {
@@ -182,19 +215,28 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
             primary_color: values.primary_color || undefined,
           };
           if (logoFile) {
-            const { key, url } = await getTeamLogoUploadUrl(tournamentId, teamId, logoFile.name, logoFile.type);
-            await fetch(url, { method: 'PUT', body: logoFile, headers: { 'Content-Type': logoFile.type } });
+            const { key, url } = await getTeamLogoUploadUrl(
+              tournamentId,
+              teamId,
+              logoFile.name,
+              logoFile.type
+            );
+            await fetch(url, {
+              method: 'PUT',
+              body: logoFile,
+              headers: { 'Content-Type': logoFile.type },
+            });
             payload.logo_url = key;
           }
           await updateTeam(tournamentId, teamId, payload);
         } catch (error) {
-          toast.error(error.message || 'Error al actualizar');
+          toast.error(error.message || t('label_error_updating'));
           return;
         }
       }
     }
     setActiveStep((prev) => Math.min(prev + 1, STEPS.length - 1));
-  }, [activeStep, trigger, values, teamId, tournamentId, logoFile]);
+  }, [activeStep, trigger, values, teamId, tournamentId, logoFile, t]);
 
   const handleBack = useCallback(() => {
     setActiveStep((prev) => Math.max(prev - 1, 0));
@@ -208,9 +250,9 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
         // non-blocking — finish anyway
       }
     }
-    toast.success(isEdit ? 'Equipo actualizado' : '¡Equipo registrado exitosamente!');
+    toast.success(isEdit ? t('label_team_updated') : t('label_team_registered_successfully'));
     onComplete?.();
-  }, [isEdit, onComplete, teamId, tournamentId, rulesAccepted]);
+  }, [isEdit, onComplete, teamId, tournamentId, rulesAccepted, t]);
 
   // Step completion checks
   const isStepDone = (index) => {
@@ -226,15 +268,25 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
 
   const getStepValue = (stepKey) => {
     switch (stepKey) {
-      case 'identity': return values.name || '—';
-      case 'roster': return teamId ? `${players.length} jugadores` : '—';
+      case 'identity':
+        return values.name || '—';
+      case 'roster':
+        return teamId ? `${players.length} ${t('word_players_lowercase')}` : '—';
       case 'documents': {
-        const totalFiles = Object.values(teamDocuments).reduce((sum, arr) => sum + (arr?.length || 0), 0);
-        return teamId ? `${totalFiles} archivo${totalFiles !== 1 ? 's' : ''}` : '—';
+        const totalFiles = Object.values(teamDocuments).reduce(
+          (sum, arr) => sum + (arr?.length || 0),
+          0
+        );
+        return teamId
+          ? `${totalFiles} ${totalFiles !== 1 ? t('label_files_plural') : t('label_file_singular')}`
+          : '—';
       }
-      case 'rules': return rulesAccepted ? 'Aceptado' : 'Pendiente';
-      case 'review': return isStepDone(0) && isStepDone(1) ? 'Listo' : 'Pendiente';
-      default: return '—';
+      case 'rules':
+        return rulesAccepted ? t('label_accepted') : t('pending');
+      case 'review':
+        return isStepDone(0) && isStepDone(1) ? t('label_ready') : t('pending');
+      default:
+        return '—';
     }
   };
 
@@ -281,13 +333,13 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
               variant="overline"
               sx={{ color: 'primary.main', letterSpacing: 2, mb: 1, display: 'block' }}
             >
-              {isEdit ? 'Editar equipo' : 'Registrar equipo'}
+              {isEdit ? t('label_edit_team_lowercase') : t('label_register_team_lowercase')}
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-              {isEdit ? 'Actualiza tu equipo.' : 'Crea tu equipo.'}
+              {isEdit ? t('label_update_your_team') : t('label_create_your_team')}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 480 }}>
-              Completa la identidad del equipo, agrega jugadores y revisa antes de finalizar.
+              {t('label_team_wizard_intro_hint')}
             </Typography>
           </Box>
 
@@ -328,18 +380,12 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
               positionCounts={positionCounts}
             />
           )}
-          {activeStep === 2 && (
-            <StepDocuments tournamentId={tournamentId} teamId={teamId} />
-          )}
+          {activeStep === 2 && <StepDocuments tournamentId={tournamentId} teamId={teamId} />}
           {activeStep === 3 && (
             <StepRules accepted={rulesAccepted} onToggle={() => setRulesAccepted(!rulesAccepted)} />
           )}
           {activeStep === 4 && (
-            <StepReview
-              values={values}
-              players={players}
-              positionCounts={positionCounts}
-            />
+            <StepReview values={values} players={players} positionCounts={positionCounts} />
           )}
 
           {/* Navigation */}
@@ -351,7 +397,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
               onClick={handleBack}
               startIcon={<Iconify icon="eva:arrow-back-fill" />}
             >
-              Anterior
+              {t('label_previous')}
             </Button>
 
             {activeStep < STEPS.length - 1 ? (
@@ -361,7 +407,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
                 loading={isSubmitting}
                 endIcon={<Iconify icon="eva:arrow-forward-fill" />}
               >
-                Siguiente
+                {t('label_next')}
               </LoadingButton>
             ) : (
               <LoadingButton
@@ -371,7 +417,7 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
                 loading={isSubmitting}
                 endIcon={<Iconify icon="eva:checkmark-circle-2-fill" />}
               >
-                {isEdit ? 'Guardar cambios' : 'Finalizar registro'}
+                {isEdit ? t('label_save_changes') : t('label_finish_registration')}
               </LoadingButton>
             )}
           </Stack>
@@ -406,10 +452,11 @@ export function TeamSetupWizard({ tournamentId, currentTeam, groups, onComplete 
 // ======================================================================
 
 function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChange }) {
+  const { t } = useTranslation();
   const initials = values.short_name || values.name?.slice(0, 2)?.toUpperCase() || '?';
 
   return (
-    <FormSection number="01" title="Identidad del equipo">
+    <FormSection number="01" title={t('label_team_identity')}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
         {/* Logo */}
         <Stack alignItems="center" spacing={1.5} sx={{ minWidth: 140 }}>
@@ -422,7 +469,7 @@ function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChang
               fontWeight: 700,
               bgcolor: values.primary_color || COLOR_OPTIONS[0],
               color: 'common.white',
-              border: (t) => `3px solid ${alpha(t.palette.grey[500], 0.12)}`,
+              border: (theme) => `3px solid ${alpha(theme.palette.grey[500], 0.12)}`,
               cursor: 'pointer',
               transition: 'all 0.2s',
               '&:hover': { opacity: 0.8, transform: 'scale(1.05)' },
@@ -438,27 +485,42 @@ function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChang
             onClick={() => logoInputRef.current?.click()}
             sx={{ fontSize: 11 }}
           >
-            {logoPreview ? 'Cambiar logo' : 'Subir logo'}
+            {logoPreview ? t('label_change_logo') : t('label_upload_logo')}
           </Button>
         </Stack>
 
         {/* Fields */}
         <Stack spacing={2.5} sx={{ flex: 1 }}>
-          <Field.Text name="name" label="Nombre del equipo" placeholder="Ej. Real Bogotá FC" required />
+          <Field.Text
+            name="name"
+            label={t('label_team_name')}
+            placeholder={t('label_team_name_example')}
+            required
+          />
 
           <Grid container spacing={2}>
             <Grid xs={12} sm={6}>
-              <Field.Text name="short_name" label="Abreviatura" placeholder="RBG" helperText="Máximo 3 caracteres" />
+              <Field.Text
+                name="short_name"
+                label={t('label_abbreviation')}
+                placeholder="RBG"
+                helperText={t('label_max_3_characters')}
+              />
             </Grid>
             <Grid xs={12} sm={6}>
-              <Field.Text name="seed" label="Seed" type="number" helperText="Posición para el sorteo" />
+              <Field.Text
+                name="seed"
+                label={t('label_seed')}
+                type="number"
+                helperText={t('label_seed_position_hint')}
+              />
             </Grid>
           </Grid>
 
           {/* Color picker */}
           <Box>
             <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block' }}>
-              Color del equipo
+              {t('label_team_color')}
             </Typography>
             <Stack direction="row" spacing={1}>
               {COLOR_OPTIONS.map((color) => (
@@ -469,7 +531,8 @@ function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChang
                     width: 28,
                     height: 28,
                     bgcolor: color,
-                    border: values.primary_color === color ? '2.5px solid' : '2.5px solid transparent',
+                    border:
+                      values.primary_color === color ? '2.5px solid' : '2.5px solid transparent',
                     borderColor: values.primary_color === color ? 'text.primary' : 'transparent',
                     borderRadius: '50%',
                     '&:hover': { bgcolor: color, opacity: 0.8 },
@@ -486,8 +549,8 @@ function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChang
         <Grid xs={12}>
           <Field.Text
             name="manager_name"
-            label="Director técnico / Manager"
-            placeholder="Nombre del DT"
+            label={t('label_manager_or_coach')}
+            placeholder={t('label_coach_name_placeholder')}
             InputProps={{
               startAdornment: (
                 <Iconify icon="mdi:account-tie" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
@@ -498,11 +561,15 @@ function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChang
         <Grid xs={12} sm={6}>
           <Field.Text
             name="contact_email"
-            label="Email de contacto"
+            label={t('label_contact_email')}
             placeholder="dt@equipo.com"
             InputProps={{
               startAdornment: (
-                <Iconify icon="mdi:email-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
+                <Iconify
+                  icon="mdi:email-outline"
+                  width={20}
+                  sx={{ mr: 1, color: 'text.disabled' }}
+                />
               ),
             }}
           />
@@ -510,12 +577,16 @@ function StepIdentity({ values, setValue, logoPreview, logoInputRef, onLogoChang
         <Grid xs={12} sm={6}>
           <Field.Text
             name="contact_phone"
-            label="Número de contacto"
+            label={t('label_contact_phone')}
             placeholder="3001234567"
             inputProps={{ autoComplete: 'tel', inputMode: 'tel' }}
             InputProps={{
               startAdornment: (
-                <Iconify icon="mdi:phone-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
+                <Iconify
+                  icon="mdi:phone-outline"
+                  width={20}
+                  sx={{ mr: 1, color: 'text.disabled' }}
+                />
               ),
             }}
           />
@@ -537,6 +608,7 @@ const POSITION_COLORS = {
 };
 
 function StepRoster({ tournamentId, teamId, players, positionCounts }) {
+  const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
 
@@ -559,28 +631,32 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
     async (playerId) => {
       try {
         await deletePlayer(tournamentId, playerId);
-        toast.success('Jugador eliminado');
+        toast.success(t('label_player_deleted'));
       } catch (error) {
-        toast.error(error.message || 'Error al eliminar');
+        toast.error(error.message || t('label_error_deleting'));
       }
     },
-    [tournamentId]
+    [tournamentId, t]
   );
 
   if (!teamId) {
     return (
-      <FormSection number="02" title="Plantilla de jugadores">
+      <FormSection number="02" title={t('label_player_roster')}>
         <Card
           sx={{
             p: 4,
             textAlign: 'center',
-            border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.24)}`,
+            border: (theme) => `1px dashed ${alpha(theme.palette.grey[500], 0.24)}`,
             boxShadow: 'none',
           }}
         >
-          <Iconify icon="mdi:account-group-outline" width={48} sx={{ color: 'text.disabled', mb: 1 }} />
+          <Iconify
+            icon="mdi:account-group-outline"
+            width={48}
+            sx={{ color: 'text.disabled', mb: 1 }}
+          />
           <Typography variant="body2" color="text.secondary">
-            Completa el paso anterior para agregar jugadores.
+            {t('label_complete_previous_step_to_add_players')}
           </Typography>
         </Card>
       </FormSection>
@@ -590,7 +666,7 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
   const sortedPlayers = [...players].sort((a, b) => (a.number ?? 99) - (b.number ?? 99));
 
   return (
-    <FormSection number="02" title="Plantilla de jugadores">
+    <FormSection number="02" title={t('label_player_roster')}>
       {/* Position stats */}
       <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
         {Object.entries(POSITION_LABELS).map(([key, label]) => (
@@ -601,16 +677,20 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
               py: 1.5,
               px: 1,
               textAlign: 'center',
-              border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+              border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
               boxShadow: 'none',
             }}
           >
-            <Iconify icon={POSITION_ICONS[key]} width={20} sx={{ color: `${POSITION_COLORS[key]}.main`, mb: 0.5 }} />
+            <Iconify
+              icon={POSITION_ICONS[key]}
+              width={20}
+              sx={{ color: `${POSITION_COLORS[key]}.main`, mb: 0.5 }}
+            />
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
               {positionCounts[key]}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {label}
+              {t(label)}
             </Typography>
           </Card>
         ))}
@@ -634,9 +714,17 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
               width={20}
               sx={{ color: players.length >= 11 ? 'success.dark' : 'warning.dark' }}
             />
-            <Typography variant="body2" sx={{ color: players.length >= 11 ? 'success.dark' : 'warning.dark' }}>
-              {players.length} jugador{players.length !== 1 ? 'es' : ''} registrado{players.length !== 1 ? 's' : ''}
-              {players.length < 11 && ` — faltan ${11 - players.length} para completar el equipo`}
+            <Typography
+              variant="body2"
+              sx={{ color: players.length >= 11 ? 'success.dark' : 'warning.dark' }}
+            >
+              {players.length}{' '}
+              {players.length !== 1
+                ? t('word_players_lowercase')
+                : t('label_player_singular_lowercase')}{' '}
+              {players.length !== 1 ? t('label_registered_plural') : t('label_registered_singular')}
+              {players.length < 11 &&
+                ` — ${t('label_missing_to_complete_team_prefix')} ${11 - players.length} ${t('label_missing_to_complete_team_suffix')}`}
             </Typography>
           </Stack>
           <Button
@@ -645,7 +733,7 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
             startIcon={<Iconify icon="mingcute:add-line" width={16} />}
             onClick={handleAdd}
           >
-            Agregar jugador
+            {t('label_add_player')}
           </Button>
         </Stack>
       </Card>
@@ -656,21 +744,39 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
           sx={{
             py: 5,
             textAlign: 'center',
-            border: (t) => `2px dashed ${alpha(t.palette.grey[500], 0.14)}`,
+            border: (theme) => `2px dashed ${alpha(theme.palette.grey[500], 0.14)}`,
             boxShadow: 'none',
           }}
         >
-          <Iconify icon="mdi:account-plus-outline" width={40} sx={{ color: 'text.disabled', mb: 1.5 }} />
+          <Iconify
+            icon="mdi:account-plus-outline"
+            width={40}
+            sx={{ color: 'text.disabled', mb: 1.5 }}
+          />
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-            Sin jugadores todavía
+            {t('label_no_players_yet')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            Agrega al menos 11 jugadores para completar la plantilla
+            {t('label_add_min_11_players_hint')}
           </Typography>
         </Card>
       ) : (
-        <Card sx={{ overflow: 'hidden', boxShadow: 'none', border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
-          <Stack divider={<Box sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}` }} />}>
+        <Card
+          sx={{
+            overflow: 'hidden',
+            boxShadow: 'none',
+            border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+          }}
+        >
+          <Stack
+            divider={
+              <Box
+                sx={{
+                  borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
+                }}
+              />
+            }
+          >
             {sortedPlayers.map((player) => (
               <Stack
                 key={player.id}
@@ -688,7 +794,7 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+                    bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
                     flexShrink: 0,
                   }}
                 >
@@ -705,19 +811,28 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
                 {/* Position */}
                 {player.position ? (
                   <Chip
-                    label={POSITION_LABELS[player.position] || player.position}
+                    label={t(POSITION_LABELS[player.position] || player.position)}
                     size="small"
                     color={POSITION_COLORS[player.position] || 'default'}
                     variant="soft"
                     sx={{ fontSize: 11, fontWeight: 600, minWidth: 80 }}
                   />
                 ) : (
-                  <Chip label="Sin posición" size="small" variant="soft" sx={{ fontSize: 11, minWidth: 80 }} />
+                  <Chip
+                    label={t('label_no_position')}
+                    size="small"
+                    variant="soft"
+                    sx={{ fontSize: 11, minWidth: 80 }}
+                  />
                 )}
 
                 {/* Actions */}
                 <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
-                  <IconButton size="small" onClick={() => handleEdit(player)} sx={{ color: 'text.secondary' }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleEdit(player)}
+                    sx={{ color: 'text.secondary' }}
+                  >
                     <Iconify icon="solar:pen-bold" width={15} />
                   </IconButton>
                   <IconButton size="small" color="error" onClick={() => handleDelete(player.id)}>
@@ -745,12 +860,13 @@ function StepRoster({ tournamentId, teamId, players, positionCounts }) {
 // STEP 3 — DOCUMENTOS
 // ======================================================================
 
+// title/description values below are i18n keys, resolved via t() at render time.
 const DOCUMENT_TYPES = [
   {
     key: 'player_ids',
     icon: 'mdi:card-account-details-outline',
-    title: 'Identificación de jugadores',
-    description: 'Cédula o documento de identidad de cada integrante',
+    title: 'label_doc_player_ids_title',
+    description: 'label_doc_player_ids_description',
     required: true,
     accept: '.pdf,.jpg,.jpeg,.png',
     multiple: true,
@@ -758,8 +874,8 @@ const DOCUMENT_TYPES = [
   {
     key: 'insurance',
     icon: 'mdi:shield-check-outline',
-    title: 'Póliza de seguro',
-    description: 'Seguro médico o de accidentes deportivos',
+    title: 'label_doc_insurance_title',
+    description: 'label_doc_insurance_description',
     required: true,
     accept: '.pdf',
     multiple: false,
@@ -767,8 +883,8 @@ const DOCUMENT_TYPES = [
   {
     key: 'medical',
     icon: 'mdi:hospital-box-outline',
-    title: 'Certificados médicos',
-    description: 'Aptitud física de cada jugador',
+    title: 'label_doc_medical_title',
+    description: 'label_doc_medical_description',
     required: false,
     accept: '.pdf,.jpg,.jpeg,.png',
     multiple: true,
@@ -776,8 +892,8 @@ const DOCUMENT_TYPES = [
   {
     key: 'consent',
     icon: 'mdi:file-sign',
-    title: 'Consentimiento informado',
-    description: 'Autorización firmada para menores de edad',
+    title: 'label_doc_consent_title',
+    description: 'label_doc_consent_description',
     required: false,
     accept: '.pdf',
     multiple: true,
@@ -785,6 +901,7 @@ const DOCUMENT_TYPES = [
 ];
 
 function StepDocuments({ tournamentId, teamId }) {
+  const { t } = useTranslation();
   const { team, revalidateTeam } = useGetTeam(tournamentId, teamId);
   const [uploading, setUploading] = useState({});
   const [deleting, setDeleting] = useState({});
@@ -805,21 +922,29 @@ function StepDocuments({ tournamentId, teamId }) {
           Array.from(files).map(async (file) => {
             const ct = file.type || 'application/octet-stream';
             const { key, url: presignedUrl } = await getTeamDocumentUploadUrl(
-              tournamentId, teamId, docType, file.name, ct
+              tournamentId,
+              teamId,
+              docType,
+              file.name,
+              ct
             );
-            await fetch(presignedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': ct } });
+            await fetch(presignedUrl, {
+              method: 'PUT',
+              body: file,
+              headers: { 'Content-Type': ct },
+            });
             await confirmTeamDocument(tournamentId, teamId, docType, file.name, key);
           })
         );
         await revalidateTeam();
-        toast.success('Documento subido');
+        toast.success(t('label_document_uploaded'));
       } catch (error) {
-        toast.error(error.message || 'Error al subir documento');
+        toast.error(error.message || t('label_error_uploading_document'));
       } finally {
         setUploading((prev) => ({ ...prev, [docType]: false }));
       }
     },
-    [tournamentId, teamId, revalidateTeam]
+    [tournamentId, teamId, revalidateTeam, t]
   );
 
   const handleDelete = useCallback(
@@ -829,23 +954,34 @@ function StepDocuments({ tournamentId, teamId }) {
       try {
         await removeTeamDocument(tournamentId, teamId, docType, key);
         await revalidateTeam();
-        toast.success('Documento eliminado');
+        toast.success(t('label_document_deleted'));
       } catch (error) {
-        toast.error(error.message || 'Error al eliminar');
+        toast.error(error.message || t('label_error_deleting'));
       } finally {
         setDeleting((prev) => ({ ...prev, [deleteKey]: false }));
       }
     },
-    [tournamentId, teamId, revalidateTeam]
+    [tournamentId, teamId, revalidateTeam, t]
   );
 
   if (!teamId) {
     return (
-      <FormSection number="03" title="Documentos del equipo">
-        <Card sx={{ p: 4, textAlign: 'center', border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.24)}`, boxShadow: 'none' }}>
-          <Iconify icon="mdi:file-document-outline" width={48} sx={{ color: 'text.disabled', mb: 1 }} />
+      <FormSection number="03" title={t('label_team_documents')}>
+        <Card
+          sx={{
+            p: 4,
+            textAlign: 'center',
+            border: (theme) => `1px dashed ${alpha(theme.palette.grey[500], 0.24)}`,
+            boxShadow: 'none',
+          }}
+        >
+          <Iconify
+            icon="mdi:file-document-outline"
+            width={48}
+            sx={{ color: 'text.disabled', mb: 1 }}
+          />
           <Typography variant="body2" color="text.secondary">
-            Completa el paso anterior para subir documentos.
+            {t('label_complete_previous_step_to_upload_documents')}
           </Typography>
         </Card>
       </FormSection>
@@ -853,7 +989,7 @@ function StepDocuments({ tournamentId, teamId }) {
   }
 
   return (
-    <FormSection number="03" title="Documentos del equipo">
+    <FormSection number="03" title={t('label_team_documents')}>
       {/* Completion status */}
       <Card
         sx={{
@@ -871,10 +1007,13 @@ function StepDocuments({ tournamentId, teamId }) {
             width={20}
             sx={{ color: requiredDone ? 'success.dark' : 'warning.dark' }}
           />
-          <Typography variant="body2" sx={{ color: requiredDone ? 'success.dark' : 'warning.dark' }}>
+          <Typography
+            variant="body2"
+            sx={{ color: requiredDone ? 'success.dark' : 'warning.dark' }}
+          >
             {requiredDone
-              ? 'Documentos obligatorios completos'
-              : 'Sube los documentos obligatorios para continuar'}
+              ? t('label_required_documents_complete')
+              : t('label_upload_required_documents_hint')}
           </Typography>
         </Stack>
       </Card>
@@ -890,11 +1029,12 @@ function StepDocuments({ tournamentId, teamId }) {
               key={doc.key}
               sx={{
                 p: 2.5,
-                border: (t) => `1px solid ${
-                  hasDocs
-                    ? alpha(t.palette.success.main, 0.24)
-                    : alpha(t.palette.grey[500], 0.12)
-                }`,
+                border: (theme) =>
+                  `1px solid ${
+                    hasDocs
+                      ? alpha(theme.palette.success.main, 0.24)
+                      : alpha(theme.palette.grey[500], 0.12)
+                  }`,
                 boxShadow: 'none',
                 transition: 'border-color 0.2s',
               }}
@@ -910,8 +1050,8 @@ function StepDocuments({ tournamentId, teamId }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     bgcolor: hasDocs
-                      ? (t) => alpha(t.palette.success.main, 0.1)
-                      : (t) => alpha(t.palette.primary.main, 0.08),
+                      ? (theme) => alpha(theme.palette.success.main, 0.1)
+                      : (theme) => alpha(theme.palette.primary.main, 0.08),
                     flexShrink: 0,
                   }}
                 >
@@ -924,16 +1064,28 @@ function StepDocuments({ tournamentId, teamId }) {
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-                    <Typography variant="subtitle2">{doc.title}</Typography>
+                    <Typography variant="subtitle2">{t(doc.title)}</Typography>
                     {doc.required && !hasDocs && (
-                      <Chip label="Requerido" size="small" color="error" variant="soft" sx={{ height: 18, fontSize: 10 }} />
+                      <Chip
+                        label={t('label_required')}
+                        size="small"
+                        color="error"
+                        variant="soft"
+                        sx={{ height: 18, fontSize: 10 }}
+                      />
                     )}
                     {hasDocs && (
-                      <Chip label={`${files.length} archivo${files.length > 1 ? 's' : ''}`} size="small" color="success" variant="soft" sx={{ height: 18, fontSize: 10 }} />
+                      <Chip
+                        label={`${files.length} ${files.length > 1 ? t('label_files_plural') : t('label_file_singular')}`}
+                        size="small"
+                        color="success"
+                        variant="soft"
+                        sx={{ height: 18, fontSize: 10 }}
+                      />
                     )}
                   </Stack>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {doc.description}
+                    {t(doc.description)}
                   </Typography>
                 </Box>
 
@@ -948,11 +1100,13 @@ function StepDocuments({ tournamentId, teamId }) {
                   onClick={() => fileInputRefs.current[doc.key]?.click()}
                   sx={{ flexShrink: 0 }}
                 >
-                  {hasDocs ? 'Agregar' : 'Subir'}
+                  {hasDocs ? t('label_add') : t('label_upload')}
                 </Button>
 
                 <input
-                  ref={(el) => { fileInputRefs.current[doc.key] = el; }}
+                  ref={(el) => {
+                    fileInputRefs.current[doc.key] = el;
+                  }}
                   type="file"
                   accept={doc.accept}
                   multiple={doc.multiple}
@@ -971,7 +1125,7 @@ function StepDocuments({ tournamentId, teamId }) {
                   sx={{
                     mt: 2,
                     pl: 7,
-                    borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+                    borderTop: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
                     pt: 1.5,
                   }}
                 >
@@ -979,12 +1133,7 @@ function StepDocuments({ tournamentId, teamId }) {
                     const deleteKey = `${doc.key}:${file.key}`;
                     const isDeleting = deleting[deleteKey];
                     return (
-                      <Stack
-                        key={file.key}
-                        direction="row"
-                        alignItems="center"
-                        spacing={1}
-                      >
+                      <Stack key={file.key} direction="row" alignItems="center" spacing={1}>
                         <Iconify
                           icon={file.name?.endsWith('.pdf') ? 'mdi:file-pdf-box' : 'mdi:file-image'}
                           width={18}
@@ -1006,8 +1155,11 @@ function StepDocuments({ tournamentId, teamId }) {
                         >
                           {file.name}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.disabled', flexShrink: 0 }}>
-                          {file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString('es') : ''}
+                        <Typography
+                          variant="caption"
+                          sx={{ color: 'text.disabled', flexShrink: 0 }}
+                        >
+                          {file.uploaded_at ? fDate(file.uploaded_at) : ''}
                         </Typography>
                         <IconButton
                           size="small"
@@ -1016,7 +1168,10 @@ function StepDocuments({ tournamentId, teamId }) {
                           onClick={() => handleDelete(doc.key, file.key)}
                           sx={{ flexShrink: 0 }}
                         >
-                          <Iconify icon={isDeleting ? 'mdi:loading' : 'solar:trash-bin-trash-bold'} width={14} />
+                          <Iconify
+                            icon={isDeleting ? 'mdi:loading' : 'solar:trash-bin-trash-bold'}
+                            width={14}
+                          />
                         </IconButton>
                       </Stack>
                     );
@@ -1035,32 +1190,39 @@ function StepDocuments({ tournamentId, teamId }) {
 // STEP 4 — REGLAMENTO
 // ======================================================================
 
+// title/content values below are i18n keys, resolved via t() at render time.
 const RULES_SECTIONS = [
   {
-    title: '1. Formato de competencia',
-    content: 'El torneo se disputa en formato de grupos + eliminación directa. Cada equipo jugará al menos 3 partidos en la fase de grupos. Los dos primeros de cada grupo avanzarán a la fase eliminatoria.',
+    key: 'format',
+    title: 'label_rules_section_format_title',
+    content: 'label_rules_section_format_content',
   },
   {
-    title: '2. Inscripción de jugadores',
-    content: 'Cada equipo debe inscribir un mínimo de 11 y un máximo de 25 jugadores. No se permitirán cambios de plantilla después de la fecha límite de inscripción. Los jugadores deben presentar documento de identidad.',
+    key: 'registration',
+    title: 'label_rules_section_registration_title',
+    content: 'label_rules_section_registration_content',
   },
   {
-    title: '3. Reglas disciplinarias',
-    content: 'Dos tarjetas amarillas acumuladas resultan en un partido de suspensión. Una tarjeta roja directa resulta en mínimo un partido de suspensión, sujeto a revisión del comité disciplinario.',
+    key: 'discipline',
+    title: 'label_rules_section_discipline_title',
+    content: 'label_rules_section_discipline_content',
   },
   {
-    title: '4. Horarios y sedes',
-    content: 'Los horarios serán publicados con al menos 48 horas de anticipación. El equipo local será responsable de proporcionar los balones. Los equipos deben presentarse 15 minutos antes del inicio.',
+    key: 'schedule',
+    title: 'label_rules_section_schedule_title',
+    content: 'label_rules_section_schedule_content',
   },
   {
-    title: '5. Criterios de desempate',
-    content: 'En caso de empate en puntos se considerará: 1) Diferencia de goles, 2) Goles a favor, 3) Resultado entre los equipos empatados, 4) Sorteo.',
+    key: 'tiebreakers',
+    title: 'label_rules_section_tiebreakers_title',
+    content: 'label_rules_section_tiebreakers_content',
   },
 ];
 
 function StepRules({ accepted, onToggle }) {
+  const { t } = useTranslation();
   return (
-    <FormSection number="04" title="Reglamento del torneo">
+    <FormSection number="04" title={t('label_tournament_rules')}>
       <Card
         sx={{
           p: 2,
@@ -1074,7 +1236,7 @@ function StepRules({ accepted, onToggle }) {
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="mdi:information-outline" width={20} sx={{ color: 'info.dark' }} />
           <Typography variant="body2" sx={{ color: 'info.dark' }}>
-            Lee atentamente el reglamento antes de inscribir a tu equipo.
+            {t('label_read_rules_hint')}
           </Typography>
         </Stack>
       </Card>
@@ -1085,18 +1247,18 @@ function StepRules({ accepted, onToggle }) {
           mb: 3,
           maxHeight: 360,
           overflowY: 'auto',
-          border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+          border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
           boxShadow: 'none',
         }}
       >
         <Stack spacing={3}>
           {RULES_SECTIONS.map((section) => (
-            <Box key={section.title}>
+            <Box key={section.key}>
               <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                {section.title}
+                {t(section.title)}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                {section.content}
+                {t(section.content)}
               </Typography>
             </Box>
           ))}
@@ -1107,23 +1269,17 @@ function StepRules({ accepted, onToggle }) {
         sx={{
           p: 2,
           border: '1.5px solid',
-          borderColor: accepted ? 'success.main' : (t) => alpha(t.palette.grey[500], 0.16),
+          borderColor: accepted ? 'success.main' : (theme) => alpha(theme.palette.grey[500], 0.16),
           bgcolor: accepted ? 'success.lighter' : 'transparent',
           boxShadow: 'none',
           transition: 'all 0.2s',
         }}
       >
         <FormControlLabel
-          control={
-            <Checkbox
-              checked={accepted}
-              onChange={onToggle}
-              color="success"
-            />
-          }
+          control={<Checkbox checked={accepted} onChange={onToggle} color="success" />}
           label={
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              He leído y acepto el reglamento del torneo y sus disposiciones disciplinarias.
+              {t('label_rules_acceptance_statement')}
             </Typography>
           }
         />
@@ -1137,10 +1293,11 @@ function StepRules({ accepted, onToggle }) {
 // ======================================================================
 
 function StepReview({ values, players, positionCounts }) {
+  const { t } = useTranslation();
   const initials = values.short_name || values.name?.slice(0, 2)?.toUpperCase() || '?';
 
   return (
-    <FormSection number="03" title="Revisión final">
+    <FormSection number="03" title={t('label_final_review')}>
       {/* Team card */}
       <Card sx={{ p: 3, mb: 3 }}>
         <Stack direction="row" spacing={2.5} alignItems="center">
@@ -1181,7 +1338,9 @@ function StepReview({ values, players, positionCounts }) {
       <Card sx={{ p: 3 }}>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
           <Iconify icon="mdi:account-group" width={20} />
-          <Typography variant="subtitle1">Plantilla ({players.length})</Typography>
+          <Typography variant="subtitle1">
+            {t('label_squad')} ({players.length})
+          </Typography>
         </Stack>
 
         {/* Position breakdown */}
@@ -1192,7 +1351,7 @@ function StepReview({ values, players, positionCounts }) {
                 {positionCounts[key]}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {label}
+                {t(label)}
               </Typography>
             </Box>
           ))}
@@ -1224,7 +1383,9 @@ function StepReview({ values, players, positionCounts }) {
                   {player.name}
                 </Typography>
                 <Chip
-                  label={POSITION_LABELS[player.position] || '—'}
+                  label={
+                    POSITION_LABELS[player.position] ? t(POSITION_LABELS[player.position]) : '—'
+                  }
                   size="small"
                   variant="soft"
                   color={player.position ? 'primary' : 'default'}
@@ -1235,7 +1396,7 @@ function StepReview({ values, players, positionCounts }) {
           </Stack>
         ) : (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-            No hay jugadores registrados
+            {t('label_no_players_registered')}
           </Typography>
         )}
       </Card>
@@ -1247,11 +1408,20 @@ function StepReview({ values, players, positionCounts }) {
 // LEFT STEPPER
 // ======================================================================
 
-function WizardStepper({ steps, activeStep, unlockedSteps, isStepDone, getStepValue, onStepClick, onCancel }) {
+function WizardStepper({
+  steps,
+  activeStep,
+  unlockedSteps,
+  isStepDone,
+  getStepValue,
+  onStepClick,
+  onCancel,
+}) {
+  const { t } = useTranslation();
   return (
     <Stack sx={{ p: 3, height: '100%', position: { md: 'sticky' }, top: { md: 0 } }}>
       <Typography variant="overline" sx={{ color: 'text.disabled', letterSpacing: 2, mb: 2 }}>
-        Registro de equipo
+        {t('label_team_registration')}
       </Typography>
 
       <Stack spacing={0.25} sx={{ flex: 1 }}>
@@ -1273,10 +1443,14 @@ function WizardStepper({ steps, activeStep, unlockedSteps, isStepDone, getStepVa
                   borderRadius: 1,
                   cursor: isLocked ? 'not-allowed' : 'pointer',
                   opacity: isLocked ? 0.35 : 1,
-                  bgcolor: isActive ? (t) => alpha(t.palette.primary.main, 0.06) : 'transparent',
+                  bgcolor: isActive
+                    ? (theme) => alpha(theme.palette.primary.main, 0.06)
+                    : 'transparent',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    bgcolor: isLocked ? 'transparent' : (t) => alpha(t.palette.primary.main, 0.04),
+                    bgcolor: isLocked
+                      ? 'transparent'
+                      : (theme) => alpha(theme.palette.primary.main, 0.04),
                   },
                 }}
               >
@@ -1291,16 +1465,18 @@ function WizardStepper({ steps, activeStep, unlockedSteps, isStepDone, getStepVa
                     fontSize: 11,
                     fontWeight: 600,
                     flexShrink: 0,
-                    border: (t) =>
+                    border: (theme) =>
                       `1.5px solid ${
                         isDone || isActive
-                          ? t.palette.primary.main
-                          : alpha(t.palette.grey[500], 0.24)
+                          ? theme.palette.primary.main
+                          : alpha(theme.palette.grey[500], 0.24)
                       }`,
-                    bgcolor: isDone ? (t) => alpha(t.palette.primary.main, 0.1) : 'transparent',
+                    bgcolor: isDone
+                      ? (theme) => alpha(theme.palette.primary.main, 0.1)
+                      : 'transparent',
                     color: isDone || isActive ? 'primary.main' : 'text.disabled',
                     ...(isActive && {
-                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.primary.main, 0.08)}`,
+                      boxShadow: (theme) => `0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`,
                     }),
                   }}
                 >
@@ -1315,7 +1491,7 @@ function WizardStepper({ steps, activeStep, unlockedSteps, isStepDone, getStepVa
                       color: isActive || isDone ? 'text.primary' : 'text.secondary',
                     }}
                   >
-                    {step.label}
+                    {t(step.label)}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -1339,8 +1515,8 @@ function WizardStepper({ steps, activeStep, unlockedSteps, isStepDone, getStepVa
                     height: 12,
                     ml: '26px',
                     bgcolor: isDone
-                      ? (t) => alpha(t.palette.primary.main, 0.2)
-                      : (t) => alpha(t.palette.grey[500], 0.12),
+                      ? (theme) => alpha(theme.palette.primary.main, 0.2)
+                      : (theme) => alpha(theme.palette.grey[500], 0.12),
                     transition: 'background-color 0.3s',
                   }}
                 />
@@ -1358,7 +1534,7 @@ function WizardStepper({ steps, activeStep, unlockedSteps, isStepDone, getStepVa
         onClick={onCancel}
         sx={{ mt: 2 }}
       >
-        Volver a la lista
+        {t('label_back_to_list')}
       </Button>
     </Stack>
   );
@@ -1368,17 +1544,35 @@ function WizardStepper({ steps, activeStep, unlockedSteps, isStepDone, getStepVa
 // RIGHT SUMMARY
 // ======================================================================
 
+// label values below are i18n keys, resolved via t() at render time.
 const REQUIREMENTS = [
-  { key: 'name', label: 'Nombre del equipo', check: (v) => !!v.name },
-  { key: 'shortName', label: 'Abreviatura', check: (v) => !!v.short_name },
-  { key: 'players', label: 'Mínimo 11 jugadores', check: (_, p) => p.length >= 11 },
-  { key: 'goalkeeper', label: 'Al menos 1 portero', check: (_, p) => p.some((pl) => pl.position === 'Goalkeeper') },
-  { key: 'positions', label: 'Posiciones asignadas', check: (_, p) => p.length > 0 && p.every((pl) => !!pl.position) },
-  { key: 'documents', label: 'Documentos subidos', check: () => false },
-  { key: 'rules', label: 'Reglamento aceptado', check: (v, _p, extra) => extra?.rulesAccepted },
+  { key: 'name', label: 'label_team_name', check: (v) => !!v.name },
+  { key: 'shortName', label: 'label_abbreviation', check: (v) => !!v.short_name },
+  { key: 'players', label: 'label_min_11_players', check: (_, p) => p.length >= 11 },
+  {
+    key: 'goalkeeper',
+    label: 'label_at_least_1_goalkeeper',
+    check: (_, p) => p.some((pl) => pl.position === 'Goalkeeper'),
+  },
+  {
+    key: 'positions',
+    label: 'label_positions_assigned',
+    check: (_, p) => p.length > 0 && p.every((pl) => !!pl.position),
+  },
+  { key: 'documents', label: 'label_documents_uploaded', check: () => false },
+  { key: 'rules', label: 'label_rules_accepted', check: (v, _p, extra) => extra?.rulesAccepted },
 ];
 
-function WizardSummary({ values, players, positionCounts, unassigned, teamId, rulesAccepted, logoPreview }) {
+function WizardSummary({
+  values,
+  players,
+  positionCounts,
+  unassigned,
+  teamId,
+  rulesAccepted,
+  logoPreview,
+}) {
+  const { t } = useTranslation();
   const extra = { rulesAccepted };
   const completedCount = REQUIREMENTS.filter((r) => r.check(values, players, extra)).length;
   const percentage = Math.round((completedCount / REQUIREMENTS.length) * 100);
@@ -1401,7 +1595,7 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
       <Card
         sx={{
           p: 2,
-          border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+          border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
           boxShadow: 'none',
           textAlign: 'center',
         }}
@@ -1422,10 +1616,10 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
           {!logoPreview && initials}
         </Avatar>
         <Typography variant="subtitle2" noWrap>
-          {values.name || 'Nombre del equipo'}
+          {values.name || t('label_team_name')}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-          {values.short_name || '—'} · {players.length} jugadores
+          {values.short_name || '—'} · {players.length} {t('word_players_lowercase')}
         </Typography>
       </Card>
 
@@ -1435,7 +1629,7 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
       <Box>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Configuración completa
+            {t('label_setup_complete')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
             {percentage}%
@@ -1447,7 +1641,7 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
           sx={{
             height: 3,
             borderRadius: 1,
-            bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+            bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
             '& .MuiLinearProgress-bar': { borderRadius: 1, bgcolor: 'primary.main' },
           }}
         />
@@ -1458,14 +1652,14 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
       {/* Roster breakdown */}
       <Box>
         <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-          Plantilla
+          {t('label_squad')}
         </Typography>
         <Stack spacing={0.75}>
           {Object.entries(POSITION_LABELS).map(([key, label]) => (
             <Stack key={key} direction="row" alignItems="center" justifyContent="space-between">
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Iconify icon={POSITION_ICONS[key]} width={16} sx={{ color: 'text.disabled' }} />
-                <Typography variant="caption">{label}</Typography>
+                <Typography variant="caption">{t(label)}</Typography>
               </Stack>
               <Typography variant="caption" sx={{ fontWeight: 600 }}>
                 {positionCounts[key]}
@@ -1475,7 +1669,7 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
           {unassigned > 0 && (
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Typography variant="caption" sx={{ color: 'warning.main' }}>
-                Sin posición
+                {t('label_no_position')}
               </Typography>
               <Typography variant="caption" sx={{ fontWeight: 600, color: 'warning.main' }}>
                 {unassigned}
@@ -1490,7 +1684,7 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
       {/* Checklist */}
       <Box>
         <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-          Pendiente
+          {t('pending')}
         </Typography>
         <Stack spacing={0.5}>
           {REQUIREMENTS.map((req) => {
@@ -1502,7 +1696,7 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    bgcolor: done ? 'primary.main' : (t) => alpha(t.palette.grey[500], 0.2),
+                    bgcolor: done ? 'primary.main' : (theme) => alpha(theme.palette.grey[500], 0.2),
                     flexShrink: 0,
                   }}
                 />
@@ -1510,9 +1704,11 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
                   variant="caption"
                   sx={{ color: done ? 'text.secondary' : 'text.disabled', flex: 1 }}
                 >
-                  {req.label}
+                  {t(req.label)}
                 </Typography>
-                {done && <Iconify icon="eva:checkmark-fill" width={14} sx={{ color: 'primary.main' }} />}
+                {done && (
+                  <Iconify icon="eva:checkmark-fill" width={14} sx={{ color: 'primary.main' }} />
+                )}
               </Stack>
             );
           })}
@@ -1520,7 +1716,13 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
       </Box>
 
       {/* Status footer */}
-      <Box sx={{ mt: 'auto', pt: 2, borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}` }}>
+      <Box
+        sx={{
+          mt: 'auto',
+          pt: 2,
+          borderTop: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
+        }}
+      >
         <Typography
           variant="caption"
           sx={{
@@ -1531,8 +1733,8 @@ function WizardSummary({ values, players, positionCounts, unassigned, teamId, ru
           }}
         >
           {percentage === 100
-            ? '✓ Equipo listo para competir'
-            : 'Completa los campos para continuar'}
+            ? `✓ ${t('label_team_ready_to_compete')}`
+            : t('label_complete_fields_to_continue')}
         </Typography>
       </Box>
     </Stack>
@@ -1549,9 +1751,9 @@ function FormSection({ number, title, children }) {
       sx={{
         mb: 3,
         p: 3,
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
         boxShadow: 'none',
-        bgcolor: (t) => alpha(t.palette.background.paper, 0.6),
+        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2.5 }}>
@@ -1563,7 +1765,7 @@ function FormSection({ number, title, children }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
             color: 'primary.main',
             fontSize: 11,
             fontWeight: 600,
@@ -1574,7 +1776,12 @@ function FormSection({ number, title, children }) {
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {title}
         </Typography>
-        <Box sx={{ flex: 1, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }} />
+        <Box
+          sx={{
+            flex: 1,
+            borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+          }}
+        />
       </Stack>
       {children}
     </Card>
@@ -1583,6 +1790,6 @@ function FormSection({ number, title, children }) {
 
 function SummaryDivider() {
   return (
-    <Box sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}` }} />
+    <Box sx={{ borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}` }} />
   );
 }

@@ -53,8 +53,8 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-function getDefaultPhase(tournament, teams) {
-  const phases = getPhases(tournament, teams);
+function getDefaultPhase(tournament, teams, t) {
+  const phases = getPhases(tournament, teams, undefined, undefined, t);
   const active = phases.find((p) => p.state === 'active');
   if (active) return active.key;
   const lastDone = [...phases].reverse().find((p) => p.state === 'done');
@@ -92,7 +92,7 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
   );
 
   const currentPhase =
-    activePhase || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
+    activePhase || (tournament ? getDefaultPhase(tournament, teams, t) : 'configuracion');
 
   const isKnockoutPhase = currentPhase === 'eliminatorias';
 

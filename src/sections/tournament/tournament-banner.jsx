@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -14,11 +16,12 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const STATUS_LABEL = {
-  draft: 'Borrador',
-  active: 'En curso',
-  finished: 'Finalizado',
-  cancelled: 'Cancelado',
+  draft: 'draft',
+  active: 'label_tournament_status_active',
+  finished: 'label_finished',
+  cancelled: 'cancelled',
 };
 
 const STATUS_COLOR = {
@@ -28,10 +31,11 @@ const STATUS_COLOR = {
   cancelled: 'error',
 };
 
+// label values below are i18n keys, resolved via t() at render time.
 const TYPE_LABEL = {
-  league: 'Liga',
-  knockout: 'Eliminación',
-  hybrid: 'Grupos + Knockout',
+  league: 'label_league',
+  knockout: 'label_knockout',
+  hybrid: 'label_groups_and_knockout',
 };
 
 const SPORT_ICONS = {
@@ -49,7 +53,7 @@ const SPORT_ICONS = {
  * Each phase has: key, label, sub, state (done | active | locked).
  * The `key` is used for navigation — it maps to what content to show.
  */
-export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
+export function getPhases(tournament, teams, totalMatchweeks, myRoster, t) {
   const { status, type } = tournament;
   const teamCount = teams?.length || 0;
   const totalTeams = tournament.num_teams || teamCount;
@@ -67,8 +71,8 @@ export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
   // Configuración — maps to overview/stats
   phases.push({
     key: 'configuracion',
-    label: 'Resumen',
-    sub: status === 'draft' ? 'En progreso' : 'Completo',
+    label: t('label_summary'),
+    sub: status === 'draft' ? t('label_in_progress') : t('label_complete'),
     state: status === 'draft' ? 'active' : 'done',
   });
 
@@ -78,21 +82,21 @@ export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
     // independent of tournament status (owners can still add players after kickoff).
     phases.push({
       key: 'inscripcion',
-      label: 'Inscripción',
+      label: t('label_registration'),
       sub: inscripcionSub,
       state: myRoster.count >= myRoster.max ? 'done' : 'active',
     });
   } else if (status === 'draft') {
     phases.push({
       key: 'inscripcion',
-      label: 'Inscripción',
+      label: t('label_registration'),
       sub: inscripcionSub,
       state: teamCount > 0 ? 'active' : 'locked',
     });
   } else {
     phases.push({
       key: 'inscripcion',
-      label: 'Inscripción',
+      label: t('label_registration'),
       sub: inscripcionSub,
       state: 'done',
     });
@@ -103,21 +107,36 @@ export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
     if (status === 'active' && currentMw > 0) {
       phases.push({
         key: 'fase_grupos',
-        label: 'Fase grupos',
-        sub: `J${currentMw} de ${totalMw}`,
+        label: t('label_group_stage'),
+        sub: `${t('label_matchday_abbr')}${currentMw} ${t('label_of')} ${totalMw}`,
         state: currentMw >= totalMw ? 'done' : 'active',
       });
     } else if (status === 'finished') {
-      phases.push({ key: 'fase_grupos', label: 'Fase grupos', sub: 'Completo', state: 'done' });
+      phases.push({
+        key: 'fase_grupos',
+        label: t('label_group_stage'),
+        sub: t('label_complete'),
+        state: 'done',
+      });
     } else {
-      phases.push({ key: 'fase_grupos', label: 'Fase grupos', sub: 'Bloqueado', state: 'locked' });
+      phases.push({
+        key: 'fase_grupos',
+        label: t('label_group_stage'),
+        sub: t('label_locked'),
+        state: 'locked',
+      });
     }
   }
 
   // Knockout phases (for knockout and hybrid) — maps to bracket view
   if (type === 'knockout' || type === 'hybrid') {
     if (status === 'finished') {
-      phases.push({ key: 'eliminatorias', label: 'Fase Final', sub: 'Completo', state: 'done' });
+      phases.push({
+        key: 'eliminatorias',
+        label: t('label_final_phase'),
+        sub: t('label_complete'),
+        state: 'done',
+      });
     } else if (status === 'active') {
       // For knockout-only: always accessible once active.
       // For hybrid: only after all group-stage jornadas are done.
@@ -125,20 +144,29 @@ export function getPhases(tournament, teams, totalMatchweeks, myRoster) {
       const bracketGenerated = tournament.bracket && Object.keys(tournament.bracket).length > 0;
       phases.push({
         key: 'eliminatorias',
-        label: 'Fase Final',
-        sub: bracketGenerated ? 'En curso' : groupsDone ? 'Lista para iniciar' : 'Bloqueado',
+        label: t('label_final_phase'),
+        sub: bracketGenerated
+          ? t('label_tournament_status_active')
+          : groupsDone
+            ? t('label_ready_to_start')
+            : t('label_locked'),
         state: groupsDone ? 'active' : 'locked',
       });
     } else {
-      phases.push({ key: 'eliminatorias', label: 'Fase Final', sub: 'Bloqueado', state: 'locked' });
+      phases.push({
+        key: 'eliminatorias',
+        label: t('label_final_phase'),
+        sub: t('label_locked'),
+        state: 'locked',
+      });
     }
   }
 
   // Estadísticas — always available; rankings of players by goals, assists, cards
   phases.push({
     key: 'estadisticas',
-    label: 'Estadísticas',
-    sub: 'Rankings',
+    label: t('label_stats'),
+    sub: t('label_rankings'),
     state: 'active',
   });
 
@@ -165,6 +193,7 @@ export function TournamentBanner({
   publicMode = false,
   myRoster,
 }) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   const totalMw = totalMatchweeks ?? tournament.rules?.total_matchweeks ?? 0;
@@ -175,7 +204,7 @@ export function TournamentBanner({
   const isLeague = tournament.type === 'league';
   const isHybrid = tournament.type === 'hybrid';
 
-  const phases = getPhases(tournament, teams, totalMw, myRoster);
+  const phases = getPhases(tournament, teams, totalMw, myRoster, t);
 
   const allGroupMatchesFinished =
     !allMatches || allMatches.length === 0 || allMatches.every((m) => m.status === 'finished');
@@ -186,7 +215,7 @@ export function TournamentBanner({
     <Box
       sx={{
         bgcolor: 'background.paper',
-        borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+        borderBottom: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
       }}
     >
       {/* ── Top Section ── */}
@@ -208,8 +237,8 @@ export function TournamentBanner({
                 height: 64,
                 borderRadius: 2,
                 flexShrink: 0,
-                border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
-                bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                border: `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
+                bgcolor: alpha(theme.palette.primary.main, 0.08),
                 color: 'primary.main',
                 mt: 0.5,
               }}
@@ -222,8 +251,8 @@ export function TournamentBanner({
                 sx={{ color: 'text.disabled', letterSpacing: 2, mb: 0.5, display: 'block' }}
               >
                 {publicMode && tournament.status === 'draft'
-                  ? 'Torneo'
-                  : `Torneo ${STATUS_LABEL[tournament.status]?.toLowerCase() || ''}`}
+                  ? t('tournament')
+                  : `${t('tournament')} ${STATUS_LABEL[tournament.status] ? t(STATUS_LABEL[tournament.status]).toLowerCase() : ''}`}
               </Typography>
 
               <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 0.75 }}>
@@ -232,7 +261,11 @@ export function TournamentBanner({
                 </Typography>
                 {!(publicMode && tournament.status === 'draft') && (
                   <Chip
-                    label={STATUS_LABEL[tournament.status] || tournament.status}
+                    label={
+                      STATUS_LABEL[tournament.status]
+                        ? t(STATUS_LABEL[tournament.status])
+                        : tournament.status
+                    }
                     color={STATUS_COLOR[tournament.status] || 'default'}
                     size="small"
                     sx={{
@@ -251,16 +284,17 @@ export function TournamentBanner({
 
               <Stack direction="row" spacing={1.75} sx={{ color: 'text.secondary' }}>
                 <Typography variant="body2">
-                  {SPORT_ICONS[tournament.sport] || '🏆'} {tournament.sport || 'Deporte'}
+                  {SPORT_ICONS[tournament.sport] || '🏆'} {tournament.sport || t('label_sport')}
                 </Typography>
                 {tournament.location && (
                   <Typography variant="body2">📍 {tournament.location}</Typography>
                 )}
                 <Typography variant="body2">
-                  {teamCount} equipo{teamCount !== 1 ? 's' : ''}
+                  {teamCount}{' '}
+                  {teamCount !== 1 ? t('label_teams_lowercase') : t('label_team_lowercase')}
                 </Typography>
                 <Typography variant="body2">
-                  {TYPE_LABEL[tournament.type] || tournament.type}
+                  {TYPE_LABEL[tournament.type] ? t(TYPE_LABEL[tournament.type]) : tournament.type}
                 </Typography>
               </Stack>
             </Box>
@@ -280,7 +314,7 @@ export function TournamentBanner({
                     J{currentMw}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    Activa
+                    {t('label_active_fem')}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'center' }}>
@@ -288,7 +322,7 @@ export function TournamentBanner({
                     {currentMw}/{totalMw}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    Jornadas
+                    {t('label_matchdays')}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'center' }}>
@@ -296,7 +330,7 @@ export function TournamentBanner({
                     {completion}%
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    Completado
+                    {t('label_completed')}
                   </Typography>
                 </Box>
               </Stack>
@@ -306,7 +340,7 @@ export function TournamentBanner({
             {!publicMode && (
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 {tournament.status === 'draft' && (
-                  <Tooltip title={!canActivate ? 'Se necesitan al menos 2 equipos' : ''} arrow>
+                  <Tooltip title={!canActivate ? t('label_need_at_least_2_teams') : ''} arrow>
                     <span>
                       <LoadingButton
                         variant="contained"
@@ -317,7 +351,7 @@ export function TournamentBanner({
                         onClick={onActivate}
                         disabled={!canActivate}
                       >
-                        Activar
+                        {t('label_activate')}
                       </LoadingButton>
                     </span>
                   </Tooltip>
@@ -334,7 +368,7 @@ export function TournamentBanner({
                       loading={isSubmitting}
                       onClick={onAdvanceMatchweek}
                     >
-                      Avanzar Jornada
+                      {t('label_advance_matchday')}
                     </LoadingButton>
                   )}
 
@@ -345,9 +379,7 @@ export function TournamentBanner({
                   !hasBracket && (
                     <Tooltip
                       title={
-                        !allGroupMatchesFinished
-                          ? 'Hay partidos pendientes en la fase de grupos'
-                          : ''
+                        !allGroupMatchesFinished ? t('label_pending_matches_in_group_stage') : ''
                       }
                       arrow
                     >
@@ -360,7 +392,7 @@ export function TournamentBanner({
                           disabled={!allGroupMatchesFinished}
                           onClick={() => onPhaseClick?.('eliminatorias')}
                         >
-                          Iniciar Fase Final
+                          {t('label_start_final_phase')}
                         </Button>
                       </span>
                     </Tooltip>
@@ -375,7 +407,7 @@ export function TournamentBanner({
                     loading={isSubmitting}
                     onClick={onFinish}
                   >
-                    Finalizar
+                    {t('label_finish')}
                   </LoadingButton>
                 )}
 
@@ -386,7 +418,7 @@ export function TournamentBanner({
                     startIcon={<Iconify icon="mdi:card-multiple" width={16} />}
                     onClick={onOpenDiscipline}
                   >
-                    Sanciones
+                    {t('label_sanctions')}
                   </Button>
                 )}
 
@@ -397,7 +429,7 @@ export function TournamentBanner({
                     startIcon={<Iconify icon="mdi:account-group-outline" width={16} />}
                     onClick={onOpenUsers}
                   >
-                    Usuarios
+                    {t('label_users')}
                   </Button>
                 )}
 
@@ -408,7 +440,7 @@ export function TournamentBanner({
                     startIcon={<Iconify icon="solar:pen-bold" width={16} />}
                     onClick={onNavigateEdit}
                   >
-                    Editar
+                    {t('edit')}
                   </Button>
                 )}
 
@@ -419,7 +451,7 @@ export function TournamentBanner({
                   startIcon={<Iconify icon="solar:trash-bin-trash-bold" width={16} />}
                   onClick={onDelete}
                 >
-                  Eliminar
+                  {t('delete')}
                 </Button>
               </Stack>
             )}

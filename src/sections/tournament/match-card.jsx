@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
@@ -12,23 +14,23 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const STATUS_MAP = {
-  scheduled: { label: 'Programado', color: 'default', icon: 'mdi:calendar-clock' },
-  live: { label: 'En Vivo', color: 'error', icon: 'mdi:play-circle' },
-  finished: { label: 'Finalizado', color: 'success', icon: 'mdi:check-circle' },
-  postponed: { label: 'Aplazado', color: 'warning', icon: 'mdi:clock-alert' },
+  scheduled: { label: 'label_scheduled', color: 'default', icon: 'mdi:calendar-clock' },
+  live: { label: 'label_live', color: 'error', icon: 'mdi:play-circle' },
+  finished: { label: 'label_finished', color: 'success', icon: 'mdi:check-circle' },
+  postponed: { label: 'label_postponed', color: 'warning', icon: 'mdi:clock-alert' },
 };
 
 export function MatchCard({ match, teams, onClick, onScoreClick }) {
-  const homeTeam = teams?.find((t) => t.id === match.home_team_id);
-  const awayTeam = teams?.find((t) => t.id === match.away_team_id);
+  const { t } = useTranslation();
+  const homeTeam = teams?.find((team) => team.id === match.home_team_id);
+  const awayTeam = teams?.find((team) => team.id === match.away_team_id);
   const status = STATUS_MAP[match.status] || STATUS_MAP.scheduled;
 
   const hasScore = match.status === 'finished' || match.status === 'live';
-  const scoreHome =
-    match.score_home >= 0 ? match.score_home : match.status === 'live' ? 0 : '-';
-  const scoreAway =
-    match.score_away >= 0 ? match.score_away : match.status === 'live' ? 0 : '-';
+  const scoreHome = match.score_home >= 0 ? match.score_home : match.status === 'live' ? 0 : '-';
+  const scoreAway = match.score_away >= 0 ? match.score_away : match.status === 'live' ? 0 : '-';
 
   return (
     <Card
@@ -41,17 +43,23 @@ export function MatchCard({ match, teams, onClick, onScoreClick }) {
     >
       <CardActionArea onClick={onClick} sx={{ flex: 1 }}>
         <CardContent sx={{ p: 2.5 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ mb: 1.5 }}
+          >
             <Chip
               icon={<Iconify icon={status.icon} width={16} />}
-              label={status.label}
+              label={t(status.label)}
               color={status.color}
               size="small"
             />
             <Stack direction="row" alignItems="center" spacing={0.5}>
               {match.matchweek > 0 && (
                 <Typography variant="caption" color="text.secondary">
-                  J{match.matchweek}
+                  {t('label_matchday_abbr')}
+                  {match.matchweek}
                 </Typography>
               )}
               {match.venue && (
@@ -62,16 +70,11 @@ export function MatchCard({ match, teams, onClick, onScoreClick }) {
             </Stack>
           </Stack>
 
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            spacing={2}
-          >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
             {/* Home */}
             <Stack alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" noWrap>
-                {homeTeam?.short_name || homeTeam?.name || 'TBD'}
+                {homeTeam?.short_name || homeTeam?.name || t('label_tbd')}
               </Typography>
             </Stack>
 
@@ -98,7 +101,7 @@ export function MatchCard({ match, teams, onClick, onScoreClick }) {
             {/* Away */}
             <Stack alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" noWrap>
-                {awayTeam?.short_name || awayTeam?.name || 'TBD'}
+                {awayTeam?.short_name || awayTeam?.name || t('label_tbd')}
               </Typography>
             </Stack>
           </Stack>
@@ -117,7 +120,7 @@ export function MatchCard({ match, teams, onClick, onScoreClick }) {
               onScoreClick();
             }}
           >
-            {match.status === 'finished' ? 'Editar Marcador' : 'Registrar Marcador'}
+            {match.status === 'finished' ? t('label_edit_score') : t('label_register_score')}
           </Button>
         </Stack>
       )}

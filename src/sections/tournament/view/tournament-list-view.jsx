@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import Tab from '@mui/material/Tab';
@@ -21,11 +22,12 @@ import { TournamentCard } from '../tournament-card';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const STATUS_OPTIONS = [
-  { value: '', label: 'Todos' },
-  { value: 'draft', label: 'Borrador' },
-  { value: 'active', label: 'Activo' },
-  { value: 'finished', label: 'Finalizado' },
+  { value: '', label: 'label_all' },
+  { value: 'draft', label: 'draft' },
+  { value: 'active', label: 'active' },
+  { value: 'finished', label: 'status_finished' },
 ];
 
 const STATUS_COLOR = {
@@ -35,6 +37,7 @@ const STATUS_COLOR = {
 };
 
 export function TournamentListView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -58,10 +61,10 @@ export function TournamentListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Torneos"
+        heading={t('tournaments')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Torneos' },
+          { name: t('label_dashboard'), href: paths.dashboard.root },
+          { name: t('tournaments') },
         ]}
         action={
           <Button
@@ -69,7 +72,7 @@ export function TournamentListView() {
             startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={() => navigate(paths.dashboard.tournament.new)}
           >
-            Crear Torneo
+            {t('label_create_tournament')}
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -88,7 +91,7 @@ export function TournamentListView() {
           <Tab
             key={opt.value}
             value={opt.value}
-            label={opt.label}
+            label={t(opt.label)}
             iconPosition="end"
             icon={
               <Label
@@ -105,11 +108,11 @@ export function TournamentListView() {
       {tournamentsEmpty && !tournamentsLoading && (
         <EmptyContent
           filled
-          title="No hay torneos"
+          title={t('label_no_tournaments')}
           description={
             statusFilter
-              ? `No hay torneos con estado "${STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label}"`
-              : 'Crea tu primer torneo para comenzar'
+              ? `${t('label_no_tournaments_with_status')} "${t(STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label)}"`
+              : t('label_create_first_tournament_hint')
           }
           sx={{ py: 10 }}
         />

@@ -133,7 +133,7 @@ export function PublicMatchDetailView({ tournamentId, matchId }) {
                     </Box>
                   ) : (
                     <Typography variant="h5" sx={{ color: 'text.disabled' }}>
-                      vs
+                      {t('label_vs')}
                     </Typography>
                   )}
                   <TeamHeader team={awayTeam} align="left" />
