@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { useParams } from 'src/routes/hooks';
 
@@ -11,9 +12,12 @@ import { InvoiceEditView } from 'src/sections/invoice/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Invoice edit | Dashboard - ${CONFIG.site.name}` };
-
 export default function Page() {
+  const { t } = useTranslation();
+  const metadata = {
+    title: `${t('page_title_invoice_edit')} | ${t('label_dashboard')} - ${CONFIG.site.name}`,
+  };
+
   const { id = '' } = useParams();
 
   const { paymentRequest, paymentRequestLoading } = useGetPaymentRequest(id);

@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { CONFIG } from 'src/config-global';
 
@@ -6,9 +7,12 @@ import { TourCreateView } from 'src/sections/tour/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Create a new tour | Dashboard - ${CONFIG.site.name}` };
-
 export default function Page() {
+  const { t } = useTranslation();
+  const metadata = {
+    title: `${t('label_create_a_new_tour')} | ${t('label_dashboard')} - ${CONFIG.site.name}`,
+  };
+
   return (
     <>
       <Helmet>

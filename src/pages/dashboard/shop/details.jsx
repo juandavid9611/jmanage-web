@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { useParams } from 'src/routes/hooks';
 
@@ -9,9 +10,10 @@ import { ProductShopDetailsView } from 'src/sections/product/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Product details - ${CONFIG.appName}` };
-
 export default function Page() {
+  const { t } = useTranslation();
+  const metadata = { title: `${t('page_title_product_details')} - ${CONFIG.appName}` };
+
   const { id = '' } = useParams();
 
   const { product, productLoading, productError } = useGetProduct(id);

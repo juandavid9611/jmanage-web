@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { CONFIG } from 'src/config-global';
 
@@ -6,9 +7,12 @@ import { InvoiceListView } from 'src/sections/invoice/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Invoice list | Dashboard - ${CONFIG.site.name}` };
-
 export default function Page() {
+  const { t } = useTranslation();
+  const metadata = {
+    title: `${t('page_title_invoice_list')} | ${t('label_dashboard')} - ${CONFIG.site.name}`,
+  };
+
   return (
     <>
       <Helmet>

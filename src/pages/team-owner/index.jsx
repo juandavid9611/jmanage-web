@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { CONFIG } from 'src/config-global';
 
@@ -9,9 +10,12 @@ import { RoleBasedGuard } from 'src/auth/guard';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Mi torneo | Dashboard - ${CONFIG.site.name}` };
-
 export default function TeamOwnerPage() {
+  const { t } = useTranslation();
+  const metadata = {
+    title: `${t('nav_my_tournament')} | ${t('label_dashboard')} - ${CONFIG.site.name}`,
+  };
+
   const { user } = useAuthContext();
   const currentRole = user?.accountsRoles?.[user?.activeAccountId];
 
