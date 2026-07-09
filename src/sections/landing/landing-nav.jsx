@@ -127,7 +127,8 @@ export function LandingNav({ basePath = '' }) {
                 px: { xs: 1, sm: 2 },
                 fontSize: { xs: '0.7rem', sm: '0.8125rem' },
                 whiteSpace: 'nowrap',
-                boxShadow: (th) => `0 4px 12px ${varAlpha(th.vars.palette.primary.mainChannel, 0.3)}`,
+                boxShadow: (th) =>
+                  `0 4px 12px ${varAlpha(th.vars.palette.primary.mainChannel, 0.3)}`,
               }}
             >
               {t('nav_go_to_portal')}
