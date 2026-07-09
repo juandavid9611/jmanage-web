@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -16,16 +17,32 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-export function FileManagerFilters({
-  filters,
-  options,
-  onResetPage,
-}) {
+// display labels only — the underlying values are real filter-matching keys and must stay unchanged.
+export const FILE_TYPE_LABEL = {
+  folder: 'file_type_folder',
+  txt: 'file_type_txt',
+  zip: 'file_type_zip',
+  audio: 'file_type_audio',
+  image: 'file_type_image',
+  video: 'file_type_video',
+  word: 'file_type_word',
+  excel: 'file_type_excel',
+  powerpoint: 'file_type_powerpoint',
+  pdf: 'file_type_pdf',
+  photoshop: 'file_type_photoshop',
+  illustrator: 'file_type_illustrator',
+};
+
+export function FileManagerFilters({ filters, options, onResetPage }) {
+  const { t } = useTranslation();
   const popover = usePopover();
 
   const renderLabel = filters.state.type.length
-    ? filters.state.type.slice(0, 2).join(',')
-    : 'All type';
+    ? filters.state.type
+        .slice(0, 2)
+        .map((type) => t(FILE_TYPE_LABEL[type] || type))
+        .join(', ')
+    : t('label_all_type');
 
   const handleFilterName = useCallback(
     (event) => {
@@ -55,7 +72,7 @@ export function FileManagerFilters({
     <TextField
       value={filters.state.name}
       onChange={handleFilterName}
-      placeholder="Search..."
+      placeholder={t('search')}
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
@@ -126,7 +143,7 @@ export function FileManagerFilters({
                     }}
                   >
                     <FileThumbnail file={type} sx={{ width: 24, height: 24 }} />
-                    {type}
+                    {t(FILE_TYPE_LABEL[type] || type)}
                   </Stack>
                 </CardActionArea>
               );
@@ -135,11 +152,11 @@ export function FileManagerFilters({
 
           <Stack spacing={1.5} direction="row" alignItems="center" justifyContent="flex-end">
             <Button variant="outlined" color="inherit" onClick={handleResetType}>
-              Clear
+              {t('label_clear')}
             </Button>
 
             <Button variant="contained" onClick={popover.onClose}>
-              Apply
+              {t('label_apply')}
             </Button>
           </Stack>
         </Stack>
@@ -157,7 +174,6 @@ export function FileManagerFilters({
       {renderFilterName}
 
       <Stack spacing={1} direction="row" alignItems="center" justifyContent="flex-end" flexGrow={1}>
-
         {renderFilterType}
       </Stack>
     </Stack>

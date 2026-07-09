@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -36,6 +37,7 @@ export function FileManagerFileDetails({
 }) {
   const { name, size, url, type, modifiedAt } = item;
 
+  const { t } = useTranslation();
   const { workspaceRole } = useWorkspace();
   const isAdmin = workspaceRole === 'admin';
 
@@ -89,7 +91,7 @@ export function FileManagerFileDetails({
         justifyContent="space-between"
         sx={{ typography: 'subtitle2' }}
       >
-        Tags
+        {t('label_tags')}
         <IconButton size="small" onClick={toggleTags.onToggle}>
           <Iconify
             icon={toggleTags.value ? 'eva:arrow-ios-upward-fill' : 'eva:arrow-ios-downward-fill'}
@@ -124,7 +126,7 @@ export function FileManagerFileDetails({
               />
             ))
           }
-          renderInput={(params) => <TextField {...params} placeholder="#Add a tags" />}
+          renderInput={(params) => <TextField {...params} placeholder={t('label_add_a_tag')} />}
         />
       )}
     </Stack>
@@ -138,7 +140,7 @@ export function FileManagerFileDetails({
         justifyContent="space-between"
         sx={{ typography: 'subtitle2' }}
       >
-        Properties
+        {t('label_properties')}
         <IconButton size="small" onClick={properties.onToggle}>
           <Iconify
             icon={properties.value ? 'eva:arrow-ios-upward-fill' : 'eva:arrow-ios-downward-fill'}
@@ -150,21 +152,21 @@ export function FileManagerFileDetails({
         <>
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
             <Box component="span" sx={{ width: 80, color: 'text.secondary', mr: 2 }}>
-              Tamaño
+              {t('label_size')}
             </Box>
             {fData(size)}
           </Stack>
 
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
             <Box component="span" sx={{ width: 80, color: 'text.secondary', mr: 2 }}>
-              Modificado
+              {t('label_modified')}
             </Box>
             {fDateTime(modifiedAt)}
           </Stack>
 
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
             <Box component="span" sx={{ width: 80, color: 'text.secondary', mr: 2 }}>
-              Tipo
+              {t('label_type')}
             </Box>
             {fileFormat(type)}
           </Stack>
@@ -175,85 +177,81 @@ export function FileManagerFileDetails({
 
   return (
     <Drawer
-        open={open}
-        onClose={onClose}
-        anchor="right"
-        slotProps={{ backdrop: { invisible: true } }}
-        PaperProps={{ sx: { width: 320 } }}
-        {...other}
-      >
-        <Scrollbar>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2.5 }}>
-            <Typography variant="h6"> Info </Typography>
+      open={open}
+      onClose={onClose}
+      anchor="right"
+      slotProps={{ backdrop: { invisible: true } }}
+      PaperProps={{ sx: { width: 320 } }}
+      {...other}
+    >
+      <Scrollbar>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2.5 }}>
+          <Typography variant="h6"> {t('label_info')} </Typography>
 
-            <Checkbox
-              color="warning"
-              icon={<Iconify icon="eva:star-outline" />}
-              checkedIcon={<Iconify icon="eva:star-fill" />}
-              checked={favorited}
-              onChange={onFavorite}
-            />
-          </Stack>
+          <Checkbox
+            color="warning"
+            icon={<Iconify icon="eva:star-outline" />}
+            checkedIcon={<Iconify icon="eva:star-fill" />}
+            checked={favorited}
+            onChange={onFavorite}
+          />
+        </Stack>
 
-          <Stack
-            spacing={2.5}
-            justifyContent="center"
-            sx={{ p: 2.5, bgcolor: 'background.neutral' }}
-          >
-            <FileThumbnail
-              imageView
-              file={type === 'folder' ? type : url}
-              sx={{ width: 'auto', height: 'auto', alignSelf: 'flex-start' }}
-              slotProps={{
-                img: {
-                  width: 320,
-                  height: 'auto',
-                  aspectRatio: '4/3',
-                  objectFit: 'cover',
-                },
-                icon: { width: 64, height: 64 },
-              }}
-            />
+        <Stack spacing={2.5} justifyContent="center" sx={{ p: 2.5, bgcolor: 'background.neutral' }}>
+          <FileThumbnail
+            imageView
+            file={type === 'folder' ? type : url}
+            sx={{ width: 'auto', height: 'auto', alignSelf: 'flex-start' }}
+            slotProps={{
+              img: {
+                width: 320,
+                height: 'auto',
+                aspectRatio: '4/3',
+                objectFit: 'cover',
+              },
+              icon: { width: 64, height: 64 },
+            }}
+          />
 
-            <Typography variant="subtitle1" sx={{ wordBreak: 'break-all' }}>
-              {name}
-            </Typography>
+          <Typography variant="subtitle1" sx={{ wordBreak: 'break-all' }}>
+            {name}
+          </Typography>
 
-            <Divider sx={{ borderStyle: 'dashed' }} />
+          <Divider sx={{ borderStyle: 'dashed' }} />
 
-            {renderTags}
+          {renderTags}
 
-            {renderProperties}
-          </Stack>
-        </Scrollbar>
+          {renderProperties}
+        </Stack>
+      </Scrollbar>
 
-        <Stack spacing={1.5} sx={{ p: 2.5 }}>
-          {isViewableFile() && (
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              size="large"
-              startIcon={<Iconify icon="solar:eye-bold" />}
-              onClick={handleView}
-            >
-              Ver
-            </Button>
-          )}
-
+      <Stack spacing={1.5} sx={{ p: 2.5 }}>
+        {isViewableFile() && (
           <Button
             fullWidth
-            variant="outlined"
-            color="inherit"
+            variant="contained"
+            color="primary"
             size="large"
-            startIcon={<Iconify icon="solar:download-minimalistic-bold" />}
-            onClick={handleDownload}
+            startIcon={<Iconify icon="solar:eye-bold" />}
+            onClick={handleView}
           >
-            Descargar
+            {t('label_view')}
           </Button>
+        )}
 
-          {isAdmin && (
-            <Button
+        <Button
+          fullWidth
+          variant="outlined"
+          color="inherit"
+          size="large"
+          startIcon={<Iconify icon="solar:download-minimalistic-bold" />}
+          onClick={handleDownload}
+        >
+          {t('label_download')}
+        </Button>
+
+        {isAdmin && (
+          <Button
             fullWidth
             variant="soft"
             color="error"
@@ -261,10 +259,10 @@ export function FileManagerFileDetails({
             startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
             onClick={onDelete}
           >
-            Eliminar
+            {t('delete')}
           </Button>
-          )}
-        </Stack>
-      </Drawer>
+        )}
+      </Stack>
+    </Drawer>
   );
 }

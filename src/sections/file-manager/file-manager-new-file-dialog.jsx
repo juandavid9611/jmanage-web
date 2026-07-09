@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback } from 'react';
 
 import Button from '@mui/material/Button';
@@ -15,14 +16,12 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function FileManagerNewFileDialog({
-  open,
-  onClose,
-  title = 'Subir archivos',
-  ...other
-}) {
+export function FileManagerNewFileDialog({ open, onClose, title, ...other }) {
+  const { t } = useTranslation();
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+
+  const dialogTitle = title ?? t('label_upload_files');
 
   useEffect(() => {
     if (!open) {
@@ -39,20 +38,20 @@ export function FileManagerNewFileDialog({
 
   const handleUpload = async () => {
     if (!files.length) {
-      toast.warning('Por favor, seleccione al menos un archivo');
+      toast.warning(t('label_select_at_least_one_file'));
       return;
     }
 
     setUploading(true);
     try {
       await uploadFiles(files);
-      
-      toast.success(`Se subieron ${files.length} archivo(s)!`);
+
+      toast.success(`${files.length} ${t('label_files_uploaded_suffix')}`);
       setFiles([]);
       onClose();
     } catch (error) {
       console.error('Subida fallida:', error);
-      toast.error('Ocurrió un error al subir los archivos');
+      toast.error(t('label_error_uploading_files'));
     } finally {
       setUploading(false);
     }
@@ -66,10 +65,10 @@ export function FileManagerNewFileDialog({
   const handleRemoveAllFiles = () => {
     setFiles([]);
   };
- 
+
   return (
     <Dialog fullWidth maxWidth="sm" open={open} onClose={onClose} {...other}>
-      <DialogTitle sx={{ p: (theme) => theme.spacing(3, 3, 2, 3) }}> {title} </DialogTitle>
+      <DialogTitle sx={{ p: (theme) => theme.spacing(3, 3, 2, 3) }}> {dialogTitle} </DialogTitle>
 
       <DialogContent dividers sx={{ pt: 1, pb: 0, border: 'none' }}>
         <Upload multiple value={files} onDrop={handleDrop} onRemove={handleRemoveFile} />
@@ -83,12 +82,12 @@ export function FileManagerNewFileDialog({
           loading={uploading}
           disabled={!files.length}
         >
-          Subir archivos
+          {t('label_upload_files')}
         </LoadingButton>
 
         {!!files.length && (
           <Button variant="outlined" color="inherit" onClick={handleRemoveAllFiles}>
-            Eliminar todo
+            {t('label_remove_all')}
           </Button>
         )}
       </DialogActions>

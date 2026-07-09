@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import Tooltip from '@mui/material/Tooltip';
@@ -19,13 +21,13 @@ import { FileManagerTableRow } from './file-manager-table-row';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const TABLE_HEAD = [
-
   { id: '', width: 88 },
-  { id: 'name', label: 'Nombre' },
-  { id: 'size', label: 'Tamaño', width: 120 },
-  { id: 'type', label: 'Tipo', width: 120 },
-  { id: 'modifiedAt', label: 'Modificado', width: 140 },
+  { id: 'name', label: 'name' },
+  { id: 'size', label: 'label_size', width: 120 },
+  { id: 'type', label: 'label_type', width: 120 },
+  { id: 'modifiedAt', label: 'label_modified', width: 140 },
   { id: '', width: 88 },
 ];
 
@@ -40,6 +42,8 @@ export function FileManagerTable({
   onOpenConfirm,
   ...other
 }) {
+  const { t } = useTranslation();
+
   const {
     dense,
     page,
@@ -78,11 +82,11 @@ export function FileManagerTable({
             )
           }
           action={
-            <Tooltip title="Eliminar">
-                <IconButton color="primary" onClick={onOpenConfirm}>
-                  <Iconify icon="solar:trash-bin-trash-bold" />
-                </IconButton>
-              </Tooltip>
+            <Tooltip title={t('delete')}>
+              <IconButton color="primary" onClick={onOpenConfirm}>
+                <Iconify icon="solar:trash-bin-trash-bold" />
+              </IconButton>
+            </Tooltip>
           }
           sx={{
             pl: 1,

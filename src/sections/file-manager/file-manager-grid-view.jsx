@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -17,6 +18,7 @@ import { FileManagerActionSelected } from './file-manager-action-selected';
 // ----------------------------------------------------------------------
 
 export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenConfirm }) {
+  const { t } = useTranslation();
   const { selected, onSelectRow: onSelectItem, onSelectAllRows: onSelectAllItems } = table;
 
   const { workspaceRole } = useWorkspace();
@@ -28,64 +30,62 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
 
   return (
     <Box ref={containerRef}>
+      <FileManagerPanel
+        title={t('label_club_documents')}
+        subtitle={`${dataFiltered.length} ${t('label_documents_lowercase')}`}
+        collapse={files.value}
+        onCollapse={files.onToggle}
+      />
 
-        <FileManagerPanel
-          title="Documentos del club"
-          subtitle={`${dataFiltered.length} documentos`}
-          collapse={files.value}
-          onCollapse={files.onToggle}
+      <Collapse in={!files.value} unmountOnExit>
+        <Box
+          display="grid"
+          gridTemplateColumns={{
+            xs: 'repeat(1, 1fr)',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)',
+            lg: 'repeat(4, 1fr)',
+          }}
+          gap={3}
+        >
+          {dataFiltered.map((file) => (
+            <FileManagerFileItem
+              key={file.id}
+              file={file}
+              selected={selected.includes(file.id)}
+              onSelect={() => onSelectItem(file.id)}
+              onDelete={() => onDeleteItem(file.id)}
+              sx={{ maxWidth: 'auto' }}
+            />
+          ))}
+        </Box>
+      </Collapse>
+
+      {!!selected?.length && isAdmin && (
+        <FileManagerActionSelected
+          numSelected={selected.length}
+          rowCount={dataFiltered.length}
+          selected={selected}
+          onSelectAllItems={(checked) =>
+            onSelectAllItems(
+              checked,
+              dataFiltered.map((row) => row.id)
+            )
+          }
+          action={
+            <Button
+              size="small"
+              color="error"
+              variant="contained"
+              startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
+              onClick={onOpenConfirm}
+              sx={{ mr: 1 }}
+            >
+              {t('delete')}
+            </Button>
+          }
         />
-
-        <Collapse in={!files.value} unmountOnExit>
-          <Box
-            display="grid"
-            gridTemplateColumns={{
-              xs: 'repeat(1, 1fr)',
-              sm: 'repeat(2, 1fr)',
-              md: 'repeat(3, 1fr)',
-              lg: 'repeat(4, 1fr)',
-            }}
-            gap={3}
-          >
-            {dataFiltered
-              .map((file) => (
-                <FileManagerFileItem
-                  key={file.id}
-                  file={file}
-                  selected={selected.includes(file.id)}
-                  onSelect={() => onSelectItem(file.id)}
-                  onDelete={() => onDeleteItem(file.id)}
-                  sx={{ maxWidth: 'auto' }}
-                />
-              ))}
-          </Box>
-        </Collapse>
-
-        {!!selected?.length && isAdmin && (
-          <FileManagerActionSelected
-            numSelected={selected.length}
-            rowCount={dataFiltered.length}
-            selected={selected}
-            onSelectAllItems={(checked) =>
-              onSelectAllItems(
-                checked,
-                dataFiltered.map((row) => row.id)
-              )
-            }
-            action={
-              <Button
-                  size="small"
-                  color="error"
-                  variant="contained"
-                  startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
-                  onClick={onOpenConfirm}
-                  sx={{ mr: 1 }}
-                >
-                  Eliminar
-                </Button>
-            }
-          />
-        )}
-      </Box>
+      )}
+    </Box>
   );
 }

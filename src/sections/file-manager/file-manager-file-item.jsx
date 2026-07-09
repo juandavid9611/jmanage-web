@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -30,6 +31,7 @@ import { FileManagerFileDetails } from './file-manager-file-details';
 // ----------------------------------------------------------------------
 
 export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ...other }) {
+  const { t } = useTranslation();
   const { workspaceRole } = useWorkspace();
   const isAdmin = workspaceRole === 'admin';
 
@@ -74,9 +76,9 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Download started!');
+    toast.success(t('label_download_started'));
     popover.onClose();
-  }, [file.url, file.name, popover]);
+  }, [file.url, file.name, popover, t]);
 
   const renderIcon = (
     <Box
@@ -92,7 +94,7 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
           checkedIcon={<Iconify icon="eva:checkmark-circle-2-fill" />}
           inputProps={{
             id: `item-checkbox-${file.id}`,
-            'aria-label': `Item checkbox`,
+            'aria-label': t('label_item_checkbox'),
           }}
           sx={{ width: 1, height: 1 }}
         />
@@ -112,7 +114,7 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
         onChange={favorite.onToggle}
         inputProps={{
           id: `favorite-checkbox-${file.id}`,
-          'aria-label': `Favorite checkbox`,
+          'aria-label': t('label_favorite_checkbox'),
         }}
       />
 
@@ -205,27 +207,29 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
           {isViewableFile() && (
             <MenuItem onClick={handleView}>
               <Iconify icon="solar:eye-bold" />
-              Ver
+              {t('label_view')}
             </MenuItem>
           )}
 
           <MenuItem onClick={handleDownload}>
             <Iconify icon="solar:download-minimalistic-bold" />
-            Descargar
+            {t('label_download')}
           </MenuItem>
 
           <Divider sx={{ borderStyle: 'dashed' }} />
 
-          {isAdmin && <MenuItem
-            onClick={() => {
-              confirm.onTrue();
-              popover.onClose();
-            }}
-            sx={{ color: 'error.main' }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Eliminar
-          </MenuItem>}
+          {isAdmin && (
+            <MenuItem
+              onClick={() => {
+                confirm.onTrue();
+                popover.onClose();
+              }}
+              sx={{ color: 'error.main' }}
+            >
+              <Iconify icon="solar:trash-bin-trash-bold" />
+              {t('delete')}
+            </MenuItem>
+          )}
         </MenuList>
       </CustomPopover>
 
@@ -241,17 +245,19 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
         }}
       />
 
-      {isAdmin &&  (<ConfirmDialog
-        open={confirm.value}
-        onClose={confirm.onFalse}
-        title="Eliminar"
-        content="¿Estás seguro de eliminar?"
-        action={
-          <Button variant="contained" color="error" onClick={onDelete}>
-            Eliminar
-          </Button>
-        }
-      />)}
+      {isAdmin && (
+        <ConfirmDialog
+          open={confirm.value}
+          onClose={confirm.onFalse}
+          title={t('delete')}
+          content={t('label_confirm_delete_generic')}
+          action={
+            <Button variant="contained" color="error" onClick={onDelete}>
+              {t('delete')}
+            </Button>
+          }
+        />
+      )}
     </>
   );
 }

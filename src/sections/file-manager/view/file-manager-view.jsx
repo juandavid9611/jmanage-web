@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -33,6 +34,7 @@ import { FileManagerNewFileDialog } from '../file-manager-new-file-dialog';
 // ----------------------------------------------------------------------
 
 export function FileManagerView() {
+  const { t } = useTranslation();
   const table = useTable({ defaultRowsPerPage: 10 });
 
   const { workspaceRole } = useWorkspace();
@@ -81,32 +83,29 @@ export function FileManagerView() {
     async (id) => {
       try {
         await deleteFile(id);
-        toast.success('Archivo eliminado!');
+        toast.success(t('label_file_deleted'));
         table.onUpdatePageDeleteRow(dataInPage.length);
       } catch (error) {
-        toast.error('Error al eliminar archivo');
+        toast.error(t('label_error_deleting_file'));
         console.error(error);
       }
     },
-    [dataInPage.length, table]
+    [dataInPage.length, table, t]
   );
 
-  const handleDeleteItems = useCallback(
-    async () => {
-      try {
-        await deleteFiles(table.selected);
-        toast.success('Archivos eliminados!');
-        table.onUpdatePageDeleteRows({
-          totalRowsInPage: dataInPage.length,
-          totalRowsFiltered: dataFiltered.length,
-        });
-      } catch (error) {
-        toast.error('Error al eliminar archivos');  
-        console.error(error);
-      }
-    },
-    [dataFiltered.length, dataInPage.length, table]
-  );
+  const handleDeleteItems = useCallback(async () => {
+    try {
+      await deleteFiles(table.selected);
+      toast.success(t('label_files_deleted'));
+      table.onUpdatePageDeleteRows({
+        totalRowsInPage: dataInPage.length,
+        totalRowsFiltered: dataFiltered.length,
+      });
+    } catch (error) {
+      toast.error(t('label_error_deleting_files'));
+      console.error(error);
+    }
+  }, [dataFiltered.length, dataInPage.length, table, t]);
 
   const renderFilters = (
     <Stack
@@ -143,14 +142,16 @@ export function FileManagerView() {
     <>
       <DashboardContent>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h4">Archivos</Typography>
-          {isAdmin && (<Button
-            variant="contained"
-            startIcon={<Iconify icon="eva:cloud-upload-fill" />}
-            onClick={upload.onTrue}
-          >
-            Subir archivos
-          </Button>)}
+          <Typography variant="h4">{t('label_files')}</Typography>
+          {isAdmin && (
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="eva:cloud-upload-fill" />}
+              onClick={upload.onTrue}
+            >
+              {t('label_upload_files')}
+            </Button>
+          )}
         </Stack>
 
         <Stack spacing={2.5} sx={{ my: { xs: 3, md: 5 } }}>
@@ -163,7 +164,12 @@ export function FileManagerView() {
           <Box
             gap={3}
             display="grid"
-            gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }}
+            gridTemplateColumns={{
+              xs: 'repeat(1, 1fr)',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+              lg: 'repeat(4, 1fr)',
+            }}
           >
             {[...Array(8)].map((_, index) => (
               <Skeleton key={index} variant="rounded" height={200} />
@@ -193,30 +199,33 @@ export function FileManagerView() {
         )}
       </DashboardContent>
 
-      {isAdmin && (<FileManagerNewFileDialog open={upload.value} onClose={upload.onFalse} />)}
+      {isAdmin && <FileManagerNewFileDialog open={upload.value} onClose={upload.onFalse} />}
 
-      {isAdmin && (<ConfirmDialog
-        open={confirm.value}
-        onClose={confirm.onFalse}
-        title="Eliminar"
-        content={
-          <>
-            ¿Estás seguro de eliminar <strong> {table.selected.length} </strong> archivos?
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              handleDeleteItems();
-              confirm.onFalse();
-            }}
-          >
-            Eliminar
-          </Button>
-        }
-      />)}
+      {isAdmin && (
+        <ConfirmDialog
+          open={confirm.value}
+          onClose={confirm.onFalse}
+          title={t('delete')}
+          content={
+            <>
+              {t('label_confirm_delete_prefix')} <strong> {table.selected.length} </strong>{' '}
+              {t('label_files').toLowerCase()}?
+            </>
+          }
+          action={
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => {
+                handleDeleteItems();
+                confirm.onFalse();
+              }}
+            >
+              {t('delete')}
+            </Button>
+          }
+        />
+      )}
     </>
   );
 }

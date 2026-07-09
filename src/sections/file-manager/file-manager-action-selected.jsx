@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Portal from '@mui/material/Portal';
 import Checkbox from '@mui/material/Checkbox';
@@ -18,6 +20,8 @@ export function FileManagerActionSelected({
   sx,
   ...other
 }) {
+  const { t } = useTranslation();
+
   return (
     <Portal>
       <Box
@@ -51,7 +55,7 @@ export function FileManagerActionSelected({
             variant="subtitle2"
             sx={{ mr: 2, color: 'common.white', [stylesMode.dark]: { color: 'grey.800' } }}
           >
-            {selected.length} Items seleccionados
+            {selected.length} {t('label_items_selected')}
           </Typography>
         )}
 
