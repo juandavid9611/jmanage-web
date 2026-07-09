@@ -114,15 +114,6 @@ export function InvoiceTableRow({
 
         <TableCell>
           <ListItemText
-            primary={fDate(row.createDate)}
-            secondary={fTime(row.createDate)}
-            primaryTypographyProps={{ typography: 'body2', noWrap: true }}
-            secondaryTypographyProps={{ mt: 0.5, component: 'span', typography: 'caption' }}
-          />
-        </TableCell>
-
-        <TableCell>
-          <ListItemText
             primary={fDate(row.dueDate)}
             secondary={fTime(row.dueDate)}
             primaryTypographyProps={{ typography: 'body2', noWrap: true }}
