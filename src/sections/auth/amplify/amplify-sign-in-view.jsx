@@ -71,7 +71,22 @@ export function AmplifySignInView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await signInWithPassword({ username: data.email, password: data.password });
+      const { isSignedIn, nextStep } = await signInWithPassword({
+        username: data.email,
+        password: data.password,
+      });
+
+      if (!isSignedIn) {
+        if (nextStep?.signInStep === 'CONFIRM_SIGN_UP') {
+          const searchParams = new URLSearchParams({ email: data.email }).toString();
+          router.push(`${paths.auth.amplify.verify}?${searchParams}`);
+          return;
+        }
+
+        setErrorMsg(t('something_went_wrong'));
+        return;
+      }
+
       await checkUserSession?.();
 
       router.refresh();

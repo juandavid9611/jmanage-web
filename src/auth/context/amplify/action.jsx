@@ -14,7 +14,7 @@ import {
  *************************************** */
 export const signInWithPassword = async ({ username, password }) => {
   username = username.toLowerCase();
-  await _signIn({ username, password });
+  return _signIn({ username, password });
 };
 
 /** **************************************
