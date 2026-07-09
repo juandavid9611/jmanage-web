@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Rating from '@mui/material/Rating';
@@ -19,13 +21,14 @@ import { ProductReviewNewForm } from './product-review-new-form';
 // ----------------------------------------------------------------------
 
 export function ProductDetailsReview({ totalRatings, totalReviews, ratings = [], reviews = [] }) {
+  const { t } = useTranslation();
   const review = useBoolean();
 
   const total = sumBy(ratings, (star) => star.starCount);
 
   const renderSummary = (
     <Stack spacing={1} alignItems="center" justifyContent="center">
-      <Typography variant="subtitle2">Average rating</Typography>
+      <Typography variant="subtitle2">{t('label_average_rating')}</Typography>
 
       <Typography variant="h2">
         {totalRatings}
@@ -35,7 +38,7 @@ export function ProductDetailsReview({ totalRatings, totalReviews, ratings = [],
       <Rating readOnly value={totalRatings} precision={0.1} />
 
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        ({fShortenNumber(totalReviews)} reviews)
+        ({fShortenNumber(totalReviews)} {t('label_reviews_lowercase')})
       </Typography>
     </Stack>
   );
@@ -87,7 +90,7 @@ export function ProductDetailsReview({ totalRatings, totalReviews, ratings = [],
         onClick={review.onTrue}
         startIcon={<Iconify icon="solar:pen-bold" />}
       >
-        Write your review
+        {t('label_write_your_review')}
       </Button>
     </Stack>
   );

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -24,7 +26,10 @@ export function ProductDetailsToolbar({
   sx,
   ...other
 }) {
+  const { t } = useTranslation();
   const popover = usePopover();
+
+  const publishLabel = publishOptions.find((option) => option.value === publish)?.label;
 
   return (
     <>
@@ -34,20 +39,20 @@ export function ProductDetailsToolbar({
           href={backLink}
           startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16} />}
         >
-          Back
+          {t('label_back')}
         </Button>
 
         <Box sx={{ flexGrow: 1 }} />
 
         {publish === 'published' && (
-          <Tooltip title="Go Live">
+          <Tooltip title={t('label_go_live')}>
             <IconButton component={RouterLink} href={liveLink}>
               <Iconify icon="eva:external-link-fill" />
             </IconButton>
           </Tooltip>
         )}
 
-        <Tooltip title="Edit">
+        <Tooltip title={t('edit')}>
           <IconButton component={RouterLink} href={editLink}>
             <Iconify icon="solar:pen-bold" />
           </IconButton>
@@ -57,12 +62,12 @@ export function ProductDetailsToolbar({
           color="inherit"
           variant="contained"
           loading={!publish}
-          loadingIndicator="Loading…"
+          loadingIndicator={t('label_loading_ellipsis')}
           endIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
           onClick={popover.onOpen}
           sx={{ textTransform: 'capitalize' }}
         >
-          {publish}
+          {publishLabel ? t(publishLabel) : publish}
         </LoadingButton>
       </Stack>
 
@@ -84,7 +89,7 @@ export function ProductDetailsToolbar({
             >
               {option.value === 'published' && <Iconify icon="eva:cloud-upload-fill" />}
               {option.value === 'draft' && <Iconify icon="solar:file-text-bold" />}
-              {option.label}
+              {t(option.label)}
             </MenuItem>
           ))}
         </MenuList>

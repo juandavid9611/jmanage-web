@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import Box from '@mui/material/Box';
@@ -51,6 +52,7 @@ export function RHFCheckbox({ name, helperText, label, slotProps, ...other }) {
 // ----------------------------------------------------------------------
 
 export function RHFMultiCheckbox({ name, label, options, slotProps, helperText, ...other }) {
+  const { t } = useTranslation();
   const { control } = useFormContext();
 
   const getSelected = (selectedItems, item) =>
@@ -93,7 +95,7 @@ export function RHFMultiCheckbox({ name, label, options, slotProps, helperText, 
                     }}
                   />
                 }
-                label={option.label}
+                label={t(option.label)}
               />
             ))}
           </FormGroup>

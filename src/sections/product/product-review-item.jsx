@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Rating from '@mui/material/Rating';
@@ -13,6 +15,7 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export function ProductReviewItem({ review }) {
+  const { t } = useTranslation();
   const renderInfo = (
     <Stack
       spacing={2}
@@ -45,7 +48,7 @@ export function ProductReviewItem({ review }) {
           sx={{ color: 'success.main', typography: 'caption' }}
         >
           <Iconify icon="ic:round-verified" width={16} sx={{ mr: 0.5 }} />
-          Verified purchase
+          {t('label_verified_purchase')}
         </Stack>
       )}
 

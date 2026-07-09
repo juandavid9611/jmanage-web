@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Radio from '@mui/material/Radio';
@@ -25,6 +26,7 @@ import { ColorPicker } from 'src/components/color-utils';
 // ----------------------------------------------------------------------
 
 export function ProductFilters({ open, onOpen, onClose, canReset, filters, options }) {
+  const { t } = useTranslation();
   const marksLabel = [...Array(21)].map((_, index) => {
     const value = index * 10;
 
@@ -76,10 +78,10 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
     <>
       <Box display="flex" alignItems="center" sx={{ py: 2, pr: 1, pl: 2.5 }}>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Filters
+          {t('filters')}
         </Typography>
 
-        <Tooltip title="Reset">
+        <Tooltip title={t('label_reset')}>
           <IconButton onClick={filters.onResetState}>
             <Badge color="error" variant="dot" invisible={!canReset}>
               <Iconify icon="solar:restart-bold" />
@@ -99,18 +101,18 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
   const renderGender = (
     <Box display="flex" flexDirection="column">
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Gender
+        {t('label_gender')}
       </Typography>
       {options.genders.map((option) => (
         <FormControlLabel
           key={option.value}
           control={
             <Checkbox
-              checked={filters.state.gender.includes(option.label)}
-              onClick={() => handleFilterGender(option.label)}
+              checked={filters.state.gender.includes(option.value)}
+              onClick={() => handleFilterGender(option.value)}
             />
           }
-          label={option.label}
+          label={t(option.label)}
         />
       ))}
     </Box>
@@ -119,7 +121,7 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
   const renderCategory = (
     <Box display="flex" flexDirection="column">
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Category
+        {t('category')}
       </Typography>
       {options.categories.map((option) => (
         <FormControlLabel
@@ -140,7 +142,7 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
   const renderColor = (
     <Box display="flex" flexDirection="column">
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Color
+        {t('word_color')}
       </Typography>
       <ColorPicker
         selected={filters.state.colors}
@@ -153,7 +155,7 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
 
   const renderPrice = (
     <Box display="flex" flexDirection="column">
-      <Typography variant="subtitle2">Price</Typography>
+      <Typography variant="subtitle2">{t('price')}</Typography>
 
       <Box gap={5} display="flex" sx={{ my: 2 }}>
         <InputRange type="min" value={filters.state.priceRange} onFilters={filters.setState} />
@@ -177,7 +179,7 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
   const renderRating = (
     <Box display="flex" flexDirection="column">
       <Typography variant="subtitle2" sx={{ mb: 2 }}>
-        Rating
+        {t('label_rating')}
       </Typography>
 
       {options.ratings.map((item, index) => (
@@ -200,7 +202,7 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
             }),
           }}
         >
-          <Rating readOnly value={4 - index} /> & Up
+          <Rating readOnly value={4 - index} /> {t('label_and_up')}
         </Box>
       ))}
     </Box>
@@ -218,7 +220,7 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
         }
         onClick={onOpen}
       >
-        Filters
+        {t('filters')}
       </Button>
 
       <Drawer
@@ -247,6 +249,7 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
 // ----------------------------------------------------------------------
 
 function InputRange({ type, value, onFilters }) {
+  const { t } = useTranslation();
   const min = value[0];
 
   const max = value[1];
@@ -277,7 +280,7 @@ function InputRange({ type, value, onFilters }) {
           fontWeight: 'fontWeightSemiBold',
         }}
       >
-        {`${type} ($)`}
+        {`${type === 'min' ? t('word_min') : t('word_max')} ($)`}
       </Typography>
 
       <InputBase

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import Box from '@mui/material/Box';
@@ -66,6 +67,7 @@ export function RHFMultiSelect({
   helperText,
   ...other
 }) {
+  const { t } = useTranslation();
   const { control } = useFormContext();
 
   const labelId = `${name}-select-label`;
@@ -102,7 +104,7 @@ export function RHFMultiSelect({
                         key={item.value}
                         size="small"
                         variant="soft"
-                        label={item.label}
+                        label={t(item.label)}
                         {...slotProps?.chip}
                       />
                     ))}
@@ -110,7 +112,7 @@ export function RHFMultiSelect({
                 );
               }
 
-              return selectedItems.map((item) => item.label).join(', ');
+              return selectedItems.map((item) => t(item.label)).join(', ');
             }}
             {...slotProps?.select}
             inputProps={{ id: labelId, ...slotProps?.select?.inputProps }}
@@ -126,7 +128,7 @@ export function RHFMultiSelect({
                   />
                 )}
 
-                {option.label}
+                {t(option.label)}
               </MenuItem>
             ))}
           </Select>

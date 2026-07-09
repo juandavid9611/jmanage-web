@@ -1,5 +1,6 @@
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -32,30 +33,47 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export const NewProductSchema = zod.object({
-  name: zod.string().min(1, { message: 'Name is required!' }),
-  description: schemaHelper.editor({ message: { required_error: 'Description is required!' } }),
-  images: schemaHelper.files({ message: { required_error: 'Images is required!' } }),
-  code: zod.string().min(1, { message: 'Product code is required!' }),
-  sku: zod.string().min(1, { message: 'Product sku is required!' }),
-  quantity: zod.number().min(1, { message: 'Quantity is required!' }),
-  colors: zod.string().array().nonempty({ message: 'Choose at least one option!' }),
-  sizes: zod.string().array().nonempty({ message: 'Choose at least one option!' }),
-  tags: zod.string().array().min(2, { message: 'Must have at least 2 items!' }),
-  gender: zod.string().array().nonempty({ message: 'Choose at least one option!' }),
-  price: zod.number().min(1, { message: 'Price should not be $0.00' }),
-  // Not required
-  category: zod.string(),
-  priceSale: zod.number(),
-  subDescription: zod.string(),
-  taxes: zod.number(),
-  saleLabel: zod.object({ enabled: zod.boolean(), content: zod.string() }),
-  newLabel: zod.object({ enabled: zod.boolean(), content: zod.string() }),
-});
+export function getNewProductSchema(t) {
+  return zod.object({
+    name: zod.string().min(1, { message: t('name_required') }),
+    description: schemaHelper.editor({
+      message: { required_error: t('description_required') },
+    }),
+    images: schemaHelper.files({ message: { required_error: t('label_images_required') } }),
+    code: zod.string().min(1, { message: t('label_product_code_required') }),
+    sku: zod.string().min(1, { message: t('label_product_sku_required') }),
+    quantity: zod.number().min(1, { message: t('label_quantity_required') }),
+    colors: zod
+      .string()
+      .array()
+      .nonempty({ message: t('label_choose_at_least_one_option') }),
+    sizes: zod
+      .string()
+      .array()
+      .nonempty({ message: t('label_choose_at_least_one_option') }),
+    tags: zod
+      .string()
+      .array()
+      .min(2, { message: t('label_must_have_at_least_2_items') }),
+    gender: zod
+      .string()
+      .array()
+      .nonempty({ message: t('label_choose_at_least_one_option') }),
+    price: zod.number().min(1, { message: t('label_price_not_zero') }),
+    // Not required
+    category: zod.string(),
+    priceSale: zod.number(),
+    subDescription: zod.string(),
+    taxes: zod.number(),
+    saleLabel: zod.object({ enabled: zod.boolean(), content: zod.string() }),
+    newLabel: zod.object({ enabled: zod.boolean(), content: zod.string() }),
+  });
+}
 
 // ----------------------------------------------------------------------
 
 export function ProductNewEditForm({ currentProduct }) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [includeTaxes, setIncludeTaxes] = useState(false);
@@ -84,6 +102,8 @@ export function ProductNewEditForm({ currentProduct }) {
     }),
     [currentProduct]
   );
+
+  const NewProductSchema = useMemo(() => getNewProductSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(NewProductSchema),
@@ -118,10 +138,10 @@ export function ProductNewEditForm({ currentProduct }) {
     try {
       if (currentProduct) {
         await updateProduct(currentProduct.id, data);
-        toast.success('Update success!');
+        toast.success(t('update_success'));
       } else {
         await createProduct(data);
-        toast.success('Create success!');
+        toast.success(t('create_success'));
       }
     } catch (error) {
       toast.error(error.message);
@@ -149,29 +169,33 @@ export function ProductNewEditForm({ currentProduct }) {
 
   const handleUpload = useCallback(() => {
     setUploadingImages(true);
-    toast.info('Images will be uploaded when you save the product');
+    toast.info(t('label_images_uploaded_on_save'));
     // Images are uploaded during form submission in onSubmit
     setUploadingImages(false);
-  }, []);
+  }, [t]);
 
   const renderDetails = (
     <Card>
-      <CardHeader title="Details" subheader="Title, short description, image..." sx={{ mb: 3 }} />
+      <CardHeader
+        title={t('details')}
+        subheader={t('label_title_short_description_image')}
+        sx={{ mb: 3 }}
+      />
 
       <Divider />
 
       <Stack spacing={3} sx={{ p: 3 }}>
-        <Field.Text name="name" label="Product name" />
+        <Field.Text name="name" label={t('label_product_name')} />
 
-        <Field.Text name="subDescription" label="Sub description" multiline rows={4} />
+        <Field.Text name="subDescription" label={t('label_sub_description')} multiline rows={4} />
 
         <Stack spacing={1.5}>
-          <Typography variant="subtitle2">Content</Typography>
+          <Typography variant="subtitle2">{t('label_content')}</Typography>
           <Field.Editor name="description" sx={{ maxHeight: 480 }} />
         </Stack>
 
         <Stack spacing={1.5}>
-          <Typography variant="subtitle2">Images</Typography>
+          <Typography variant="subtitle2">{t('images')}</Typography>
           <Field.Upload
             multiple
             thumbnail
@@ -189,8 +213,8 @@ export function ProductNewEditForm({ currentProduct }) {
   const renderProperties = (
     <Card>
       <CardHeader
-        title="Properties"
-        subheader="Additional functions and attributes..."
+        title={t('label_properties')}
+        subheader={t('payment_request_properties')}
         sx={{ mb: 3 }}
       />
 
@@ -203,19 +227,24 @@ export function ProductNewEditForm({ currentProduct }) {
           display="grid"
           gridTemplateColumns={{ xs: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }}
         >
-          <Field.Text name="code" label="Product code" />
+          <Field.Text name="code" label={t('label_product_code')} />
 
-          <Field.Text name="sku" label="Product SKU" />
+          <Field.Text name="sku" label={t('label_product_sku')} />
 
           <Field.Text
             name="quantity"
-            label="Quantity"
+            label={t('word_quantity')}
             placeholder="0"
             type="number"
             InputLabelProps={{ shrink: true }}
           />
 
-          <Field.Select native name="category" label="Category" InputLabelProps={{ shrink: true }}>
+          <Field.Select
+            native
+            name="category"
+            label={t('category')}
+            InputLabelProps={{ shrink: true }}
+          >
             {PRODUCT_CATEGORY_GROUP_OPTIONS.map((category) => (
               <optgroup key={category.group} label={category.group}>
                 {category.classify.map((classify) => (
@@ -230,17 +259,22 @@ export function ProductNewEditForm({ currentProduct }) {
           <Field.MultiSelect
             checkbox
             name="colors"
-            label="Colors"
+            label={t('label_colors')}
             options={PRODUCT_COLOR_NAME_OPTIONS}
           />
 
-          <Field.MultiSelect checkbox name="sizes" label="Sizes" options={PRODUCT_SIZE_OPTIONS} />
+          <Field.MultiSelect
+            checkbox
+            name="sizes"
+            label={t('label_sizes')}
+            options={PRODUCT_SIZE_OPTIONS}
+          />
         </Box>
 
         <Field.Autocomplete
           name="tags"
-          label="Tags"
-          placeholder="+ Tags"
+          label={t('label_tags')}
+          placeholder={t('label_plus_tags')}
           multiple
           freeSolo
           disableCloseOnSelect
@@ -266,7 +300,7 @@ export function ProductNewEditForm({ currentProduct }) {
         />
 
         <Stack spacing={1}>
-          <Typography variant="subtitle2">Gender</Typography>
+          <Typography variant="subtitle2">{t('label_gender')}</Typography>
           <Field.MultiCheckbox row name="gender" options={PRODUCT_GENDER_OPTIONS} sx={{ gap: 2 }} />
         </Stack>
 
@@ -276,7 +310,7 @@ export function ProductNewEditForm({ currentProduct }) {
           <Field.Switch name="saleLabel.enabled" label={null} sx={{ m: 0 }} />
           <Field.Text
             name="saleLabel.content"
-            label="Sale label"
+            label={t('label_sale_label')}
             fullWidth
             disabled={!values.saleLabel.enabled}
           />
@@ -286,7 +320,7 @@ export function ProductNewEditForm({ currentProduct }) {
           <Field.Switch name="newLabel.enabled" label={null} sx={{ m: 0 }} />
           <Field.Text
             name="newLabel.content"
-            label="New label"
+            label={t('label_new_label')}
             fullWidth
             disabled={!values.newLabel.enabled}
           />
@@ -297,14 +331,18 @@ export function ProductNewEditForm({ currentProduct }) {
 
   const renderPricing = (
     <Card>
-      <CardHeader title="Pricing" subheader="Price related inputs" sx={{ mb: 3 }} />
+      <CardHeader
+        title={t('label_pricing')}
+        subheader={t('label_price_related_inputs')}
+        sx={{ mb: 3 }}
+      />
 
       <Divider />
 
       <Stack spacing={3} sx={{ p: 3 }}>
         <Field.Text
           name="price"
-          label="Regular price"
+          label={t('regular_price')}
           placeholder="0.00"
           type="number"
           InputLabelProps={{ shrink: true }}
@@ -321,7 +359,7 @@ export function ProductNewEditForm({ currentProduct }) {
 
         <Field.Text
           name="priceSale"
-          label="Sale price"
+          label={t('label_sale_price')}
           placeholder="0.00"
           type="number"
           InputLabelProps={{ shrink: true }}
@@ -340,13 +378,13 @@ export function ProductNewEditForm({ currentProduct }) {
           control={
             <Switch id="toggle-taxes" checked={includeTaxes} onChange={handleChangeIncludeTaxes} />
           }
-          label="Price includes taxes"
+          label={t('label_price_includes_taxes')}
         />
 
         {!includeTaxes && (
           <Field.Text
             name="taxes"
-            label="Tax (%)"
+            label={t('label_tax_percent')}
             placeholder="0.00"
             type="number"
             InputLabelProps={{ shrink: true }}
@@ -369,12 +407,12 @@ export function ProductNewEditForm({ currentProduct }) {
     <Stack spacing={3} direction="row" alignItems="center" flexWrap="wrap">
       <FormControlLabel
         control={<Switch defaultChecked inputProps={{ id: 'publish-switch' }} />}
-        label="Publish"
+        label={t('label_publish')}
         sx={{ pl: 3, flexGrow: 1 }}
       />
 
       <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting}>
-        {!currentProduct ? 'Create product' : 'Save changes'}
+        {!currentProduct ? t('label_create_product') : t('save_changes')}
       </LoadingButton>
     </Stack>
   );

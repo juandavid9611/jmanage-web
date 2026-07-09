@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Fab from '@mui/material/Fab';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -20,6 +22,7 @@ import { useCheckoutContext } from '../checkout/context';
 // ----------------------------------------------------------------------
 
 export function ProductItem({ product }) {
+  const { t } = useTranslation();
   const checkout = useCheckoutContext();
 
   const { id, name, coverUrl, price, colors, available, sizes, priceSale, newLabel, saleLabel } =
@@ -95,7 +98,7 @@ export function ProductItem({ product }) {
         </Fab>
       )}
 
-      <Tooltip title={!available && 'Out of stock'} placement="bottom-end">
+      <Tooltip title={!available && t('label_out_of_stock')} placement="bottom-end">
         <Image
           alt={name}
           src={coverUrl}

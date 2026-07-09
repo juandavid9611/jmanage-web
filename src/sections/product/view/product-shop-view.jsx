@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Stack from '@mui/material/Stack';
 import Container from '@mui/material/Container';
@@ -32,6 +33,7 @@ import { ProductFiltersResult } from '../product-filters-result';
 // ----------------------------------------------------------------------
 
 export function ProductShopView({ products, loading }) {
+  const { t } = useTranslation();
   const checkout = useCheckoutContext();
 
   const openFilters = useBoolean();
@@ -119,7 +121,7 @@ export function ProductShopView({ products, loading }) {
       <CartIcon totalItems={checkout.totalItems} />
 
       <Typography variant="h4" sx={{ my: { xs: 3, md: 5 } }}>
-        Shop
+        {t('shop')}
       </Typography>
 
       <Stack spacing={2.5} sx={{ mb: { xs: 3, md: 5 } }}>

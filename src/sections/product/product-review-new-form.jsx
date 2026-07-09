@@ -1,6 +1,7 @@
 import { z as zod } from 'zod';
-import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Button from '@mui/material/Button';
@@ -15,25 +16,30 @@ import { Form, Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export const ReviewSchema = zod.object({
-  rating: zod.number().min(1, 'Rating must be greater than or equal to 1!'),
-  name: zod.string().min(1, { message: 'Name is required!' }),
-  review: zod.string().min(1, { message: 'Review is required!' }),
-  email: zod
-    .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
-});
+export function getReviewSchema(t) {
+  return zod.object({
+    rating: zod.number().min(1, t('label_rating_min_1')),
+    name: zod.string().min(1, { message: t('name_required') }),
+    review: zod.string().min(1, { message: t('label_review_required') }),
+    email: zod
+      .string()
+      .min(1, { message: t('email_required') })
+      .email({ message: t('email_invalid') }),
+  });
+}
 
 // ----------------------------------------------------------------------
 
 export function ProductReviewNewForm({ onClose, ...other }) {
+  const { t } = useTranslation();
   const defaultValues = {
     rating: 0,
     review: '',
     name: '',
     email: '',
   };
+
+  const ReviewSchema = useMemo(() => getReviewSchema(t), [t]);
 
   const methods = useForm({
     mode: 'all',
@@ -66,30 +72,36 @@ export function ProductReviewNewForm({ onClose, ...other }) {
   return (
     <Dialog onClose={onClose} {...other}>
       <Form methods={methods} onSubmit={onSubmit}>
-        <DialogTitle> Add Review </DialogTitle>
+        <DialogTitle> {t('label_add_review')} </DialogTitle>
 
         <DialogContent>
           <div>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              Your review about this product:
+              {t('label_your_review_about_product')}
             </Typography>
             <Field.Rating name="rating" />
           </div>
 
-          <Field.Text name="review" label="Review *" multiline rows={3} sx={{ mt: 3 }} />
+          <Field.Text
+            name="review"
+            label={t('label_review_star')}
+            multiline
+            rows={3}
+            sx={{ mt: 3 }}
+          />
 
-          <Field.Text name="name" label="Name *" sx={{ mt: 3 }} />
+          <Field.Text name="name" label={t('label_name_star')} sx={{ mt: 3 }} />
 
-          <Field.Text name="email" label="Email *" sx={{ mt: 3 }} />
+          <Field.Text name="email" label={t('label_email_star')} sx={{ mt: 3 }} />
         </DialogContent>
 
         <DialogActions>
           <Button color="inherit" variant="outlined" onClick={onCancel}>
-            Cancel
+            {t('cancel')}
           </Button>
 
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Post
+            {t('label_post')}
           </LoadingButton>
         </DialogActions>
       </Form>

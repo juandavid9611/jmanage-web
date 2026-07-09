@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 
 import Box from '@mui/material/Box';
@@ -25,6 +26,12 @@ import { IncrementerButton } from './components/incrementer-button';
 
 // ----------------------------------------------------------------------
 
+const INVENTORY_TYPE_LABEL = {
+  'in stock': 'label_in_stock',
+  'low stock': 'label_low_stock',
+  'out of stock': 'label_out_of_stock',
+};
+
 export function ProductDetailsSummary({
   items,
   product,
@@ -33,6 +40,7 @@ export function ProductDetailsSummary({
   disableActions,
   ...other
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const {
@@ -126,7 +134,7 @@ export function ProductDetailsSummary({
         sx={{ color: 'text.secondary', display: 'inline-flex', alignItems: 'center' }}
       >
         <Iconify icon="mingcute:add-line" width={16} sx={{ mr: 1 }} />
-        Compare
+        {t('label_compare')}
       </Link>
 
       <Link
@@ -134,7 +142,7 @@ export function ProductDetailsSummary({
         sx={{ color: 'text.secondary', display: 'inline-flex', alignItems: 'center' }}
       >
         <Iconify icon="solar:heart-bold" width={16} sx={{ mr: 1 }} />
-        Favorite
+        {t('label_favorite')}
       </Link>
 
       <Link
@@ -142,7 +150,7 @@ export function ProductDetailsSummary({
         sx={{ color: 'text.secondary', display: 'inline-flex', alignItems: 'center' }}
       >
         <Iconify icon="solar:share-bold" width={16} sx={{ mr: 1 }} />
-        Share
+        {t('label_share')}
       </Link>
     </Stack>
   );
@@ -150,7 +158,7 @@ export function ProductDetailsSummary({
   const renderColorOptions = (
     <Stack direction="row">
       <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
-        Color
+        {t('word_color')}
       </Typography>
 
       <Controller
@@ -171,7 +179,7 @@ export function ProductDetailsSummary({
   const renderSizeOptions = (
     <Stack direction="row">
       <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
-        Size
+        {t('word_size')}
       </Typography>
 
       <Field.Select
@@ -179,7 +187,7 @@ export function ProductDetailsSummary({
         size="small"
         helperText={
           <Link underline="always" color="textPrimary">
-            Size chart
+            {t('label_size_chart')}
           </Link>
         }
         sx={{
@@ -199,7 +207,7 @@ export function ProductDetailsSummary({
   const renderQuantity = (
     <Stack direction="row">
       <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
-        Quantity
+        {t('word_quantity')}
       </Typography>
 
       <Stack spacing={1}>
@@ -213,7 +221,7 @@ export function ProductDetailsSummary({
         />
 
         <Typography variant="caption" component="div" sx={{ textAlign: 'right' }}>
-          Available: {available}
+          {t('label_available')}: {available}
         </Typography>
       </Stack>
     </Stack>
@@ -231,11 +239,11 @@ export function ProductDetailsSummary({
         onClick={handleAddCart}
         sx={{ whiteSpace: 'nowrap' }}
       >
-        Add to cart
+        {t('label_add_to_cart')}
       </Button>
 
       <Button fullWidth size="large" type="submit" variant="contained" disabled={disableActions}>
-        Buy now
+        {t('label_buy_now')}
       </Button>
     </Stack>
   );
@@ -249,7 +257,7 @@ export function ProductDetailsSummary({
   const renderRating = (
     <Stack direction="row" alignItems="center" sx={{ color: 'text.disabled', typography: 'body2' }}>
       <Rating size="small" value={totalRatings} precision={0.1} readOnly sx={{ mr: 1 }} />
-      {`(${fShortenNumber(totalReviews)} reviews)`}
+      {`(${fShortenNumber(totalReviews)} ${t('label_reviews_lowercase')})`}
     </Stack>
   );
 
@@ -271,7 +279,7 @@ export function ProductDetailsSummary({
           'success.main',
       }}
     >
-      {inventoryType}
+      {INVENTORY_TYPE_LABEL[inventoryType] ? t(INVENTORY_TYPE_LABEL[inventoryType]) : inventoryType}
     </Box>
   );
 
