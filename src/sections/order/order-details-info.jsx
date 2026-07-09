@@ -83,7 +83,7 @@ export function OrderDetailsInfo({
     <>
       <CardHeader title={t('label_delivery')} />
       <Stack spacing={1.5} sx={{ p: 3 }}>
-        <Row label={t('word_type')}>{delivery?.deliveryType}</Row>
+        <Row label={t('word_type')}>{delivery?.deliveryType && t(delivery.deliveryType)}</Row>
         <Row label={t('word_cost')}>
           {delivery?.shipmentAmount != null
             ? `$${Number(delivery.shipmentAmount).toLocaleString()}`

@@ -8,12 +8,13 @@ import { CheckoutCartProduct } from './checkout-cart-product';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() inside TableHeadCustom.
 const TABLE_HEAD = [
   { id: '', width: 88 },
-  { id: 'product', label: 'Product' },
-  { id: 'price', label: 'Price' },
-  { id: 'quantity', label: 'Quantity' },
-  { id: 'totalAmount', label: 'Total Price', align: 'right' },
+  { id: 'product', label: 'product' },
+  { id: 'price', label: 'price' },
+  { id: 'quantity', label: 'label_quantity' },
+  { id: 'totalAmount', label: 'label_total_price', align: 'right' },
 ];
 
 // ----------------------------------------------------------------------

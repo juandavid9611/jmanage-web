@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Card from '@mui/material/Card';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -17,6 +19,7 @@ import { CheckoutCartProductList } from './checkout-cart-product-list';
 // ----------------------------------------------------------------------
 
 export function CheckoutCart() {
+  const { t } = useTranslation();
   const checkout = useCheckoutContext();
 
   const empty = !checkout.items.length;
@@ -28,10 +31,9 @@ export function CheckoutCart() {
           <CardHeader
             title={
               <Typography variant="h6">
-                Cart
+                {t('label_cart')}
                 <Typography component="span" sx={{ color: 'text.secondary' }}>
-                  &nbsp;(
-                  {checkout.totalItems} item)
+                  &nbsp;({checkout.totalItems} {t('label_items_lowercase')})
                 </Typography>
               </Typography>
             }
@@ -40,8 +42,8 @@ export function CheckoutCart() {
 
           {empty ? (
             <EmptyContent
-              title="Cart is empty!"
-              description="Look like you have no items in your shopping cart."
+              title={t('label_cart_is_empty')}
+              description={t('label_cart_empty_body')}
               imgUrl="/assets/icons/empty/ic-cart.svg"
               sx={{ pt: 5, pb: 10 }}
             />
@@ -61,7 +63,7 @@ export function CheckoutCart() {
           color="inherit"
           startIcon={<Iconify icon="eva:arrow-ios-back-fill" />}
         >
-          Continue shopping
+          {t('label_continue_shopping')}
         </Button>
       </Grid>
 
@@ -81,7 +83,7 @@ export function CheckoutCart() {
           disabled={empty}
           onClick={checkout.onNextStep}
         >
-          Check out
+          {t('label_check_out')}
         </Button>
       </Grid>
     </Grid>

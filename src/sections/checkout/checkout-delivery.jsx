@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import Box from '@mui/material/Box';
@@ -11,11 +12,12 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export function CheckoutDelivery({ name, options, onApplyShipping, sx, ...other }) {
+  const { t } = useTranslation();
   const { control } = useFormContext();
 
   return (
     <Card sx={sx} {...other}>
-      <CardHeader title="Entrega" />
+      <CardHeader title={t('label_delivery')} />
 
       <Controller
         name={name}
@@ -51,6 +53,7 @@ export function CheckoutDelivery({ name, options, onApplyShipping, sx, ...other 
 // ----------------------------------------------------------------------
 
 function OptionItem({ option, selected, disabled, sx, ...other }) {
+  const { t } = useTranslation();
   return (
     <Box
       display="flex"
@@ -79,8 +82,8 @@ function OptionItem({ option, selected, disabled, sx, ...other }) {
       <Iconify
         width={28}
         icon={
-          (option.label === 'Standard' && 'carbon:delivery') ||
-          (option.label === 'Express' && 'carbon:rocket') ||
+          (option.value === 10 && 'carbon:delivery') ||
+          (option.value === 20 && 'carbon:rocket') ||
           (option.value === 'pickup' && 'carbon:location') ||
           'carbon:bicycle'
         }
@@ -89,12 +92,12 @@ function OptionItem({ option, selected, disabled, sx, ...other }) {
       <Box flex="1 1 auto">
         <Box display="flex" alignItems="center" sx={{ mb: 0.5, typography: 'h6' }}>
           <Box component="span" flexGrow={1} sx={{ typography: 'subtitle1' }}>
-            {option.label}
+            {t(option.label)}
           </Box>
-          {option.value === 'pickup' ? 'Gratis' : `$${option.value}`}
+          {option.value === 'pickup' ? t('word_free') : `$${option.value}`}
         </Box>
         <Box component="span" display="flex" sx={{ typography: 'body2', color: 'text.secondary' }}>
-          {option.description}
+          {t(option.description)}
         </Box>
       </Box>
     </Box>

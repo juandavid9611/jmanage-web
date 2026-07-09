@@ -68,7 +68,8 @@ export const PRODUCT_CATEGORY_GROUP_OPTIONS = [
   { group: 'Accessories', classify: ['Shoes', 'Backpacks and bags', 'Bracelets', 'Face masks'] },
 ];
 
-export const PRODUCT_CHECKOUT_STEPS = ['Cart', 'Billing & address', 'Payment'];
+// values below are i18n keys, resolved via t() at render time (see checkout-steps.jsx).
+export const PRODUCT_CHECKOUT_STEPS = ['label_cart', 'label_billing_and_address', 'payment'];
 
 // ----------------------------------------------------------------------
 

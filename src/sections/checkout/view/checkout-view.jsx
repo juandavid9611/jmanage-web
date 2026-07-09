@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -16,6 +17,7 @@ import { CheckoutBillingAddress } from '../checkout-billing-address';
 // ----------------------------------------------------------------------
 
 export function CheckoutView() {
+  const { t } = useTranslation();
   const checkout = useCheckoutContext();
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export function CheckoutView() {
   return (
     <Container sx={{ mb: 10 }}>
       <Typography variant="h4" sx={{ my: { xs: 3, md: 5 } }}>
-        Checkout
+        {t('label_checkout')}
       </Typography>
 
       <Grid container justifyContent={checkout.completed ? 'center' : 'flex-start'}>

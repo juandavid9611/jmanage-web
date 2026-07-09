@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Step from '@mui/material/Step';
 import Stack from '@mui/material/Stack';
@@ -26,6 +28,7 @@ const StepConnector = styled(MuiStepConnector)(({ theme }) => ({
 // ----------------------------------------------------------------------
 
 export function CheckoutSteps({ steps, activeStep, sx, ...other }) {
+  const { t } = useTranslation();
   return (
     <Stepper
       alternativeLabel
@@ -40,7 +43,7 @@ export function CheckoutSteps({ steps, activeStep, sx, ...other }) {
             StepIconComponent={StepIcon}
             sx={{ [`& .${stepLabelClasses.label}`]: { fontWeight: 'fontWeightSemiBold' } }}
           >
-            {label}
+            {t(label)}
           </StepLabel>
         </Step>
       ))}

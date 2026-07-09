@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
@@ -18,6 +20,7 @@ import { IncrementerButton } from '../product/components/incrementer-button';
 // ----------------------------------------------------------------------
 
 export function CheckoutCartProduct({ row, onDelete, onDecrease, onIncrease }) {
+  const { t } = useTranslation();
   return (
     <TableRow>
       <TableCell>
@@ -39,7 +42,7 @@ export function CheckoutCartProduct({ row, onDelete, onDecrease, onIncrease }) {
               alignItems="center"
               sx={{ typography: 'body2', color: 'text.secondary' }}
             >
-              size: <Label sx={{ ml: 0.5 }}> {row.size} </Label>
+              {t('label_size_lowercase')}: <Label sx={{ ml: 0.5 }}> {row.size} </Label>
               <Divider orientation="vertical" sx={{ mx: 1, height: 16 }} />
               <ColorPreview colors={row.colors} />
             </Stack>
@@ -60,7 +63,7 @@ export function CheckoutCartProduct({ row, onDelete, onDecrease, onIncrease }) {
           />
 
           <Typography variant="caption" component="div" sx={{ color: 'text.secondary', mt: 1 }}>
-            available: {row.available}
+            {t('label_available_lowercase')}: {row.available}
           </Typography>
         </Box>
       </TableCell>
