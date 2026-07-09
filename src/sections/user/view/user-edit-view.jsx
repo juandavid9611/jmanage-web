@@ -15,7 +15,7 @@ export function UserEditView({ user: currentUser }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Edit"
+        heading={t('edit')}
         links={[
           {
             name: t('app'),

@@ -33,37 +33,39 @@ import { UserWorkspaceCard } from './user-workspace-card';
 
 // // ----------------------------------------------------------------------
 
-export const NewUserSchema = zod.object({
-  name: zod.string().min(1, { message: 'Nombre requerido!' }),
-  identityCardNumber: zod.string().min(1, { message: 'Número de documento requerido!' }),
-  email: zod
-    .string()
-    .min(1, { message: 'Correo requerido!' })
-    .email({ message: 'Dirección de correo invalida!' }),
-  phoneNumber: zod.string().min(1, { message: 'Número de teléfono requerido!' }),
-  country: schemaHelper.objectOrNull({
-    message: { required_error: 'Pais requerido!' },
-  }),
-  city: zod.string().min(1, { message: 'Ciudad requerida!' }),
-  address: zod.string().min(1, { message: 'Dirección requerida!' }),
-  rh: zod.string().min(1, { message: 'R.H requerido!' }),
-  emergencyContactName: zod
-    .string()
-    .min(1, { message: 'Nombre de contacto de emergencia requerido!' }),
-  emergencyContactPhoneNumber: zod
-    .string()
-    .min(1, { message: 'Número de teléfono contacto de emergencia requerido!' }),
-  emergencyContactRelationship: zod
-    .string()
-    .min(1, { message: 'Relación contacto de emergencia requerida!' }),
-  eps: zod.string().min(1, { message: 'Eps requerida!' }),
-  avatarUrl: zod.string().nullable(),
-  shirtNumber: zod.string().min(1, { message: 'Número de camiseta requerido!' }),
-});
+export function getNewUserSchema(t) {
+  return zod.object({
+    name: zod.string().min(1, { message: t('name_required') }),
+    identityCardNumber: zod.string().min(1, { message: t('identity_card_required') }),
+    email: zod
+      .string()
+      .min(1, { message: t('email_required') })
+      .email({ message: t('email_invalid') }),
+    phoneNumber: zod.string().min(1, { message: t('phone_number_required') }),
+    country: schemaHelper.objectOrNull({
+      message: { required_error: t('country_required') },
+    }),
+    city: zod.string().min(1, { message: t('city_required') }),
+    address: zod.string().min(1, { message: t('address_required') }),
+    rh: zod.string().min(1, { message: t('rh_required') }),
+    emergencyContactName: zod.string().min(1, { message: t('emergency_contact_name_required') }),
+    emergencyContactPhoneNumber: zod
+      .string()
+      .min(1, { message: t('emergency_contact_phone_required') }),
+    emergencyContactRelationship: zod
+      .string()
+      .min(1, { message: t('emergency_contact_relationship_required') }),
+    eps: zod.string().min(1, { message: t('eps_required') }),
+    avatarUrl: zod.string().nullable(),
+    shirtNumber: zod.string().min(1, { message: t('shirt_number_required') }),
+  });
+}
 
 export function UserNewEditForm({ currentUser, isAdmin }) {
   const router = useRouter();
   const { t } = useTranslation();
+
+  const NewUserSchema = useMemo(() => getNewUserSchema(t), [t]);
 
   const defaultValues = useMemo(
     () => ({
@@ -109,7 +111,7 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
     try {
       data.status = currentUser.status;
       await updateUser(currentUser.id, data);
-      toast.success('Update success!');
+      toast.success(t('update_success'));
       if (isAdmin) {
         router.push(paths.dashboard.admin.user.list);
       } else {
@@ -131,13 +133,13 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
       const updateAvatarUrlPromise = await updateAvatarUrl(values.id, fileKey);
       const allPromises = Promise.all([uploadFilePromise, updateAvatarUrlPromise]);
       toast.promise(allPromises, {
-        loading: 'Loading...',
-        success: () => 'All files uploaded successfully',
-        error: 'File upload failed',
+        loading: t('label_loading'),
+        success: () => t('label_all_files_uploaded'),
+        error: t('label_file_upload_error'),
       });
       setValue('avatarUrl', getPresignedUrl);
     },
-    [setValue, values.id]
+    [setValue, values.id, t]
   );
 
   return (
@@ -162,8 +164,8 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
                       color: 'text.disabled',
                     }}
                   >
-                    Allowed *.jpeg, *.jpg, *.png, *.gif
-                    <br /> max size of {fData(3145728)}
+                    {t('label_allowed_image_formats')}
+                    <br /> {t('label_max_size_of')} {fData(3145728)}
                   </Typography>
                 }
               />
@@ -194,10 +196,10 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
                   label={
                     <>
                       <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                        Deshabilitado
+                        {t('disabled')}
                       </Typography>
                       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        El usuario no podra entrar a la plataforma o recibir notificaciones
+                        {t('label_disabled_user_body')}
                       </Typography>
                     </>
                   }
@@ -232,8 +234,8 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
               <Field.CountrySelect
                 fullWidth
                 name="country"
-                label="Country"
-                placeholder="Choose a country"
+                label={t('country')}
+                placeholder={t('label_choose_a_country')}
               />
               <Field.Text name="city" label={t('city')} />
               <Field.Text name="address" label={t('address')} />
@@ -243,7 +245,7 @@ export function UserNewEditForm({ currentUser, isAdmin }) {
             </Box>
 
             <Stack spacing={3} px={3} py={3}>
-              <Typography variant="subtitle2">Contacto de emergencia</Typography>
+              <Typography variant="subtitle2">{t('label_emergency_contact')}</Typography>
             </Stack>
 
             <Box

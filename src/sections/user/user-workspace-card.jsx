@@ -39,10 +39,7 @@ export function UserWorkspaceCard() {
 
   return (
     <Card sx={{ mb: 3 }}>
-      <CardHeader
-        title="Mi Categoría"
-        subheader="Selecciona la categoría a la que perteneces"
-      />
+      <CardHeader title={t('label_my_category')} subheader={t('label_select_your_category')} />
 
       <CardContent>
         {selectedWorkspace && (
@@ -104,9 +101,7 @@ export function UserWorkspaceCard() {
                 <Stack direction="row" alignItems="center" spacing={1.5} sx={{ width: '100%' }}>
                   <Avatar src={ws.logo} alt={ws.name} sx={{ width: 32, height: 32 }} />
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>{ws.name}</Box>
-                  {ws.role && (
-                    <Label color={ROLE_COLORS[ws.role] || 'default'}>{t(ws.role)}</Label>
-                  )}
+                  {ws.role && <Label color={ROLE_COLORS[ws.role] || 'default'}>{t(ws.role)}</Label>}
                 </Stack>
               </MenuItem>
             ))}
