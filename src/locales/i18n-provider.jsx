@@ -1,19 +1,26 @@
 import i18next from 'i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
+import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next, I18nextProvider as Provider } from 'react-i18next';
+
+import { localStorageGetItem } from 'src/utils/storage-available';
 
 import { i18nOptions, fallbackLng } from './config-locales';
 
 // ----------------------------------------------------------------------
 
-// This app's UI is Spanish-only in practice — many labels are hardcoded Spanish
-// with no English counterpart, so switching to 'en' produces a broken mixed-
-// language UI. Always init with fallbackLng ('es'), ignoring any 'en' a user
-// previously toggled and got cached in localStorage.
+/**
+ * [1] localStorage
+ * Auto detection:
+ * const lng = localStorageGetItem('i18nextLng')
+ */
+const lng = localStorageGetItem('i18nextLng', fallbackLng);
+
 i18next
+  .use(LanguageDetector)
   .use(initReactI18next)
   .use(resourcesToBackend((lang, ns) => import(`./langs/${lang}/${ns}.json`)))
-  .init({ ...i18nOptions(fallbackLng) });
+  .init({ ...i18nOptions(lng), detection: { caches: ['localStorage'] } });
 
 // ----------------------------------------------------------------------
 
