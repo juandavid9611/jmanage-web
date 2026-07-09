@@ -33,6 +33,25 @@ export function useGetUsers(selectedWorkspace, includeDisabled = false) {
   return memoizedValue;
 }
 
+/**
+ * Team ownership lives on the team record (owner_user_id), not the user
+ * record, so the Usuarios list for tournament accounts needs this separately
+ * to show which team each team-owner user actually owns.
+ */
+export function useGetTeamOwnerTeams(enabled) {
+  const { data, isLoading, error } = useSWR(enabled ? `${URL}/team-owners` : null, fetcher);
+
+  const memoizedValue = useMemo(
+    () => ({
+      teamOwnerTeams: data || [],
+      teamOwnerTeamsLoading: isLoading,
+      teamOwnerTeamsError: error,
+    }),
+    [data, error, isLoading]
+  );
+  return memoizedValue;
+}
+
 export function useGetUser(userId) {
   const { data, isLoading, error, isValidating } = useSWR(`${URL}/${userId}`, fetcher);
 

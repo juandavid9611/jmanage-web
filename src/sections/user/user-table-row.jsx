@@ -32,7 +32,15 @@ const ROLE_COLORS = {
 
 // ----------------------------------------------------------------------
 
-export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
+export function UserTableRow({
+  row,
+  selected,
+  onEditRow,
+  onSelectRow,
+  onDeleteRow,
+  teamName,
+  isTournamentAccount,
+}) {
   const confirm = useBoolean();
   const popover = usePopover();
   const quickEdit = useBoolean();
@@ -66,11 +74,17 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.identityCardNumber)}</TableCell>
+        {isTournamentAccount ? (
+          <TableCell sx={{ whiteSpace: 'nowrap' }}>{teamName || '—'}</TableCell>
+        ) : (
+          <>
+            <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.identityCardNumber)}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.shirtNumber)}</TableCell>
+            <TableCell sx={{ whiteSpace: 'nowrap' }}>{t(row.shirtNumber)}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.eps}</TableCell>
+            <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.eps}</TableCell>
+          </>
+        )}
 
         <TableCell>
           <Label variant="soft" color={ROLE_COLORS[role] || 'default'}>
@@ -94,7 +108,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
         <TableCell>
           <Stack direction="row" alignItems="center">
-            <Tooltip title="Quick Edit" placement="top" arrow>
+            <Tooltip title="Edición rápida" placement="top" arrow>
               <IconButton
                 color={quickEdit.value ? 'inherit' : 'default'}
                 onClick={quickEdit.onTrue}
@@ -161,7 +175,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
+        title={t('delete')}
         content={`${t('delete_confirmation')}, ${t('delete_confirmation_2')}`}
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
