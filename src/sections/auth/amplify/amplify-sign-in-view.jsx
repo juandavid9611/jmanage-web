@@ -1,6 +1,7 @@
 import { z as zod } from 'zod';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Link from '@mui/material/Link';
@@ -26,21 +27,24 @@ import { signInWithPassword } from 'src/auth/context/amplify';
 
 // ----------------------------------------------------------------------
 
-export const SignInSchema = zod.object({
-  email: zod
-    .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
-  password: zod
-    .string()
-    .min(1, { message: 'Password is required!' })
-    .min(6, { message: 'Password must be at least 6 characters!' }),
-});
+export function getSignInSchema(t) {
+  return zod.object({
+    email: zod
+      .string()
+      .min(1, { message: t('email_required') })
+      .email({ message: t('email_invalid') }),
+    password: zod
+      .string()
+      .min(1, { message: t('password_required') })
+      .min(6, { message: t('password_min') }),
+  });
+}
 
 // ----------------------------------------------------------------------
 
 export function AmplifySignInView() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const password = useBoolean();
 
@@ -52,6 +56,8 @@ export function AmplifySignInView() {
     email: '',
     password: '',
   };
+
+  const SignInSchema = useMemo(() => getSignInSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(SignInSchema),
@@ -79,15 +85,15 @@ export function AmplifySignInView() {
 
   const renderHead = (
     <Stack alignItems="center" spacing={1.5} sx={{ mb: 5 }}>
-      <Typography variant="h5">Ingresa a tu cuenta</Typography>
+      <Typography variant="h5">{t('sign_in_heading')}</Typography>
 
       <Stack direction="row" spacing={0.5}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Aún no tienes una cuenta?
+          {t('no_account_yet')}
         </Typography>
 
         <Link component={RouterLink} href={paths.auth.amplify.signUp} variant="subtitle2">
-          Registrate
+          {t('sign_up_link')}
         </Link>
       </Stack>
     </Stack>
@@ -95,7 +101,7 @@ export function AmplifySignInView() {
 
   const renderForm = (
     <Stack spacing={3}>
-      <Field.Text name="email" label="Correo" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label={t('email_label')} InputLabelProps={{ shrink: true }} />
 
       <Stack spacing={1.5}>
         <Link
@@ -105,13 +111,13 @@ export function AmplifySignInView() {
           color="inherit"
           sx={{ alignSelf: 'flex-end' }}
         >
-          ¿Olvidaste tu contraseña?
+          {t('forgot_password')}
         </Link>
 
         <Field.Text
           name="password"
-          label="Contraseña"
-          placeholder="6+ caracteres"
+          label={t('password')}
+          placeholder={t('password_placeholder_hint')}
           type={password.value ? 'text' : 'password'}
           InputLabelProps={{ shrink: true }}
           InputProps={{
@@ -133,9 +139,9 @@ export function AmplifySignInView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Iniciar sesión..."
+        loadingIndicator={t('signing_in')}
       >
-        Iniciar sesión
+        {t('sign_in')}
       </LoadingButton>
     </Stack>
   );
