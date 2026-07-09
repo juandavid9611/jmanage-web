@@ -15,11 +15,11 @@ export function InvoiceCreateView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Crear nuevo pago"
+        heading={t('heading_create_payment')}
         links={[
           { name: t('app'), href: paths.dashboard.root },
           { name: t('invoice'), href: paths.dashboard.admin.invoice.root },
-          { name: 'Nuevo Cobro' },
+          { name: t('label_new_charge') },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />

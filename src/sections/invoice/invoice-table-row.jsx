@@ -124,7 +124,7 @@ export function InvoiceTableRow({
           <Checkbox
             checked={selected}
             onClick={onSelectRow}
-            inputProps={{ id: `row-checkbox-${row.id}`, 'aria-label': `Row checkbox` }}
+            inputProps={{ id: `row-checkbox-${row.id}`, 'aria-label': t('label_row_checkbox') }}
           />
         </TableCell>
       </TableRow>
@@ -165,7 +165,7 @@ export function InvoiceTableRow({
         open={confirm.value}
         onClose={confirm.onFalse}
         title={t('delete')}
-        content={`${t('delete_confirmation')} este pago?`}
+        content={`${t('delete_confirmation')} ${t('delete_confirmation_payment')}`}
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
             {t('delete')}

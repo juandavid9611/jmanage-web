@@ -125,31 +125,26 @@ export function InvoiceListView() {
   const TABS = [
     {
       value: 'all',
-      label: 'All',
       color: 'default',
       count: tableData.length,
     },
     {
       value: 'approval_pending',
-      label: 'Approving',
       color: 'secondary',
       count: getInvoiceLength('approval_pending'),
     },
     {
       value: 'pending',
-      label: 'Pending',
       color: 'warning',
       count: getInvoiceLength('pending'),
     },
     {
       value: 'overdue',
-      label: 'Overdue',
       color: 'error',
       count: getInvoiceLength('overdue'),
     },
     {
       value: 'paid',
-      label: 'Paid',
       color: 'success',
       count: getInvoiceLength('paid'),
     },
@@ -160,13 +155,13 @@ export function InvoiceListView() {
       deletePaymentRequest(id, selectedWorkspace?.id);
       const deleteRow = tableData.filter((row) => row.id !== id);
 
-      toast.success('Delete success!');
+      toast.success(t('delete_success'));
 
       setTableData(deleteRow);
 
       table.onUpdatePageDeleteRow(dataInPage.length);
     },
-    [dataInPage.length, table, tableData, selectedWorkspace?.id]
+    [dataInPage.length, table, tableData, selectedWorkspace?.id, t]
   );
 
   const handleDeleteRows = useCallback(() => {
@@ -347,19 +342,19 @@ export function InvoiceListView() {
               }}
               action={
                 <Stack direction="row">
-                  <Tooltip title="Enviado">
+                  <Tooltip title={t('label_sent')}>
                     <IconButton color="primary">
                       <Iconify icon="iconamoon:send-fill" />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Descargar">
+                  <Tooltip title={t('label_download')}>
                     <IconButton color="primary">
                       <Iconify icon="eva:download-outline" />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Imprimir">
+                  <Tooltip title={t('print')}>
                     <IconButton color="primary">
                       <Iconify icon="solar:printer-minimalistic-bold" />
                     </IconButton>

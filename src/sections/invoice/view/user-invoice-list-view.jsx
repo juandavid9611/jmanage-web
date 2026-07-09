@@ -111,67 +111,85 @@ export function UserInvoiceListView() {
     steps: [
       {
         target: '#invoice-analytics-summary',
-        title: '💰 Gestiona tus Pagos',
+        title: `💰 ${t('tour_invoice_step1_title')}`,
         placement: 'bottom',
         disableBeacon: true,
         hideCloseButton: true,
         content: (
           <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-            Aquí puedes ver todas tus solicitudes de pago del club. Revisa el estado de tus pagos
-            y sube comprobantes fácilmente.
+            {t('tour_invoice_step1_body')}
           </Box>
         ),
       },
       {
         target: '#invoice-analytics-summary',
-        title: '📊 Resumen de Pagos',
+        title: `📊 ${t('tour_invoice_step2_title')}`,
         placement: 'bottom',
         disableBeacon: true,
         content: (
           <Stack spacing={1} sx={{ typography: 'body2', color: 'text.secondary' }}>
-            <Box>
-              En la parte superior puedes ver un resumen de tus pagos:
-            </Box>
+            <Box>{t('tour_invoice_step2_body')}</Box>
             <Box component="ul" sx={{ pl: 2, m: 0 }}>
-              <li><strong style={{ color: theme.vars.palette.error.main }}>Vencidos:</strong> Pagos que ya pasaron su fecha límite</li>
-              <li><strong style={{ color: theme.vars.palette.warning.main }}>Pendientes:</strong> Pagos por realizar</li>
-              <li><strong style={{ color: theme.palette.secondary.main }}>En Aprobación:</strong> Comprobantes enviados esperando validación</li>
-              <li><strong style={{ color: theme.vars.palette.success.main }}>Pagados:</strong> Pagos completados y aprobados</li>
+              <li>
+                <strong style={{ color: theme.vars.palette.error.main }}>{t('overdue')}:</strong>{' '}
+                {t('tour_invoice_step2_overdue')}
+              </li>
+              <li>
+                <strong style={{ color: theme.vars.palette.warning.main }}>{t('pending')}:</strong>{' '}
+                {t('tour_invoice_step2_pending')}
+              </li>
+              <li>
+                <strong style={{ color: theme.palette.secondary.main }}>
+                  {t('approval_pending')}:
+                </strong>{' '}
+                {t('tour_invoice_step2_approval_pending')}
+              </li>
+              <li>
+                <strong style={{ color: theme.vars.palette.success.main }}>{t('paid')}:</strong>{' '}
+                {t('tour_invoice_step2_paid')}
+              </li>
             </Box>
           </Stack>
         ),
       },
       {
         target: '#invoice-table-container',
-        title: '📤 Cómo Subir un Comprobante',
+        title: `📤 ${t('tour_invoice_step3_title')}`,
         placement: 'top',
         disableBeacon: true,
         content: (
           <Stack spacing={1.5} sx={{ typography: 'body2', color: 'text.secondary' }}>
             <Box>
-              Para realizar un pago, sube tu comprobante haciendo clic en el botón de
-              <strong> subir </strong>
-              <Iconify 
-                icon="lets-icons:upload-fill" 
-                sx={{ ml: 0.5, verticalAlign: 'middle', color: 'primary.main' }} 
+              {t('tour_invoice_step3_body_prefix')}
+              <strong> {t('label_upload_lowercase')} </strong>
+              <Iconify
+                icon="lets-icons:upload-fill"
+                sx={{ ml: 0.5, verticalAlign: 'middle', color: 'primary.main' }}
               />
-              que aparece en cada fila de la tabla.
+              {t('tour_invoice_step3_body_suffix')}
             </Box>
-            <Box sx={{ fontSize: '0.875rem', opacity: 0.8, bgcolor: 'action.hover', p: 1.5, borderRadius: 1 }}>
-              💡 <strong>Tip:</strong> Busca el ícono de subir al inicio de cada fila de pago
+            <Box
+              sx={{
+                fontSize: '0.875rem',
+                opacity: 0.8,
+                bgcolor: 'action.hover',
+                p: 1.5,
+                borderRadius: 1,
+              }}
+            >
+              💡 <strong>{t('word_tip')}:</strong> {t('tour_invoice_step3_tip')}
             </Box>
           </Stack>
         ),
       },
       {
         target: '#invoice-status-tabs',
-        title: '🔍 Filtra y Busca',
+        title: `🔍 ${t('tour_invoice_step4_title')}`,
         placement: 'bottom',
         disableBeacon: true,
         content: (
           <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-            Usa las pestañas y la barra de búsqueda para filtrar tus pagos por estado,
-            concepto o rango de fechas. ¡Encuentra rápidamente lo que necesitas!
+            {t('tour_invoice_step4_body')}
           </Box>
         ),
       },
@@ -240,31 +258,26 @@ export function UserInvoiceListView() {
   const TABS = [
     {
       value: 'all',
-      label: 'All',
       color: 'default',
       count: tableData.length,
     },
     {
       value: 'approval_pending',
-      label: 'Approving',
       color: 'secondary',
       count: getInvoiceLength('approval_pending'),
     },
     {
       value: 'pending',
-      label: 'Pending',
       color: 'warning',
       count: getInvoiceLength('pending'),
     },
     {
       value: 'overdue',
-      label: 'Overdue',
       color: 'error',
       count: getInvoiceLength('overdue'),
     },
     {
       value: 'paid',
-      label: 'Paid',
       color: 'success',
       count: getInvoiceLength('paid'),
     },
@@ -301,223 +314,223 @@ export function UserInvoiceListView() {
         disableOverlayClose
       />
       <DashboardContent>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: { xs: 3, md: 5 } }}>
-        <CustomBreadcrumbs
-          heading={t('user_invoices')}
-          links={[{ name: t('app'), href: paths.dashboard.root }, { name: t('list') }]}
-          sx={{ mb: 0, flexGrow: 1 }}
-        />
-        <Tooltip title="Ver tutorial de pagos">
-          <IconButton 
-            onClick={() => {
-              setHasSeenInvoiceTour(false);
-              walktour.setRun(true);
-            }}
-            color="primary"
-            sx={{ 
-              bgcolor: 'action.hover',
-              '&:hover': { bgcolor: 'action.selected' }
-            }}
-          >
-            <Iconify icon="eva:question-mark-circle-fill" width={24} />
-          </IconButton>
-        </Tooltip>
-      </Stack>
-
-      <Card id="invoice-analytics-summary" sx={{ mb: { xs: 3, md: 5 } }}>
-        <Scrollbar sx={{ minHeight: 108 }}>
-          <Stack
-            direction="row"
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
-            sx={{ py: 2 }}
-          >
-            <InvoiceAnalytic
-              title={t('overdue')}
-              total={getInvoiceLength('overdue')}
-              percent={getPercentByStatus('overdue')}
-              price={getTotalAmount('overdue')}
-              icon="solar:bell-bing-bold-duotone"
-              color={theme.vars.palette.error.main}
-            />
-            <InvoiceAnalytic
-              title={t('pending')}
-              total={getInvoiceLength('pending')}
-              percent={getPercentByStatus('pending')}
-              price={getTotalAmount('pending')}
-              icon="solar:sort-by-time-bold-duotone"
-              color={theme.vars.palette.warning.main}
-            />
-
-            <InvoiceAnalytic
-              title={t('approval_pending')}
-              total={getInvoiceLength('approval_pending')}
-              percent={getPercentByStatus('approval_pending')}
-              price={getTotalAmount('approval_pending')}
-              icon="solar:file-corrupted-bold-duotone"
-              color={theme.palette.secondary.main}
-            />
-            <InvoiceAnalytic
-              title={t('paid')}
-              total={getInvoiceLength('paid')}
-              percent={getPercentByStatus('paid')}
-              price={getTotalAmount('paid')}
-              icon="solar:file-check-bold-duotone"
-              color={theme.vars.palette.success.main}
-            />
-            <InvoiceAnalytic
-              title={t('total')}
-              total={tableData.length}
-              percent={100}
-              price={sumBy(tableData, (invoice) => invoice.totalAmount)}
-              icon="solar:bill-list-bold-duotone"
-              color={theme.vars.palette.info.main}
-            />
-          </Stack>
-        </Scrollbar>
-      </Card>
-
-      <Card>
-        <Tabs
-          id="invoice-status-tabs"
-          value={filters.state.status}
-          onChange={handleFilterStatus}
-          sx={{
-            px: 2.5,
-            boxShadow: `inset 0 -2px 0 0 ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              key={tab.value}
-              value={tab.value}
-              label={t(tab.value)}
-              iconPosition="end"
-              icon={
-                <Label
-                  variant={
-                    ((tab.value === 'all' || tab.value === filters.state.status) && 'filled') ||
-                    'soft'
-                  }
-                  color={tab.color}
-                >
-                  {tab.count}
-                </Label>
-              }
-            />
-          ))}
-        </Tabs>
-
-        <InvoiceTableToolbar
-          filters={filters}
-          dateError={dateError}
-          onResetPage={table.onResetPage}
-        />
-
-        {canReset && (
-          <InvoiceTableFiltersResult
-            filters={filters}
-            onResetPage={table.onResetPage}
-            totalResults={dataFiltered.length}
-            sx={{ p: 2.5, pt: 0 }}
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: { xs: 3, md: 5 } }}>
+          <CustomBreadcrumbs
+            heading={t('user_invoices')}
+            links={[{ name: t('app'), href: paths.dashboard.root }, { name: t('list') }]}
+            sx={{ mb: 0, flexGrow: 1 }}
           />
-        )}
+          <Tooltip title={t('tour_invoice_view_tutorial')}>
+            <IconButton
+              onClick={() => {
+                setHasSeenInvoiceTour(false);
+                walktour.setRun(true);
+              }}
+              color="primary"
+              sx={{
+                bgcolor: 'action.hover',
+                '&:hover': { bgcolor: 'action.selected' },
+              }}
+            >
+              <Iconify icon="eva:question-mark-circle-fill" width={24} />
+            </IconButton>
+          </Tooltip>
+        </Stack>
 
-        <Box id="invoice-table-container" sx={{ position: 'relative' }}>
-          <TableSelectedAction
-            dense={table.dense}
-            numSelected={table.selected.length}
-            rowCount={dataFiltered.length}
-            onSelectAllRows={(checked) => {
-              table.onSelectAllRows(
-                checked,
-                dataFiltered.map((row) => row.id)
-              );
-            }}
-            action={
-              <Stack direction="row">
-                <Tooltip title="Sent">
-                  <IconButton color="primary">
-                    <Iconify icon="iconamoon:send-fill" />
-                  </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Download">
-                  <IconButton color="primary">
-                    <Iconify icon="eva:download-outline" />
-                  </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Print">
-                  <IconButton color="primary">
-                    <Iconify icon="solar:printer-minimalistic-bold" />
-                  </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Delete">
-                  <IconButton color="primary" onClick={confirm.onTrue}>
-                    <Iconify icon="solar:trash-bin-trash-bold" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-            }
-          />
-
-          <Scrollbar sx={{ minHeight: 444 }}>
-            <Table size={table.dense ? 'small' : 'medium'} sx={{ minWidth: 800 }}>
-              <TableHeadCustom
-                order={table.order}
-                orderBy={table.orderBy}
-                headLabel={get_table_head(t, false)}
-                rowCount={dataFiltered.length}
-                numSelected={table.selected.length}
-                onSort={table.onSort}
-                onSelectAllRows={(checked) =>
-                  table.onSelectAllRows(
-                    checked,
-                    dataFiltered.map((row) => row.id)
-                  )
-                }
+        <Card id="invoice-analytics-summary" sx={{ mb: { xs: 3, md: 5 } }}>
+          <Scrollbar sx={{ minHeight: 108 }}>
+            <Stack
+              direction="row"
+              divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+              sx={{ py: 2 }}
+            >
+              <InvoiceAnalytic
+                title={t('overdue')}
+                total={getInvoiceLength('overdue')}
+                percent={getPercentByStatus('overdue')}
+                price={getTotalAmount('overdue')}
+                icon="solar:bell-bing-bold-duotone"
+                color={theme.vars.palette.error.main}
+              />
+              <InvoiceAnalytic
+                title={t('pending')}
+                total={getInvoiceLength('pending')}
+                percent={getPercentByStatus('pending')}
+                price={getTotalAmount('pending')}
+                icon="solar:sort-by-time-bold-duotone"
+                color={theme.vars.palette.warning.main}
               />
 
-              <TableBody>
-                {dataFiltered
-                  .slice(
-                    table.page * table.rowsPerPage,
-                    table.page * table.rowsPerPage + table.rowsPerPage
-                  )
-                  .map((row) => (
-                    <InvoiceTableRow
-                      key={row.id}
-                      row={row}
-                      selected={table.selected.includes(row.id)}
-                      onSelectRow={() => table.onSelectRow(row.id)}
-                      onEditRow={() => handleEditRow(row.id)}
-                      isAdmin={false}
-                    />
-                  ))}
+              <InvoiceAnalytic
+                title={t('approval_pending')}
+                total={getInvoiceLength('approval_pending')}
+                percent={getPercentByStatus('approval_pending')}
+                price={getTotalAmount('approval_pending')}
+                icon="solar:file-corrupted-bold-duotone"
+                color={theme.palette.secondary.main}
+              />
+              <InvoiceAnalytic
+                title={t('paid')}
+                total={getInvoiceLength('paid')}
+                percent={getPercentByStatus('paid')}
+                price={getTotalAmount('paid')}
+                icon="solar:file-check-bold-duotone"
+                color={theme.vars.palette.success.main}
+              />
+              <InvoiceAnalytic
+                title={t('total')}
+                total={tableData.length}
+                percent={100}
+                price={sumBy(tableData, (invoice) => invoice.totalAmount)}
+                icon="solar:bill-list-bold-duotone"
+                color={theme.vars.palette.info.main}
+              />
+            </Stack>
+          </Scrollbar>
+        </Card>
 
-                <TableEmptyRows
-                  height={table.dense ? 56 : 56 + 20}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
+        <Card>
+          <Tabs
+            id="invoice-status-tabs"
+            value={filters.state.status}
+            onChange={handleFilterStatus}
+            sx={{
+              px: 2.5,
+              boxShadow: `inset 0 -2px 0 0 ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
+            }}
+          >
+            {TABS.map((tab) => (
+              <Tab
+                key={tab.value}
+                value={tab.value}
+                label={t(tab.value)}
+                iconPosition="end"
+                icon={
+                  <Label
+                    variant={
+                      ((tab.value === 'all' || tab.value === filters.state.status) && 'filled') ||
+                      'soft'
+                    }
+                    color={tab.color}
+                  >
+                    {tab.count}
+                  </Label>
+                }
+              />
+            ))}
+          </Tabs>
+
+          <InvoiceTableToolbar
+            filters={filters}
+            dateError={dateError}
+            onResetPage={table.onResetPage}
+          />
+
+          {canReset && (
+            <InvoiceTableFiltersResult
+              filters={filters}
+              onResetPage={table.onResetPage}
+              totalResults={dataFiltered.length}
+              sx={{ p: 2.5, pt: 0 }}
+            />
+          )}
+
+          <Box id="invoice-table-container" sx={{ position: 'relative' }}>
+            <TableSelectedAction
+              dense={table.dense}
+              numSelected={table.selected.length}
+              rowCount={dataFiltered.length}
+              onSelectAllRows={(checked) => {
+                table.onSelectAllRows(
+                  checked,
+                  dataFiltered.map((row) => row.id)
+                );
+              }}
+              action={
+                <Stack direction="row">
+                  <Tooltip title={t('label_sent')}>
+                    <IconButton color="primary">
+                      <Iconify icon="iconamoon:send-fill" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title={t('label_download')}>
+                    <IconButton color="primary">
+                      <Iconify icon="eva:download-outline" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title={t('print')}>
+                    <IconButton color="primary">
+                      <Iconify icon="solar:printer-minimalistic-bold" />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title={t('delete')}>
+                    <IconButton color="primary" onClick={confirm.onTrue}>
+                      <Iconify icon="solar:trash-bin-trash-bold" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+              }
+            />
+
+            <Scrollbar sx={{ minHeight: 444 }}>
+              <Table size={table.dense ? 'small' : 'medium'} sx={{ minWidth: 800 }}>
+                <TableHeadCustom
+                  order={table.order}
+                  orderBy={table.orderBy}
+                  headLabel={get_table_head(t, false)}
+                  rowCount={dataFiltered.length}
+                  numSelected={table.selected.length}
+                  onSort={table.onSort}
+                  onSelectAllRows={(checked) =>
+                    table.onSelectAllRows(
+                      checked,
+                      dataFiltered.map((row) => row.id)
+                    )
+                  }
                 />
 
-                <TableNoData notFound={notFound} />
-              </TableBody>
-            </Table>
-          </Scrollbar>
-        </Box>
+                <TableBody>
+                  {dataFiltered
+                    .slice(
+                      table.page * table.rowsPerPage,
+                      table.page * table.rowsPerPage + table.rowsPerPage
+                    )
+                    .map((row) => (
+                      <InvoiceTableRow
+                        key={row.id}
+                        row={row}
+                        selected={table.selected.includes(row.id)}
+                        onSelectRow={() => table.onSelectRow(row.id)}
+                        onEditRow={() => handleEditRow(row.id)}
+                        isAdmin={false}
+                      />
+                    ))}
 
-        <TablePaginationCustom
-          page={table.page}
-          dense={table.dense}
-          count={dataFiltered.length}
-          rowsPerPage={table.rowsPerPage}
-          onPageChange={table.onChangePage}
-          onChangeDense={table.onChangeDense}
-          onRowsPerPageChange={table.onChangeRowsPerPage}
-        />
-      </Card>
-    </DashboardContent>
+                  <TableEmptyRows
+                    height={table.dense ? 56 : 56 + 20}
+                    emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
+                  />
+
+                  <TableNoData notFound={notFound} />
+                </TableBody>
+              </Table>
+            </Scrollbar>
+          </Box>
+
+          <TablePaginationCustom
+            page={table.page}
+            dense={table.dense}
+            count={dataFiltered.length}
+            rowsPerPage={table.rowsPerPage}
+            onPageChange={table.onChangePage}
+            onChangeDense={table.onChangeDense}
+            onRowsPerPageChange={table.onChangeRowsPerPage}
+          />
+        </Card>
+      </DashboardContent>
     </>
   );
 }

@@ -128,13 +128,13 @@ export function UserListView() {
       deleteUser(id);
       const deleteRow = tableData.filter((row) => row.id !== id);
 
-      toast.success('¡Eliminado con éxito!');
+      toast.success(t('delete_success'));
 
       setTableData(deleteRow);
 
       table.onUpdatePageDeleteRow(dataInPage.length);
     },
-    [dataInPage.length, table, tableData]
+    [dataInPage.length, table, tableData, t]
   );
 
   const handleDeleteRows = useCallback(() => {
@@ -185,7 +185,7 @@ export function UserListView() {
               startIcon={<Iconify icon="mingcute:add-line" />}
               onClick={adminInviteDialog.onTrue}
             >
-              Crear administrador
+              {t('label_create_admin')}
             </Button>
           }
           sx={{
