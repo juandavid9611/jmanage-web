@@ -61,7 +61,6 @@ function get_table_head(t) {
     { id: 'price', label: t('amount') },
     { id: 'status', label: t('status') },
     { id: 'concept', label: t('concept') },
-    { id: 'createDate', label: t('creation') },
     { id: 'dueDate', label: t('due') },
     { id: '', width: 88 },
   ];
