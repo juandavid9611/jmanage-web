@@ -7,6 +7,7 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 
 import { varAlpha } from 'src/theme/styles';
+import { LanguagePopover } from 'src/layouts/components/language-popover';
 
 import { Logo } from 'src/components/logo';
 
@@ -17,6 +18,11 @@ const NAV_LINKS = [
   { label: 'Clubes', href: '#clubs' },
   { label: 'Funciones', href: '#features' },
   { label: 'Resultados', href: '#stats' },
+];
+
+const LANGS = [
+  { value: 'es', label: 'Spanish', countryCode: 'CO' },
+  { value: 'en', label: 'English', countryCode: 'GB' },
 ];
 
 // ----------------------------------------------------------------------
@@ -40,10 +46,16 @@ export function LandingNav({ basePath = '' }) {
     <Box
       component="header"
       sx={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
         transition: 'all 0.35s ease',
         backdropFilter: scrolled ? 'blur(20px) saturate(1.6)' : 'none',
-        bgcolor: scrolled ? (t) => varAlpha(t.vars.palette.background.defaultChannel, 0.88) : 'transparent',
+        bgcolor: scrolled
+          ? (t) => varAlpha(t.vars.palette.background.defaultChannel, 0.88)
+          : 'transparent',
         borderBottom: '1px solid',
         borderColor: scrolled
           ? (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.1)
@@ -54,7 +66,12 @@ export function LandingNav({ basePath = '' }) {
       }}
     >
       <Container>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ height: 64 }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ height: 64 }}
+        >
           <Logo href="/" />
 
           <Stack direction="row" spacing={3.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
@@ -65,8 +82,11 @@ export function LandingNav({ basePath = '' }) {
                 href={`${basePath}${link.href}`}
                 variant="body2"
                 sx={{
-                  fontWeight: 500, color: 'text.secondary', textDecoration: 'none',
-                  transition: 'color 0.2s', '&:hover': { color: 'text.primary' },
+                  fontWeight: 500,
+                  color: 'text.secondary',
+                  textDecoration: 'none',
+                  transition: 'color 0.2s',
+                  '&:hover': { color: 'text.primary' },
                 }}
               >
                 {link.label}
@@ -75,6 +95,8 @@ export function LandingNav({ basePath = '' }) {
           </Stack>
 
           <Stack direction="row" spacing={1} alignItems="center">
+            <LanguagePopover data={LANGS} />
+
             <Button
               size="small"
               variant="contained"
