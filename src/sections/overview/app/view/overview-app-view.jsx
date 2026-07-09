@@ -83,14 +83,14 @@ export function OverviewAppView() {
   const walktourSteps = [
     {
       target: 'body',
-      title: '🏟️ Selecciona tu Workspace',
+      title: `🏟️ ${t('label_walktour_select_workspace_title')}`,
       placement: 'center',
       hideCloseButton: true,
-      nextButtonText: workspaceChanged ? 'Guardar' : undefined,
+      nextButtonText: workspaceChanged ? t('label_save') : undefined,
       content: (
         <Stack spacing={1.5}>
           <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-            Selecciona la categoría a la que perteneces. Puedes cambiarlo después desde tu perfil.
+            {t('label_walktour_select_workspace_body')}
           </Box>
           <WalktourWorkspaceSelector
             workspaces={allWorkspaces}
@@ -103,55 +103,55 @@ export function OverviewAppView() {
     },
     {
       target: 'body',
-      title: '🎉 Nueva Característica: Documentos!',
+      title: `🎉 ${t('label_walktour_documents_feature_title')}`,
       placement: 'center',
       hideCloseButton: true,
       content: (
         <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-          ¡Hemos agregado una potente función de Documentos! Ahora puedes ver todos los documentos
-          de tu Club al instante.
+          {t('label_walktour_documents_feature_body')}
         </Box>
       ),
     },
     {
       target: 'body',
-      title: 'Encuéntralo en la Barra Lateral 📁',
+      title: `${t('label_walktour_find_sidebar_title')} 📁`,
       placement: 'center',
       content: (
         <Stack spacing={1.5} sx={{ typography: 'body2', color: 'text.secondary' }}>
           <Box>
-            Busca <strong>&quot;Documentos&quot;</strong> en la barra lateral izquierda bajo la
-            sección de Gestión principal.
+            {t('label_walktour_find_sidebar_body_prefix')}{' '}
+            <strong>&quot;{t('nav_documents')}&quot;</strong>{' '}
+            {t('label_walktour_find_sidebar_body_suffix')}
           </Box>
           <Box sx={{ fontSize: '0.875rem', opacity: 0.8 }}>
-            👈 Está en la barra lateral a la izquierda
+            👈 {t('label_walktour_sidebar_hint')}
           </Box>
         </Stack>
       ),
     },
     {
       target: 'body',
-      title: 'Ver y Descargar ⚡',
+      title: `${t('label_walktour_view_download_title')} ⚡`,
       placement: 'center',
       content: (
         <Stack spacing={1} sx={{ typography: 'body2', color: 'text.secondary' }}>
           <Box>
-            <strong>Ver:</strong> Previsualiza PDFs, imágenes y videos en tu navegador
+            <strong>{t('label_view')}:</strong> {t('label_walktour_preview_body')}
           </Box>
           <Box>
-            <strong>Descargar:</strong> Guarda cualquier archivo directamente en tu dispositivo
+            <strong>{t('label_download_colon_prefix')}:</strong> {t('label_walktour_download_body')}
           </Box>
         </Stack>
       ),
     },
     {
       target: 'body',
-      title: '¿Listo para Explorar? 🚀',
+      title: `¿${t('label_walktour_ready_explore_title')}? 🚀`,
       placement: 'center',
       content: (
         <Box sx={{ typography: 'body2', color: 'text.secondary' }}>
-          Haz clic en &quot;Documentos&quot; en la barra lateral para comenzar a gestionar tus
-          archivos. ¡Prueba ver un PDF o descargar un archivo!
+          {t('label_walktour_click_documents_prefix')} &quot;{t('nav_documents')}&quot;{' '}
+          {t('label_walktour_click_documents_suffix')}
         </Box>
       ),
     },
@@ -231,7 +231,7 @@ export function OverviewAppView() {
                     endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
                     sx={{ whiteSpace: 'nowrap' }}
                   >
-                    Vota ya
+                    {t('label_vote_now')}
                   </Button>
                 }
                 sx={{
@@ -240,7 +240,7 @@ export function OverviewAppView() {
                   color: 'primary.darker',
                 }}
               >
-                ¡Participa en las votaciones activas de tu club y haz escuchar tu voz!
+                {t('label_join_active_votes')}
               </Alert>
             </Grid>
           )}
@@ -256,14 +256,14 @@ export function OverviewAppView() {
           {/* Pending / overdue payments */}
           <Grid xs={12} md={6}>
             <AppNewInvoice
-              title="Pagos pendientes o vencidos"
+              title={t('label_pending_or_overdue_payments')}
               tableData={pendingOrOverduePaymentRequests}
               headLabel={[
-                { id: 'status', label: 'Estado' },
-                { id: 'totalAmount', label: 'Monto' },
-                { id: 'concept', label: 'Concepto' },
-                { id: 'dueDate', label: 'Vencimiento' },
-                { id: 'id', label: 'ID Pago' },
+                { id: 'status', label: t('label_status') },
+                { id: 'totalAmount', label: t('label_amount') },
+                { id: 'concept', label: t('label_concept') },
+                { id: 'dueDate', label: t('label_due_date') },
+                { id: 'id', label: t('label_payment_id') },
               ]}
             />
           </Grid>
@@ -282,7 +282,7 @@ export function OverviewAppView() {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Grid container spacing={3}>
                   <Grid xs={12} md={6}>
-                    <CourseWidgetSummary title="Puntos llegadas tarde" list={stadistics} />
+                    <CourseWidgetSummary title={t('label_late_arrival_points')} list={stadistics} />
                   </Grid>
 
                   <Grid xs={12} md={6}>

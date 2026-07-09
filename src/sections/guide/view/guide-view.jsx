@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -17,7 +19,8 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Replace these with the actual S3 URLs once the videos are uploaded
 const PWA_VIDEO_URL = 'https://jmanage-bucket.s3.us-west-2.amazonaws.com/pwa-guide.mp4';
-const NOTIFICATIONS_VIDEO_URL = 'https://jmanage-bucket.s3.us-west-2.amazonaws.com/notifications_guide.mp4';
+const NOTIFICATIONS_VIDEO_URL =
+  'https://jmanage-bucket.s3.us-west-2.amazonaws.com/notifications_guide.mp4';
 
 // ----------------------------------------------------------------------
 
@@ -34,6 +37,7 @@ function StepList({ steps }) {
 }
 
 function VideoPlayer({ src, title }) {
+  const { t } = useTranslation();
   if (!src) {
     return (
       <Box
@@ -48,7 +52,7 @@ function VideoPlayer({ src, title }) {
         }}
       >
         <Typography variant="body2" color="text.disabled">
-          Video proximamente
+          {t('label_video_coming_soon')}
         </Typography>
       </Box>
     );
@@ -102,75 +106,79 @@ function GuideCard({ title, description, videoUrl, videoTitle, sections }) {
 // ----------------------------------------------------------------------
 
 export function GuideView() {
+  const { t } = useTranslation();
   return (
     <Container maxWidth="lg">
       <Stack spacing={3}>
-        <CustomBreadcrumbs heading="Guia de inicio" links={[{ name: 'Guia de inicio' }]} />
+        <CustomBreadcrumbs
+          heading={t('label_guide_title')}
+          links={[{ name: t('label_guide_title') }]}
+        />
 
         <GuideCard
-          title="Instalar como aplicacion"
-          description="Puedes instalar SportsManage en tu dispositivo para acceder rapidamente desde la pantalla de inicio, sin necesidad de abrir el navegador."
+          title={t('label_install_as_app_title')}
+          description={t('label_install_as_app_desc')}
           videoUrl={PWA_VIDEO_URL}
-          videoTitle="Como instalar SportsManage como aplicacion"
+          videoTitle={t('label_install_as_app_video_title')}
           sections={[
             {
-              heading: 'Android (Chrome)',
+              heading: t('label_guide_android_chrome'),
               steps: [
-                'Abre SportsManage en Chrome.',
-                'Toca el menu de tres puntos (arriba a la derecha).',
-                'Selecciona "Agregar a pantalla de inicio".',
-                'Confirma tocando "Agregar".',
+                t('label_guide_android_step1'),
+                t('label_guide_android_step2'),
+                t('label_guide_android_step3'),
+                t('label_guide_android_step4'),
               ],
             },
             {
-              heading: 'iPhone / iPad (Safari)',
+              heading: t('label_guide_iphone_safari'),
               steps: [
-                'Abre SportsManage en Safari.',
-                'Toca el boton de compartir (cuadrado con flecha hacia arriba).',
-                'Desplazate y selecciona "Agregar a inicio".',
-                'Toca "Agregar" en la esquina superior derecha.',
+                t('label_guide_iphone_step1'),
+                t('label_guide_iphone_step2'),
+                t('label_guide_iphone_step3'),
+                t('label_guide_iphone_step4'),
               ],
             },
             {
-              heading: 'Computadora (Chrome o Edge)',
+              heading: t('label_guide_desktop_chrome_edge'),
               steps: [
-                'Abre SportsManage en tu navegador.',
-                'Haz clic en el icono de instalacion en la barra de direcciones.',
-                'Selecciona "Instalar" en el dialogo que aparece.',
+                t('label_guide_desktop_step1'),
+                t('label_guide_desktop_step2'),
+                t('label_guide_desktop_step3'),
               ],
             },
           ]}
         />
 
         <GuideCard
-          title="Activar notificaciones push"
-          description="Las notificaciones push te avisan sobre eventos importantes como partidos, pagos y actualizaciones del equipo, incluso cuando no tienes la app abierta."
+          title={t('label_push_notifications_title')}
+          description={t('label_push_notifications_desc')}
           videoUrl={NOTIFICATIONS_VIDEO_URL}
-          videoTitle="Como activar notificaciones push"
+          videoTitle={t('label_push_notifications_video_title')}
           sections={[
             {
-              heading: 'Activar al ingresar por primera vez',
+              heading: t('label_guide_first_time_heading'),
               steps: [
-                'Al abrir la app, el navegador mostrara un mensaje solicitando permiso.',
-                'Toca o haz clic en "Permitir".',
-                'Listo, comenzaras a recibir notificaciones.',
+                t('label_guide_first_time_step1'),
+                t('label_guide_first_time_step2'),
+                t('label_guide_first_time_step3'),
               ],
             },
             {
-              heading: 'Si rechazaste el permiso (Android / Computadora)',
+              heading: t('label_guide_rejected_android_heading'),
               steps: [
-                'Haz clic en el candado o la "i" a la izquierda de la direccion web.',
-                'Busca "Notificaciones" y cambia el valor a "Permitir".',
-                'Recarga la pagina.',
+                t('label_guide_rejected_android_step1'),
+                t('label_guide_rejected_android_step2'),
+                t('label_guide_rejected_android_step3'),
               ],
             },
             {
-              heading: 'Si rechazaste el permiso (iPhone / iPad)',
+              heading: t('label_guide_rejected_iphone_heading'),
               steps: [
-                'Ve a Configuracion del iPhone.',
-                'Desplazate hasta Safari y toca "Notificaciones".',
-                'Busca SportsManage y activa las notificaciones.',
-                'Vuelve a la app y recarga la pagina.',
+                t('label_guide_rejected_iphone_step1'),
+                t('label_guide_rejected_iphone_step2'),
+                t('label_guide_rejected_iphone_step3'),
+                t('label_guide_rejected_iphone_step4'),
               ],
             },
           ]}
@@ -178,11 +186,10 @@ export function GuideView() {
         <Card>
           <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
             <Typography variant="h6" gutterBottom>
-              Proximos pasos
+              {t('label_next_steps_title')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Ya tienes la app instalada y las notificaciones activas. Ahora explora todo lo que
-              SportsManage tiene para ofrecerte.
+              {t('label_next_steps_desc')}
             </Typography>
 
             <Grid container spacing={2} justifyContent="center">
@@ -200,10 +207,10 @@ export function GuideView() {
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Iconify icon="solar:folder-bold" width={22} color="primary.main" />
-                    <Typography variant="subtitle2">Documentos</Typography>
+                    <Typography variant="subtitle2">{t('nav_documents')}</Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
-                    Accede a todos los archivos y documentos compartidos por tu club.
+                    {t('label_next_steps_documents_desc')}
                   </Typography>
                   <Button
                     component={RouterLink}
@@ -213,7 +220,7 @@ export function GuideView() {
                     endIcon={<Iconify icon="solar:arrow-right-linear" />}
                     sx={{ alignSelf: 'flex-start', mt: 1 }}
                   >
-                    Ir a Documentos
+                    {t('label_go_to_documents')}
                   </Button>
                 </Box>
               </Grid>

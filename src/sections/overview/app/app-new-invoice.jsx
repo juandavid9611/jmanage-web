@@ -24,6 +24,7 @@ import { TableHeadCustom } from 'src/components/table';
 // ----------------------------------------------------------------------
 
 export function AppNewInvoice({ title, subheader, tableData, headLabel, ...other }) {
+  const { t } = useTranslation();
   const router = useRouter();
   return (
     <Card {...other}>
@@ -50,7 +51,7 @@ export function AppNewInvoice({ title, subheader, tableData, headLabel, ...other
           endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
           onClick={() => router.push(paths.dashboard.user.invoice.invoiceList)}
         >
-          Ver todos
+          {t('label_view_all_masc')}
         </Button>
       </Box>
     </Card>
