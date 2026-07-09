@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -14,10 +15,10 @@ import { Logo } from 'src/components/logo';
 // ----------------------------------------------------------------------
 
 const NAV_LINKS = [
-  { label: 'Torneos', href: '#lifecycle' },
-  { label: 'Clubes', href: '#clubs' },
-  { label: 'Funciones', href: '#features' },
-  { label: 'Resultados', href: '#stats' },
+  { label: 'tournaments', href: '#lifecycle' },
+  { label: 'clubs', href: '#clubs' },
+  { label: 'footer_link_features', href: '#features' },
+  { label: 'nav_results', href: '#stats' },
 ];
 
 const LANGS = [
@@ -34,6 +35,7 @@ const LANGS = [
  *   landing page itself; '/' on other pages so links become '/#lifecycle' etc.
  */
 export function LandingNav({ basePath = '' }) {
+  const { t } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -54,14 +56,14 @@ export function LandingNav({ basePath = '' }) {
         transition: 'all 0.35s ease',
         backdropFilter: scrolled ? 'blur(20px) saturate(1.6)' : 'none',
         bgcolor: scrolled
-          ? (t) => varAlpha(t.vars.palette.background.defaultChannel, 0.88)
+          ? (th) => varAlpha(th.vars.palette.background.defaultChannel, 0.88)
           : 'transparent',
         borderBottom: '1px solid',
         borderColor: scrolled
-          ? (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.1)
+          ? (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.1)
           : 'transparent',
         boxShadow: scrolled
-          ? (t) => `0 1px 24px ${varAlpha(t.vars.palette.common.blackChannel, 0.08)}`
+          ? (th) => `0 1px 24px ${varAlpha(th.vars.palette.common.blackChannel, 0.08)}`
           : 'none',
       }}
     >
@@ -89,7 +91,7 @@ export function LandingNav({ basePath = '' }) {
                   '&:hover': { color: 'text.primary' },
                 }}
               >
-                {link.label}
+                {t(link.label)}
               </Typography>
             ))}
           </Stack>
@@ -108,10 +110,10 @@ export function LandingNav({ basePath = '' }) {
                 px: { xs: 1, sm: 2 },
                 fontSize: { xs: '0.7rem', sm: '0.8125rem' },
                 whiteSpace: 'nowrap',
-                boxShadow: (t) => `0 4px 12px ${varAlpha(t.vars.palette.error.mainChannel, 0.3)}`,
+                boxShadow: (th) => `0 4px 12px ${varAlpha(th.vars.palette.error.mainChannel, 0.3)}`,
               }}
             >
-              Torneos en vivo
+              {t('nav_live_tournaments')}
             </Button>
 
             <Button
@@ -125,10 +127,10 @@ export function LandingNav({ basePath = '' }) {
                 px: { xs: 1, sm: 2 },
                 fontSize: { xs: '0.7rem', sm: '0.8125rem' },
                 whiteSpace: 'nowrap',
-                boxShadow: (t) => `0 4px 12px ${varAlpha(t.vars.palette.primary.mainChannel, 0.3)}`,
+                boxShadow: (th) => `0 4px 12px ${varAlpha(th.vars.palette.primary.mainChannel, 0.3)}`,
               }}
             >
-              Ir al portal
+              {t('nav_go_to_portal')}
             </Button>
           </Stack>
         </Stack>
