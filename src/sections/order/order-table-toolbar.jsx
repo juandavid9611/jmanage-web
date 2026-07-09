@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Stack from '@mui/material/Stack';
 import MenuList from '@mui/material/MenuList';
@@ -15,6 +16,7 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions = [] }) {
+  const { t } = useTranslation();
   const popover = usePopover();
 
   const handleFilterName = useCallback(
@@ -58,7 +60,7 @@ export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions 
         sx={{ p: 2.5, pr: { xs: 2.5, md: 1 } }}
       >
         <DatePicker
-          label="Start date"
+          label={t('start_date')}
           value={filters.state.startDate}
           onChange={handleFilterStartDate}
           slotProps={{ textField: { fullWidth: true } }}
@@ -66,14 +68,14 @@ export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions 
         />
 
         <DatePicker
-          label="End date"
+          label={t('end_date')}
           value={filters.state.endDate}
           onChange={handleFilterEndDate}
           slotProps={{
             textField: {
               fullWidth: true,
               error: dateError,
-              helperText: dateError ? 'End date must be later than start date' : null,
+              helperText: dateError ? t('label_end_date_after_start_date') : null,
             },
           }}
           sx={{
@@ -88,7 +90,7 @@ export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions 
         {opsOptions.length > 0 && (
           <TextField
             select
-            label="Operación"
+            label={t('label_operation')}
             value={filters.state.ops || 'all'}
             onChange={handleFilterOps}
             SelectProps={{ native: true }}
@@ -96,7 +98,7 @@ export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions 
           >
             {opsOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {t(opt.label)}
               </option>
             ))}
           </TextField>
@@ -107,7 +109,7 @@ export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions 
             fullWidth
             value={filters.state.name}
             onChange={handleFilterName}
-            placeholder="Search customer or order number..."
+            placeholder={t('label_search_customer_or_order')}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -136,7 +138,7 @@ export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions 
             }}
           >
             <Iconify icon="solar:printer-minimalistic-bold" />
-            Print
+            {t('print')}
           </MenuItem>
 
           <MenuItem
@@ -145,7 +147,7 @@ export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions 
             }}
           >
             <Iconify icon="solar:import-bold" />
-            Import
+            {t('import')}
           </MenuItem>
 
           <MenuItem
@@ -154,7 +156,7 @@ export function OrderTableToolbar({ filters, onResetPage, dateError, opsOptions 
             }}
           >
             <Iconify icon="solar:export-bold" />
-            Export
+            {t('export')}
           </MenuItem>
         </MenuList>
       </CustomPopover>

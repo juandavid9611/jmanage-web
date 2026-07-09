@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Timeline from '@mui/lab/Timeline';
@@ -31,11 +33,12 @@ const EVENT_DOT_COLOR = {
 };
 
 export function OrderDetailsHistory({ history }) {
+  const { t } = useTranslation();
   const events = history || [];
 
   return (
     <Card>
-      <CardHeader title="Historial" />
+      <CardHeader title={t('label_history')} />
       <Scrollbar sx={{ maxHeight: 420, p: 3 }}>
         <Timeline
           sx={{ p: 0, m: 0, [`& .${timelineItemClasses.root}:before`]: { flex: 0, padding: 0 } }}

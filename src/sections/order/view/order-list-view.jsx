@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
@@ -47,36 +48,38 @@ import { OrderTableFiltersResult } from '../order-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...ORDER_STATUS_OPTIONS];
+const STATUS_OPTIONS = [{ value: 'all', label: 'all' }, ...ORDER_STATUS_OPTIONS];
 
+// label values below are i18n keys, resolved via t() at render time.
 const TABLE_HEAD = [
   { id: '', width: 88 },
-  { id: 'orderNumber', label: 'Order', width: 88 },
-  { id: 'name', label: 'Customer' },
-  { id: 'createdAt', label: 'Date', width: 140 },
+  { id: 'orderNumber', label: 'order', width: 88 },
+  { id: 'name', label: 'label_customer' },
+  { id: 'createdAt', label: 'label_date', width: 140 },
   {
     id: 'totalQuantity',
-    label: 'Items',
+    label: 'label_items',
     width: 120,
     align: 'center',
   },
-  { id: 'totalAmount', label: 'Price', width: 140 },
-  { id: 'status', label: 'Status', width: 110 },
-  { id: 'providerCheck', label: 'Proveedor', width: 100, align: 'center' },
-  { id: 'deliveryCheck', label: 'Entregado', width: 100, align: 'center' },
+  { id: 'totalAmount', label: 'price', width: 140 },
+  { id: 'status', label: 'status', width: 110 },
+  { id: 'providerCheck', label: 'label_provider', width: 100, align: 'center' },
+  { id: 'deliveryCheck', label: 'label_delivered', width: 100, align: 'center' },
   { id: '', width: 88 },
 ];
 
 const OPS_OPTIONS = [
-  { value: 'all', label: 'Todas' },
-  { value: 'pendingProvider', label: 'Sin pedir a proveedor' },
-  { value: 'pendingDelivery', label: 'Sin entregar' },
-  { value: 'bothDone', label: 'Proveedor y entrega listos' },
+  { value: 'all', label: 'all' },
+  { value: 'pendingProvider', label: 'label_ops_pending_provider' },
+  { value: 'pendingDelivery', label: 'label_ops_pending_delivery' },
+  { value: 'bothDone', label: 'label_ops_both_done' },
 ];
 
 // ----------------------------------------------------------------------
 
 export function OrderListView() {
+  const { t } = useTranslation();
   const table = useTable({ defaultOrderBy: 'orderNumber' });
 
   const router = useRouter();
@@ -125,30 +128,30 @@ export function OrderListView() {
       try {
         await deleteOrder(id);
         const deleteRow = tableData.filter((row) => row.id !== id);
-        toast.success('Delete success!');
+        toast.success(t('delete_success'));
         setTableData(deleteRow);
         table.onUpdatePageDeleteRow(dataInPage.length);
       } catch (error) {
-        toast.error(error.message || 'Delete failed!');
+        toast.error(error.message || t('label_delete_failed'));
       }
     },
-    [dataInPage.length, table, tableData]
+    [dataInPage.length, table, tableData, t]
   );
 
   const handleDeleteRows = useCallback(async () => {
     try {
       await Promise.all(table.selected.map((id) => deleteOrder(id)));
       const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
-      toast.success('Delete success!');
+      toast.success(t('delete_success'));
       setTableData(deleteRows);
       table.onUpdatePageDeleteRows({
         totalRowsInPage: dataInPage.length,
         totalRowsFiltered: dataFiltered.length,
       });
     } catch (error) {
-      toast.error(error.message || 'Delete failed!');
+      toast.error(error.message || t('label_delete_failed'));
     }
-  }, [dataFiltered.length, dataInPage.length, table, tableData]);
+  }, [dataFiltered.length, dataInPage.length, table, tableData, t]);
 
   const handleViewRow = useCallback(
     (id) => {
@@ -169,11 +172,11 @@ export function OrderListView() {
     <>
       <DashboardContent>
         <CustomBreadcrumbs
-          heading="List"
+          heading={t('list')}
           links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Order', href: paths.dashboard.order.root },
-            { name: 'List' },
+            { name: t('label_dashboard'), href: paths.dashboard.root },
+            { name: t('order'), href: paths.dashboard.order.root },
+            { name: t('list') },
           ]}
           sx={{ mb: { xs: 3, md: 5 } }}
         />
@@ -193,7 +196,7 @@ export function OrderListView() {
                 key={tab.value}
                 iconPosition="end"
                 value={tab.value}
-                label={tab.label}
+                label={t(tab.label)}
                 icon={
                   <Label
                     variant={
@@ -244,7 +247,7 @@ export function OrderListView() {
                 )
               }
               action={
-                <Tooltip title="Delete">
+                <Tooltip title={t('delete')}>
                   <IconButton color="primary" onClick={confirm.onTrue}>
                     <Iconify icon="solar:trash-bin-trash-bold" />
                   </IconButton>
@@ -312,10 +315,11 @@ export function OrderListView() {
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
+        title={t('delete')}
         content={
           <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> items?
+            {t('label_confirm_delete_prefix')} <strong> {table.selected.length} </strong>{' '}
+            {t('label_confirm_delete_suffix_items')}
           </>
         }
         action={
@@ -327,7 +331,7 @@ export function OrderListView() {
               confirm.onFalse();
             }}
           >
-            Delete
+            {t('delete')}
           </Button>
         }
       />

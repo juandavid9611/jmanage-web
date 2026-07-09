@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
@@ -59,7 +61,10 @@ export function OrderDetailsToolbar({
   onToggleProviderCheck,
   onToggleDeliveryCheck,
 }) {
+  const { t } = useTranslation();
   const popover = usePopover();
+
+  const statusLabel = statusOptions.find((option) => option.value === status)?.label;
 
   return (
     <>
@@ -71,7 +76,10 @@ export function OrderDetailsToolbar({
 
           <Stack spacing={0.5}>
             <Stack spacing={1} direction="row" alignItems="center">
-              <Typography variant="h4"> Order {orderNumber} </Typography>
+              <Typography variant="h4">
+                {' '}
+                {t('order')} {orderNumber}{' '}
+              </Typography>
               <Label
                 variant="soft"
                 color={
@@ -81,7 +89,7 @@ export function OrderDetailsToolbar({
                   'default'
                 }
               >
-                {status}
+                {statusLabel ? t(statusLabel) : status}
               </Label>
             </Stack>
 
@@ -101,18 +109,18 @@ export function OrderDetailsToolbar({
         >
           <CheckButton
             icon="solar:bag-check-bold"
-            label="Pedido a proveedor"
+            label={t('label_ordered_from_provider')}
             check={providerCheck}
             onToggle={onToggleProviderCheck}
-            fallbackTooltip="Marca cuando el pedido al proveedor esté hecho"
+            fallbackTooltip={t('label_check_provider_order_done')}
           />
 
           <CheckButton
             icon="solar:delivery-bold"
-            label="Entregado"
+            label={t('label_delivered')}
             check={deliveryCheck}
             onToggle={onToggleDeliveryCheck}
-            fallbackTooltip="Marca cuando se haya entregado al cliente"
+            fallbackTooltip={t('label_check_delivered_to_customer')}
           />
 
           <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
@@ -124,7 +132,7 @@ export function OrderDetailsToolbar({
             onClick={popover.onOpen}
             sx={{ textTransform: 'capitalize' }}
           >
-            {status}
+            {statusLabel ? t(statusLabel) : status}
           </Button>
 
           <Button
@@ -132,11 +140,11 @@ export function OrderDetailsToolbar({
             variant="outlined"
             startIcon={<Iconify icon="solar:printer-minimalistic-bold" />}
           >
-            Print
+            {t('print')}
           </Button>
 
           <Button color="inherit" variant="contained" startIcon={<Iconify icon="solar:pen-bold" />}>
-            Edit
+            {t('edit')}
           </Button>
         </Stack>
       </Stack>
@@ -157,7 +165,7 @@ export function OrderDetailsToolbar({
                 onChangeStatus(option.value);
               }}
             >
-              {option.label}
+              {t(option.label)}
             </MenuItem>
           ))}
         </MenuList>
