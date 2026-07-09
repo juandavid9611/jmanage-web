@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -28,9 +29,9 @@ import { LandingNav } from 'src/sections/landing/landing-nav';
 // ----------------------------------------------------------------------
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'Todos' },
-  { value: 'active', label: 'Activos' },
-  { value: 'finished', label: 'Finalizados' },
+  { value: '', label: 'all' },
+  { value: 'active', label: 'status_active_plural' },
+  { value: 'finished', label: 'status_finished_plural' },
 ];
 
 const STATUS_COLOR = {
@@ -39,16 +40,16 @@ const STATUS_COLOR = {
 };
 
 const STATUS_META = {
-  draft: { label: 'Borrador', color: 'default', accent: 'grey.400' },
-  active: { label: 'Activo', color: 'success', accent: 'success.main' },
-  finished: { label: 'Finalizado', color: 'info', accent: 'info.main' },
-  cancelled: { label: 'Cancelado', color: 'error', accent: 'error.main' },
+  draft: { label: 'draft', color: 'default', accent: 'grey.400' },
+  active: { label: 'active', color: 'success', accent: 'success.main' },
+  finished: { label: 'status_finished', color: 'info', accent: 'info.main' },
+  cancelled: { label: 'cancelled', color: 'error', accent: 'error.main' },
 };
 
 const TYPE_LABEL = {
-  league: 'Liga',
-  knockout: 'Eliminación',
-  hybrid: 'Híbrido',
+  league: 'tournament_type_league',
+  knockout: 'tournament_type_knockout',
+  hybrid: 'tournament_type_hybrid',
 };
 
 const TYPE_COLOR = {
@@ -66,6 +67,7 @@ const TYPE_ICON = {
 // ----------------------------------------------------------------------
 
 export function PublicTournamentListView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('active');
 
@@ -86,9 +88,9 @@ export function PublicTournamentListView() {
       <LandingNav basePath="/" />
       <Container maxWidth="lg" sx={{ pt: { xs: 12, md: 14 }, pb: { xs: 6, md: 8 } }}>
         <Stack spacing={1} sx={{ mb: { xs: 3, md: 5 } }}>
-          <Typography variant="h3">Torneos</Typography>
+          <Typography variant="h3">{t('tournaments')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Consulta resultados, tablas y estadísticas de los torneos.
+            {t('public_tournaments_subtitle')}
           </Typography>
         </Stack>
 
@@ -105,7 +107,7 @@ export function PublicTournamentListView() {
             <Tab
               key={opt.value}
               value={opt.value}
-              label={opt.label}
+              label={t(opt.label)}
               iconPosition="end"
               icon={
                 <Label
@@ -122,11 +124,11 @@ export function PublicTournamentListView() {
         {tournamentsEmpty && !tournamentsLoading && (
           <EmptyContent
             filled
-            title="No hay torneos"
+            title={t('no_tournaments_title')}
             description={
               statusFilter
-                ? `No hay torneos con estado "${STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label}"`
-                : 'No hay torneos disponibles'
+                ? `${t('no_tournaments_with_status')} "${t(STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label)}"`
+                : t('no_tournaments_available')
             }
             sx={{ py: 10 }}
           />
@@ -153,6 +155,7 @@ export function PublicTournamentListView() {
 // ----------------------------------------------------------------------
 
 function PublicTournamentCard({ tournament, onView }) {
+  const { t } = useTranslation();
   const { name, season, type, status, current_matchweek, rules, teams, logo_url } = tournament;
 
   const meta = STATUS_META[status] || STATUS_META.draft;
@@ -170,7 +173,7 @@ function PublicTournamentCard({ tournament, onView }) {
         position: 'relative',
         overflow: 'hidden',
         transition: 'all 0.2s ease-in-out',
-        '&:hover': { transform: 'translateY(-4px)', boxShadow: (t) => t.shadows[16] },
+        '&:hover': { transform: 'translateY(-4px)', boxShadow: (th) => th.shadows[16] },
       }}
     >
       {/* Status accent bar */}
@@ -216,7 +219,7 @@ function PublicTournamentCard({ tournament, onView }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  bgcolor: (t) => alpha(t.palette[TYPE_COLOR[type] || 'primary'].main, 0.08),
+                  bgcolor: (th) => alpha(th.palette[TYPE_COLOR[type] || 'primary'].main, 0.08),
                   flexShrink: 0,
                 }}
               >
@@ -236,7 +239,7 @@ function PublicTournamentCard({ tournament, onView }) {
                   lineHeight: 1,
                 }}
               >
-                {TYPE_LABEL[type] || type}
+                {TYPE_LABEL[type] ? t(TYPE_LABEL[type]) : type}
               </Typography>
               {season && (
                 <Typography
@@ -249,7 +252,7 @@ function PublicTournamentCard({ tournament, onView }) {
             </Box>
           </Stack>
 
-          <Chip label={meta.label} color={meta.color} size="small" variant="soft" />
+          <Chip label={t(meta.label)} color={meta.color} size="small" variant="soft" />
         </Stack>
 
         {/* Name */}
@@ -262,8 +265,8 @@ function PublicTournamentCard({ tournament, onView }) {
           <Iconify icon="mdi:shield-half-full" width={13} sx={{ color: 'text.disabled' }} />
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
             {teamCount > 0
-              ? `${teamCount} equipo${teamCount !== 1 ? 's' : ''}${numTeams > 0 ? ` / ${numTeams}` : ''}`
-              : 'Sin equipos'}
+              ? `${teamCount} ${teamCount !== 1 ? t('word_teams_lowercase') : t('word_team_lowercase')}${numTeams > 0 ? ` / ${numTeams}` : ''}`
+              : t('label_no_teams')}
           </Typography>
         </Stack>
 
@@ -294,7 +297,7 @@ function PublicTournamentCard({ tournament, onView }) {
                     }}
                   />
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Fase eliminatoria en curso
+                    {t('label_knockout_in_progress')}
                   </Typography>
                 </Stack>
               );
@@ -311,7 +314,7 @@ function PublicTournamentCard({ tournament, onView }) {
                         sx={{ color: 'success.main' }}
                       />
                       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Jornada {currentMw}
+                        {t('word_matchday')} {currentMw}
                         <Typography
                           component="span"
                           variant="caption"
@@ -332,7 +335,7 @@ function PublicTournamentCard({ tournament, onView }) {
                     sx={{
                       height: 5,
                       borderRadius: 1,
-                      bgcolor: (t) => alpha(t.palette.success.main, 0.1),
+                      bgcolor: (th) => alpha(th.palette.success.main, 0.1),
                       '& .MuiLinearProgress-bar': { borderRadius: 1 },
                     }}
                   />
@@ -347,7 +350,7 @@ function PublicTournamentCard({ tournament, onView }) {
           <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1 }}>
             <Iconify icon="mdi:check-circle" width={16} sx={{ color: 'info.main' }} />
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Torneo finalizado
+              {t('label_tournament_finished')}
             </Typography>
           </Stack>
         )}
@@ -362,7 +365,7 @@ function PublicTournamentCard({ tournament, onView }) {
           endIcon={<Iconify icon="eva:arrow-forward-fill" />}
           onClick={onView}
         >
-          Ver torneo
+          {t('label_view_tournament')}
         </Button>
       </Box>
     </Card>

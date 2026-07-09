@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMemo, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -44,10 +45,10 @@ import { TournamentConfigSummary } from './tournament-config-summary';
 // ----------------------------------------------------------------------
 
 const POSITION_LABEL = {
-  Goalkeeper: 'Porteros',
-  Defender: 'Defensas',
-  Midfielder: 'Mediocampistas',
-  Forward: 'Delanteros',
+  Goalkeeper: 'position_goalkeepers',
+  Defender: 'position_defenders',
+  Midfielder: 'position_midfielders',
+  Forward: 'position_forwards',
 };
 
 // ----------------------------------------------------------------------
@@ -64,6 +65,7 @@ function getDefaultPhase(tournament, teams) {
 // ----------------------------------------------------------------------
 
 export function PublicTournamentDetailView({ id }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [openTeamId, setOpenTeamId] = useState(null);
@@ -140,8 +142,8 @@ export function PublicTournamentDetailView({ id }) {
         <LandingNav basePath="/" />
         <Container maxWidth="lg" sx={{ pt: { xs: 12, md: 14 }, pb: 8 }}>
           <EmptyContent
-            title="Torneo no disponible"
-            description="Este torneo no existe o no está configurado como público."
+            title={t('label_tournament_unavailable')}
+            description={t('label_tournament_unavailable_body')}
           />
         </Container>
       </>
@@ -159,7 +161,7 @@ export function PublicTournamentDetailView({ id }) {
           onClick={() => navigate(paths.publicTournaments.root)}
           sx={{ mb: 2, color: 'text.secondary' }}
         >
-          Torneos
+          {t('tournaments')}
         </Button>
 
         {/* Same banner + phase tabs as auth, wrapped in a card-like surface so it
@@ -168,7 +170,7 @@ export function PublicTournamentDetailView({ id }) {
           sx={{
             borderRadius: 2,
             overflow: 'hidden',
-            border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+            border: (th) => `1px solid ${alpha(th.palette.grey[500], 0.16)}`,
             bgcolor: 'background.paper',
           }}
         >
@@ -183,132 +185,134 @@ export function PublicTournamentDetailView({ id }) {
           />
 
           {/* Phase content (mirrors auth tournament-detail-view) */}
-          <Box sx={{ bgcolor: (t) => alpha(t.palette.grey[500], 0.02), minHeight: 400 }}>
-          {/* ── CONFIGURACIÓN ── */}
-          {currentPhase === 'configuracion' && (
-            <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
-              <StatsOverview tournamentId={id} tournament={tournament} publicMode />
-              <TournamentConfigSummary tournament={tournament} />
-            </Stack>
-          )}
+          <Box sx={{ bgcolor: (th) => alpha(th.palette.grey[500], 0.02), minHeight: 400 }}>
+            {/* ── CONFIGURACIÓN ── */}
+            {currentPhase === 'configuracion' && (
+              <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
+                <StatsOverview tournamentId={id} tournament={tournament} publicMode />
+                <TournamentConfigSummary tournament={tournament} />
+              </Stack>
+            )}
 
-          {/* ── INSCRIPCIÓN (public: teams grouped by Grupo, read-only) ── */}
-          {currentPhase === 'inscripcion' && (
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-              <PublicTeamsByGroup
-                teams={teams}
-                groups={groups}
-                onTeamClick={openTeamRoster}
-              />
-            </Box>
-          )}
+            {/* ── INSCRIPCIÓN (public: teams grouped by Grupo, read-only) ── */}
+            {currentPhase === 'inscripcion' && (
+              <Box sx={{ p: { xs: 2, md: 3 } }}>
+                <PublicTeamsByGroup teams={teams} groups={groups} onTeamClick={openTeamRoster} />
+              </Box>
+            )}
 
-          {/* ── FASE GRUPOS: matches + standings (50/50 like auth) ── */}
-          {currentPhase === 'fase_grupos' && (
-            <Grid container>
-              <Grid
-                xs={12}
-                md={6}
-                sx={{
-                  borderRight: (t) => ({ md: `1px solid ${alpha(t.palette.grey[500], 0.12)}` }),
-                }}
-              >
-                {(isLeague || isHybrid) && totalMw > 0 && (
-                  <MatchweekTimeline
-                    totalMatchweeks={totalMw}
-                    currentMatchweek={currentMw}
-                    allMatches={allMatches}
-                    selectedMatchweek={activeMw}
-                    onSelect={(mw) => setSelectedMw(mw)}
-                    onViewAll={() => setSelectedMw(null)}
-                  />
-                )}
-
-                <Box sx={{ p: { xs: 2, md: 3 } }}>
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: 'text.disabled', fontWeight: 600 }}
-                    >
-                      {activeMw === null ? 'Todos los partidos' : `Jornada ${activeMw}`}
-                    </Typography>
-                    <Box
-                      sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.08) }}
-                    />
-                  </Stack>
-
-                  {matchesLoading ? (
-                    <Stack spacing={0.75}>
-                      {[...Array(4)].map((_, i) => (
-                        <Skeleton key={i} variant="rounded" height={64} />
-                      ))}
-                    </Stack>
-                  ) : (
-                    <MatchList
-                      matches={currentMatches}
-                      teams={teams}
-                      tournamentId={id}
-                      grouped
-                      publicMode
-                      onMatchClick={(match) =>
-                        navigate(paths.publicTournaments.match(id, match.id))
-                      }
+            {/* ── FASE GRUPOS: matches + standings (50/50 like auth) ── */}
+            {currentPhase === 'fase_grupos' && (
+              <Grid container>
+                <Grid
+                  xs={12}
+                  md={6}
+                  sx={{
+                    borderRight: (th) => ({ md: `1px solid ${alpha(th.palette.grey[500], 0.12)}` }),
+                  }}
+                >
+                  {(isLeague || isHybrid) && totalMw > 0 && (
+                    <MatchweekTimeline
+                      totalMatchweeks={totalMw}
+                      currentMatchweek={currentMw}
+                      allMatches={allMatches}
+                      selectedMatchweek={activeMw}
+                      onSelect={(mw) => setSelectedMw(mw)}
+                      onViewAll={() => setSelectedMw(null)}
                     />
                   )}
-                </Box>
-              </Grid>
 
-              <Grid xs={12} md={6}>
-                <StandingsSidebar
+                  <Box sx={{ p: { xs: 2, md: 3 } }}>
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'text.disabled', fontWeight: 600 }}
+                      >
+                        {activeMw === null
+                          ? t('label_all_matches')
+                          : `${t('word_matchday')} ${activeMw}`}
+                      </Typography>
+                      <Box
+                        sx={{
+                          flex: 1,
+                          height: 1,
+                          bgcolor: (th) => alpha(th.palette.grey[500], 0.08),
+                        }}
+                      />
+                    </Stack>
+
+                    {matchesLoading ? (
+                      <Stack spacing={0.75}>
+                        {[...Array(4)].map((_, i) => (
+                          <Skeleton key={i} variant="rounded" height={64} />
+                        ))}
+                      </Stack>
+                    ) : (
+                      <MatchList
+                        matches={currentMatches}
+                        teams={teams}
+                        tournamentId={id}
+                        grouped
+                        publicMode
+                        onMatchClick={(match) =>
+                          navigate(paths.publicTournaments.match(id, match.id))
+                        }
+                      />
+                    )}
+                  </Box>
+                </Grid>
+
+                <Grid xs={12} md={6}>
+                  <StandingsSidebar
+                    tournamentId={id}
+                    teams={teams}
+                    allMatches={allMatches}
+                    currentMatchweek={currentMw}
+                    totalMatchweeks={totalMw}
+                    publicMode
+                  />
+                </Grid>
+              </Grid>
+            )}
+
+            {/* ── FASE FINAL (bracket) ── */}
+            {isKnockoutPhase && (
+              <Box sx={{ p: { xs: 2, md: 3 } }}>
+                <BracketView
                   tournamentId={id}
                   teams={teams}
+                  tournament={tournament}
                   allMatches={allMatches}
-                  currentMatchweek={currentMw}
-                  totalMatchweeks={totalMw}
-                  publicMode
+                  readOnly
+                  bracket={bracket}
+                  bracketLoading={bracketLoading}
                 />
-              </Grid>
-            </Grid>
-          )}
+              </Box>
+            )}
 
-          {/* ── FASE FINAL (bracket) ── */}
-          {isKnockoutPhase && (
-            <Box sx={{ p: { xs: 2, md: 3 } }}>
-              <BracketView
-                tournamentId={id}
-                teams={teams}
-                tournament={tournament}
-                allMatches={allMatches}
-                readOnly
-                bracket={bracket}
-                bracketLoading={bracketLoading}
-              />
-            </Box>
-          )}
-
-          {/* ── ESTADÍSTICAS: rankings (goals, assists, cards) ── */}
-          {currentPhase === 'estadisticas' && (
-            <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-              <Box>
-                <Typography variant="h6" sx={{ mb: 1.5 }}>
-                  Goleadores
-                </Typography>
-                <PlayerRankingTable tournamentId={id} metric="goals" publicMode />
-              </Box>
-              <Box>
-                <Typography variant="h6" sx={{ mb: 1.5 }}>
-                  Asistencias
-                </Typography>
-                <PlayerRankingTable tournamentId={id} metric="assists" publicMode />
-              </Box>
-              <Box>
-                <Typography variant="h6" sx={{ mb: 1.5 }}>
-                  Amonestaciones
-                </Typography>
-                <PlayerRankingTable tournamentId={id} metric="cards" publicMode />
-              </Box>
-            </Stack>
-          )}
+            {/* ── ESTADÍSTICAS: rankings (goals, assists, cards) ── */}
+            {currentPhase === 'estadisticas' && (
+              <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 1.5 }}>
+                    {t('word_top_scorers')}
+                  </Typography>
+                  <PlayerRankingTable tournamentId={id} metric="goals" publicMode />
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 1.5 }}>
+                    {t('word_assists')}
+                  </Typography>
+                  <PlayerRankingTable tournamentId={id} metric="assists" publicMode />
+                </Box>
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 1.5 }}>
+                    {t('word_cards')}
+                  </Typography>
+                  <PlayerRankingTable tournamentId={id} metric="cards" publicMode />
+                </Box>
+              </Stack>
+            )}
           </Box>
         </Box>
       </Container>
@@ -329,22 +333,24 @@ export function PublicTournamentDetailView({ id }) {
 // ----------------------------------------------------------------------
 
 function PublicTeamsByGroup({ teams, groups, onTeamClick }) {
+  const { t } = useTranslation();
+
   if (!teams?.length) {
-    return <EmptyContent title="Sin equipos" sx={{ py: 8 }} />;
+    return <EmptyContent title={t('label_no_teams')} sx={{ py: 8 }} />;
   }
 
   const groupsList = groups || [];
   const groupedIds = new Set();
   const sections = groupsList.map((g) => {
-    const inGroup = teams.filter((t) => t.group_id === g.id);
-    inGroup.forEach((t) => groupedIds.add(t.id));
-    return { key: g.id, name: g.name || 'Grupo', teams: inGroup };
+    const inGroup = teams.filter((t2) => t2.group_id === g.id);
+    inGroup.forEach((t2) => groupedIds.add(t2.id));
+    return { key: g.id, name: g.name || t('word_group'), teams: inGroup };
   });
-  const ungrouped = teams.filter((t) => !groupedIds.has(t.id));
+  const ungrouped = teams.filter((t2) => !groupedIds.has(t2.id));
   if (ungrouped.length > 0) {
     sections.push({
       key: '__ungrouped__',
-      name: sections.length > 0 ? 'Sin grupo' : 'Equipos',
+      name: sections.length > 0 ? t('label_no_group') : t('word_teams'),
       teams: ungrouped,
     });
   }
@@ -367,7 +373,8 @@ function PublicTeamsByGroup({ teams, groups, onTeamClick }) {
               {section.name}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-              {section.teams.length} equipo{section.teams.length !== 1 ? 's' : ''}
+              {section.teams.length}{' '}
+              {section.teams.length !== 1 ? t('word_teams_lowercase') : t('word_team_lowercase')}
             </Typography>
           </Stack>
           <PublicTeamsGrid teams={section.teams} onTeamClick={onTeamClick} />
@@ -378,8 +385,10 @@ function PublicTeamsByGroup({ teams, groups, onTeamClick }) {
 }
 
 function PublicTeamsGrid({ teams, onTeamClick }) {
+  const { t } = useTranslation();
+
   if (!teams?.length) {
-    return <EmptyContent title="Sin equipos" sx={{ py: 8 }} />;
+    return <EmptyContent title={t('label_no_teams')} sx={{ py: 8 }} />;
   }
 
   return (
@@ -398,10 +407,10 @@ function PublicTeamsGrid({ teams, onTeamClick }) {
             cursor: 'pointer',
             transition: 'all 0.15s',
             '&:hover': {
-              borderColor: (t) => alpha(t.palette.primary.main, 0.32),
+              borderColor: (th) => alpha(th.palette.primary.main, 0.32),
               transform: 'translateY(-1px)',
             },
-            border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+            border: (th) => `1px solid ${alpha(th.palette.grey[500], 0.12)}`,
           }}
         >
           <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -413,7 +422,7 @@ function PublicTeamsGrid({ teams, onTeamClick }) {
                   width: 40,
                   height: 40,
                   borderRadius: 1,
-                  bgcolor: (t) => alpha(t.palette.grey[500], 0.12),
+                  bgcolor: (th) => alpha(th.palette.grey[500], 0.12),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -442,7 +451,8 @@ function PublicTeamsGrid({ teams, onTeamClick }) {
 // ----------------------------------------------------------------------
 
 function PublicTeamRosterDialog({ open, tournamentId, teamId, teams, onClose }) {
-  const team = teams?.find((t) => t.id === teamId);
+  const { t } = useTranslation();
+  const team = teams?.find((tm) => tm.id === teamId);
   const { players, playersLoading } = useGetPublicPlayers(open ? tournamentId : null, teamId);
 
   const grouped = useMemo(() => {
@@ -470,12 +480,12 @@ function PublicTeamRosterDialog({ open, tournamentId, teamId, teams, onClose }) 
                 width: 36,
                 height: 36,
                 borderRadius: 1,
-                bgcolor: (t) => alpha(t.palette.grey[500], 0.12),
+                bgcolor: (th) => alpha(th.palette.grey[500], 0.12),
               }}
             />
           )}
           <Stack>
-            <Typography variant="h6">{team?.name || 'Equipo'}</Typography>
+            <Typography variant="h6">{team?.name || t('team')}</Typography>
             {team?.short_name && (
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                 {team.short_name}
@@ -492,14 +502,14 @@ function PublicTeamRosterDialog({ open, tournamentId, teamId, teams, onClose }) 
             ))}
           </Stack>
         ) : !players?.length ? (
-          <EmptyContent title="Sin jugadores" sx={{ py: 4 }} />
+          <EmptyContent title={t('label_no_players')} sx={{ py: 4 }} />
         ) : (
           <Stack spacing={2}>
             {Object.entries(grouped).map(([pos, list]) =>
               list.length > 0 ? (
                 <Box key={pos}>
                   <Typography variant="overline" sx={{ color: 'text.disabled' }}>
-                    {POSITION_LABEL[pos] || pos}
+                    {POSITION_LABEL[pos] ? t(POSITION_LABEL[pos]) : pos}
                   </Typography>
                   <Stack spacing={0.5} sx={{ mt: 0.5 }}>
                     {list.map((p) => (

@@ -1,4 +1,5 @@
 import { m } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
@@ -14,20 +15,19 @@ import { varBounce, MotionContainer } from 'src/components/animate';
 // ----------------------------------------------------------------------
 
 export function View403() {
+  const { t } = useTranslation();
+
   return (
     <SimpleLayout content={{ compact: true }}>
       <Container component={MotionContainer}>
         <m.div variants={varBounce().in}>
           <Typography variant="h3" sx={{ mb: 2 }}>
-            No permission
+            {t('error_403_title')}
           </Typography>
         </m.div>
 
         <m.div variants={varBounce().in}>
-          <Typography sx={{ color: 'text.secondary' }}>
-            The page you’re trying to access has restricted access. Please refer to your system
-            administrator.
-          </Typography>
+          <Typography sx={{ color: 'text.secondary' }}>{t('error_403_body')}</Typography>
         </m.div>
 
         <m.div variants={varBounce().in}>
@@ -35,7 +35,7 @@ export function View403() {
         </m.div>
 
         <Button component={RouterLink} href="/" size="large" variant="contained">
-          Go to home
+          {t('error_go_home')}
         </Button>
       </Container>
     </SimpleLayout>

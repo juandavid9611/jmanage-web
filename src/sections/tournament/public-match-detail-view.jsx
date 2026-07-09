@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -31,22 +32,23 @@ import { MatchEventTimeline } from './match-event-timeline';
 // ----------------------------------------------------------------------
 
 const STATUS_BADGE = {
-  finished: { label: 'Final', color: 'success' },
-  live: { label: 'En vivo', color: 'error' },
-  scheduled: { label: 'Pendiente', color: 'warning' },
-  postponed: { label: 'Aplazado', color: 'warning' },
+  finished: { label: 'word_final', color: 'success' },
+  live: { label: 'word_live_lowercase', color: 'error' },
+  scheduled: { label: 'pending', color: 'warning' },
+  postponed: { label: 'word_postponed', color: 'warning' },
 };
 
 // ----------------------------------------------------------------------
 
 export function PublicMatchDetailView({ tournamentId, matchId }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { tournament } = useGetPublicTournament(tournamentId);
   const { teams } = useGetPublicTeams(tournamentId);
   const { match, matchLoading } = useGetPublicMatch(tournamentId, matchId);
 
-  const homeTeam = teams?.find((t) => t.id === match?.home_team_id);
-  const awayTeam = teams?.find((t) => t.id === match?.away_team_id);
+  const homeTeam = teams?.find((tm) => tm.id === match?.home_team_id);
+  const awayTeam = teams?.find((tm) => tm.id === match?.away_team_id);
 
   const { players: homePlayers } = useGetPublicPlayers(
     match ? tournamentId : null,
@@ -74,7 +76,7 @@ export function PublicMatchDetailView({ tournamentId, matchId }) {
           onClick={() => navigate(paths.publicTournaments.detail(tournamentId))}
           sx={{ mb: 3, color: 'text.secondary' }}
         >
-          {tournament?.name || 'Torneo'}
+          {tournament?.name || t('tournament')}
         </Button>
 
         {matchLoading && !match ? (
@@ -83,16 +85,16 @@ export function PublicMatchDetailView({ tournamentId, matchId }) {
             <Skeleton variant="rounded" height={240} />
           </Stack>
         ) : !match ? (
-          <EmptyContent title="Partido no disponible" sx={{ py: 8 }} />
+          <EmptyContent title={t('label_match_unavailable')} sx={{ py: 8 }} />
         ) : (
           <Stack spacing={3}>
             <Card sx={{ p: { xs: 2.5, md: 3.5 } }}>
               <Stack spacing={2}>
                 <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
-                  <Chip label={badge.label} color={badge.color} size="small" variant="soft" />
+                  <Chip label={t(badge.label)} color={badge.color} size="small" variant="soft" />
                   {match.matchweek != null && (
                     <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                      Jornada {match.matchweek}
+                      {t('word_matchday')} {match.matchweek}
                     </Typography>
                   )}
                   {match.round && (
@@ -120,7 +122,7 @@ export function PublicMatchDetailView({ tournamentId, matchId }) {
                         px: 3,
                         py: 1,
                         borderRadius: 2,
-                        bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+                        bgcolor: (th) => alpha(th.palette.grey[500], 0.08),
                         minWidth: 120,
                         textAlign: 'center',
                       }}
@@ -141,13 +143,9 @@ export function PublicMatchDetailView({ tournamentId, matchId }) {
 
             <Card sx={{ p: { xs: 2, md: 3 } }}>
               <Typography variant="h6" sx={{ mb: 1.5 }}>
-                Eventos
+                {t('events')}
               </Typography>
-              <MatchEventTimeline
-                events={match.events || []}
-                players={allPlayers}
-                teams={teams}
-              />
+              <MatchEventTimeline events={match.events || []} players={allPlayers} teams={teams} />
             </Card>
 
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -164,6 +162,7 @@ export function PublicMatchDetailView({ tournamentId, matchId }) {
 // ----------------------------------------------------------------------
 
 function TeamHeader({ team, align }) {
+  const { t } = useTranslation();
   return (
     <Stack
       direction={align === 'right' ? 'row' : 'row-reverse'}
@@ -172,11 +171,8 @@ function TeamHeader({ team, align }) {
       flex={1}
       justifyContent={align === 'right' ? 'flex-end' : 'flex-end'}
     >
-      <Typography
-        variant="h6"
-        sx={{ textAlign: align, fontWeight: 600 }}
-      >
-        {team?.name || 'TBD'}
+      <Typography variant="h6" sx={{ textAlign: align, fontWeight: 600 }}>
+        {team?.name || t('word_tbd')}
       </Typography>
       {team?.logo_url ? (
         <Avatar src={team.logo_url} variant="rounded" sx={{ width: 48, height: 48 }} />
@@ -186,7 +182,7 @@ function TeamHeader({ team, align }) {
             width: 48,
             height: 48,
             borderRadius: 1,
-            bgcolor: (t) => alpha(t.palette.grey[500], 0.12),
+            bgcolor: (th) => alpha(th.palette.grey[500], 0.12),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -200,6 +196,7 @@ function TeamHeader({ team, align }) {
 }
 
 function LineupCard({ team, players }) {
+  const { t } = useTranslation();
   const grouped = useMemo(() => {
     const buckets = { Goalkeeper: [], Defender: [], Midfielder: [], Forward: [] };
     (players || []).forEach((p) => {
@@ -219,11 +216,11 @@ function LineupCard({ team, players }) {
         {team?.logo_url && (
           <Avatar src={team.logo_url} variant="rounded" sx={{ width: 28, height: 28 }} />
         )}
-        <Typography variant="subtitle1">{team?.name || 'Equipo'}</Typography>
+        <Typography variant="subtitle1">{team?.name || t('team')}</Typography>
       </Stack>
       {!players?.length ? (
         <Typography variant="body2" color="text.disabled" sx={{ py: 1.5 }}>
-          Plantilla no disponible
+          {t('label_roster_unavailable')}
         </Typography>
       ) : (
         <Stack spacing={1.5}>
@@ -231,7 +228,7 @@ function LineupCard({ team, players }) {
             list.length > 0 ? (
               <Box key={pos}>
                 <Typography variant="overline" sx={{ color: 'text.disabled' }}>
-                  {POSITION_LABEL[pos] || pos}
+                  {POSITION_LABEL[pos] ? t(POSITION_LABEL[pos]) : pos}
                 </Typography>
                 <Stack spacing={0.25} sx={{ mt: 0.25 }}>
                   {list.map((p) => (
@@ -259,8 +256,8 @@ function LineupCard({ team, players }) {
 }
 
 const POSITION_LABEL = {
-  Goalkeeper: 'Porteros',
-  Defender: 'Defensas',
-  Midfielder: 'Mediocampistas',
-  Forward: 'Delanteros',
+  Goalkeeper: 'position_goalkeepers',
+  Defender: 'position_defenders',
+  Midfielder: 'position_midfielders',
+  Forward: 'position_forwards',
 };
