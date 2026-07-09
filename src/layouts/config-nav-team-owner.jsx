@@ -36,13 +36,11 @@ export function getTeamOwnerNavData(t) {
           title: t('payments'),
           path: paths.dashboard.user.invoice.invoiceList,
           icon: ICONS.invoice,
-          disabled: true,
         },
         {
           title: t('nav_documents'),
           path: paths.dashboard.fileManager,
           icon: ICONS.folder,
-          disabled: true,
         },
       ],
     },
