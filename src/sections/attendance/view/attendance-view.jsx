@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -40,23 +41,56 @@ const PLAYER_COL_WIDTH = 160;
 const SESSION_COL_WIDTH = 52;
 const GROUP_ROW_HEIGHT = 28;
 
+// values below are i18n keys, resolved via t() at render time.
 const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+  'month_jan_full',
+  'month_feb_full',
+  'month_mar_full',
+  'month_apr_full',
+  'month_may_full',
+  'month_jun_full',
+  'month_jul_full',
+  'month_aug_full',
+  'month_sep_full',
+  'month_oct_full',
+  'month_nov_full',
+  'month_dec_full',
 ];
 
 const STATUS = { ASISTIO: 'asistio', AVISO: 'aviso', AUSENTE: 'ausente' };
 
+// label values below are i18n keys, resolved via t() at render time.
 const STATUS_CONFIG = {
-  [STATUS.ASISTIO]: { icon: 'solar:check-circle-bold',  color: 'success.main', label: 'Asistio'    },
-  [STATUS.AVISO]:   { icon: 'solar:danger-circle-bold', color: 'warning.main', label: 'Aviso'      },
-  [STATUS.AUSENTE]: { icon: 'solar:close-circle-bold',  color: 'error.main',   label: 'No asistio' },
+  [STATUS.ASISTIO]: {
+    icon: 'solar:check-circle-bold',
+    color: 'success.main',
+    label: 'label_attended',
+  },
+  [STATUS.AVISO]: {
+    icon: 'solar:danger-circle-bold',
+    color: 'warning.main',
+    label: 'label_excused',
+  },
+  [STATUS.AUSENTE]: {
+    icon: 'solar:close-circle-bold',
+    color: 'error.main',
+    label: 'label_did_not_attend',
+  },
 };
 
+// tooltip values below are i18n keys, resolved via t() at render time.
 const SORT_OPTIONS = [
-  { value: 'name',     icon: 'solar:sort-by-alphabet-bold',         tooltip: 'Ordenar A→Z'      },
-  { value: 'pct_desc', icon: 'solar:sort-from-top-to-bottom-bold',  tooltip: 'Mayor % primero'  },
-  { value: 'pct_asc',  icon: 'solar:sort-from-bottom-to-top-bold',  tooltip: 'Menor % primero'  },
+  { value: 'name', icon: 'solar:sort-by-alphabet-bold', tooltip: 'label_sort_a_to_z' },
+  {
+    value: 'pct_desc',
+    icon: 'solar:sort-from-top-to-bottom-bold',
+    tooltip: 'label_sort_highest_pct_first',
+  },
+  {
+    value: 'pct_asc',
+    icon: 'solar:sort-from-bottom-to-top-bold',
+    tooltip: 'label_sort_lowest_pct_first',
+  },
 ];
 
 function getDateParts(startDate) {
@@ -86,7 +120,7 @@ function CornerCell({ children, topOffset = 0, sx }) {
         top: topOffset,
         zIndex: 5,
         bgcolor: 'background.paper',
-        borderRight: (t) => `1px solid ${t.palette.divider}`,
+        borderRight: (theme) => `1px solid ${theme.palette.divider}`,
         ...sx,
       }}
     >
@@ -98,6 +132,7 @@ function CornerCell({ children, topOffset = 0, sx }) {
 // ----------------------------------------------------------------------
 
 export function AttendanceView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { selectedWorkspace, workspaceRole } = useWorkspace();
   const { user } = useAuthContext();
@@ -105,14 +140,14 @@ export function AttendanceView() {
   const isAdminOrCoach = workspaceRole === 'admin' || workspaceRole === 'coach';
 
   const [selectedMonth, setSelectedMonth] = useState(null);
-  const [search, setSearch]               = useState('');
-  const [sortBy, setSortBy]               = useState('name');
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('name');
   const [localSessions, setLocalSessions] = useState(null);
 
   const sourceTours = localSessions ?? tours;
 
   const allSessions = orderBy(
-    sourceTours.filter((t) => getDateParts(t.available?.startDate)?.year === YEAR),
+    sourceTours.filter((tour) => getDateParts(tour.available?.startDate)?.year === YEAR),
     ['available.startDate'],
     ['asc']
   );
@@ -120,14 +155,18 @@ export function AttendanceView() {
   const sessions =
     selectedMonth === null
       ? allSessions
-      : allSessions.filter((t) => getDateParts(t.available?.startDate)?.month === selectedMonth);
+      : allSessions.filter(
+          (tour) => getDateParts(tour.available?.startDate)?.month === selectedMonth
+        );
 
   const monthCounts = {};
-  allSessions.forEach((t) => {
-    const m = getDateParts(t.available?.startDate)?.month;
+  allSessions.forEach((tour) => {
+    const m = getDateParts(tour.available?.startDate)?.month;
     if (m != null) monthCounts[m] = (monthCounts[m] || 0) + 1;
   });
-  const availableMonths = Object.keys(monthCounts).map(Number).sort((a, b) => a - b);
+  const availableMonths = Object.keys(monthCounts)
+    .map(Number)
+    .sort((a, b) => a - b);
 
   const monthGroups = [];
   sessions.forEach((s) => {
@@ -139,7 +178,7 @@ export function AttendanceView() {
     }
   });
   const showGroupRow = selectedMonth === null && monthGroups.length > 1;
-  const dateRowTop   = showGroupRow ? GROUP_ROW_HEIGHT : 0;
+  const dateRowTop = showGroupRow ? GROUP_ROW_HEIGHT : 0;
 
   const playerMap = {};
   allSessions.forEach((session) => {
@@ -169,13 +208,14 @@ export function AttendanceView() {
 
   const players = [...filtered].sort((a, b) => {
     if (sortBy === 'pct_desc') return b.pct - a.pct;
-    if (sortBy === 'pct_asc')  return a.pct - b.pct;
+    if (sortBy === 'pct_asc') return a.pct - b.pct;
     return (a.name || '').localeCompare(b.name || '');
   });
 
-  const isEmpty      = !toursLoading && allSessions.length === 0;
-  const sortConfig   = SORT_OPTIONS.find((o) => o.value === sortBy);
-  const nextSort     = SORT_OPTIONS[(SORT_OPTIONS.findIndex((o) => o.value === sortBy) + 1) % SORT_OPTIONS.length];
+  const isEmpty = !toursLoading && allSessions.length === 0;
+  const sortConfig = SORT_OPTIONS.find((o) => o.value === sortBy);
+  const nextSort =
+    SORT_OPTIONS[(SORT_OPTIONS.findIndex((o) => o.value === sortBy) + 1) % SORT_OPTIONS.length];
 
   const handleToggle = useCallback(
     async (session, playerId) => {
@@ -202,29 +242,23 @@ export function AttendanceView() {
         );
       } catch (err) {
         setLocalSessions(base);
-        toast.error('Error actualizando asistencia');
+        toast.error(t('label_error_updating_attendance'));
       }
     },
-    [localSessions, tours, selectedWorkspace?.id]
+    [localSessions, tours, selectedWorkspace?.id, t]
   );
 
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Entrenamientos"
-        links={[{ name: 'Entrenamientos' }]}
+        heading={t('label_trainings')}
+        links={[{ name: t('label_trainings') }]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
       {/* Toolbar — month tabs + search + sort + legend in one prominent row */}
       <Card sx={{ mb: { xs: 3, md: 5 }, px: 1 }}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          flexWrap="wrap"
-          gap={1}
-          sx={{ minHeight: 56 }}
-        >
+        <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1} sx={{ minHeight: 56 }}>
           {/* Month tabs */}
           {availableMonths.length > 0 && (
             <Tabs
@@ -240,13 +274,18 @@ export function AttendanceView() {
                   value={month}
                   label={
                     <Stack direction="row" alignItems="center" spacing={0.75}>
-                      <span>{MONTH_NAMES[month]}</span>
+                      <span>{t(MONTH_NAMES[month])}</span>
                       <Chip
                         label={monthCounts[month]}
                         size="small"
                         variant={selectedMonth === month ? 'filled' : 'soft'}
                         color={selectedMonth === month ? 'primary' : 'default'}
-                        sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700, pointerEvents: 'none' }}
+                        sx={{
+                          height: 18,
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          pointerEvents: 'none',
+                        }}
                       />
                     </Stack>
                   }
@@ -260,7 +299,7 @@ export function AttendanceView() {
           {/* Legend */}
           <Stack direction="row" spacing={1.5} sx={{ px: 1 }}>
             {Object.values(STATUS_CONFIG).map(({ icon, color, label }) => (
-              <Tooltip key={label} title={label}>
+              <Tooltip key={label} title={t(label)}>
                 <Iconify icon={icon} width={20} sx={{ color, cursor: 'default' }} />
               </Tooltip>
             ))}
@@ -271,7 +310,7 @@ export function AttendanceView() {
           {/* Search */}
           <TextField
             size="small"
-            placeholder="Buscar jugador..."
+            placeholder={t('label_search_player_ellipsis')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             InputProps={{
@@ -285,7 +324,7 @@ export function AttendanceView() {
           />
 
           {/* Sort */}
-          <Tooltip title={nextSort.tooltip}>
+          <Tooltip title={t(nextSort.tooltip)}>
             <IconButton size="small" onClick={() => setSortBy(nextSort.value)} sx={{ mr: 0.5 }}>
               <Iconify icon={sortConfig.icon} width={20} />
             </IconButton>
@@ -306,7 +345,7 @@ export function AttendanceView() {
                 }
                 sx={{ flexShrink: 0, mr: 0.5 }}
               >
-                Nueva Votación
+                {t('label_new_vote')}
               </Button>
             </>
           )}
@@ -314,14 +353,13 @@ export function AttendanceView() {
       </Card>
 
       {isEmpty && (
-        <EmptyContent title={`Sin sesiones de entrenamiento en ${YEAR}`} sx={{ py: 8 }} />
+        <EmptyContent title={`${t('label_no_training_sessions_in')} ${YEAR}`} sx={{ py: 8 }} />
       )}
 
       {!isEmpty && sessions.length > 0 && (
         <Card>
           <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
             <Box sx={{ minWidth: PLAYER_COL_WIDTH + sessions.length * SESSION_COL_WIDTH }}>
-
               {/* Month group header row */}
               {showGroupRow && (
                 <Box
@@ -332,7 +370,7 @@ export function AttendanceView() {
                     top: 0,
                     zIndex: 4,
                     bgcolor: 'background.paper',
-                    borderBottom: (t) => `1px solid ${alpha(t.palette.divider, 0.6)}`,
+                    borderBottom: (theme) => `1px solid ${alpha(theme.palette.divider, 0.6)}`,
                   }}
                 >
                   <CornerCell topOffset={0} sx={{ height: GROUP_ROW_HEIGHT }} />
@@ -345,16 +383,26 @@ export function AttendanceView() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        borderRight: i < monthGroups.length - 1
-                          ? (t) => `2px solid ${t.palette.divider}`
-                          : 'none',
-                        bgcolor: i % 2 === 0
-                          ? (t) => alpha(t.palette.primary.main, 0.04)
-                          : 'transparent',
+                        borderRight:
+                          i < monthGroups.length - 1
+                            ? (theme) => `2px solid ${theme.palette.divider}`
+                            : 'none',
+                        bgcolor:
+                          i % 2 === 0
+                            ? (theme) => alpha(theme.palette.primary.main, 0.04)
+                            : 'transparent',
                       }}
                     >
-                      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.65rem', letterSpacing: 0.5 }}>
-                        {MONTH_NAMES[group.month].toUpperCase()}
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontWeight: 700,
+                          color: 'text.secondary',
+                          fontSize: '0.65rem',
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        {t(MONTH_NAMES[group.month]).toUpperCase()}
                       </Typography>
                     </Box>
                   ))}
@@ -370,23 +418,39 @@ export function AttendanceView() {
                   top: dateRowTop,
                   zIndex: 4,
                   bgcolor: 'background.paper',
-                  borderBottom: (t) => `1px solid ${t.palette.divider}`,
+                  borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                 }}
               >
-                <CornerCell topOffset={dateRowTop} sx={{ px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.disabled', fontSize: '0.65rem', letterSpacing: 0.4 }}>
-                    JUGADOR
+                <CornerCell
+                  topOffset={dateRowTop}
+                  sx={{ px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 700,
+                      color: 'text.disabled',
+                      fontSize: '0.65rem',
+                      letterSpacing: 0.4,
+                    }}
+                  >
+                    {t('word_player').toUpperCase()}
                   </Typography>
-                  <Tooltip title={nextSort.tooltip}>
-                    <IconButton size="small" onClick={() => setSortBy(nextSort.value)} sx={{ ml: 'auto', p: 0.25 }}>
+                  <Tooltip title={t(nextSort.tooltip)}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setSortBy(nextSort.value)}
+                      sx={{ ml: 'auto', p: 0.25 }}
+                    >
                       <Iconify icon={sortConfig.icon} width={14} sx={{ color: 'text.disabled' }} />
                     </IconButton>
                   </Tooltip>
                 </CornerCell>
 
                 {sessions.map((session, i) => {
-                  const month    = getDateParts(session.available?.startDate)?.month;
-                  const prevMonth = i > 0 ? getDateParts(sessions[i - 1].available?.startDate)?.month : month;
+                  const month = getDateParts(session.available?.startDate)?.month;
+                  const prevMonth =
+                    i > 0 ? getDateParts(sessions[i - 1].available?.startDate)?.month : month;
                   return (
                     <Tooltip key={session.id} title={session.name} placement="top">
                       <Box
@@ -396,13 +460,22 @@ export function AttendanceView() {
                           px: 0.5,
                           py: 1,
                           textAlign: 'center',
-                          borderLeft: month !== prevMonth && !showGroupRow
-                            ? (t) => `2px solid ${t.palette.divider}`
-                            : 'none',
-                          borderRight: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+                          borderLeft:
+                            month !== prevMonth && !showGroupRow
+                              ? (theme) => `2px solid ${theme.palette.divider}`
+                              : 'none',
+                          borderRight: (theme) => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
                         }}
                       >
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.65rem', lineHeight: 1.2 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 700,
+                            color: 'text.secondary',
+                            fontSize: '0.65rem',
+                            lineHeight: 1.2,
+                          }}
+                        >
                           {fDate(session.available?.startDate, 'DD/MM')}
                         </Typography>
                       </Box>
@@ -420,7 +493,7 @@ export function AttendanceView() {
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
-                      '&:hover': { bgcolor: (t) => alpha(t.palette.grey[500], 0.04) },
+                      '&:hover': { bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04) },
                     }}
                   >
                     {/* Sticky name column */}
@@ -437,10 +510,14 @@ export function AttendanceView() {
                         left: 0,
                         bgcolor: 'background.paper',
                         zIndex: 2,
-                        borderRight: (t) => `1px solid ${t.palette.divider}`,
+                        borderRight: (theme) => `1px solid ${theme.palette.divider}`,
                       }}
                     >
-                      <Avatar src={player.avatarUrl} alt={player.name} sx={{ width: 28, height: 28, flexShrink: 0, fontSize: '0.75rem' }}>
+                      <Avatar
+                        src={player.avatarUrl}
+                        alt={player.name}
+                        sx={{ width: 28, height: 28, flexShrink: 0, fontSize: '0.75rem' }}
+                      >
                         {player.name?.charAt(0)}
                       </Avatar>
                       <Stack sx={{ minWidth: 0 }}>
@@ -455,7 +532,12 @@ export function AttendanceView() {
                             fontWeight: 700,
                             fontSize: '0.65rem',
                             lineHeight: 1,
-                            color: player.pct >= 80 ? 'success.main' : player.pct >= 50 ? 'warning.main' : 'error.main',
+                            color:
+                              player.pct >= 80
+                                ? 'success.main'
+                                : player.pct >= 50
+                                  ? 'warning.main'
+                                  : 'error.main',
                           }}
                         >
                           {player.pct}%
@@ -465,16 +547,25 @@ export function AttendanceView() {
 
                     {/* Session cells */}
                     {sessions.map((session, i) => {
-                      const month     = getDateParts(session.available?.startDate)?.month;
-                      const prevMonth = i > 0 ? getDateParts(sessions[i - 1].available?.startDate)?.month : month;
-                      const status    = getStatus(session.bookers, player.id);
+                      const month = getDateParts(session.available?.startDate)?.month;
+                      const prevMonth =
+                        i > 0 ? getDateParts(sessions[i - 1].available?.startDate)?.month : month;
+                      const status = getStatus(session.bookers, player.id);
                       const { icon, color, label } = STATUS_CONFIG[status];
                       const isInteractive = isAdminOrCoach && status !== STATUS.AUSENTE;
 
                       return (
-                        <Tooltip key={session.id} title={isInteractive ? `${label} — clic para cambiar` : label} placement="top">
+                        <Tooltip
+                          key={session.id}
+                          title={
+                            isInteractive ? `${t(label)} — ${t('label_click_to_change')}` : t(label)
+                          }
+                          placement="top"
+                        >
                           <Box
-                            onClick={isInteractive ? () => handleToggle(session, player.id) : undefined}
+                            onClick={
+                              isInteractive ? () => handleToggle(session, player.id) : undefined
+                            }
                             sx={{
                               width: SESSION_COL_WIDTH,
                               minWidth: SESSION_COL_WIDTH,
@@ -483,12 +574,14 @@ export function AttendanceView() {
                               justifyContent: 'center',
                               py: 1.25,
                               cursor: isInteractive ? 'pointer' : 'default',
-                              borderLeft: month !== prevMonth && !showGroupRow
-                                ? (t) => `2px solid ${t.palette.divider}`
-                                : 'none',
-                              borderRight: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+                              borderLeft:
+                                month !== prevMonth && !showGroupRow
+                                  ? (theme) => `2px solid ${theme.palette.divider}`
+                                  : 'none',
+                              borderRight: (theme) =>
+                                `1px solid ${alpha(theme.palette.divider, 0.5)}`,
                               '&:hover': isInteractive
-                                ? { bgcolor: (t) => alpha(t.palette.grey[500], 0.08) }
+                                ? { bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08) }
                                 : {},
                             }}
                           >
@@ -508,8 +601,8 @@ export function AttendanceView() {
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    borderTop: (t) => `2px solid ${t.palette.divider}`,
-                    bgcolor: (t) => alpha(t.palette.grey[500], 0.04),
+                    borderTop: (theme) => `2px solid ${theme.palette.divider}`,
+                    bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
                   }}
                 >
                   <Box
@@ -520,18 +613,28 @@ export function AttendanceView() {
                       py: 1,
                       position: 'sticky',
                       left: 0,
-                      bgcolor: (t) => alpha(t.palette.grey[500], 0.06),
+                      bgcolor: (theme) => alpha(theme.palette.grey[500], 0.06),
                       zIndex: 2,
-                      borderRight: (t) => `1px solid ${t.palette.divider}`,
+                      borderRight: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.disabled', fontSize: '0.65rem', letterSpacing: 0.4 }}>
-                      TOTAL
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 700,
+                        color: 'text.disabled',
+                        fontSize: '0.65rem',
+                        letterSpacing: 0.4,
+                      }}
+                    >
+                      {t('total').toUpperCase()}
                     </Typography>
                   </Box>
 
                   {sessions.map((session) => {
-                    const attended = players.filter((p) => getStatus(session.bookers, p.id) === STATUS.ASISTIO).length;
+                    const attended = players.filter(
+                      (p) => getStatus(session.bookers, p.id) === STATUS.ASISTIO
+                    ).length;
                     const pct = Math.round((attended / players.length) * 100);
                     return (
                       <Box
@@ -543,7 +646,7 @@ export function AttendanceView() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           py: 0.75,
-                          borderRight: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+                          borderRight: (theme) => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
                         }}
                       >
                         <Typography
@@ -552,7 +655,12 @@ export function AttendanceView() {
                             fontWeight: 700,
                             fontSize: '0.6rem',
                             lineHeight: 1.2,
-                            color: pct >= 80 ? 'success.main' : pct >= 50 ? 'warning.main' : 'error.main',
+                            color:
+                              pct >= 80
+                                ? 'success.main'
+                                : pct >= 50
+                                  ? 'warning.main'
+                                  : 'error.main',
                           }}
                         >
                           {attended}/{players.length}
@@ -563,12 +671,10 @@ export function AttendanceView() {
                   <Box sx={{ flex: 1 }} />
                 </Box>
               )}
-
             </Box>
           </Box>
         </Card>
       )}
-
     </DashboardContent>
   );
 }
