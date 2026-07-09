@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Button from '@mui/material/Button';
 
 import { RouterLink } from 'src/routes/components';
@@ -7,6 +9,7 @@ import { CONFIG } from 'src/config-global';
 // ----------------------------------------------------------------------
 
 export function SignInButton({ sx, ...other }) {
+  const { t } = useTranslation();
   return (
     <Button
       component={RouterLink}
@@ -15,7 +18,7 @@ export function SignInButton({ sx, ...other }) {
       sx={sx}
       {...other}
     >
-      Sign in
+      {t('sign_in')}
     </Button>
   );
 }

@@ -1,5 +1,6 @@
 import { m } from 'framer-motion';
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -25,6 +26,7 @@ import { NotificationItem } from './notification-item';
 // ----------------------------------------------------------------------
 
 export function NotificationsDrawer({ sx, ...other }) {
+  const { t } = useTranslation();
   const drawer = useBoolean();
 
   const { notifications, markAllAsRead, markAsRead } = useNotificationsContext();
@@ -37,24 +39,25 @@ export function NotificationsDrawer({ sx, ...other }) {
 
   const totalUnRead = notifications.filter((n) => n.isUnRead).length;
 
-  const filtered = {
-    all: notifications,
-    unread: notifications.filter((n) => n.isUnRead),
-  }[currentTab] ?? notifications;
+  const filtered =
+    {
+      all: notifications,
+      unread: notifications.filter((n) => n.isUnRead),
+    }[currentTab] ?? notifications;
 
   const TABS = [
-    { value: 'all', label: 'Todos', count: notifications.length },
-    { value: 'unread', label: 'Sin leer', count: totalUnRead },
+    { value: 'all', label: 'all', count: notifications.length },
+    { value: 'unread', label: 'label_unread', count: totalUnRead },
   ];
 
   const renderHead = (
     <Stack direction="row" alignItems="center" sx={{ py: 2, pl: 2.5, pr: 1, minHeight: 68 }}>
       <Typography variant="h6" sx={{ flexGrow: 1 }}>
-        Notificaciones
+        {t('label_notifications')}
       </Typography>
 
       {!!totalUnRead && (
-        <Tooltip title="Marcar todas como leídas">
+        <Tooltip title={t('label_mark_all_read')}>
           <IconButton color="primary" onClick={markAllAsRead}>
             <Iconify icon="eva:done-all-fill" />
           </IconButton>
@@ -74,7 +77,7 @@ export function NotificationsDrawer({ sx, ...other }) {
           key={tab.value}
           iconPosition="end"
           value={tab.value}
-          label={tab.label}
+          label={t(tab.label)}
           icon={
             <Label
               variant={((tab.value === 'all' || tab.value === currentTab) && 'filled') || 'soft'}
@@ -91,7 +94,7 @@ export function NotificationsDrawer({ sx, ...other }) {
   const renderEmpty = (
     <Box sx={{ py: 8, textAlign: 'center', color: 'text.disabled' }}>
       <Iconify icon="solar:bell-off-bold-duotone" width={48} sx={{ mb: 1, opacity: 0.5 }} />
-      <Typography variant="body2">Sin notificaciones</Typography>
+      <Typography variant="body2">{t('label_no_notifications')}</Typography>
     </Box>
   );
 

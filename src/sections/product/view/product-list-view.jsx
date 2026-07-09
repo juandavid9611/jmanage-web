@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -43,9 +44,10 @@ import {
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const PUBLISH_OPTIONS = [
-  { value: 'published', label: 'Published' },
-  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'label_published' },
+  { value: 'draft', label: 'draft' },
 ];
 
 const HIDE_COLUMNS = { category: false };
@@ -55,6 +57,7 @@ const HIDE_COLUMNS_TOGGLABLE = ['category', 'actions'];
 // ----------------------------------------------------------------------
 
 export function ProductListView() {
+  const { t } = useTranslation();
   const confirmRows = useBoolean();
 
   const router = useRouter();
@@ -86,26 +89,26 @@ export function ProductListView() {
       try {
         await deleteProduct(id);
         const deleteRow = tableData.filter((row) => row.id !== id);
-        toast.success('Delete success!');
+        toast.success(t('delete_success'));
         setTableData(deleteRow);
       } catch (error) {
-        toast.error(error.message || 'Failed to delete product');
+        toast.error(error.message || t('label_failed_to_delete_product'));
       }
     },
-    [tableData]
+    [tableData, t]
   );
 
   const handleDeleteRows = useCallback(async () => {
     try {
       await Promise.all(selectedRowIds.map((id) => deleteProduct(id)));
       const deleteRows = tableData.filter((row) => !selectedRowIds.includes(row.id));
-      toast.success('Delete success!');
+      toast.success(t('delete_success'));
       setTableData(deleteRows);
       setSelectedRowIds([]);
     } catch (error) {
-      toast.error(error.message || 'Failed to delete products');
+      toast.error(error.message || t('label_failed_to_delete_products'));
     }
-  }, [selectedRowIds, tableData]);
+  }, [selectedRowIds, tableData, t]);
 
   const handleEditRow = useCallback(
     (id) => {
@@ -136,11 +139,21 @@ export function ProductListView() {
     [filters.state, selectedRowIds]
   );
 
+  const translatedStockOptions = useMemo(
+    () => PRODUCT_STOCK_OPTIONS.map((option) => ({ ...option, label: t(option.label) })),
+    [t]
+  );
+
+  const translatedPublishOptions = useMemo(
+    () => PUBLISH_OPTIONS.map((option) => ({ ...option, label: t(option.label) })),
+    [t]
+  );
+
   const columns = [
-    { field: 'category', headerName: 'Category', filterable: false },
+    { field: 'category', headerName: t('category'), filterable: false },
     {
       field: 'name',
-      headerName: 'Product',
+      headerName: t('product'),
       flex: 1,
       minWidth: 360,
       hideable: false,
@@ -150,32 +163,32 @@ export function ProductListView() {
     },
     {
       field: 'createdAt',
-      headerName: 'Create at',
+      headerName: t('label_create_at'),
       width: 160,
       renderCell: (params) => <RenderCellCreatedAt params={params} />,
     },
     {
       field: 'inventoryType',
-      headerName: 'Stock',
+      headerName: t('label_stock'),
       width: 160,
       type: 'singleSelect',
-      valueOptions: PRODUCT_STOCK_OPTIONS,
+      valueOptions: translatedStockOptions,
       renderCell: (params) => <RenderCellStock params={params} />,
     },
     {
       field: 'price',
-      headerName: 'Price',
+      headerName: t('price'),
       width: 140,
       editable: true,
       renderCell: (params) => <RenderCellPrice params={params} />,
     },
     {
       field: 'publish',
-      headerName: 'Publish',
+      headerName: t('label_publish'),
       width: 110,
       type: 'singleSelect',
       editable: true,
-      valueOptions: PUBLISH_OPTIONS,
+      valueOptions: translatedPublishOptions,
       renderCell: (params) => <RenderCellPublish params={params} />,
     },
     {
@@ -192,19 +205,19 @@ export function ProductListView() {
         <GridActionsCellItem
           showInMenu
           icon={<Iconify icon="solar:eye-bold" />}
-          label="View"
+          label={t('label_view')}
           onClick={() => handleViewRow(params.row.id)}
         />,
         <GridActionsCellItem
           showInMenu
           icon={<Iconify icon="solar:pen-bold" />}
-          label="Edit"
+          label={t('edit')}
           onClick={() => handleEditRow(params.row.id)}
         />,
         <GridActionsCellItem
           showInMenu
           icon={<Iconify icon="solar:trash-bin-trash-bold" />}
-          label="Delete"
+          label={t('delete')}
           onClick={() => {
             handleDeleteRow(params.row.id);
           }}
@@ -223,11 +236,11 @@ export function ProductListView() {
     <>
       <DashboardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <CustomBreadcrumbs
-          heading="List"
+          heading={t('list')}
           links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Product', href: paths.dashboard.product.root },
-            { name: 'List' },
+            { name: t('label_dashboard'), href: paths.dashboard.root },
+            { name: t('product'), href: paths.dashboard.product.root },
+            { name: t('list') },
           ]}
           action={
             <Button
@@ -236,7 +249,7 @@ export function ProductListView() {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              New product
+              {t('label_new_product')}
             </Button>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
@@ -265,7 +278,7 @@ export function ProductListView() {
             slots={{
               toolbar: CustomToolbarCallback,
               noRowsOverlay: () => <EmptyContent />,
-              noResultsOverlay: () => <EmptyContent title="No results found" />,
+              noResultsOverlay: () => <EmptyContent title={t('label_no_results_found')} />,
             }}
             slotProps={{
               panel: { anchorEl: filterButtonEl },
@@ -280,10 +293,11 @@ export function ProductListView() {
       <ConfirmDialog
         open={confirmRows.value}
         onClose={confirmRows.onFalse}
-        title="Delete"
+        title={t('delete')}
         content={
           <>
-            Are you sure want to delete <strong> {selectedRowIds.length} </strong> items?
+            {t('label_confirm_delete_prefix')} <strong> {selectedRowIds.length} </strong>{' '}
+            {t('label_confirm_delete_suffix_items')}
           </>
         }
         action={
@@ -295,7 +309,7 @@ export function ProductListView() {
               confirmRows.onFalse();
             }}
           >
-            Delete
+            {t('delete')}
           </Button>
         }
       />
@@ -311,6 +325,7 @@ function CustomToolbar({
   setFilterButtonEl,
   onOpenConfirmDeleteRows,
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <GridToolbarContainer>
@@ -335,7 +350,7 @@ function CustomToolbar({
               startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
               onClick={onOpenConfirmDeleteRows}
             >
-              Delete ({selectedRowIds.length})
+              {t('delete')} ({selectedRowIds.length})
             </Button>
           )}
 

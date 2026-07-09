@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { m, useSpring, useTransform, useMotionValue, AnimatePresence } from 'framer-motion';
 
@@ -26,41 +27,43 @@ import { LandingNav } from './landing-nav';
 
 // ─── DATA ───────────────────────────────────────────────────────────
 
+// title/desc/label values below are i18n keys (see src/locales/langs/*/common.json),
+// resolved via t() at render time — not literal display text.
 const TOURNAMENT_FEATURES = [
   {
     icon: 'solar:cup-star-bold-duotone',
-    title: 'Constructor de Torneos',
-    desc: 'Crea formatos de liga, eliminación directa o híbridos en segundos. Generación automática de fixtures y siembra.',
+    title: 'feat_tournament_builder_title',
+    desc: 'feat_tournament_builder_desc',
     color: 'primary',
   },
   {
     icon: 'solar:chart-bold-duotone',
-    title: 'Resultados en Vivo',
-    desc: 'Actualizaciones de resultados en tiempo real visibles para todos. Notificaciones push tras cada gol.',
+    title: 'feat_live_results_title',
+    desc: 'feat_live_results_desc',
     color: 'info',
   },
   {
     icon: 'solar:ranking-bold-duotone',
-    title: 'Fase de Grupos',
-    desc: 'Tablas de posiciones dinámicas con desempates configurables, puntos y diferencia de goles calculados automáticamente.',
+    title: 'feat_group_stage_title',
+    desc: 'feat_group_stage_desc',
     color: 'warning',
   },
   {
     icon: 'solar:graph-new-bold-duotone',
-    title: 'Estadísticas de Jugadores',
-    desc: 'Goles, asistencias, tarjetas, valoraciones — todo se rastrea automáticamente. Tablas de líderes actualizadas tras cada partido.',
+    title: 'feat_player_stats_title',
+    desc: 'feat_player_stats_desc',
     color: 'error',
   },
   {
     icon: 'solar:calendar-bold-duotone',
-    title: 'Programación Inteligente',
-    desc: 'Programación de partidos sin conflictos. Reprograma jornadas con un clic y notifica a todos al instante.',
+    title: 'feat_smart_scheduling_title',
+    desc: 'feat_smart_scheduling_desc',
     color: 'success',
   },
   {
     icon: 'solar:route-bold-duotone',
-    title: 'Llaves y Finales',
-    desc: 'Visualización de llaves con siembra automática desde grupos. Un clic para coronar al campeón.',
+    title: 'feat_brackets_finals_title',
+    desc: 'feat_brackets_finals_desc',
     color: 'secondary',
   },
 ];
@@ -68,105 +71,108 @@ const TOURNAMENT_FEATURES = [
 const CLUB_FEATURES = [
   {
     icon: 'solar:card-bold-duotone',
-    title: 'Pagos y Cuotas',
-    desc: 'Cobra cuotas mensuales, registra abonos y lleva el control financiero de cada miembro desde un solo panel.',
+    title: 'feat_payments_dues_title',
+    desc: 'feat_payments_dues_desc',
     color: 'success',
   },
   {
     icon: 'solar:calendar-bold-duotone',
-    title: 'Calendario de Eventos',
-    desc: 'Programa entrenamientos, partidos y reuniones. Notificaciones automáticas para que nadie se pierda nada.',
+    title: 'feat_event_calendar_title',
+    desc: 'feat_event_calendar_desc',
     color: 'info',
   },
   {
     icon: 'solar:users-group-rounded-bold-duotone',
-    title: 'Control de Asistencias',
-    desc: 'Registra la asistencia a cada sesión. Consulta el historial por jugador y detecta patrones de ausencia.',
+    title: 'feat_attendance_control_title',
+    desc: 'feat_attendance_control_desc',
     color: 'warning',
   },
   {
     icon: 'solar:bag-bold-duotone',
-    title: 'Tienda del Club',
-    desc: 'Vende uniformes, equipamiento y merchandising directamente desde la plataforma. Gestión de stock incluida.',
+    title: 'feat_club_shop_title',
+    desc: 'feat_club_shop_desc',
     color: 'primary',
   },
   {
     icon: 'solar:file-text-bold-duotone',
-    title: 'Documentos',
-    desc: 'Centraliza contratos, fichas médicas y licencias. Control de versiones y acceso por roles para tu staff.',
+    title: 'feat_documents_title',
+    desc: 'feat_documents_desc',
     color: 'error',
   },
   {
     icon: 'solar:football-bold-duotone',
-    title: 'Gestión de Partidos',
-    desc: 'Convocatorias, alineaciones, resultados y estadísticas. Todo el seguimiento del rendimiento del equipo.',
+    title: 'feat_match_management_title',
+    desc: 'feat_match_management_desc',
     color: 'secondary',
   },
 ];
 
 const FEAT_TABS = [
-  { key: 'tournaments', label: 'Torneos', icon: 'solar:cup-star-bold-duotone', color: 'primary' },
-  { key: 'clubs', label: 'Clubes', icon: 'solar:shield-bold-duotone', color: 'info' },
+  {
+    key: 'tournaments',
+    label: 'tournaments',
+    icon: 'solar:cup-star-bold-duotone',
+    color: 'primary',
+  },
+  { key: 'clubs', label: 'clubs', icon: 'solar:shield-bold-duotone', color: 'info' },
 ];
 
 const STATS = [
   {
     value: 2,
     suffix: '+',
-    label: 'Paises alcanzados',
+    label: 'stat_countries_reached',
     icon: 'solar:cup-star-bold-duotone',
     color: 'primary',
   },
   {
     value: 400,
     suffix: '+',
-    label: 'Jugadores Activos',
+    label: 'stat_active_players',
     icon: 'solar:users-group-rounded-bold-duotone',
     color: 'info',
   },
   {
     value: 4,
     suffix: '+',
-    label: 'Clubes Registrados',
+    label: 'stat_registered_clubs',
     icon: 'solar:shield-bold-duotone',
     color: 'warning',
   },
   {
     value: 98,
     suffix: '%',
-    label: 'Satisfacción del Usuario',
+    label: 'stat_user_satisfaction',
     icon: 'solar:star-bold-duotone',
     color: 'success',
   },
   {
     value: 120,
     suffix: '+',
-    label: 'Partidos Jugados',
+    label: 'stat_matches_played',
     icon: 'solar:football-bold-duotone',
     color: 'error',
   },
 ];
 
+// author/role are fictional sample names — kept as literal text, not translated.
 const TESTIMONIALS = [
   {
-    quote:
-      'SportsManagement transformó la forma en que gestionamos nuestra liga. Lo que antes tomaba horas, ahora lo hacemos en minutos.',
+    quote: 'testimonial_1_quote',
     author: 'Carlos Mendoza',
     role: 'Director · Liga Bogotá FC',
     avatar: 'CM',
     color: 'primary',
   },
   {
-    quote:
-      'El control de asistencias y los pagos en un solo lugar es increíble. Nuestros jugadores también aman la plataforma.',
+    quote: 'testimonial_2_quote',
     author: 'Luis García',
     role: 'Administrador · Club Deportivo Vittoria',
     avatar: 'LG',
     color: 'info',
   },
   {
-    quote:
-      'Generamos el fixture de 32 equipos en segundos. La fase de grupos y las llaves funcionan perfectamente.',
+    quote: 'testimonial_3_quote',
     author: 'Pedro Torres',
     role: 'Organizador · Copa Regional 2025',
     avatar: 'PT',
@@ -178,29 +184,29 @@ const LIFECYCLE_STEPS = [
   {
     key: 'configure',
     icon: 'solar:settings-bold-duotone',
-    title: 'Configurar Torneo',
-    desc: 'Elige el formato, establece reglas de puntuación y define desempates. Tu torneo, tus reglas.',
+    title: 'step_configure_title',
+    desc: 'step_configure_desc',
     color: 'primary',
   },
   {
     key: 'teams',
     icon: 'solar:shield-bold-duotone',
-    title: 'Registrar Equipos',
-    desc: 'Invita equipos, gestiona plantillas y rastrea el progreso del registro hasta completar la escuadra.',
+    title: 'step_register_teams_title',
+    desc: 'step_register_teams_desc',
     color: 'info',
   },
   {
     key: 'groups',
     icon: 'solar:ranking-bold-duotone',
-    title: 'Fase de Grupos',
-    desc: 'Fixtures autogenerados, tablas en vivo y cronogramas de jornadas. Posiciones actualizadas en tiempo real.',
+    title: 'feat_group_stage_title',
+    desc: 'step_groups_desc',
     color: 'warning',
   },
   {
     key: 'knockout',
     icon: 'solar:cup-star-bold-duotone',
-    title: 'Eliminatorias y Finales',
-    desc: 'Visualización de llaves con siembra automática desde grupos. Un clic para coronar al campeón.',
+    title: 'step_knockout_title',
+    desc: 'feat_brackets_finals_desc',
     color: 'success',
   },
 ];
@@ -209,43 +215,43 @@ const CLUB_STEPS = [
   {
     key: 'payments',
     icon: 'solar:card-bold-duotone',
-    title: 'Pagos y Cuotas',
-    desc: 'Gestiona cuotas, cobra pagos online y lleva el control financiero de cada miembro.',
+    title: 'feat_payments_dues_title',
+    desc: 'step_payments_desc',
     color: 'success',
   },
   {
     key: 'calendar',
     icon: 'solar:calendar-bold-duotone',
-    title: 'Calendario de Eventos',
-    desc: 'Programa entrenamientos, partidos y eventos. Todos al tanto con notificaciones automáticas.',
+    title: 'feat_event_calendar_title',
+    desc: 'step_calendar_desc',
     color: 'info',
   },
   {
     key: 'assists',
     icon: 'solar:users-group-rounded-bold-duotone',
-    title: 'Control de Asistencias',
-    desc: 'Registra la asistencia a entrenamientos y partidos. Estadísticas por jugador en tiempo real.',
+    title: 'feat_attendance_control_title',
+    desc: 'step_attendance_desc',
     color: 'warning',
   },
   {
     key: 'shop',
     icon: 'solar:bag-bold-duotone',
-    title: 'Tienda del Club',
-    desc: 'Vende uniformes, equipamiento y merchandising directamente desde la plataforma.',
+    title: 'feat_club_shop_title',
+    desc: 'step_shop_desc',
     color: 'primary',
   },
   {
     key: 'documents',
     icon: 'solar:file-text-bold-duotone',
-    title: 'Documentos',
-    desc: 'Centraliza contratos, fichas médicas y documentos del club con acceso controlado.',
+    title: 'feat_documents_title',
+    desc: 'step_documents_desc',
     color: 'error',
   },
   {
     key: 'matches',
     icon: 'solar:football-bold-duotone',
-    title: 'Gestión de Partidos',
-    desc: 'Convocatorias, resultados y estadísticas por partido para hacer seguimiento del rendimiento.',
+    title: 'feat_match_management_title',
+    desc: 'step_matches_desc',
     color: 'secondary',
   },
 ];
@@ -272,36 +278,46 @@ const HERO_CLUB_PAYMENTS = [
   { name: 'Pedro Torres', avatar: 'PT', paid: false },
 ];
 
+// day/label/month values below are i18n keys, resolved via t() at render time.
 const HERO_CLUB_EVENTS = [
   {
-    day: 'Hoy',
+    day: 'day_today',
     time: '18:00',
-    label: 'Entrenamiento',
+    label: 'label_training',
     color: 'info',
     icon: 'solar:running-round-bold-duotone',
   },
   {
-    day: 'Mié',
+    day: 'day_wed_abbr',
     time: '20:00',
-    label: 'Partido vs Tigres',
+    label: 'word_match_vs',
+    opponent: 'Tigres',
     color: 'warning',
     icon: 'solar:football-bold-duotone',
   },
   {
-    day: 'Sáb',
+    day: 'day_sat_abbr',
     time: '10:00',
-    label: 'Reunión Directiva',
+    label: 'label_board_meeting',
     color: 'primary',
     icon: 'solar:users-group-rounded-bold-duotone',
   },
 ];
 
 const HERO_ATT_BARS = [72, 68, 80, 75, 83, 87];
-const HERO_ATT_LABELS = ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'];
+const HERO_ATT_LABELS = [
+  'month_oct_abbr',
+  'month_nov_abbr',
+  'month_dec_abbr',
+  'month_jan_abbr',
+  'month_feb_abbr',
+  'month_mar_abbr',
+];
 
 // ─── HERO DASHBOARD COMPONENTS ───────────────────────────────────────
 
 function HeroDashboardTournament() {
+  const { t } = useTranslation();
   const [liveScore, setLiveScore] = useState({ h: 2, a: 1 });
   const [goalFlash, setGoalFlash] = useState(false);
   const [minute, setMinute] = useState(67);
@@ -331,19 +347,19 @@ function HeroDashboardTournament() {
               Copa Verano 2026
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.63rem' }}>
-              16 equipos · Fase de grupos
+              {`16 ${t('word_teams_lowercase')} · ${t('feat_group_stage_title')}`}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={0.75}>
             <Chip
-              label="Jornada 3"
+              label={`${t('word_matchday')} 3`}
               size="small"
               color="primary"
               variant="soft"
               sx={{ height: 20, fontSize: '0.6rem' }}
             />
             <Chip
-              label="Activo"
+              label={t('word_active')}
               size="small"
               color="success"
               variant="soft"
@@ -363,11 +379,21 @@ function HeroDashboardTournament() {
         }}
       >
         {[
-          { label: 'Equipos', value: '16', icon: 'solar:shield-bold-duotone', color: 'primary' },
-          { label: 'Partidos', value: '48', icon: 'solar:football-bold-duotone', color: 'info' },
-          { label: 'Goles', value: '127', icon: 'solar:cup-star-bold-duotone', color: 'warning' },
+          { label: 'word_teams', value: '16', icon: 'solar:shield-bold-duotone', color: 'primary' },
           {
-            label: 'Jugadores',
+            label: 'word_matches',
+            value: '48',
+            icon: 'solar:football-bold-duotone',
+            color: 'info',
+          },
+          {
+            label: 'word_goals',
+            value: '127',
+            icon: 'solar:cup-star-bold-duotone',
+            color: 'warning',
+          },
+          {
+            label: 'word_players',
             value: '224',
             icon: 'solar:users-group-rounded-bold-duotone',
             color: 'success',
@@ -387,7 +413,7 @@ function HeroDashboardTournament() {
               {s.value}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.52rem' }}>
-              {s.label}
+              {t(s.label)}
             </Typography>
           </Box>
         ))}
@@ -415,7 +441,7 @@ function HeroDashboardTournament() {
               mb: 0.75,
             }}
           >
-            Posiciones
+            {t('word_standings')}
           </Typography>
           <Stack spacing={0.5}>
             {HERO_STANDINGS.map((team) => (
@@ -486,7 +512,7 @@ function HeroDashboardTournament() {
               mb: 0.75,
             }}
           >
-            Goleadores
+            {t('word_top_scorers')}
           </Typography>
           <Stack spacing={0.75}>
             {HERO_SCORERS.map((player) => (
@@ -556,10 +582,10 @@ function HeroDashboardTournament() {
             variant="caption"
             sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.6rem' }}
           >
-            EN VIVO
+            {t('word_live')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.58rem' }}>
-            min {minute}&apos;
+            {t('word_min_abbr')} {minute}&apos;
           </Typography>
         </Stack>
 
@@ -591,7 +617,7 @@ function HeroDashboardTournament() {
                   letterSpacing: 1,
                 }}
               >
-                Gol!
+                {t('word_goal_exclaim')}
               </Typography>
             </Box>
           )}
@@ -616,7 +642,7 @@ function HeroDashboardTournament() {
               SportsManagement FC
             </Typography>
             <Chip
-              label="Local"
+              label={t('word_home')}
               size="small"
               sx={{
                 height: 14,
@@ -682,7 +708,7 @@ function HeroDashboardTournament() {
               Águilas FC
             </Typography>
             <Chip
-              label="Visitante"
+              label={t('word_away')}
               size="small"
               sx={{
                 height: 14,
@@ -699,11 +725,12 @@ function HeroDashboardTournament() {
 }
 
 function HeroDashboardClub() {
+  const { t } = useTranslation();
   const [barsReady, setBarsReady] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setBarsReady(true), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setBarsReady(true), 300);
+    return () => clearTimeout(timer);
   }, []);
 
   const paidCount = HERO_CLUB_PAYMENTS.filter((p) => p.paid).length;
@@ -719,19 +746,19 @@ function HeroDashboardClub() {
               Club Los Tigres
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.63rem' }}>
-              Temporada 2026 · 24 miembros
+              {`${t('word_season')} 2026 · 24 ${t('word_members_lowercase')}`}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={0.75}>
             <Chip
-              label="Abr 2026"
+              label={`${t('month_apr_abbr')} 2026`}
               size="small"
               color="info"
               variant="soft"
               sx={{ height: 20, fontSize: '0.6rem' }}
             />
             <Chip
-              label="Activo"
+              label={t('word_active')}
               size="small"
               color="success"
               variant="soft"
@@ -752,14 +779,29 @@ function HeroDashboardClub() {
       >
         {[
           {
-            label: 'Miembros',
+            label: 'word_members',
             value: '24',
             icon: 'solar:users-group-rounded-bold-duotone',
             color: 'info',
           },
-          { label: 'Cuotas OK', value: '20', icon: 'solar:card-bold-duotone', color: 'success' },
-          { label: 'Asistencia', value: '87%', icon: 'solar:chart-bold-duotone', color: 'warning' },
-          { label: 'Partidos', value: '8', icon: 'solar:football-bold-duotone', color: 'primary' },
+          {
+            label: 'label_dues_ok',
+            value: '20',
+            icon: 'solar:card-bold-duotone',
+            color: 'success',
+          },
+          {
+            label: 'word_attendance',
+            value: '87%',
+            icon: 'solar:chart-bold-duotone',
+            color: 'warning',
+          },
+          {
+            label: 'word_matches',
+            value: '8',
+            icon: 'solar:football-bold-duotone',
+            color: 'primary',
+          },
         ].map((s, i) => (
           <Box
             key={s.label}
@@ -775,7 +817,7 @@ function HeroDashboardClub() {
               {s.value}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.52rem' }}>
-              {s.label}
+              {t(s.label)}
             </Typography>
           </Box>
         ))}
@@ -802,7 +844,7 @@ function HeroDashboardClub() {
                 textTransform: 'uppercase',
               }}
             >
-              Cuotas
+              {t('word_dues')}
             </Typography>
             <Typography
               variant="caption"
@@ -886,7 +928,7 @@ function HeroDashboardClub() {
               mb: 0.75,
             }}
           >
-            Próximos
+            {t('word_upcoming')}
           </Typography>
           <Stack spacing={0.75}>
             {HERO_CLUB_EVENTS.map((ev) => (
@@ -912,13 +954,13 @@ function HeroDashboardClub() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {ev.label}
+                    {ev.opponent ? `${t(ev.label)} ${ev.opponent}` : t(ev.label)}
                   </Typography>
                   <Typography
                     variant="caption"
                     sx={{ color: 'text.disabled', fontSize: '0.52rem' }}
                   >
-                    {ev.day} · {ev.time}
+                    {t(ev.day)} · {ev.time}
                   </Typography>
                 </Stack>
                 <Iconify
@@ -944,13 +986,13 @@ function HeroDashboardClub() {
               textTransform: 'uppercase',
             }}
           >
-            Asistencia mensual
+            {t('label_monthly_attendance')}
           </Typography>
           <Typography
             variant="caption"
             sx={{ fontWeight: 700, fontSize: '0.6rem', color: 'warning.main' }}
           >
-            87% promedio
+            {`87% ${t('word_average')}`}
           </Typography>
         </Stack>
         <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5, height: 36 }}>
@@ -984,7 +1026,7 @@ function HeroDashboardClub() {
                 }}
               />
               <Typography sx={{ fontSize: '0.42rem', color: 'text.disabled', lineHeight: 1 }}>
-                {HERO_ATT_LABELS[idx]}
+                {t(HERO_ATT_LABELS[idx])}
               </Typography>
             </Box>
           ))}
@@ -1057,17 +1099,18 @@ function FloatingCard({ src, altText, sx }) {
 // ─── TOURNAMENT LIFECYCLE STEP PREVIEW CARDS ────────────────────────
 
 function ConfigPreview({ theme }) {
+  const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
   const [typedName, setTypedName] = useState('');
   const [teamCount, setTeamCount] = useState(0);
   const [groupCount, setGroupCount] = useState(0);
   const [tieBreakers, setTieBreakers] = useState([
-    { id: 'dg', label: 'Diferencia goles' },
-    { id: 'gf', label: 'Goles a favor' },
-    { id: 'rp', label: 'Resultado particular' },
+    { id: 'dg', label: 'tiebreaker_goal_diff' },
+    { id: 'gf', label: 'tiebreaker_goals_for' },
+    { id: 'rp', label: 'tiebreaker_head_to_head' },
   ]);
 
-  const FULL_NAME = 'Copa Verano 2025';
+  const FULL_NAME = 'Copa Verano 2026';
 
   useEffect(() => {
     if (activeStep === 0) {
@@ -1126,18 +1169,18 @@ function ConfigPreview({ theme }) {
     if (activeStep === 3) {
       const timer = setTimeout(() => {
         setTieBreakers([
-          { id: 'gf', label: 'Goles a favor' },
-          { id: 'dg', label: 'Diferencia goles' },
-          { id: 'rp', label: 'Resultado particular' },
+          { id: 'gf', label: 'tiebreaker_goals_for' },
+          { id: 'dg', label: 'tiebreaker_goal_diff' },
+          { id: 'rp', label: 'tiebreaker_head_to_head' },
         ]);
       }, 700);
       return () => clearTimeout(timer);
     }
     if (activeStep < 3) {
       setTieBreakers([
-        { id: 'dg', label: 'Diferencia goles' },
-        { id: 'gf', label: 'Goles a favor' },
-        { id: 'rp', label: 'Resultado particular' },
+        { id: 'dg', label: 'tiebreaker_goal_diff' },
+        { id: 'gf', label: 'tiebreaker_goals_for' },
+        { id: 'rp', label: 'tiebreaker_head_to_head' },
       ]);
     }
     return undefined;
@@ -1152,11 +1195,26 @@ function ConfigPreview({ theme }) {
   }, []);
 
   const CONFIG_SUBSTEPS = [
-    { key: 'identidad', label: 'Identidad', icon: 'mdi:shield-account-outline', color: 'primary' },
-    { key: 'formato', label: 'Formato', icon: 'mdi:tournament', color: 'info' },
-    { key: 'puntuacion', label: 'Puntuación', icon: 'mdi:numeric-3-box-outline', color: 'warning' },
-    { key: 'desempates', label: 'Desempates', icon: 'mdi:format-list-numbered', color: 'error' },
-    { key: 'opciones', label: 'Opciones', icon: 'mdi:cog-outline', color: 'success' },
+    {
+      key: 'identidad',
+      label: 'word_identity',
+      icon: 'mdi:shield-account-outline',
+      color: 'primary',
+    },
+    { key: 'formato', label: 'word_format', icon: 'mdi:tournament', color: 'info' },
+    {
+      key: 'puntuacion',
+      label: 'word_scoring',
+      icon: 'mdi:numeric-3-box-outline',
+      color: 'warning',
+    },
+    {
+      key: 'desempates',
+      label: 'word_tiebreakers',
+      icon: 'mdi:format-list-numbered',
+      color: 'error',
+    },
+    { key: 'opciones', label: 'word_options', icon: 'mdi:cog-outline', color: 'success' },
   ];
 
   const getVisibility = (stepIndex) => ({
@@ -1186,12 +1244,12 @@ function ConfigPreview({ theme }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    bgcolor: (t) =>
+                    bgcolor: (th) =>
                       isDone
-                        ? varAlpha(t.vars.palette[sub.color].mainChannel, 0.12)
+                        ? varAlpha(th.vars.palette[sub.color].mainChannel, 0.12)
                         : 'transparent',
-                    border: (t) =>
-                      `2px solid ${isDone || isActive ? t.palette[sub.color].main : varAlpha(t.vars.palette.grey['500Channel'], 0.2)}`,
+                    border: (th) =>
+                      `2px solid ${isDone || isActive ? th.palette[sub.color].main : varAlpha(th.vars.palette.grey['500Channel'], 0.2)}`,
                     transition: 'all 0.3s ease',
                   }}
                 >
@@ -1220,7 +1278,7 @@ function ConfigPreview({ theme }) {
                   }}
                   noWrap
                 >
-                  {sub.label}
+                  {t(sub.label)}
                 </Typography>
               </Stack>
               {idx < CONFIG_SUBSTEPS.length - 1 && (
@@ -1229,10 +1287,10 @@ function ConfigPreview({ theme }) {
                     height: '2px',
                     flex: '0 0 10px',
                     mt: -2,
-                    bgcolor: (t) =>
+                    bgcolor: (th) =>
                       isDone
-                        ? varAlpha(t.vars.palette[sub.color].mainChannel, 0.4)
-                        : varAlpha(t.vars.palette.grey['500Channel'], 0.16),
+                        ? varAlpha(th.vars.palette[sub.color].mainChannel, 0.4)
+                        : varAlpha(th.vars.palette.grey['500Channel'], 0.16),
                     transition: 'background-color 0.3s ease',
                   }}
                 />
@@ -1250,7 +1308,7 @@ function ConfigPreview({ theme }) {
             ...getVisibility(0),
             p: 1.5,
             boxShadow: 'none',
-            border: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
+            border: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
             bgcolor: 'background.paper',
           }}
         >
@@ -1260,7 +1318,7 @@ function ConfigPreview({ theme }) {
                 width: 36,
                 height: 36,
                 borderRadius: 1,
-                bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.1),
+                bgcolor: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.1),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1313,7 +1371,7 @@ function ConfigPreview({ theme }) {
                   transition: 'opacity 0.3s',
                 }}
               >
-                <Iconify icon="mdi:soccer" width={14} /> Fútbol
+                <Iconify icon="mdi:soccer" width={14} /> {t('word_soccer')}
                 <Box component="span" sx={{ mx: 0.5 }}>
                   •
                 </Box>
@@ -1329,7 +1387,7 @@ function ConfigPreview({ theme }) {
             ...getVisibility(1),
             p: 1.5,
             boxShadow: 'none',
-            border: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
+            border: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
             bgcolor: 'background.paper',
           }}
         >
@@ -1343,12 +1401,12 @@ function ConfigPreview({ theme }) {
                 borderRadius: 1,
                 position: 'relative',
                 overflow: 'hidden',
-                bgcolor: (t) =>
+                bgcolor: (th) =>
                   currentFormat === 0
-                    ? varAlpha(t.vars.palette.info.mainChannel, 0.08)
+                    ? varAlpha(th.vars.palette.info.mainChannel, 0.08)
                     : 'transparent',
-                border: (t) =>
-                  `1px solid ${currentFormat === 0 ? t.palette.info.main : varAlpha(t.vars.palette.grey['500Channel'], 0.2)}`,
+                border: (th) =>
+                  `1px solid ${currentFormat === 0 ? th.palette.info.main : varAlpha(th.vars.palette.grey['500Channel'], 0.2)}`,
                 transition: 'all 0.3s ease',
                 opacity: currentFormat === 0 ? 1 : 0.6,
               }}
@@ -1381,7 +1439,7 @@ function ConfigPreview({ theme }) {
                     textAlign: 'center',
                   }}
                 >
-                  LIGA
+                  {t('word_league_upper')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1392,9 +1450,9 @@ function ConfigPreview({ theme }) {
                     lineHeight: 1.1,
                   }}
                 >
-                  Todos vs
+                  {t('word_all_vs')}
                   <br />
-                  Todos
+                  {t('all')}
                 </Typography>
               </Stack>
             </Box>
@@ -1407,12 +1465,12 @@ function ConfigPreview({ theme }) {
                 borderRadius: 1,
                 position: 'relative',
                 overflow: 'hidden',
-                bgcolor: (t) =>
+                bgcolor: (th) =>
                   currentFormat === 1
-                    ? varAlpha(t.vars.palette.info.mainChannel, 0.08)
+                    ? varAlpha(th.vars.palette.info.mainChannel, 0.08)
                     : 'transparent',
-                border: (t) =>
-                  `1px solid ${currentFormat === 1 ? t.palette.info.main : varAlpha(t.vars.palette.grey['500Channel'], 0.2)}`,
+                border: (th) =>
+                  `1px solid ${currentFormat === 1 ? th.palette.info.main : varAlpha(th.vars.palette.grey['500Channel'], 0.2)}`,
                 transition: 'all 0.3s ease',
                 opacity: currentFormat === 1 ? 1 : 0.6,
               }}
@@ -1445,7 +1503,7 @@ function ConfigPreview({ theme }) {
                     textAlign: 'center',
                   }}
                 >
-                  GRUPOS
+                  {t('word_groups_upper')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1456,9 +1514,9 @@ function ConfigPreview({ theme }) {
                     lineHeight: 1.1,
                   }}
                 >
-                  Fases
+                  {t('word_phases')}
                   <br />
-                  Clasif.
+                  {t('word_qualif_abbr')}
                 </Typography>
               </Stack>
             </Box>
@@ -1471,12 +1529,12 @@ function ConfigPreview({ theme }) {
                 borderRadius: 1,
                 position: 'relative',
                 overflow: 'hidden',
-                bgcolor: (t) =>
+                bgcolor: (th) =>
                   currentFormat === 2
-                    ? varAlpha(t.vars.palette.info.mainChannel, 0.08)
+                    ? varAlpha(th.vars.palette.info.mainChannel, 0.08)
                     : 'transparent',
-                border: (t) =>
-                  `1px solid ${currentFormat === 2 ? t.palette.info.main : varAlpha(t.vars.palette.grey['500Channel'], 0.2)}`,
+                border: (th) =>
+                  `1px solid ${currentFormat === 2 ? th.palette.info.main : varAlpha(th.vars.palette.grey['500Channel'], 0.2)}`,
                 transition: 'all 0.3s ease',
                 opacity: currentFormat === 2 ? 1 : 0.6,
               }}
@@ -1509,7 +1567,7 @@ function ConfigPreview({ theme }) {
                     textAlign: 'center',
                   }}
                 >
-                  GRUPOS + KO
+                  {t('word_groups_ko_upper')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1520,8 +1578,9 @@ function ConfigPreview({ theme }) {
                     lineHeight: 1.1,
                   }}
                 >
-                  Grupos y<br />
-                  Fase Final
+                  {t('word_groups_and')}
+                  <br />
+                  {t('word_final_phase')}
                 </Typography>
               </Stack>
             </Box>
@@ -1531,7 +1590,7 @@ function ConfigPreview({ theme }) {
             sx={{
               borderStyle: 'dashed',
               mb: 1.5,
-              borderColor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.2),
+              borderColor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.2),
             }}
           />
 
@@ -1541,8 +1600,8 @@ function ConfigPreview({ theme }) {
                 flex: 1,
                 p: 1,
                 borderRadius: 1,
-                bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.04),
-                border: (t) => `1px solid ${varAlpha(t.vars.palette.info.mainChannel, 0.1)}`,
+                bgcolor: (th) => varAlpha(th.vars.palette.info.mainChannel, 0.04),
+                border: (th) => `1px solid ${varAlpha(th.vars.palette.info.mainChannel, 0.1)}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
@@ -1550,7 +1609,7 @@ function ConfigPreview({ theme }) {
             >
               <Iconify icon="mdi:shield-outline" width={16} sx={{ color: 'info.main' }} />
               <Typography variant="subtitle2" sx={{ color: 'info.dark' }}>
-                {teamCount} Equipos
+                {teamCount} {t('word_teams')}
               </Typography>
             </Box>
             <Box
@@ -1558,7 +1617,7 @@ function ConfigPreview({ theme }) {
                 flex: 1,
                 p: 1,
                 borderRadius: 1,
-                bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
+                bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.04),
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
@@ -1571,7 +1630,9 @@ function ConfigPreview({ theme }) {
                 width={16}
                 sx={{ color: 'text.secondary' }}
               />
-              <Typography variant="subtitle2">{activeStep >= 1 ? groupCount : 0} Grupos</Typography>
+              <Typography variant="subtitle2">
+                {activeStep >= 1 ? groupCount : 0} {t('word_groups')}
+              </Typography>
             </Box>
           </Stack>
         </Card>
@@ -1584,7 +1645,7 @@ function ConfigPreview({ theme }) {
               flex: 1,
               p: 1.5,
               boxShadow: 'none',
-              border: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
+              border: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
               bgcolor: 'background.paper',
               display: 'flex',
               flexDirection: 'column',
@@ -1594,7 +1655,7 @@ function ConfigPreview({ theme }) {
               variant="caption"
               sx={{ fontWeight: 700, color: 'warning.main', display: 'block', mb: 1.5 }}
             >
-              PUNTUACIÓN
+              {t('word_scoring_upper')}
             </Typography>
             <Stack
               direction="row"
@@ -1607,7 +1668,7 @@ function ConfigPreview({ theme }) {
                     width: 20,
                     height: 20,
                     borderRadius: '50%',
-                    bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.1),
+                    bgcolor: (th) => varAlpha(th.vars.palette.success.mainChannel, 0.1),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1617,7 +1678,7 @@ function ConfigPreview({ theme }) {
                     variant="caption"
                     sx={{ color: 'success.main', fontWeight: 700, fontSize: '0.6rem' }}
                   >
-                    V
+                    {t('result_win_abbr')}
                   </Typography>
                 </Box>
                 <Typography variant="subtitle2">
@@ -1626,7 +1687,7 @@ function ConfigPreview({ theme }) {
                     component="span"
                     sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 400 }}
                   >
-                    pts
+                    {t('word_pts_abbr')}
                   </Box>
                 </Typography>
               </Stack>
@@ -1636,7 +1697,7 @@ function ConfigPreview({ theme }) {
                     width: 20,
                     height: 20,
                     borderRadius: '50%',
-                    bgcolor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.1),
+                    bgcolor: (th) => varAlpha(th.vars.palette.warning.mainChannel, 0.1),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1646,7 +1707,7 @@ function ConfigPreview({ theme }) {
                     variant="caption"
                     sx={{ color: 'warning.main', fontWeight: 700, fontSize: '0.6rem' }}
                   >
-                    E
+                    {t('result_draw_abbr')}
                   </Typography>
                 </Box>
                 <Typography variant="subtitle2">
@@ -1655,7 +1716,7 @@ function ConfigPreview({ theme }) {
                     component="span"
                     sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 400 }}
                   >
-                    pt
+                    {t('word_pt_abbr')}
                   </Box>
                 </Typography>
               </Stack>
@@ -1665,7 +1726,7 @@ function ConfigPreview({ theme }) {
                     width: 20,
                     height: 20,
                     borderRadius: '50%',
-                    bgcolor: (t) => varAlpha(t.vars.palette.error.mainChannel, 0.1),
+                    bgcolor: (th) => varAlpha(th.vars.palette.error.mainChannel, 0.1),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1675,7 +1736,7 @@ function ConfigPreview({ theme }) {
                     variant="caption"
                     sx={{ color: 'error.main', fontWeight: 700, fontSize: '0.6rem' }}
                   >
-                    D
+                    {t('result_loss_abbr')}
                   </Typography>
                 </Box>
                 <Typography variant="subtitle2">
@@ -1684,7 +1745,7 @@ function ConfigPreview({ theme }) {
                     component="span"
                     sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 400 }}
                   >
-                    pts
+                    {t('word_pts_abbr')}
                   </Box>
                 </Typography>
               </Stack>
@@ -1697,7 +1758,7 @@ function ConfigPreview({ theme }) {
               flex: 1.2,
               p: 1.5,
               boxShadow: 'none',
-              border: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
+              border: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
               bgcolor: 'background.paper',
             }}
           >
@@ -1705,7 +1766,7 @@ function ConfigPreview({ theme }) {
               variant="caption"
               sx={{ fontWeight: 700, color: 'info.main', display: 'block', mb: 1 }}
             >
-              DESEMPATES
+              {t('word_tiebreakers_upper')}
             </Typography>
             <Stack spacing={0.75}>
               <AnimatePresence mode="popLayout">
@@ -1729,7 +1790,7 @@ function ConfigPreview({ theme }) {
                           width: 14,
                           height: 14,
                           borderRadius: '50%',
-                          bgcolor: (t) => (activeStep >= 3 ? 'info.main' : 'text.disabled'),
+                          bgcolor: (th) => (activeStep >= 3 ? 'info.main' : 'text.disabled'),
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -1751,7 +1812,7 @@ function ConfigPreview({ theme }) {
                           fontWeight: i === 0 && activeStep >= 3 ? 700 : 400,
                         }}
                       >
-                        {rule.label}
+                        {t(rule.label)}
                       </Typography>
                       {i === 0 && activeStep >= 3 && (
                         <Iconify
@@ -1781,7 +1842,7 @@ function ConfigPreview({ theme }) {
               flex: 1.2,
               p: 1.5,
               boxShadow: 'none',
-              border: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
+              border: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
               bgcolor: 'background.paper',
             }}
           >
@@ -1789,12 +1850,12 @@ function ConfigPreview({ theme }) {
               variant="caption"
               sx={{ fontWeight: 700, color: 'success.main', display: 'block', mb: 1 }}
             >
-              OPCIONES
+              {t('word_options_upper')}
             </Typography>
             <Stack spacing={0.5}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>
-                  Inscripción abierta
+                  {t('option_open_registration')}
                 </Typography>
                 <Iconify
                   icon={activeStep >= 4 ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off'}
@@ -1807,7 +1868,7 @@ function ConfigPreview({ theme }) {
               </Stack>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>
-                  Notificaciones push
+                  {t('option_push_notifications')}
                 </Typography>
                 <Iconify
                   icon={activeStep >= 5 ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off'}
@@ -1820,7 +1881,7 @@ function ConfigPreview({ theme }) {
               </Stack>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>
-                  Visibilidad pública
+                  {t('option_public_visibility')}
                 </Typography>
                 <Iconify
                   icon={activeStep >= 6 ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off'}
@@ -1840,6 +1901,7 @@ function ConfigPreview({ theme }) {
 }
 
 function TeamsPreview() {
+  const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
   const [typedName, setTypedName] = useState('');
   const [playerCount, setPlayerCount] = useState(0);
@@ -1902,25 +1964,25 @@ function TeamsPreview() {
   const TEAM_SUBSTEPS = [
     {
       key: 'identidad',
-      label: 'Identidad',
+      label: 'word_identity',
       icon: 'mdi:shield-account-outline',
       color: 'primary',
     },
     {
       key: 'plantilla',
-      label: 'Plantilla',
+      label: 'word_roster',
       icon: 'mdi:account-group-outline',
       color: 'info',
     },
     {
       key: 'documentos',
-      label: 'Documentos',
+      label: 'feat_documents_title',
       icon: 'mdi:file-document-check-outline',
       color: 'warning',
     },
     {
       key: 'reglamento',
-      label: 'Reglamento',
+      label: 'word_rules',
       icon: 'mdi:gavel',
       color: 'error',
     },
@@ -1950,12 +2012,12 @@ function TeamsPreview() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    bgcolor: (t) =>
+                    bgcolor: (th) =>
                       isDone
-                        ? varAlpha(t.vars.palette[sub.color].mainChannel, 0.12)
+                        ? varAlpha(th.vars.palette[sub.color].mainChannel, 0.12)
                         : 'transparent',
-                    border: (t) =>
-                      `2px solid ${isDone || isActive ? t.palette[sub.color].main : varAlpha(t.vars.palette.grey['500Channel'], 0.2)}`,
+                    border: (th) =>
+                      `2px solid ${isDone || isActive ? th.palette[sub.color].main : varAlpha(th.vars.palette.grey['500Channel'], 0.2)}`,
                     transition: 'all 0.3s ease',
                   }}
                 >
@@ -1984,7 +2046,7 @@ function TeamsPreview() {
                   }}
                   noWrap
                 >
-                  {sub.label}
+                  {t(sub.label)}
                 </Typography>
               </Stack>
               {idx < TEAM_SUBSTEPS.length - 1 && (
@@ -1993,10 +2055,10 @@ function TeamsPreview() {
                     height: '2px',
                     flex: '0 0 16px',
                     mt: -2,
-                    bgcolor: (t) =>
+                    bgcolor: (th) =>
                       isDone
-                        ? varAlpha(t.vars.palette[sub.color].mainChannel, 0.4)
-                        : varAlpha(t.vars.palette.grey['500Channel'], 0.16),
+                        ? varAlpha(th.vars.palette[sub.color].mainChannel, 0.4)
+                        : varAlpha(th.vars.palette.grey['500Channel'], 0.16),
                     transition: 'background-color 0.3s ease',
                   }}
                 />
@@ -2013,8 +2075,8 @@ function TeamsPreview() {
             ...getVisibility(0),
             p: 1.5,
             boxShadow: 'none',
-            border: (t) => `1px solid ${varAlpha(t.vars.palette.primary.mainChannel, 0.2)}`,
-            bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.02),
+            border: (th) => `1px solid ${varAlpha(th.vars.palette.primary.mainChannel, 0.2)}`,
+            bgcolor: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.02),
           }}
         >
           <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -2082,7 +2144,7 @@ function TeamsPreview() {
                   sx={{ height: 16, fontSize: '0.55rem' }}
                 />
                 <Chip
-                  label="Seed 1"
+                  label={`${t('word_seed')} 1`}
                   size="small"
                   variant="soft"
                   color="primary"
@@ -2108,8 +2170,8 @@ function TeamsPreview() {
             ...getVisibility(1),
             p: 1.5,
             boxShadow: 'none',
-            border: (t) => `1px solid ${varAlpha(t.vars.palette.info.mainChannel, 0.2)}`,
-            bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.02),
+            border: (th) => `1px solid ${varAlpha(th.vars.palette.info.mainChannel, 0.2)}`,
+            bgcolor: (th) => varAlpha(th.vars.palette.info.mainChannel, 0.02),
           }}
         >
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
@@ -2118,15 +2180,30 @@ function TeamsPreview() {
               variant="caption"
               sx={{ fontWeight: 600, color: 'info.main', fontSize: '0.65rem' }}
             >
-              {playerCount} jugadores
+              {playerCount} {t('word_players_lowercase')}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={0.75}>
             {[
-              { pos: 'POR', count: posCounts.POR, icon: 'mdi:hand-back-right' },
-              { pos: 'DEF', count: posCounts.DEF, icon: 'mdi:shield-outline' },
-              { pos: 'MED', count: posCounts.MED, icon: 'mdi:strategy' },
-              { pos: 'DEL', count: posCounts.DEL, icon: 'mdi:soccer' },
+              {
+                pos: 'POR',
+                label: 'position_gk_abbr',
+                count: posCounts.POR,
+                icon: 'mdi:hand-back-right',
+              },
+              {
+                pos: 'DEF',
+                label: 'position_def_abbr',
+                count: posCounts.DEF,
+                icon: 'mdi:shield-outline',
+              },
+              {
+                pos: 'MED',
+                label: 'position_mid_abbr',
+                count: posCounts.MED,
+                icon: 'mdi:strategy',
+              },
+              { pos: 'DEL', label: 'position_fwd_abbr', count: posCounts.DEL, icon: 'mdi:soccer' },
             ].map((p) => (
               <Card
                 key={p.pos}
@@ -2135,8 +2212,8 @@ function TeamsPreview() {
                   py: 0.75,
                   textAlign: 'center',
                   boxShadow: 'none',
-                  bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
-                  border: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.06)}`,
+                  bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.04),
+                  border: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.06)}`,
                   transition: 'all 0.3s',
                 }}
               >
@@ -2160,7 +2237,7 @@ function TeamsPreview() {
                   {p.count}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.55rem' }}>
-                  {p.pos}
+                  {t(p.label)}
                 </Typography>
               </Card>
             ))}
@@ -2175,25 +2252,33 @@ function TeamsPreview() {
               flex: 1.2,
               p: 1.5,
               boxShadow: 'none',
-              border: (t) => `1px solid ${varAlpha(t.vars.palette.warning.mainChannel, 0.2)}`,
-              bgcolor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.02),
+              border: (th) => `1px solid ${varAlpha(th.vars.palette.warning.mainChannel, 0.2)}`,
+              bgcolor: (th) => varAlpha(th.vars.palette.warning.mainChannel, 0.02),
             }}
           >
             <Typography
               variant="caption"
               sx={{ fontWeight: 700, color: 'warning.main', display: 'block', mb: 1 }}
             >
-              DOCUMENTOS
+              {t('word_documents_upper')}
             </Typography>
             <Stack spacing={0.5}>
               {[
                 {
-                  label: 'Identificación',
+                  label: 'word_identification',
                   icon: 'mdi:card-account-details-outline',
                   baseDone: true,
                 },
-                { label: 'Póliza seguro', icon: 'mdi:shield-check-outline', baseDone: true },
-                { label: 'Cert. médicos', icon: 'mdi:hospital-box-outline', baseDone: false },
+                {
+                  label: 'word_insurance_policy',
+                  icon: 'mdi:shield-check-outline',
+                  baseDone: true,
+                },
+                {
+                  label: 'word_medical_certs',
+                  icon: 'mdi:hospital-box-outline',
+                  baseDone: false,
+                },
               ].map((doc, idx) => {
                 // The later docs only get checked near the end of the step
                 const isChecked = doc.baseDone || activeStep > 2;
@@ -2227,7 +2312,7 @@ function TeamsPreview() {
                       }}
                       noWrap
                     >
-                      {doc.label}
+                      {t(doc.label)}
                     </Typography>
                   </Stack>
                 );
@@ -2244,15 +2329,15 @@ function TeamsPreview() {
               boxShadow: 'none',
               display: 'flex',
               flexDirection: 'column',
-              border: (t) => `1px solid ${varAlpha(t.vars.palette.success.mainChannel, 0.3)}`,
-              bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.04),
+              border: (th) => `1px solid ${varAlpha(th.vars.palette.success.mainChannel, 0.3)}`,
+              bgcolor: (th) => varAlpha(th.vars.palette.success.mainChannel, 0.04),
             }}
           >
             <Typography
               variant="caption"
               sx={{ fontWeight: 700, color: 'success.dark', display: 'block', mb: 1 }}
             >
-              REGLAMENTO
+              {t('word_rules_upper')}
             </Typography>
             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Stack alignItems="center" spacing={0.5}>
@@ -2289,7 +2374,7 @@ function TeamsPreview() {
                     transition: 'color 0.3s',
                   }}
                 >
-                  {activeStep > 3 ? 'Aceptado' : 'Pendiente'}
+                  {activeStep > 3 ? t('word_accepted') : t('pending')}
                 </Typography>
               </Stack>
             </Box>
@@ -2301,6 +2386,7 @@ function TeamsPreview() {
 }
 
 function GroupsPreview() {
+  const { t } = useTranslation();
   const [phase, setPhase] = useState('generating'); // 'generating' | 'live'
   const [matchA, setMatchA] = useState('0_0');
   const [matchB, setMatchB] = useState('0_0');
@@ -2404,10 +2490,10 @@ function GroupsPreview() {
               }}
             />
             <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 800 }}>
-              Generando Grupos
+              {t('label_generating_groups')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-              Sorteando 16 equipos automáticamente...
+              {t('label_drawing_teams')}
             </Typography>
           </Stack>
 
@@ -2455,7 +2541,7 @@ function GroupsPreview() {
               width: '100%',
               maxWidth: 240,
               height: 4,
-              bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.1),
+              bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.1),
               borderRadius: 2,
               overflow: 'hidden',
             }}
@@ -2478,13 +2564,13 @@ function GroupsPreview() {
           spacing={2.5}
         >
           <GroupCard
-            name="Grupo A"
+            name={`${t('word_group')} A`}
             match={{ home: 'SportsManagement FC', away: 'Inter Club', score: matchA }}
             standings={getStandings(matchA === '1_0', 'A')}
             color="warning.main"
           />
           <GroupCard
-            name="Grupo B"
+            name={`${t('word_group')} B`}
             match={{ home: 'Galaxy XI', away: 'Titans FC', score: matchB }}
             standings={getStandings(matchB === '1_0', 'B')}
             color="info.main"
@@ -2496,6 +2582,7 @@ function GroupsPreview() {
 }
 
 function GroupCard({ name, match, standings, color }) {
+  const { t } = useTranslation();
   const isGoalScored = match.score === '1_0';
 
   return (
@@ -2515,8 +2602,8 @@ function GroupCard({ name, match, standings, color }) {
           mb: 1.25,
           p: 1,
           boxShadow: 'none',
-          border: (t) => `1px solid ${varAlpha(t.vars.palette.error.mainChannel, 0.2)}`,
-          bgcolor: (t) => varAlpha(t.vars.palette.error.mainChannel, 0.02),
+          border: (th) => `1px solid ${varAlpha(th.vars.palette.error.mainChannel, 0.2)}`,
+          bgcolor: (th) => varAlpha(th.vars.palette.error.mainChannel, 0.02),
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -2545,7 +2632,7 @@ function GroupCard({ name, match, standings, color }) {
             variant="caption"
             sx={{ color: 'error.main', fontWeight: 700, fontSize: '0.5rem', letterSpacing: 0.5 }}
           >
-            EN VIVO
+            {t('word_live')}
           </Typography>
         </Box>
 
@@ -2560,8 +2647,8 @@ function GroupCard({ name, match, standings, color }) {
                 position: 'absolute',
                 inset: 0,
                 zIndex: 0,
-                background: (t) =>
-                  `linear-gradient(90deg, transparent, ${varAlpha(t.vars.palette.success.mainChannel, 0.15)}, transparent)`,
+                background: (th) =>
+                  `linear-gradient(90deg, transparent, ${varAlpha(th.vars.palette.success.mainChannel, 0.15)}, transparent)`,
               }}
             />
           )}
@@ -2605,7 +2692,7 @@ function GroupCard({ name, match, standings, color }) {
                   }}
                 >
                   <Chip
-                    label="¡GOL!"
+                    label={t('word_goal_upper')}
                     size="small"
                     color="success"
                     sx={{ height: 14, fontSize: '0.45rem', fontWeight: 800, px: 0.25 }}
@@ -2618,7 +2705,7 @@ function GroupCard({ name, match, standings, color }) {
                 px: 1,
                 py: 0.25,
                 borderRadius: 0.5,
-                bgcolor: (t) => varAlpha(t.vars.palette.error.mainChannel, 0.08),
+                bgcolor: (th) => varAlpha(th.vars.palette.error.mainChannel, 0.08),
                 display: 'flex',
                 alignItems: 'center',
                 gap: 0.75,
@@ -2661,7 +2748,7 @@ function GroupCard({ name, match, standings, color }) {
       <Card
         sx={{
           boxShadow: 'none',
-          border: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.1)}`,
+          border: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.1)}`,
           overflow: 'hidden',
         }}
       >
@@ -2672,21 +2759,27 @@ function GroupCard({ name, match, standings, color }) {
             px: 1,
             py: 0.5,
             gap: 0.5,
-            bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.03),
+            bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.03),
           }}
         >
-          {['Equipo', 'PG', 'PE', 'PP', 'PTS'].map((h) => (
+          {[
+            'table_header_team',
+            'table_header_wins_abbr',
+            'table_header_draws_abbr',
+            'table_header_losses_abbr',
+            'table_header_points_abbr',
+          ].map((h) => (
             <Typography
               key={h}
               variant="caption"
               sx={{
                 fontSize: '0.55rem',
-                fontWeight: h === 'PTS' ? 700 : 500,
+                fontWeight: h === 'table_header_points_abbr' ? 700 : 500,
                 color: 'text.disabled',
-                textAlign: h === 'Equipo' ? 'left' : 'center',
+                textAlign: h === 'table_header_team' ? 'left' : 'center',
               }}
             >
-              {h}
+              {t(h)}
             </Typography>
           ))}
         </Box>
@@ -2706,7 +2799,7 @@ function GroupCard({ name, match, standings, color }) {
                 gap: 0.5,
                 alignItems: 'center',
                 bgcolor: isScorer
-                  ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08)
+                  ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.08)
                   : 'transparent',
                 transition: 'background-color 0.5s',
               }}
@@ -2757,7 +2850,7 @@ function GroupCard({ name, match, standings, color }) {
 
 const SF1 = {
   home: 'SportsManagement FC',
-  away: 'Titanes',
+  away: 'Titans FC',
   scoreH: 2,
   scoreA: 0,
   mvp: 'T. Müller',
@@ -2781,8 +2874,8 @@ const Sunburst = () => (
       position: 'absolute',
       inset: -20,
       zIndex: -1,
-      background: (t) =>
-        `repeating-conic-gradient(${varAlpha(t.vars.palette.warning.mainChannel, 0)}, ${varAlpha(t.vars.palette.warning.mainChannel, 0.1)} 10deg, ${varAlpha(t.vars.palette.warning.mainChannel, 0)} 20deg)`,
+      background: (th) =>
+        `repeating-conic-gradient(${varAlpha(th.vars.palette.warning.mainChannel, 0)}, ${varAlpha(th.vars.palette.warning.mainChannel, 0.1)} 10deg, ${varAlpha(th.vars.palette.warning.mainChannel, 0)} 20deg)`,
       borderRadius: '50%',
     }}
   />
@@ -2855,7 +2948,7 @@ const MVPBadge = ({ name, show }) => (
           display: 'flex',
           alignItems: 'center',
           gap: 0.25,
-          boxShadow: (t) => `0 2px 4px ${varAlpha(t.vars.palette.warning.mainChannel, 0.4)}`,
+          boxShadow: (th) => `0 2px 4px ${varAlpha(th.vars.palette.warning.mainChannel, 0.4)}`,
         }}
       >
         <Iconify icon="solar:star-bold" width={10} />
@@ -2871,6 +2964,7 @@ const MVPBadge = ({ name, show }) => (
 );
 
 const NodeCard = ({ match, index, revealedCount }) => {
+  const { t } = useTranslation();
   const isRevealing = revealedCount === index;
   const isRevealed = revealedCount >= index;
   const isWinner = match.home === CHAMP && isRevealed;
@@ -2879,7 +2973,7 @@ const NodeCard = ({ match, index, revealedCount }) => {
   return (
     <Box sx={{ width: '100%', px: 0.5, position: 'relative' }}>
       <Tooltip
-        title={isRevealed ? `Tiros: 12 - Posesión: 54%` : ''}
+        title={isRevealed ? `${t('word_shots')}: 12 - ${t('word_possession')}: 54%` : ''}
         arrow
         placement="top"
         slotProps={{ tooltip: { sx: { bgcolor: 'common.black', fontSize: '0.6rem' } } }}
@@ -2902,14 +2996,14 @@ const NodeCard = ({ match, index, revealedCount }) => {
                     : 'divider'
                   : 'divider',
               bgcolor: isWinner
-                ? (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.03)
+                ? (th) => varAlpha(th.vars.palette.warning.mainChannel, 0.03)
                 : isRevealing
-                  ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.05)
+                  ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.05)
                   : 'background.paper',
               boxShadow: isRevealing
-                ? (t) => `0 0 12px ${varAlpha(t.vars.palette.success.mainChannel, 0.4)}`
+                ? (th) => `0 0 12px ${varAlpha(th.vars.palette.success.mainChannel, 0.4)}`
                 : isWinner
-                  ? (t) => `0 0 8px ${varAlpha(t.vars.palette.warning.mainChannel, 0.2)}`
+                  ? (th) => `0 0 8px ${varAlpha(th.vars.palette.warning.mainChannel, 0.2)}`
                   : 'none',
               borderRadius: 1,
               overflow: 'hidden',
@@ -2928,7 +3022,7 @@ const NodeCard = ({ match, index, revealedCount }) => {
                 borderColor: 'divider',
                 bgcolor:
                   isRevealed && homeWinner
-                    ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08)
+                    ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.08)
                     : 'transparent',
                 transition: 'background-color 0.5s ease',
               }}
@@ -2973,8 +3067,8 @@ const NodeCard = ({ match, index, revealedCount }) => {
                   borderColor: 'divider',
                   bgcolor:
                     isRevealed && homeWinner
-                      ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.16)
-                      : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
+                      ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.16)
+                      : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.04),
                   color: isRevealed && homeWinner ? 'success.main' : 'text.primary',
                   transition: 'all 0.5s ease',
                 }}
@@ -2989,7 +3083,7 @@ const NodeCard = ({ match, index, revealedCount }) => {
                 flex: 1,
                 bgcolor:
                   isRevealed && !homeWinner
-                    ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08)
+                    ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.08)
                     : 'transparent',
                 transition: 'background-color 0.5s ease',
               }}
@@ -3029,8 +3123,8 @@ const NodeCard = ({ match, index, revealedCount }) => {
                   borderColor: 'divider',
                   bgcolor:
                     isRevealed && !homeWinner
-                      ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.16)
-                      : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
+                      ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.16)
+                      : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.04),
                   color: isRevealed && !homeWinner ? 'success.main' : 'text.primary',
                   transition: 'all 0.5s ease',
                 }}
@@ -3047,6 +3141,7 @@ const NodeCard = ({ match, index, revealedCount }) => {
 
 // (Skipping to the relevant KnockoutPreview section in this chunk)
 function KnockoutPreview() {
+  const { t } = useTranslation();
   const [revealedCount, setRevealedCount] = useState(0);
 
   useEffect(() => {
@@ -3076,7 +3171,7 @@ function KnockoutPreview() {
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
         <Iconify icon="solar:route-bold-duotone" width={18} sx={{ color: 'success.main' }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-          Fase Final
+          {t('word_final_phase')}
         </Typography>
       </Stack>
 
@@ -3147,7 +3242,8 @@ function KnockoutPreview() {
                 borderTopRightRadius: 6,
                 opacity: 0,
                 transition: 'all 0.4s',
-                boxShadow: (t) => `0 -2px 8px ${varAlpha(t.vars.palette.warning.mainChannel, 0.4)}`,
+                boxShadow: (th) =>
+                  `0 -2px 8px ${varAlpha(th.vars.palette.warning.mainChannel, 0.4)}`,
               }}
             />
           )}
@@ -3182,7 +3278,8 @@ function KnockoutPreview() {
                 borderBottom: '2px solid',
                 borderColor: 'warning.main',
                 mt: '-1px',
-                boxShadow: (t) => `2px 0 8px ${varAlpha(t.vars.palette.warning.mainChannel, 0.4)}`,
+                boxShadow: (th) =>
+                  `2px 0 8px ${varAlpha(th.vars.palette.warning.mainChannel, 0.4)}`,
               }}
             />
           )}
@@ -3218,7 +3315,8 @@ function KnockoutPreview() {
                 borderBottom: '2px solid',
                 borderColor: 'warning.main',
                 mt: '-1px',
-                boxShadow: (t) => `0 4px 12px ${varAlpha(t.vars.palette.warning.mainChannel, 0.5)}`,
+                boxShadow: (th) =>
+                  `0 4px 12px ${varAlpha(th.vars.palette.warning.mainChannel, 0.5)}`,
               }}
             />
           )}
@@ -3237,14 +3335,14 @@ function KnockoutPreview() {
                 sx={{
                   position: 'relative',
                   textAlign: 'center',
-                  bgcolor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.1),
+                  bgcolor: (th) => varAlpha(th.vars.palette.warning.mainChannel, 0.1),
                   border: '2px solid',
                   borderColor: 'warning.main',
                   borderRadius: 1.5,
                   py: 1.5,
                   px: 0.5,
-                  boxShadow: (t) =>
-                    `0 8px 32px ${varAlpha(t.vars.palette.warning.mainChannel, 0.4)}`,
+                  boxShadow: (th) =>
+                    `0 8px 32px ${varAlpha(th.vars.palette.warning.mainChannel, 0.4)}`,
                 }}
               >
                 <Sunburst />
@@ -3275,7 +3373,7 @@ function KnockoutPreview() {
                     letterSpacing: 1,
                   }}
                 >
-                  ¡Campeón!
+                  {t('label_champion')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -3317,6 +3415,7 @@ const PAYMENT_MEMBERS = [
 ];
 
 function PaymentsPreview() {
+  const { t } = useTranslation();
   const [paidCount, setPaidCount] = useState(0);
 
   useEffect(() => {
@@ -3341,22 +3440,22 @@ function PaymentsPreview() {
             fontSize: '0.65rem',
           }}
         >
-          Cuota Mensual · Abril 2026
+          {`${t('label_monthly_dues')} · ${t('month_apr_abbr')} 2026`}
         </Typography>
         <Box
           sx={{
             px: 1.25,
             py: 0.5,
             borderRadius: 1,
-            bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.1),
-            border: (t) => `1px solid ${varAlpha(t.vars.palette.success.mainChannel, 0.2)}`,
+            bgcolor: (th) => varAlpha(th.vars.palette.success.mainChannel, 0.1),
+            border: (th) => `1px solid ${varAlpha(th.vars.palette.success.mainChannel, 0.2)}`,
           }}
         >
           <Typography
             variant="caption"
             sx={{ color: 'success.main', fontWeight: 700, fontSize: '0.65rem' }}
           >
-            ${total.toLocaleString()} recaudados
+            {`$${total.toLocaleString()} ${t('word_collected')}`}
           </Typography>
         </Box>
       </Stack>
@@ -3367,7 +3466,7 @@ function PaymentsPreview() {
             flex: 1,
             height: 6,
             borderRadius: 3,
-            bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.12),
+            bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.12),
             overflow: 'hidden',
           }}
         >
@@ -3399,12 +3498,12 @@ function PaymentsPreview() {
                 p: 0.875,
                 borderRadius: 1,
                 bgcolor: isPaid
-                  ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.05)
-                  : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
+                  ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.05)
+                  : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.04),
                 border: '1px solid',
                 borderColor: isPaid
-                  ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.18)
-                  : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.1),
+                  ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.18)
+                  : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.1),
                 transition: 'all 0.4s ease',
               }}
             >
@@ -3415,7 +3514,7 @@ function PaymentsPreview() {
                   borderRadius: '50%',
                   bgcolor: isPaid
                     ? 'success.main'
-                    : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.16),
+                    : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.16),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -3480,17 +3579,41 @@ function PaymentsPreview() {
   );
 }
 
-const CALENDAR_DAYS_HEADER = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+// weekday/label values below are i18n keys, resolved via t() at render time.
+const CALENDAR_DAYS_HEADER = [
+  'weekday_mon_abbr',
+  'weekday_tue_abbr',
+  'weekday_wed_abbr',
+  'weekday_thu_abbr',
+  'weekday_fri_abbr',
+  'weekday_sat_abbr',
+  'weekday_sun_abbr',
+];
 const CALENDAR_EVENTS = [
-  { day: 7, type: 'training', label: 'Entrenamiento', color: 'info', time: '18:00' },
-  { day: 10, type: 'match', label: 'vs Águilas FC', color: 'error', time: '16:00' },
-  { day: 14, type: 'training', label: 'Entrenamiento', color: 'info', time: '18:00' },
-  { day: 17, type: 'match', label: 'vs Rayo Azul', color: 'error', time: '15:00' },
-  { day: 21, type: 'training', label: 'Entrenamiento', color: 'info', time: '18:00' },
-  { day: 24, type: 'event', label: 'Reunión directiva', color: 'warning', time: '19:30' },
+  { day: 7, type: 'training', label: 'label_training', color: 'info', time: '18:00' },
+  {
+    day: 10,
+    type: 'match',
+    label: 'word_match_vs',
+    opponent: 'Águilas FC',
+    color: 'error',
+    time: '16:00',
+  },
+  { day: 14, type: 'training', label: 'label_training', color: 'info', time: '18:00' },
+  {
+    day: 17,
+    type: 'match',
+    label: 'word_match_vs',
+    opponent: 'Rayo Azul',
+    color: 'error',
+    time: '15:00',
+  },
+  { day: 21, type: 'training', label: 'label_training', color: 'info', time: '18:00' },
+  { day: 24, type: 'event', label: 'label_board_meeting', color: 'warning', time: '19:30' },
 ];
 
 function CalendarPreview() {
+  const { t } = useTranslation();
   const [revealedEvents, setRevealedEvents] = useState(0);
 
   useEffect(() => {
@@ -3513,7 +3636,7 @@ function CalendarPreview() {
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.8rem' }}>
-          Abril 2026
+          {`${t('month_apr_full')} 2026`}
         </Typography>
         <Stack direction="row" spacing={0.5}>
           <Iconify icon="eva:arrow-ios-back-fill" width={16} sx={{ color: 'text.disabled' }} />
@@ -3533,7 +3656,7 @@ function CalendarPreview() {
               fontWeight: 600,
             }}
           >
-            {d}
+            {t(d)}
           </Typography>
         ))}
       </Box>
@@ -3552,11 +3675,11 @@ function CalendarPreview() {
                 justifyContent: 'center',
                 position: 'relative',
                 bgcolor: event
-                  ? (t) => varAlpha(t.vars.palette[event.color].mainChannel, 0.12)
+                  ? (th) => varAlpha(th.vars.palette[event.color].mainChannel, 0.12)
                   : 'transparent',
                 border: event ? '1px solid' : '1px solid transparent',
                 borderColor: event
-                  ? (t) => varAlpha(t.vars.palette[event.color].mainChannel, 0.3)
+                  ? (th) => varAlpha(th.vars.palette[event.color].mainChannel, 0.3)
                   : 'transparent',
                 transition: 'all 0.35s ease',
               }}
@@ -3597,7 +3720,7 @@ function CalendarPreview() {
         sx={{
           my: 1.5,
           borderStyle: 'dashed',
-          borderColor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.2),
+          borderColor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.2),
         }}
       />
 
@@ -3617,7 +3740,7 @@ function CalendarPreview() {
                 gap: 1,
                 p: 0.75,
                 borderRadius: 1,
-                bgcolor: (t) => varAlpha(t.vars.palette[ev.color].mainChannel, 0.06),
+                bgcolor: (th) => varAlpha(th.vars.palette[ev.color].mainChannel, 0.06),
               }}
             >
               <Box
@@ -3635,15 +3758,19 @@ function CalendarPreview() {
                   sx={{ fontWeight: 600, fontSize: '0.65rem', display: 'block' }}
                   noWrap
                 >
-                  {ev.label}
+                  {ev.opponent ? `${t(ev.label)} ${ev.opponent}` : t(ev.label)}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.55rem' }}>
-                  Día {ev.day} · {ev.time}
+                  {`${t('word_day')} ${ev.day} · ${ev.time}`}
                 </Typography>
               </Box>
               <Chip
                 label={
-                  ev.type === 'match' ? 'PARTIDO' : ev.type === 'training' ? 'ENTREN.' : 'EVENTO'
+                  ev.type === 'match'
+                    ? t('word_match_abbr')
+                    : ev.type === 'training'
+                      ? t('word_training_abbr')
+                      : t('word_event_abbr')
                 }
                 size="small"
                 color={ev.color}
@@ -3659,15 +3786,16 @@ function CalendarPreview() {
 }
 
 const ASSISTS_PLAYERS = [
-  { name: 'Carlos Mendoza', pos: 'POR', avatar: 'CM' },
-  { name: 'Luis García', pos: 'DEF', avatar: 'LG' },
-  { name: 'Pedro Torres', pos: 'DEF', avatar: 'PT' },
-  { name: 'Juan Ramírez', pos: 'MED', avatar: 'JR' },
-  { name: 'Diego López', pos: 'MED', avatar: 'DL' },
-  { name: 'Miguel Ángel', pos: 'DEL', avatar: 'MA' },
+  { name: 'Carlos Mendoza', pos: 'position_gk_abbr', avatar: 'CM' },
+  { name: 'Luis García', pos: 'position_def_abbr', avatar: 'LG' },
+  { name: 'Pedro Torres', pos: 'position_def_abbr', avatar: 'PT' },
+  { name: 'Juan Ramírez', pos: 'position_mid_abbr', avatar: 'JR' },
+  { name: 'Diego López', pos: 'position_mid_abbr', avatar: 'DL' },
+  { name: 'Miguel Ángel', pos: 'position_fwd_abbr', avatar: 'MA' },
 ];
 
 function AssistsPreview() {
+  const { t } = useTranslation();
   const [markedCount, setMarkedCount] = useState(0);
 
   useEffect(() => {
@@ -3685,10 +3813,10 @@ function AssistsPreview() {
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.25 }}>
         <Stack>
           <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.8rem' }}>
-            Entrenamiento · Martes
+            {`${t('label_training')} · ${t('weekday_tuesday')}`}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem' }}>
-            7 Abril 2026 · 18:00
+            {`7 ${t('month_apr_full')} 2026 · 18:00`}
           </Typography>
         </Stack>
         <Box sx={{ textAlign: 'center' }}>
@@ -3704,7 +3832,7 @@ function AssistsPreview() {
             {pct}%
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.55rem' }}>
-            asistencia
+            {t('word_attendance_lowercase')}
           </Typography>
         </Box>
       </Stack>
@@ -3714,7 +3842,7 @@ function AssistsPreview() {
           mb: 2,
           height: 5,
           borderRadius: 3,
-          bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.1),
+          bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.1),
           overflow: 'hidden',
         }}
       >
@@ -3744,7 +3872,7 @@ function AssistsPreview() {
                 p: 0.75,
                 borderRadius: 1,
                 bgcolor: isPresent
-                  ? (t) => varAlpha(t.vars.palette.success.mainChannel, 0.04)
+                  ? (th) => varAlpha(th.vars.palette.success.mainChannel, 0.04)
                   : 'transparent',
                 transition: 'background-color 0.4s',
               }}
@@ -3756,7 +3884,7 @@ function AssistsPreview() {
                   borderRadius: '50%',
                   bgcolor: isPresent
                     ? 'success.main'
-                    : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.16),
+                    : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.16),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -3783,7 +3911,7 @@ function AssistsPreview() {
                 {player.name}
               </Typography>
               <Chip
-                label={player.pos}
+                label={t(player.pos)}
                 size="small"
                 variant="soft"
                 color={isPresent ? 'success' : 'default'}
@@ -3823,13 +3951,26 @@ function AssistsPreview() {
 }
 
 const SHOP_PRODUCTS = [
-  { name: 'Camiseta Local', price: 85000, icon: 'mdi:tshirt-crew', color: 'primary', stock: 24 },
-  { name: 'Short Oficial', price: 45000, icon: 'mdi:human-male', color: 'info', stock: 18 },
-  { name: 'Medias Club', price: 15000, icon: 'mdi:shoe-cleat', color: 'warning', stock: 42 },
-  { name: 'Chaqueta Banca', price: 120000, icon: 'mdi:jacket', color: 'success', stock: 8 },
+  {
+    name: 'product_home_jersey',
+    price: 85000,
+    icon: 'mdi:tshirt-crew',
+    color: 'primary',
+    stock: 24,
+  },
+  {
+    name: 'product_official_shorts',
+    price: 45000,
+    icon: 'mdi:human-male',
+    color: 'info',
+    stock: 18,
+  },
+  { name: 'product_club_socks', price: 15000, icon: 'mdi:shoe-cleat', color: 'warning', stock: 42 },
+  { name: 'product_bench_jacket', price: 120000, icon: 'mdi:jacket', color: 'success', stock: 8 },
 ];
 
 function ShopPreview() {
+  const { t } = useTranslation();
   const [cartCount, setCartCount] = useState(0);
   const [activeProduct, setActiveProduct] = useState(0);
 
@@ -3853,19 +3994,19 @@ function ShopPreview() {
           mb: 2,
           p: 1.25,
           borderRadius: 1.5,
-          bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.06),
-          border: (t) => `1px solid ${varAlpha(t.vars.palette.primary.mainChannel, 0.16)}`,
+          bgcolor: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.06),
+          border: (th) => `1px solid ${varAlpha(th.vars.palette.primary.mainChannel, 0.16)}`,
         }}
       >
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="solar:bag-bold-duotone" width={18} sx={{ color: 'primary.main' }} />
           <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>
-            Carrito del Club
+            {t('label_club_cart')}
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Chip
-            label={`${cartCount} items`}
+            label={`${cartCount} ${t('word_items')}`}
             size="small"
             color="primary"
             variant="soft"
@@ -3897,10 +4038,10 @@ function ShopPreview() {
                 overflow: 'hidden',
                 border: '1px solid',
                 borderColor: inCart
-                  ? (t) => varAlpha(t.vars.palette[product.color].mainChannel, 0.3)
+                  ? (th) => varAlpha(th.vars.palette[product.color].mainChannel, 0.3)
                   : 'divider',
                 bgcolor: inCart
-                  ? (t) => varAlpha(t.vars.palette[product.color].mainChannel, 0.04)
+                  ? (th) => varAlpha(th.vars.palette[product.color].mainChannel, 0.04)
                   : 'background.paper',
                 transition: 'all 0.4s ease',
               }}
@@ -3925,7 +4066,7 @@ function ShopPreview() {
                   width: 28,
                   height: 28,
                   borderRadius: 1,
-                  bgcolor: (t) => varAlpha(t.vars.palette[product.color].mainChannel, 0.12),
+                  bgcolor: (th) => varAlpha(th.vars.palette[product.color].mainChannel, 0.12),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -3945,7 +4086,7 @@ function ShopPreview() {
                 }}
                 noWrap
               >
-                {product.name}
+                {t(product.name)}
               </Typography>
               <Typography
                 variant="caption"
@@ -3957,7 +4098,7 @@ function ShopPreview() {
                 variant="caption"
                 sx={{ display: 'block', color: 'text.disabled', fontSize: '0.55rem' }}
               >
-                Stock: {product.stock}
+                {`${t('word_stock')}: ${product.stock}`}
               </Typography>
             </Card>
           );
@@ -3968,14 +4109,25 @@ function ShopPreview() {
 }
 
 const CLUB_DOCS = [
-  { name: 'Contrato temporada', icon: 'mdi:file-sign', color: 'primary', size: '245 KB' },
-  { name: 'Fichas médicas', icon: 'mdi:hospital-box-outline', color: 'error', size: '1.2 MB' },
-  { name: 'Reglamento interno', icon: 'mdi:gavel', color: 'warning', size: '88 KB' },
-  { name: 'Póliza de seguro', icon: 'mdi:shield-check-outline', color: 'success', size: '420 KB' },
-  { name: 'Licencias jugadores', icon: 'mdi:card-account-details', color: 'info', size: '3.1 MB' },
+  { name: 'doc_season_contract', icon: 'mdi:file-sign', color: 'primary', size: '245 KB' },
+  { name: 'doc_medical_records', icon: 'mdi:hospital-box-outline', color: 'error', size: '1.2 MB' },
+  { name: 'doc_internal_bylaws', icon: 'mdi:gavel', color: 'warning', size: '88 KB' },
+  {
+    name: 'word_insurance_policy',
+    icon: 'mdi:shield-check-outline',
+    color: 'success',
+    size: '420 KB',
+  },
+  {
+    name: 'doc_player_licenses',
+    icon: 'mdi:card-account-details',
+    color: 'info',
+    size: '3.1 MB',
+  },
 ];
 
 function DocumentsPreview() {
+  const { t } = useTranslation();
   const [uploadProgress, setUploadProgress] = useState(0);
   const [verifiedCount, setVerifiedCount] = useState(0);
 
@@ -4003,8 +4155,8 @@ function DocumentsPreview() {
           p: 1.25,
           borderRadius: 1.5,
           border: '2px dashed',
-          borderColor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.3),
-          bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.04),
+          borderColor: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.3),
+          bgcolor: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.04),
           textAlign: 'center',
         }}
       >
@@ -4017,13 +4169,13 @@ function DocumentsPreview() {
           variant="caption"
           sx={{ display: 'block', fontWeight: 600, fontSize: '0.65rem', mb: 0.75 }}
         >
-          Subiendo documento...
+          {t('label_uploading_document')}
         </Typography>
         <Box
           sx={{
             height: 4,
             borderRadius: 2,
-            bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.12),
+            bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.12),
             overflow: 'hidden',
           }}
         >
@@ -4035,7 +4187,7 @@ function DocumentsPreview() {
           />
         </Box>
         <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem' }}>
-          {uploadProgress}% completado
+          {`${uploadProgress}% ${t('word_completed')}`}
         </Typography>
       </Box>
 
@@ -4052,12 +4204,12 @@ function DocumentsPreview() {
                 p: 0.75,
                 borderRadius: 1,
                 bgcolor: isVerified
-                  ? (t) => varAlpha(t.vars.palette[doc.color].mainChannel, 0.04)
-                  : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
+                  ? (th) => varAlpha(th.vars.palette[doc.color].mainChannel, 0.04)
+                  : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.04),
                 border: '1px solid',
                 borderColor: isVerified
-                  ? (t) => varAlpha(t.vars.palette[doc.color].mainChannel, 0.2)
-                  : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.1),
+                  ? (th) => varAlpha(th.vars.palette[doc.color].mainChannel, 0.2)
+                  : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.1),
                 transition: 'all 0.4s ease',
               }}
             >
@@ -4066,7 +4218,7 @@ function DocumentsPreview() {
                   width: 28,
                   height: 28,
                   borderRadius: 0.75,
-                  bgcolor: (t) => varAlpha(t.vars.palette[doc.color].mainChannel, 0.12),
+                  bgcolor: (th) => varAlpha(th.vars.palette[doc.color].mainChannel, 0.12),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -4081,7 +4233,7 @@ function DocumentsPreview() {
                   sx={{ fontWeight: isVerified ? 600 : 400, fontSize: '0.68rem', display: 'block' }}
                   noWrap
                 >
-                  {doc.name}
+                  {t(doc.name)}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.55rem' }}>
                   {doc.size}
@@ -4097,7 +4249,7 @@ function DocumentsPreview() {
                     transition={{ type: 'spring', damping: 12 }}
                   >
                     <Chip
-                      label="Verificado"
+                      label={t('word_verified')}
                       size="small"
                       color={doc.color}
                       variant="soft"
@@ -4107,7 +4259,7 @@ function DocumentsPreview() {
                 ) : (
                   <Box component={m.div} key="pending">
                     <Chip
-                      label="Pendiente"
+                      label={t('pending')}
                       size="small"
                       variant="soft"
                       sx={{ height: 16, fontSize: '0.5rem', fontWeight: 600 }}
@@ -4124,9 +4276,30 @@ function DocumentsPreview() {
 }
 
 const CLUB_MATCHES = [
-  { date: 'Sáb 10 Abr', time: '16:00', opponent: 'Águilas FC', venue: 'Estadio El Campin' },
-  { date: 'Sáb 17 Abr', time: '15:00', opponent: 'Rayo Azul', venue: 'Cancha Norte' },
-  { date: 'Dom 24 Abr', time: '11:00', opponent: 'Inter Club', venue: 'Campo Sur' },
+  {
+    dayAbbr: 'day_sat_abbr',
+    day: 10,
+    monthAbbr: 'month_apr_abbr',
+    time: '16:00',
+    opponent: 'Águilas FC',
+    venue: 'Estadio El Campin',
+  },
+  {
+    dayAbbr: 'day_sat_abbr',
+    day: 17,
+    monthAbbr: 'month_apr_abbr',
+    time: '15:00',
+    opponent: 'Rayo Azul',
+    venue: 'Cancha Norte',
+  },
+  {
+    dayAbbr: 'day_sun_abbr',
+    day: 24,
+    monthAbbr: 'month_apr_abbr',
+    time: '11:00',
+    opponent: 'Inter Club',
+    venue: 'Campo Sur',
+  },
 ];
 const CLUB_SQUAD = [
   'C. Mendoza',
@@ -4143,6 +4316,7 @@ const CLUB_SQUAD = [
 ];
 
 function ClubMatchesPreview() {
+  const { t } = useTranslation();
   const [activeMatch, setActiveMatch] = useState(0);
   const [convocados, setConvocados] = useState(0);
 
@@ -4182,13 +4356,13 @@ function ClubMatchesPreview() {
               textAlign: 'center',
               bgcolor:
                 idx === activeMatch
-                  ? (t) => varAlpha(t.vars.palette.error.mainChannel, 0.08)
+                  ? (th) => varAlpha(th.vars.palette.error.mainChannel, 0.08)
                   : 'transparent',
               border: '1px solid',
               borderColor:
                 idx === activeMatch
-                  ? (t) => varAlpha(t.vars.palette.error.mainChannel, 0.3)
-                  : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.12),
+                  ? (th) => varAlpha(th.vars.palette.error.mainChannel, 0.3)
+                  : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.12),
               transition: 'all 0.3s',
             }}
           >
@@ -4201,7 +4375,7 @@ function ClubMatchesPreview() {
                 display: 'block',
               }}
             >
-              {mt.date.split(' ')[0]}
+              {t(mt.dayAbbr)}
             </Typography>
             <Typography
               variant="caption"
@@ -4232,8 +4406,8 @@ function ClubMatchesPreview() {
               p: 1.5,
               mb: 1.5,
               boxShadow: 'none',
-              border: (t) => `1px solid ${varAlpha(t.vars.palette.error.mainChannel, 0.2)}`,
-              bgcolor: (t) => varAlpha(t.vars.palette.error.mainChannel, 0.02),
+              border: (th) => `1px solid ${varAlpha(th.vars.palette.error.mainChannel, 0.2)}`,
+              bgcolor: (th) => varAlpha(th.vars.palette.error.mainChannel, 0.02),
             }}
           >
             <Stack
@@ -4246,10 +4420,10 @@ function ClubMatchesPreview() {
                 variant="caption"
                 sx={{ fontWeight: 600, fontSize: '0.65rem', color: 'error.main' }}
               >
-                {match.date} · {match.time}
+                {`${t(match.dayAbbr)} ${match.day} ${t(match.monthAbbr)} · ${match.time}`}
               </Typography>
               <Chip
-                label="PRÓXIMO"
+                label={t('word_upcoming_upper')}
                 size="small"
                 color="error"
                 variant="soft"
@@ -4291,7 +4465,7 @@ function ClubMatchesPreview() {
                     width: 32,
                     height: 32,
                     borderRadius: '50%',
-                    bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.16),
+                    bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.16),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -4324,7 +4498,7 @@ function ClubMatchesPreview() {
                 textTransform: 'uppercase',
               }}
             >
-              Convocatoria
+              {t('word_call_up')}
             </Typography>
             <Typography
               variant="caption"
@@ -4384,6 +4558,7 @@ function AnimatedDiv({ children }) {
 
 export function LandingPage() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const pageProgress = useScrollProgress();
 
   // Hero domain auto-cycle
@@ -4455,30 +4630,30 @@ export function LandingPage() {
                       lineHeight: 1.1,
                     }}
                   >
-                    Gestiona tu{' '}
+                    {`${t('hero_headline_prefix')} `}
                     <Box
                       component="span"
-                      sx={(t) => ({
+                      sx={(t2) => ({
                         ...textGradient(
-                          `135deg, ${t.vars.palette.primary.main} 0%, ${t.vars.palette.info.main} 100%`
+                          `135deg, ${t2.vars.palette.primary.main} 0%, ${t2.vars.palette.info.main} 100%`
                         ),
                       })}
                     >
-                      Club
+                      {t('hero_headline_club')}
                     </Box>{' '}
-                    y tus
+                    {t('hero_headline_and_your')}
                     <br />
                     <Box
                       component="span"
-                      sx={(t) => ({
+                      sx={(t2) => ({
                         ...textGradient(
-                          `135deg, ${t.vars.palette.primary.main} 0%, ${t.vars.palette.info.main} 100%`
+                          `135deg, ${t2.vars.palette.primary.main} 0%, ${t2.vars.palette.info.main} 100%`
                         ),
                       })}
                     >
-                      Torneos
+                      {t('hero_headline_tournaments')}
                     </Box>{' '}
-                    como nunca antes
+                    {t('hero_headline_suffix')}
                   </Box>
                 </AnimatedDiv>
 
@@ -4487,8 +4662,7 @@ export function LandingPage() {
                     variant="body1"
                     sx={{ color: 'text.secondary', maxWidth: 480, fontSize: { md: 18 } }}
                   >
-                    La plataforma todo-en-uno para clubes y torneos deportivos. Crea torneos, sigue
-                    resultados en tiempo real y gestiona toda tu liga — con estilo.
+                    {t('hero_subheadline')}
                   </Typography>
                 </AnimatedDiv>
 
@@ -4503,11 +4677,11 @@ export function LandingPage() {
                       sx={{
                         px: 3,
                         borderRadius: 2,
-                        boxShadow: (t) =>
-                          `0 8px 24px ${varAlpha(t.vars.palette.primary.mainChannel, 0.36)}`,
+                        boxShadow: (th) =>
+                          `0 8px 24px ${varAlpha(th.vars.palette.primary.mainChannel, 0.36)}`,
                       }}
                     >
-                      Empieza ahora
+                      {t('cta_get_started_lowercase')}
                     </Button>
                     <Button
                       size="large"
@@ -4517,7 +4691,7 @@ export function LandingPage() {
                       startIcon={<Iconify icon="solar:play-circle-bold" width={20} />}
                       sx={{ px: 3, borderRadius: 2 }}
                     >
-                      Ver cómo funciona
+                      {t('hero_see_how_it_works')}
                     </Button>
                   </Stack>
                 </AnimatedDiv>
@@ -4525,9 +4699,9 @@ export function LandingPage() {
                 <AnimatedDiv>
                   <Stack direction="row" spacing={3} flexWrap="wrap">
                     {[
-                      { icon: 'solar:star-bold', label: 'Gestión guiada' },
-                      { icon: 'solar:shield-check-bold', label: 'Sin tarjeta de crédito' },
-                      { icon: 'solar:lock-password-bold', label: 'Datos seguros' },
+                      { icon: 'solar:star-bold', label: 'cta_badge_guided_setup' },
+                      { icon: 'solar:shield-check-bold', label: 'hero_badge_no_credit_card' },
+                      { icon: 'solar:lock-password-bold', label: 'hero_badge_secure_data' },
                     ].map((badge) => (
                       <Stack key={badge.label} direction="row" alignItems="center" spacing={0.75}>
                         <Iconify icon={badge.icon} width={14} sx={{ color: 'text.disabled' }} />
@@ -4535,7 +4709,7 @@ export function LandingPage() {
                           variant="caption"
                           sx={{ color: 'text.disabled', fontWeight: 500 }}
                         >
-                          {badge.label}
+                          {t(badge.label)}
                         </Typography>
                       </Stack>
                     ))}
@@ -4557,9 +4731,10 @@ export function LandingPage() {
                   sx={{
                     borderRadius: 3,
                     overflow: 'hidden',
-                    border: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
-                    boxShadow: (t) =>
-                      `0 32px 64px -12px ${varAlpha(t.vars.palette.common.blackChannel, 0.22)}`,
+                    border: (th) =>
+                      `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
+                    boxShadow: (th) =>
+                      `0 32px 64px -12px ${varAlpha(th.vars.palette.common.blackChannel, 0.22)}`,
                   }}
                 >
                   {/* Window chrome */}
@@ -4569,7 +4744,7 @@ export function LandingPage() {
                       py: 1.25,
                       borderBottom: '1px solid',
                       borderColor: 'divider',
-                      bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.04),
+                      bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.04),
                       display: 'flex',
                       alignItems: 'center',
                       gap: 0.75,
@@ -4593,7 +4768,7 @@ export function LandingPage() {
                         height: 22,
                         mx: 2,
                         borderRadius: 0.75,
-                        bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.08),
+                        bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.08),
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -4625,20 +4800,20 @@ export function LandingPage() {
                       px: 2,
                       borderBottom: '1px solid',
                       borderColor: 'divider',
-                      bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.02),
+                      bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.02),
                     }}
                   >
                     <Stack direction="row">
                       {[
                         {
                           key: 'tournaments',
-                          label: 'Torneos',
+                          label: 'tournaments',
                           icon: 'solar:cup-star-bold-duotone',
                           color: 'primary',
                         },
                         {
                           key: 'clubs',
-                          label: 'Clubes',
+                          label: 'clubs',
                           icon: 'solar:shield-bold-duotone',
                           color: 'info',
                         },
@@ -4676,7 +4851,7 @@ export function LandingPage() {
                                   transition: 'color 0.25s',
                                 }}
                               >
-                                {tab.label}
+                                {t(tab.label)}
                               </Typography>
                             </Stack>
                           </Box>
@@ -4727,8 +4902,8 @@ export function LandingPage() {
                             p: 1.5,
                             borderRadius: 2,
                             border: '1px solid',
-                            borderColor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.3),
-                            bgcolor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.08),
+                            borderColor: (th) => varAlpha(th.vars.palette.warning.mainChannel, 0.3),
+                            bgcolor: (th) => varAlpha(th.vars.palette.warning.mainChannel, 0.08),
                             backdropFilter: 'blur(16px)',
                           }}
                         >
@@ -4760,7 +4935,7 @@ export function LandingPage() {
                                   color: 'warning.dark',
                                 }}
                               >
-                                ¡Campeón!
+                                {t('label_champion')}
                               </Typography>
                               <Typography
                                 variant="caption"
@@ -4777,8 +4952,8 @@ export function LandingPage() {
                             p: 1.5,
                             borderRadius: 2,
                             border: '1px solid',
-                            borderColor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.3),
-                            bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08),
+                            borderColor: (th) => varAlpha(th.vars.palette.success.mainChannel, 0.3),
+                            bgcolor: (th) => varAlpha(th.vars.palette.success.mainChannel, 0.08),
                             backdropFilter: 'blur(16px)',
                           }}
                         >
@@ -4810,7 +4985,7 @@ export function LandingPage() {
                                   color: 'success.dark',
                                 }}
                               >
-                                Pago recibido
+                                {t('label_payment_received')}
                               </Typography>
                               <Typography
                                 variant="caption"
@@ -4849,7 +5024,7 @@ export function LandingPage() {
                             p: 1.5,
                             borderRadius: 2,
                             border: '1px solid',
-                            borderColor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.2),
+                            borderColor: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.2),
                             backdropFilter: 'blur(16px)',
                           }}
                         >
@@ -4859,7 +5034,8 @@ export function LandingPage() {
                                 width: 28,
                                 height: 28,
                                 borderRadius: 1,
-                                bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.12),
+                                bgcolor: (th) =>
+                                  varAlpha(th.vars.palette.primary.mainChannel, 0.12),
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -4876,7 +5052,7 @@ export function LandingPage() {
                                 variant="caption"
                                 sx={{ fontWeight: 700, fontSize: '0.65rem', display: 'block' }}
                               >
-                                ¡Nuevo gol!
+                                {t('label_new_goal')}
                               </Typography>
                               <Typography
                                 variant="caption"
@@ -4893,7 +5069,7 @@ export function LandingPage() {
                             p: 1.5,
                             borderRadius: 2,
                             border: '1px solid',
-                            borderColor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.2),
+                            borderColor: (th) => varAlpha(th.vars.palette.info.mainChannel, 0.2),
                             backdropFilter: 'blur(16px)',
                           }}
                         >
@@ -4903,7 +5079,7 @@ export function LandingPage() {
                                 width: 28,
                                 height: 28,
                                 borderRadius: 1,
-                                bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.12),
+                                bgcolor: (th) => varAlpha(th.vars.palette.info.mainChannel, 0.12),
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -4920,7 +5096,7 @@ export function LandingPage() {
                                 variant="caption"
                                 sx={{ fontWeight: 700, fontSize: '0.65rem', display: 'block' }}
                               >
-                                Entrenamiento hoy
+                                {t('label_training_today')}
                               </Typography>
                               <Typography
                                 variant="caption"
@@ -4948,11 +5124,11 @@ export function LandingPage() {
                   top: '5%',
                   right: '5%',
                   pointerEvents: 'none',
-                  background: (t) =>
+                  background: (th) =>
                     varAlpha(
                       heroDomain === 'tournaments'
-                        ? t.vars.palette.primary.mainChannel
-                        : t.vars.palette.info.mainChannel,
+                        ? th.vars.palette.primary.mainChannel
+                        : th.vars.palette.info.mainChannel,
                       0.1
                     ),
                   zIndex: 0,
@@ -4969,11 +5145,11 @@ export function LandingPage() {
                   bottom: '10%',
                   left: '5%',
                   pointerEvents: 'none',
-                  background: (t) =>
+                  background: (th) =>
                     varAlpha(
                       heroDomain === 'tournaments'
-                        ? t.vars.palette.info.mainChannel
-                        : t.vars.palette.success.mainChannel,
+                        ? th.vars.palette.info.mainChannel
+                        : th.vars.palette.success.mainChannel,
                       0.08
                     ),
                   zIndex: 0,
@@ -4990,9 +5166,9 @@ export function LandingPage() {
         sx={{
           borderTop: '1px solid',
           borderBottom: '1px solid',
-          borderColor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.06),
+          borderColor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.06),
           py: 4,
-          bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.02),
+          bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.02),
         }}
       >
         <Container>
@@ -5012,7 +5188,7 @@ export function LandingPage() {
                 flexShrink: 0,
               }}
             >
-              Con la confianza de
+              {t('trusted_by')}
             </Typography>
             <Stack
               direction="row"
@@ -5031,7 +5207,7 @@ export function LandingPage() {
                   key={name}
                   variant="subtitle2"
                   sx={{
-                    color: (t) => varAlpha(t.vars.palette.text.primaryChannel, 0.28),
+                    color: (th) => varAlpha(th.vars.palette.text.primaryChannel, 0.28),
                     fontWeight: 800,
                     whiteSpace: 'nowrap',
                     letterSpacing: '-0.01em',
@@ -5055,7 +5231,7 @@ export function LandingPage() {
             overflow: 'hidden',
             position: 'relative',
             py: { xs: 10, md: 16 },
-            bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.02),
+            bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.02),
           }}
         >
           <MotionViewport>
@@ -5064,21 +5240,21 @@ export function LandingPage() {
               <Stack spacing={3} sx={{ mb: { xs: 5, md: 8 }, textAlign: 'center' }}>
                 <AnimatedDiv>
                   <Typography variant="overline" sx={{ color: 'text.disabled' }}>
-                    Funciones Principales
+                    {t('features_overline')}
                   </Typography>
                 </AnimatedDiv>
                 <AnimatedDiv>
                   <Typography variant="h2">
-                    Todo lo que necesitas.{' '}
+                    {`${t('features_heading_prefix')} `}
                     <Box
                       component="span"
-                      sx={(t) => ({
+                      sx={(t2) => ({
                         ...textGradient(
-                          `to right, ${t.vars.palette.text.primary}, ${varAlpha(t.vars.palette.text.primaryChannel, 0.2)}`
+                          `to right, ${t2.vars.palette.text.primary}, ${varAlpha(t2.vars.palette.text.primaryChannel, 0.2)}`
                         ),
                       })}
                     >
-                      Nada que no.
+                      {t('features_heading_highlight')}
                     </Box>
                   </Typography>
                 </AnimatedDiv>
@@ -5091,9 +5267,9 @@ export function LandingPage() {
                         display: 'inline-flex',
                         p: 0.625,
                         borderRadius: 2.5,
-                        bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.08),
-                        border: (t) =>
-                          `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
+                        bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.08),
+                        border: (th) =>
+                          `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
                       }}
                     >
                       {FEAT_TABS.map((tab) => {
@@ -5121,8 +5297,8 @@ export function LandingPage() {
                                   inset: 0,
                                   borderRadius: 2,
                                   bgcolor: 'background.paper',
-                                  boxShadow: (t) =>
-                                    `0 2px 8px ${varAlpha(t.vars.palette.common.blackChannel, 0.1)}`,
+                                  boxShadow: (th) =>
+                                    `0 2px 8px ${varAlpha(th.vars.palette.common.blackChannel, 0.1)}`,
                                 }}
                               />
                             )}
@@ -5148,7 +5324,7 @@ export function LandingPage() {
                                   transition: 'color 0.25s',
                                 }}
                               >
-                                {tab.label}
+                                {t(tab.label)}
                               </Typography>
                             </Stack>
                             {/* Auto-cycle progress bar */}
@@ -5195,8 +5371,8 @@ export function LandingPage() {
                         sx={{ color: 'text.secondary', maxWidth: 520, mx: 'auto' }}
                       >
                         {featTab === 'tournaments'
-                          ? 'Desde fixtures automáticos hasta llaves finales — cada fase de tu torneo bajo control.'
-                          : 'Pagos, asistencias, tienda y documentos — administra tu club sin salir de la plataforma.'}
+                          ? t('feat_tournaments_subtitle')
+                          : t('feat_clubs_subtitle')}
                       </Typography>
                     </Box>
                   </AnimatePresence>
@@ -5248,10 +5424,10 @@ export function LandingPage() {
                           />
                         </Box>
                         <Typography variant="h6" sx={{ mb: 1 }}>
-                          {feat.title}
+                          {t(feat.title)}
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          {feat.desc}
+                          {t(feat.desc)}
                         </Typography>
                       </Card>
                     </Grid>
@@ -5276,28 +5452,27 @@ export function LandingPage() {
               >
                 <AnimatedDiv>
                   <Typography variant="overline" sx={{ color: 'text.disabled' }}>
-                    Ciclo de Vida del Torneo
+                    {t('lifecycle_overline')}
                   </Typography>
                 </AnimatedDiv>
                 <AnimatedDiv>
                   <Typography variant="h2">
-                    Cuatro pasos a la{' '}
+                    {`${t('lifecycle_heading_prefix')} `}
                     <Box
                       component="span"
-                      sx={(t) => ({
+                      sx={(t2) => ({
                         ...textGradient(
-                          `135deg, ${t.vars.palette.primary.main} 0%, ${t.vars.palette.success.main} 100%`
+                          `135deg, ${t2.vars.palette.primary.main} 0%, ${t2.vars.palette.success.main} 100%`
                         ),
                       })}
                     >
-                      gloria
+                      {t('lifecycle_heading_highlight')}
                     </Box>
                   </Typography>
                 </AnimatedDiv>
                 <AnimatedDiv>
                   <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 500 }}>
-                    Desde la creación hasta el campeón — mira cómo SportsManagementment te guía en
-                    cada fase de tu torneo.
+                    {t('lifecycle_body')}
                   </Typography>
                 </AnimatedDiv>
               </Stack>
@@ -5327,12 +5502,12 @@ export function LandingPage() {
                                 borderRadius: 1.5,
                                 cursor: 'pointer',
                                 bgcolor: isActive
-                                  ? (t) => varAlpha(t.vars.palette[step.color].mainChannel, 0.08)
+                                  ? (th) => varAlpha(th.vars.palette[step.color].mainChannel, 0.08)
                                   : 'transparent',
                                 transition: 'all 0.25s ease',
                                 '&:hover': {
-                                  bgcolor: (t) =>
-                                    varAlpha(t.vars.palette[step.color].mainChannel, 0.04),
+                                  bgcolor: (th) =>
+                                    varAlpha(th.vars.palette[step.color].mainChannel, 0.04),
                                 },
                               }}
                             >
@@ -5346,21 +5521,22 @@ export function LandingPage() {
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  border: (t) =>
+                                  border: (th) =>
                                     `2px solid ${
                                       isDone || isActive
-                                        ? t.palette[step.color].main
-                                        : varAlpha(t.vars.palette.grey['500Channel'], 0.24)
+                                        ? th.palette[step.color].main
+                                        : varAlpha(th.vars.palette.grey['500Channel'], 0.24)
                                     }`,
                                   bgcolor: isDone
-                                    ? (t) => varAlpha(t.vars.palette[step.color].mainChannel, 0.12)
+                                    ? (th) =>
+                                        varAlpha(th.vars.palette[step.color].mainChannel, 0.12)
                                     : 'transparent',
                                   color:
                                     isDone || isActive ? `${step.color}.main` : 'text.disabled',
                                   transition: 'all 0.3s',
                                   ...(isActive && {
-                                    boxShadow: (t) =>
-                                      `0 0 0 4px ${varAlpha(t.vars.palette[step.color].mainChannel, 0.12)}`,
+                                    boxShadow: (th) =>
+                                      `0 0 0 4px ${varAlpha(th.vars.palette[step.color].mainChannel, 0.12)}`,
                                   }),
                                 }}
                               >
@@ -5379,14 +5555,14 @@ export function LandingPage() {
                                     color: isActive || isDone ? 'text.primary' : 'text.secondary',
                                   }}
                                 >
-                                  {step.title}
+                                  {t(step.title)}
                                 </Typography>
                                 {isActive && (
                                   <Typography
                                     variant="caption"
                                     sx={{ color: 'text.disabled', display: 'block' }}
                                   >
-                                    {step.desc}
+                                    {t(step.desc)}
                                   </Typography>
                                 )}
                               </Box>
@@ -5400,8 +5576,8 @@ export function LandingPage() {
                                   height: 16,
                                   ml: '35px',
                                   bgcolor: isDone
-                                    ? (t) => varAlpha(t.vars.palette[step.color].mainChannel, 0.3)
-                                    : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.12),
+                                    ? (th) => varAlpha(th.vars.palette[step.color].mainChannel, 0.3)
+                                    : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.12),
                                   transition: 'background-color 0.3s',
                                 }}
                               />
@@ -5421,10 +5597,10 @@ export function LandingPage() {
                         p: 3,
                         borderRadius: 3,
                         minHeight: 360,
-                        bgcolor: (t) => varAlpha(t.vars.palette.background.defaultChannel, 0.9),
+                        bgcolor: (th) => varAlpha(th.vars.palette.background.defaultChannel, 0.9),
                         backdropFilter: 'blur(20px)',
-                        border: (t) =>
-                          `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
+                        border: (th) =>
+                          `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
                       }}
                     >
                       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2.5 }}>
@@ -5436,9 +5612,9 @@ export function LandingPage() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            bgcolor: (t) =>
+                            bgcolor: (th) =>
                               varAlpha(
-                                t.vars.palette[LIFECYCLE_STEPS[activeStep].color].mainChannel,
+                                th.vars.palette[LIFECYCLE_STEPS[activeStep].color].mainChannel,
                                 0.12
                               ),
                           }}
@@ -5450,10 +5626,10 @@ export function LandingPage() {
                           />
                         </Box>
                         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                          {LIFECYCLE_STEPS[activeStep].title}
+                          {t(LIFECYCLE_STEPS[activeStep].title)}
                         </Typography>
                         <Chip
-                          label={`Paso ${activeStep + 1}/4`}
+                          label={`${t('step_label')} ${activeStep + 1}/4`}
                           size="small"
                           color={LIFECYCLE_STEPS[activeStep].color}
                           variant="soft"
@@ -5498,21 +5674,21 @@ export function LandingPage() {
               >
                 <AnimatedDiv>
                   <Typography variant="overline" sx={{ color: 'text.disabled' }}>
-                    Gestión de Clubes
+                    {t('club_management_overline')}
                   </Typography>
                 </AnimatedDiv>
                 <AnimatedDiv>
                   <Typography variant="h2">
-                    Tu club,{' '}
+                    {`${t('club_management_heading_prefix')} `}
                     <Box
                       component="span"
-                      sx={(t) => ({
+                      sx={(t2) => ({
                         ...textGradient(
-                          `135deg, ${t.vars.palette.info.main} 0%, ${t.vars.palette.success.main} 100%`
+                          `135deg, ${t2.vars.palette.info.main} 0%, ${t2.vars.palette.success.main} 100%`
                         ),
                       })}
                     >
-                      todo en uno
+                      {t('club_management_heading_highlight')}
                     </Box>
                   </Typography>
                 </AnimatedDiv>
@@ -5521,8 +5697,7 @@ export function LandingPage() {
                     variant="body1"
                     sx={{ color: 'text.secondary', maxWidth: 500, ml: { md: 'auto' } }}
                   >
-                    Pagos, asistencias, documentos, tienda y más — SportsManagement centraliza todo
-                    lo que necesitas para administrar tu club sin complicaciones.
+                    {t('club_management_body')}
                   </Typography>
                 </AnimatedDiv>
               </Stack>
@@ -5553,12 +5728,12 @@ export function LandingPage() {
                                 borderRadius: 1.5,
                                 cursor: 'pointer',
                                 bgcolor: isActive
-                                  ? (t) => varAlpha(t.vars.palette[step.color].mainChannel, 0.08)
+                                  ? (th) => varAlpha(th.vars.palette[step.color].mainChannel, 0.08)
                                   : 'transparent',
                                 transition: 'all 0.25s ease',
                                 '&:hover': {
-                                  bgcolor: (t) =>
-                                    varAlpha(t.vars.palette[step.color].mainChannel, 0.04),
+                                  bgcolor: (th) =>
+                                    varAlpha(th.vars.palette[step.color].mainChannel, 0.04),
                                 },
                               }}
                             >
@@ -5571,17 +5746,18 @@ export function LandingPage() {
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  border: (t) =>
-                                    `2px solid ${isDone || isActive ? t.palette[step.color].main : varAlpha(t.vars.palette.grey['500Channel'], 0.24)}`,
+                                  border: (th) =>
+                                    `2px solid ${isDone || isActive ? th.palette[step.color].main : varAlpha(th.vars.palette.grey['500Channel'], 0.24)}`,
                                   bgcolor: isDone
-                                    ? (t) => varAlpha(t.vars.palette[step.color].mainChannel, 0.12)
+                                    ? (th) =>
+                                        varAlpha(th.vars.palette[step.color].mainChannel, 0.12)
                                     : 'transparent',
                                   color:
                                     isDone || isActive ? `${step.color}.main` : 'text.disabled',
                                   transition: 'all 0.3s',
                                   ...(isActive && {
-                                    boxShadow: (t) =>
-                                      `0 0 0 4px ${varAlpha(t.vars.palette[step.color].mainChannel, 0.12)}`,
+                                    boxShadow: (th) =>
+                                      `0 0 0 4px ${varAlpha(th.vars.palette[step.color].mainChannel, 0.12)}`,
                                   }),
                                 }}
                               >
@@ -5600,14 +5776,14 @@ export function LandingPage() {
                                     color: isActive || isDone ? 'text.primary' : 'text.secondary',
                                   }}
                                 >
-                                  {step.title}
+                                  {t(step.title)}
                                 </Typography>
                                 {isActive && (
                                   <Typography
                                     variant="caption"
                                     sx={{ color: 'text.disabled', display: 'block' }}
                                   >
-                                    {step.desc}
+                                    {t(step.desc)}
                                   </Typography>
                                 )}
                               </Box>
@@ -5620,8 +5796,8 @@ export function LandingPage() {
                                   height: 16,
                                   ml: '35px',
                                   bgcolor: isDone
-                                    ? (t) => varAlpha(t.vars.palette[step.color].mainChannel, 0.3)
-                                    : (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.12),
+                                    ? (th) => varAlpha(th.vars.palette[step.color].mainChannel, 0.3)
+                                    : (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.12),
                                   transition: 'background-color 0.3s',
                                 }}
                               />
@@ -5641,10 +5817,10 @@ export function LandingPage() {
                         p: 3,
                         borderRadius: 3,
                         minHeight: 400,
-                        bgcolor: (t) => varAlpha(t.vars.palette.background.defaultChannel, 0.9),
+                        bgcolor: (th) => varAlpha(th.vars.palette.background.defaultChannel, 0.9),
                         backdropFilter: 'blur(20px)',
-                        border: (t) =>
-                          `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.12)}`,
+                        border: (th) =>
+                          `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.12)}`,
                       }}
                     >
                       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2.5 }}>
@@ -5656,9 +5832,9 @@ export function LandingPage() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            bgcolor: (t) =>
+                            bgcolor: (th) =>
                               varAlpha(
-                                t.vars.palette[CLUB_STEPS[activeClubStep].color].mainChannel,
+                                th.vars.palette[CLUB_STEPS[activeClubStep].color].mainChannel,
                                 0.12
                               ),
                           }}
@@ -5670,7 +5846,7 @@ export function LandingPage() {
                           />
                         </Box>
                         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                          {CLUB_STEPS[activeClubStep].title}
+                          {t(CLUB_STEPS[activeClubStep].title)}
                         </Typography>
                         <Chip
                           label={`${activeClubStep + 1}/${CLUB_STEPS.length}`}
@@ -5715,8 +5891,8 @@ export function LandingPage() {
             sx={{
               position: 'absolute',
               inset: 0,
-              background: (t) =>
-                `linear-gradient(180deg, transparent 0%, ${varAlpha(t.vars.palette.primary.mainChannel, 0.03)} 50%, transparent 100%)`,
+              background: (th) =>
+                `linear-gradient(180deg, transparent 0%, ${varAlpha(th.vars.palette.primary.mainChannel, 0.03)} 50%, transparent 100%)`,
               pointerEvents: 'none',
             }}
           />
@@ -5725,21 +5901,21 @@ export function LandingPage() {
               <Stack spacing={3} sx={{ mb: { xs: 6, md: 10 }, textAlign: 'center' }}>
                 <AnimatedDiv>
                   <Typography variant="overline" sx={{ color: 'text.disabled' }}>
-                    Impacto Real
+                    {t('stats_overline')}
                   </Typography>
                 </AnimatedDiv>
                 <AnimatedDiv>
                   <Typography variant="h2">
-                    Números que{' '}
+                    {`${t('stats_heading_prefix')} `}
                     <Box
                       component="span"
-                      sx={(t) => ({
+                      sx={(t2) => ({
                         ...textGradient(
-                          `135deg, ${t.vars.palette.primary.main} 0%, ${t.vars.palette.info.main} 100%`
+                          `135deg, ${t2.vars.palette.primary.main} 0%, ${t2.vars.palette.info.main} 100%`
                         ),
                       })}
                     >
-                      hablan solos
+                      {t('stats_heading_highlight')}
                     </Box>
                   </Typography>
                 </AnimatedDiv>
@@ -5748,8 +5924,7 @@ export function LandingPage() {
                     variant="body1"
                     sx={{ color: 'text.secondary', maxWidth: 480, mx: 'auto' }}
                   >
-                    Cientos de jugadores, equipos y organizadores ya confían en SportsManagement
-                    para llevar su deporte al siguiente nivel.
+                    {t('stats_body')}
                   </Typography>
                 </AnimatedDiv>
               </Stack>
@@ -5764,18 +5939,18 @@ export function LandingPage() {
                           textAlign: 'center',
                           borderRadius: 3,
                           height: 1,
-                          border: (t) =>
-                            `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.08)}`,
-                          transition: (t) =>
-                            t.transitions.create(['border-color', 'box-shadow', 'transform'], {
-                              duration: t.transitions.duration.shorter,
+                          border: (th) =>
+                            `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.08)}`,
+                          transition: (th) =>
+                            th.transitions.create(['border-color', 'box-shadow', 'transform'], {
+                              duration: th.transitions.duration.shorter,
                             }),
                           '&:hover': {
                             transform: 'translateY(-4px)',
-                            borderColor: (t) =>
-                              varAlpha(t.vars.palette[stat.color].mainChannel, 0.24),
-                            boxShadow: (t) =>
-                              `0 12px 32px -4px ${varAlpha(t.vars.palette[stat.color].mainChannel, 0.16)}`,
+                            borderColor: (th) =>
+                              varAlpha(th.vars.palette[stat.color].mainChannel, 0.24),
+                            boxShadow: (th) =>
+                              `0 12px 32px -4px ${varAlpha(th.vars.palette[stat.color].mainChannel, 0.16)}`,
                           },
                         }}
                       >
@@ -5789,8 +5964,8 @@ export function LandingPage() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            background: (t) =>
-                              `linear-gradient(135deg, ${varAlpha(t.vars.palette[stat.color].mainChannel, 0.16)} 0%, ${varAlpha(t.vars.palette[stat.color].mainChannel, 0.04)} 100%)`,
+                            background: (th) =>
+                              `linear-gradient(135deg, ${varAlpha(th.vars.palette[stat.color].mainChannel, 0.16)} 0%, ${varAlpha(th.vars.palette[stat.color].mainChannel, 0.04)} 100%)`,
                           }}
                         >
                           <Iconify
@@ -5801,10 +5976,10 @@ export function LandingPage() {
                         </Box>
                         <Typography
                           variant="h3"
-                          sx={(t) => ({
+                          sx={(th) => ({
                             mb: 0.5,
                             ...textGradient(
-                              `135deg, ${t.vars.palette[stat.color].main} 0%, ${t.vars.palette[stat.color].dark} 100%`
+                              `135deg, ${th.vars.palette[stat.color].main} 0%, ${th.vars.palette[stat.color].dark} 100%`
                             ),
                           })}
                         >
@@ -5814,7 +5989,7 @@ export function LandingPage() {
                           variant="body2"
                           sx={{ color: 'text.secondary', fontWeight: 500 }}
                         >
-                          {stat.label}
+                          {t(stat.label)}
                         </Typography>
                       </Card>
                     </Box>
@@ -5832,21 +6007,21 @@ export function LandingPage() {
               <Stack spacing={3} sx={{ mb: { xs: 6, md: 10 }, textAlign: 'center' }}>
                 <AnimatedDiv>
                   <Typography variant="overline" sx={{ color: 'text.disabled' }}>
-                    Historias de Éxito
+                    {t('testimonials_overline')}
                   </Typography>
                 </AnimatedDiv>
                 <AnimatedDiv>
                   <Typography variant="h2">
-                    Lo que dicen{' '}
+                    {`${t('testimonials_heading_prefix')} `}
                     <Box
                       component="span"
-                      sx={(t) => ({
+                      sx={(t2) => ({
                         ...textGradient(
-                          `135deg, ${t.vars.palette.warning.main} 0%, ${t.vars.palette.error.main} 100%`
+                          `135deg, ${t2.vars.palette.warning.main} 0%, ${t2.vars.palette.error.main} 100%`
                         ),
                       })}
                     >
-                      nuestros usuarios
+                      {t('testimonials_heading_highlight')}
                     </Box>
                   </Typography>
                 </AnimatedDiv>
@@ -5899,7 +6074,7 @@ export function LandingPage() {
                           variant="body2"
                           sx={{ color: 'text.secondary', lineHeight: 1.7, flex: 1, mb: 3 }}
                         >
-                          &ldquo;{item.quote}&rdquo;
+                          &ldquo;{t(item.quote)}&rdquo;
                         </Typography>
 
                         <Divider
@@ -5960,9 +6135,10 @@ export function LandingPage() {
                     p: { xs: 5, md: 10 },
                     textAlign: 'center',
                     borderRadius: 4,
-                    background: (t) =>
-                      `linear-gradient(135deg, ${varAlpha(t.vars.palette.primary.mainChannel, 0.08)} 0%, ${varAlpha(t.vars.palette.info.mainChannel, 0.08)} 100%)`,
-                    border: (t) => `1px solid ${varAlpha(t.vars.palette.primary.mainChannel, 0.2)}`,
+                    background: (th) =>
+                      `linear-gradient(135deg, ${varAlpha(th.vars.palette.primary.mainChannel, 0.08)} 0%, ${varAlpha(th.vars.palette.info.mainChannel, 0.08)} 100%)`,
+                    border: (th) =>
+                      `1px solid ${varAlpha(th.vars.palette.primary.mainChannel, 0.2)}`,
                     position: 'relative',
                     overflow: 'hidden',
                   }}
@@ -5977,7 +6153,7 @@ export function LandingPage() {
                       filter: 'blur(120px)',
                       top: '-20%',
                       left: '-10%',
-                      background: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.12),
+                      background: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.12),
                       pointerEvents: 'none',
                     }}
                   />
@@ -5990,7 +6166,7 @@ export function LandingPage() {
                       filter: 'blur(100px)',
                       bottom: '-15%',
                       right: '-5%',
-                      background: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.1),
+                      background: (th) => varAlpha(th.vars.palette.info.mainChannel, 0.1),
                       pointerEvents: 'none',
                     }}
                   />
@@ -5998,7 +6174,7 @@ export function LandingPage() {
                   <Box sx={{ position: 'relative', zIndex: 1 }}>
                     <Chip
                       icon={<Iconify icon="solar:rocket-bold" width={14} />}
-                      label="Gestión Inteligente a tu alcance"
+                      label={t('cta_chip')}
                       size="small"
                       color="primary"
                       variant="soft"
@@ -6006,16 +6182,16 @@ export function LandingPage() {
                     />
 
                     <Typography variant="h2" sx={{ mb: 2, maxWidth: 600, mx: 'auto' }}>
-                      ¿Listo para dar un salto{' '}
+                      {`${t('cta_heading_prefix')} `}
                       <Box
                         component="span"
-                        sx={(t) => ({
+                        sx={(t2) => ({
                           ...textGradient(
-                            `135deg, ${t.vars.palette.primary.main} 0%, ${t.vars.palette.info.main} 100%`
+                            `135deg, ${t2.vars.palette.primary.main} 0%, ${t2.vars.palette.info.main} 100%`
                           ),
                         })}
                       >
-                        en la gestión deportiva?
+                        {t('cta_heading_highlight')}
                       </Box>
                     </Typography>
 
@@ -6023,8 +6199,7 @@ export function LandingPage() {
                       variant="body1"
                       sx={{ color: 'text.secondary', maxWidth: 480, mx: 'auto', mb: 5 }}
                     >
-                      Únete a cientos de gestores deportivos que confían en SportsManagement para
-                      llevar sus torneos y clubes al siguiente nivel — sin complicaciones.
+                      {t('cta_body')}
                     </Typography>
 
                     <Stack
@@ -6044,11 +6219,11 @@ export function LandingPage() {
                           py: 1.5,
                           fontSize: 16,
                           borderRadius: 3,
-                          boxShadow: (t) =>
-                            `0 8px 32px ${varAlpha(t.vars.palette.primary.mainChannel, 0.4)}`,
+                          boxShadow: (th) =>
+                            `0 8px 32px ${varAlpha(th.vars.palette.primary.mainChannel, 0.4)}`,
                         }}
                       >
-                        Empezieza Ahora
+                        {t('cta_get_started')}
                       </Button>
                       <Button
                         size="large"
@@ -6057,15 +6232,15 @@ export function LandingPage() {
                         href="/auth/amplify/sign-in"
                         sx={{ px: 4, py: 1.5, fontSize: 16, borderRadius: 3 }}
                       >
-                        Ya tengo cuenta
+                        {t('cta_already_have_account')}
                       </Button>
                     </Stack>
 
                     <Stack direction="row" spacing={3} justifyContent="center" flexWrap="wrap">
                       {[
-                        { icon: 'solar:star-bold', label: 'Gestión guiada' },
-                        { icon: 'solar:shield-check-bold', label: 'Sin tarjetas de crédito' },
-                        { icon: 'solar:users-group-rounded-bold', label: 'Configuración en 5 min' },
+                        { icon: 'solar:star-bold', label: 'cta_badge_guided_setup' },
+                        { icon: 'solar:shield-check-bold', label: 'cta_badge_no_credit_card' },
+                        { icon: 'solar:users-group-rounded-bold', label: 'cta_badge_setup_time' },
                       ].map((badge) => (
                         <Stack key={badge.label} direction="row" alignItems="center" spacing={0.75}>
                           <Iconify icon={badge.icon} width={15} sx={{ color: 'text.disabled' }} />
@@ -6073,7 +6248,7 @@ export function LandingPage() {
                             variant="caption"
                             sx={{ color: 'text.disabled', fontWeight: 500 }}
                           >
-                            {badge.label}
+                            {t(badge.label)}
                           </Typography>
                         </Stack>
                       ))}
@@ -6089,8 +6264,8 @@ export function LandingPage() {
         <Box
           component="footer"
           sx={{
-            borderTop: (t) => `1px solid ${varAlpha(t.vars.palette.grey['500Channel'], 0.08)}`,
-            bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.02),
+            borderTop: (th) => `1px solid ${varAlpha(th.vars.palette.grey['500Channel'], 0.08)}`,
+            bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.02),
           }}
         >
           <Container>
@@ -6104,8 +6279,7 @@ export function LandingPage() {
                     variant="body2"
                     sx={{ color: 'text.secondary', maxWidth: 280, lineHeight: 1.7 }}
                   >
-                    La plataforma todo-en-uno para clubes deportivos. Torneos, pagos, asistencias y
-                    más — todo en un solo lugar.
+                    {t('footer_tagline')}
                   </Typography>
                   <Stack direction="row" spacing={1}>
                     {[
@@ -6126,12 +6300,12 @@ export function LandingPage() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          bgcolor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.08),
+                          bgcolor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.08),
                           color: 'text.secondary',
                           textDecoration: 'none',
                           transition: 'all 0.2s',
                           '&:hover': {
-                            bgcolor: (t) => varAlpha(t.vars.palette.primary.mainChannel, 0.12),
+                            bgcolor: (th) => varAlpha(th.vars.palette.primary.mainChannel, 0.12),
                             color: 'primary.main',
                           },
                         }}
@@ -6146,30 +6320,30 @@ export function LandingPage() {
               {/* Links columns */}
               {[
                 {
-                  title: 'Plataforma',
+                  title: 'footer_col_platform',
                   links: [
-                    { label: 'Torneos', href: '#lifecycle' },
-                    { label: 'Gestión de Clubes', href: '#clubs' },
-                    { label: 'Funciones', href: '#features' },
-                    { label: 'Resultados en Vivo', href: '#' },
-                    { label: 'Estadísticas', href: '#' },
+                    { label: 'tournaments', href: '#lifecycle' },
+                    { label: 'footer_link_club_management', href: '#clubs' },
+                    { label: 'footer_link_features', href: '#features' },
+                    { label: 'footer_link_live_results', href: '#' },
+                    { label: 'footer_link_stats', href: '#' },
                   ],
                 },
                 {
-                  title: 'Empresa',
+                  title: 'footer_col_company',
                   links: [
-                    { label: 'Acerca de', href: '#' },
-                    { label: 'Blog', href: '#' },
-                    { label: 'Contacto', href: '#' },
-                    { label: 'Empleo', href: '#' },
+                    { label: 'footer_link_about', href: '#' },
+                    { label: 'footer_link_blog', href: '#' },
+                    { label: 'footer_link_contact', href: '#' },
+                    { label: 'footer_link_careers', href: '#' },
                   ],
                 },
                 {
-                  title: 'Legal',
+                  title: 'footer_col_legal',
                   links: [
-                    { label: 'Términos de Uso', href: '#' },
-                    { label: 'Privacidad', href: '#' },
-                    { label: 'Cookies', href: '#' },
+                    { label: 'footer_link_terms', href: '#' },
+                    { label: 'footer_link_privacy', href: '#' },
+                    { label: 'footer_link_cookies', href: '#' },
                   ],
                 },
               ].map((col) => (
@@ -6178,7 +6352,7 @@ export function LandingPage() {
                     variant="overline"
                     sx={{ color: 'text.disabled', display: 'block', mb: 2 }}
                   >
-                    {col.title}
+                    {t(col.title)}
                   </Typography>
                   <Stack spacing={1.25}>
                     {col.links.map((link) => (
@@ -6196,7 +6370,7 @@ export function LandingPage() {
                           display: 'block',
                         }}
                       >
-                        {link.label}
+                        {t(link.label)}
                       </Typography>
                     ))}
                   </Stack>
@@ -6208,7 +6382,7 @@ export function LandingPage() {
             <Box
               sx={{
                 borderTop: '1px solid',
-                borderColor: (t) => varAlpha(t.vars.palette.grey['500Channel'], 0.08),
+                borderColor: (th) => varAlpha(th.vars.palette.grey['500Channel'], 0.08),
                 py: 3,
               }}
             >
@@ -6219,7 +6393,7 @@ export function LandingPage() {
                 spacing={2}
               >
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  © 2026 SportsManagement. Todos los derechos reservados.
+                  {`© 2026 SportsManagement. ${t('footer_rights_reserved')}`}
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Box
@@ -6233,7 +6407,7 @@ export function LandingPage() {
                     }}
                   />
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    Todos los sistemas operativos
+                    {t('footer_all_systems_operational')}
                   </Typography>
                 </Stack>
               </Stack>

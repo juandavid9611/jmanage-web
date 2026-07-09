@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
@@ -12,6 +14,17 @@ import { Label } from 'src/components/label';
 
 // ----------------------------------------------------------------------
 
+const PUBLISH_LABEL = {
+  published: 'label_published',
+  draft: 'draft',
+};
+
+const INVENTORY_TYPE_LABEL = {
+  'in stock': 'label_in_stock',
+  'low stock': 'label_low_stock',
+  'out of stock': 'label_out_of_stock',
+};
+
 export function RenderCellPrice({ params }) {
   return fCurrency(params.row.price);
 }
@@ -19,9 +32,10 @@ export function RenderCellPrice({ params }) {
 // ----------------------------------------------------------------------
 
 export function RenderCellPublish({ params }) {
+  const { t } = useTranslation();
   return (
     <Label variant="soft" color={(params.row.publish === 'published' && 'info') || 'default'}>
-      {params.row.publish}
+      {t(PUBLISH_LABEL[params.row.publish] || params.row.publish)}
     </Label>
   );
 }
@@ -42,6 +56,7 @@ export function RenderCellCreatedAt({ params }) {
 // ----------------------------------------------------------------------
 
 export function RenderCellStock({ params }) {
+  const { t } = useTranslation();
   return (
     <Stack justifyContent="center" sx={{ typography: 'caption', color: 'text.secondary' }}>
       <LinearProgress
@@ -54,7 +69,8 @@ export function RenderCellStock({ params }) {
         }
         sx={{ mb: 1, width: 1, height: 6, maxWidth: 80 }}
       />
-      {!!params.row.available && params.row.available} {params.row.inventoryType}
+      {!!params.row.available && params.row.available}{' '}
+      {t(INVENTORY_TYPE_LABEL[params.row.inventoryType] || params.row.inventoryType)}
     </Stack>
   );
 }

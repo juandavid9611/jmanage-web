@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import parse from 'autosuggest-highlight/parse';
 import match from 'autosuggest-highlight/match';
 
@@ -17,6 +18,7 @@ import { SearchNotFound } from 'src/components/search-not-found';
 // ----------------------------------------------------------------------
 
 export function ProductSearch({ query, results, onSearch, loading }) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const handleClick = (id) => {
@@ -51,7 +53,7 @@ export function ProductSearch({ query, results, onSearch, loading }) {
       renderInput={(params) => (
         <TextField
           {...params}
-          placeholder="Search..."
+          placeholder={t('search')}
           onKeyUp={handleKeyUp}
           InputProps={{
             ...params.InputProps,

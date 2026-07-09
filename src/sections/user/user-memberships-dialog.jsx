@@ -44,12 +44,7 @@ export function UserMembershipsDialog({ user, open, onClose }) {
   const byWorkspace = new Map(memberships.map((m) => [m.workspace_id, m]));
 
   return (
-    <Dialog
-      fullWidth
-      open={open}
-      onClose={onClose}
-      PaperProps={{ sx: { maxWidth: 520 } }}
-    >
+    <Dialog fullWidth open={open} onClose={onClose} PaperProps={{ sx: { maxWidth: 520 } }}>
       <DialogTitle>{t('manage_memberships')}</DialogTitle>
 
       <DialogContent dividers sx={{ pb: 1 }}>
@@ -72,7 +67,9 @@ export function UserMembershipsDialog({ user, open, onClose }) {
             {t('no_workspaces')}
           </Typography>
         ) : (
-          <Stack divider={<Box sx={{ borderTop: (theme) => `dashed 1px ${theme.palette.divider}` }} />}>
+          <Stack
+            divider={<Box sx={{ borderTop: (theme) => `dashed 1px ${theme.palette.divider}` }} />}
+          >
             {allWorkspaces.map((ws) => (
               <MembershipRow
                 key={ws.id}

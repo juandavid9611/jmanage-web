@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -20,24 +21,36 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys (or a literal "#"), resolved via t() at render time.
 const COLS = [
   { key: 'rank', label: '#', fixed: '20px', align: 'center' },
-  { key: 'name', label: 'Equipo', fixed: '2fr', align: 'left' },
-  { key: 'played', label: 'PJ', fixed: '1fr', align: 'center' },
-  { key: 'won', label: 'PG', fixed: '1fr', align: 'center' },
-  { key: 'drawn', label: 'PE', fixed: '1fr', align: 'center' },
-  { key: 'lost', label: 'PP', fixed: '1fr', align: 'center' },
-  { key: 'goals_for', label: 'GF', fixed: '1fr', align: 'center' },
-  { key: 'goals_against', label: 'GC', fixed: '1fr', align: 'center' },
-  { key: 'goal_difference', label: 'DG', fixed: '1fr', align: 'center' },
-  { key: 'points', label: 'PTS', fixed: '1fr', align: 'center' },
+  { key: 'name', label: 'team', fixed: '2fr', align: 'left' },
+  { key: 'played', label: 'label_col_played_abbr', fixed: '1fr', align: 'center' },
+  { key: 'won', label: 'label_col_won_abbr', fixed: '1fr', align: 'center' },
+  { key: 'drawn', label: 'label_col_drawn_abbr', fixed: '1fr', align: 'center' },
+  { key: 'lost', label: 'label_col_lost_abbr', fixed: '1fr', align: 'center' },
+  { key: 'goals_for', label: 'label_gf_abbr', fixed: '1fr', align: 'center' },
+  { key: 'goals_against', label: 'label_ga_abbr', fixed: '1fr', align: 'center' },
+  { key: 'goal_difference', label: 'label_col_goal_diff_abbr', fixed: '1fr', align: 'center' },
+  { key: 'points', label: 'label_col_points_abbr', fixed: '1fr', align: 'center' },
 ];
 
 const GRID_TEMPLATE = COLS.map((c) => c.fixed).join(' ');
 
 // ----------------------------------------------------------------------
 
-export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMatches, onViewAll, onNextAction, currentMatchweek, totalMatchweeks, publicMode = false }) {
+export function StandingsSidebar({
+  tournamentId,
+  nextPendingMatch,
+  teams,
+  allMatches,
+  onViewAll,
+  onNextAction,
+  currentMatchweek,
+  totalMatchweeks,
+  publicMode = false,
+}) {
+  const { t } = useTranslation();
   const authGroups = useGetGroups(publicMode ? null : tournamentId);
   const pubGroups = useGetPublicGroups(publicMode ? tournamentId : null);
   const { groups } = publicMode ? pubGroups : authGroups;
@@ -69,18 +82,18 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMat
         sx={{
           px: 2.25,
           py: 1.5,
-          borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+          borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
         }}
       >
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="mdi:trophy-outline" width={18} sx={{ color: 'text.secondary' }} />
           <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-            Tabla de posiciones
+            {t('label_standings_table')}
           </Typography>
         </Stack>
         {onViewAll && (
           <Button size="small" sx={{ fontSize: 11 }} onClick={onViewAll}>
-            Ver todo
+            {t('label_view_all')}
           </Button>
         )}
       </Stack>
@@ -104,7 +117,11 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMat
             />
           ))
         ) : (
-          <AllStandings rows={allStandings?.tournament?.items || []} teams={teams} liveTeamIds={liveTeamIds} />
+          <AllStandings
+            rows={allStandings?.tournament?.items || []}
+            teams={teams}
+            liveTeamIds={liveTeamIds}
+          />
         )}
       </Box>
 
@@ -114,15 +131,15 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMat
           sx={{
             px: 2.25,
             py: 1.75,
-            borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+            borderTop: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
           }}
         >
           {nextPendingMatch ? (
             <Box
               onClick={onNextAction}
               sx={{
-                bgcolor: (t) => alpha(t.palette.grey[900], 0.04),
-                border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+                bgcolor: (theme) => alpha(theme.palette.grey[900], 0.04),
+                border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
                 borderRadius: 1,
                 px: 1.75,
                 py: 1.25,
@@ -132,23 +149,28 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMat
                 justifyContent: 'space-between',
                 transition: 'all 0.2s',
                 '&:hover': onNextAction
-                  ? { bgcolor: (t) => alpha(t.palette.grey[900], 0.06) }
+                  ? { bgcolor: (theme) => alpha(theme.palette.grey[900], 0.06) }
                   : {},
               }}
             >
               <Box>
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {nextPendingMatch.status === 'live' ? 'Ver en vivo ' : 'Registrar '}
-                  {(teams?.find((t) => t.id === nextPendingMatch.home_team_id)?.short_name ||
-                    teams?.find((t) => t.id === nextPendingMatch.home_team_id)?.name ||
-                    'LOC')}{' '}
-                  vs{' '}
-                  {(teams?.find((t) => t.id === nextPendingMatch.away_team_id)?.short_name ||
-                    teams?.find((t) => t.id === nextPendingMatch.away_team_id)?.name ||
-                    'VIS')}
+                  {nextPendingMatch.status === 'live'
+                    ? `${t('label_watch_live')} `
+                    : `${t('label_register')} `}
+                  {teams?.find((team) => team.id === nextPendingMatch.home_team_id)?.short_name ||
+                    teams?.find((team) => team.id === nextPendingMatch.home_team_id)?.name ||
+                    t('label_home_abbr')}{' '}
+                  {t('label_vs')}{' '}
+                  {teams?.find((team) => team.id === nextPendingMatch.away_team_id)?.short_name ||
+                    teams?.find((team) => team.id === nextPendingMatch.away_team_id)?.name ||
+                    t('label_away_abbr')}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  {nextPendingMatch.status === 'live' ? 'Partido en curso' : 'Resultado pendiente'}{nextPendingMatch.venue ? ` · ${nextPendingMatch.venue}` : ''}
+                  {nextPendingMatch.status === 'live'
+                    ? t('label_match_in_progress')
+                    : t('label_result_pending')}
+                  {nextPendingMatch.venue ? ` · ${nextPendingMatch.venue}` : ''}
                 </Typography>
               </Box>
               <Iconify icon="eva:arrow-forward-fill" sx={{ color: 'text.disabled' }} />
@@ -162,17 +184,21 @@ export function StandingsSidebar({ tournamentId, nextPendingMatch, teams, allMat
                 px: 1.75,
                 py: 1.25,
                 borderRadius: 1,
-                bgcolor: (t) => alpha(t.palette.success.main, 0.06),
-                border: (t) => `1px solid ${alpha(t.palette.success.main, 0.16)}`,
+                bgcolor: (theme) => alpha(theme.palette.success.main, 0.06),
+                border: (theme) => `1px solid ${alpha(theme.palette.success.main, 0.16)}`,
               }}
             >
-              <Iconify icon="mdi:check-circle" width={18} sx={{ color: 'success.main', flexShrink: 0 }} />
+              <Iconify
+                icon="mdi:check-circle"
+                width={18}
+                sx={{ color: 'success.main', flexShrink: 0 }}
+              />
               <Box>
                 <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.dark' }}>
-                  Jornada {currentMatchweek} completada
+                  {t('label_matchday')} {currentMatchweek} {t('label_completed_fem')}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  Lista para avanzar a la Jornada {currentMatchweek + 1}
+                  {t('label_ready_to_advance_to_matchday')} {currentMatchweek + 1}
                 </Typography>
               </Box>
             </Stack>
@@ -208,13 +234,14 @@ function AllStandings({ rows, teams, liveTeamIds }) {
 // ----------------------------------------------------------------------
 
 function StandingsTable({ rows, teams, liveTeamIds }) {
+  const { t } = useTranslation();
   if (!rows || rows.length === 0) {
     return (
       <Typography
         variant="caption"
         sx={{ color: 'text.disabled', py: 2, display: 'block', textAlign: 'center' }}
       >
-        Sin datos
+        {t('label_no_data')}
       </Typography>
     );
   }
@@ -223,7 +250,7 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
     <Card
       sx={{
         boxShadow: 'none',
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
         overflow: 'hidden',
       }}
     >
@@ -235,8 +262,8 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
           alignItems: 'center',
           px: 1,
           py: 0.75,
-          bgcolor: (t) => alpha(t.palette.grey[500], 0.04),
-          borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+          borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
           gap: 0.25,
         }}
       >
@@ -251,7 +278,7 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
               textAlign: col.align,
             }}
           >
-            {col.label}
+            {col.label === '#' ? col.label : t(col.label)}
           </Typography>
         ))}
       </Box>
@@ -259,7 +286,7 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
       {/* Rows */}
       <Stack spacing={0}>
         {rows.map((row, idx) => {
-          const team = teams?.find((t) => t.id === row.team_id);
+          const team = teams?.find((tm) => tm.id === row.team_id);
           const name = team?.short_name || team?.name || '—';
           const isTop = idx < 2;
           const gd = row.goal_difference;
@@ -274,9 +301,11 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
                   px: 1,
                   py: 0.875,
                   gap: 0.25,
-                  bgcolor: isTop ? (t) => alpha(t.palette.success.main, 0.03) : 'transparent',
+                  bgcolor: isTop
+                    ? (theme) => alpha(theme.palette.success.main, 0.03)
+                    : 'transparent',
                   transition: 'background 0.15s',
-                  '&:hover': { bgcolor: (t) => alpha(t.palette.grey[500], 0.04) },
+                  '&:hover': { bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04) },
                 }}
               >
                 {/* # */}
@@ -318,7 +347,7 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
                         px: 0.75,
                         py: 0.25,
                         borderRadius: 0.5,
-                        bgcolor: (t) => alpha(t.palette.error.main, 0.16),
+                        bgcolor: (theme) => alpha(theme.palette.error.main, 0.16),
                         color: 'error.main',
                         fontSize: '0.6rem',
                         fontWeight: 700,
@@ -332,7 +361,7 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
                         },
                       }}
                     >
-                      En vivo
+                      {t('label_live')}
                     </Box>
                   )}
                 </Stack>
@@ -388,7 +417,7 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
                   sx={{
                     mx: 1,
                     borderStyle: 'dashed',
-                    borderColor: (t) => alpha(t.palette.success.main, 0.24),
+                    borderColor: (theme) => alpha(theme.palette.success.main, 0.24),
                   }}
                 />
               )}

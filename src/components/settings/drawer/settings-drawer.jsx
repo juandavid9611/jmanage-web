@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
@@ -19,6 +21,7 @@ import { useNotificationsContext } from '../../onesignal/notifications-context';
 // ----------------------------------------------------------------------
 
 export function SettingsDrawer({ sx }) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   const settings = useSettingsContext();
@@ -30,12 +33,12 @@ export function SettingsDrawer({ sx }) {
   const renderHead = (
     <Box display="flex" alignItems="center" sx={{ py: 2, pr: 1, pl: 2.5 }}>
       <Typography variant="h6" sx={{ flexGrow: 1 }}>
-        Settings
+        {t('settings')}
       </Typography>
 
       <FullScreenButton />
 
-      <Tooltip title="Close">
+      <Tooltip title={t('close')}>
         <IconButton onClick={settings.onCloseDrawer}>
           <Iconify icon="mingcute:close-line" />
         </IconButton>
@@ -45,7 +48,7 @@ export function SettingsDrawer({ sx }) {
 
   const renderMode = (
     <BaseOption
-      label="Dark mode"
+      label={t('label_dark_mode')}
       icon="moon"
       selected={settings.colorScheme === 'dark'}
       onClick={() => {
@@ -57,7 +60,7 @@ export function SettingsDrawer({ sx }) {
 
   const renderContrast = (
     <BaseOption
-      label="Contrast"
+      label={t('label_contrast')}
       icon="contrast"
       selected={settings.contrast === 'hight'}
       onClick={() =>
@@ -68,7 +71,7 @@ export function SettingsDrawer({ sx }) {
 
   const renderNotifications = (
     <BaseOption
-      label="Notificaciones"
+      label={t('label_notifications')}
       icon="notification"
       selected={settings.notificationsEnabled && permissionGranted}
       loading={notificationsLoading}

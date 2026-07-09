@@ -33,7 +33,7 @@ export function InvoiceEditView({ invoice }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Actualizar pago"
+        heading={t('heading_update_payment')}
         links={[
           { name: t('app'), href: paths.dashboard.root },
           { name: t('invoice'), href: invoiceHref },

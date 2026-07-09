@@ -11,45 +11,38 @@ const icon = (name) => <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navb
 const ICONS = {
   dashboard: icon('ic-dashboard'),
   blank: icon('ic-blank'),
-  calendar: icon('ic-calendar'),
   invoice: icon('ic-invoice'),
   folder: icon('ic-folder'),
 };
 
 // ----------------------------------------------------------------------
 
-export const teamOwnerNavData = [
-  {
-    subheader: 'Mi torneo',
-    items: [
-      {
-        title: 'Resumen',
-        path: paths.dashboard.teamOwner.root,
-        icon: ICONS.dashboard,
-      },
-      {
-        title: 'Guia de inicio',
-        path: paths.dashboard.guide,
-        icon: ICONS.blank,
-      },
-      {
-        title: 'Calendario',
-        path: paths.dashboard.calendar,
-        icon: ICONS.calendar,
-        disabled: true,
-      },
-      {
-        title: 'Pagos',
-        path: paths.dashboard.user.invoice.invoiceList,
-        icon: ICONS.invoice,
-        disabled: true,
-      },
-      {
-        title: 'Documentos',
-        path: paths.dashboard.fileManager,
-        icon: ICONS.folder,
-        disabled: true,
-      },
-    ],
-  },
-];
+export function getTeamOwnerNavData(t) {
+  return [
+    {
+      subheader: t('nav_my_tournament'),
+      items: [
+        {
+          title: t('nav_overview'),
+          path: paths.dashboard.teamOwner.root,
+          icon: ICONS.dashboard,
+        },
+        {
+          title: t('nav_getting_started_guide'),
+          path: paths.dashboard.guide,
+          icon: ICONS.blank,
+        },
+        {
+          title: t('payments'),
+          path: paths.dashboard.user.invoice.invoiceList,
+          icon: ICONS.invoice,
+        },
+        {
+          title: t('nav_documents'),
+          path: paths.dashboard.fileManager,
+          icon: ICONS.folder,
+        },
+      ],
+    },
+  ];
+}

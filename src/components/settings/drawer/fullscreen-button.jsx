@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
@@ -10,6 +11,7 @@ import { SvgColor, svgColorClasses } from '../../svg-color';
 // ----------------------------------------------------------------------
 
 export function FullScreenButton() {
+  const { t } = useTranslation();
   const [fullscreen, setFullscreen] = useState(false);
 
   const onToggleFullScreen = useCallback(() => {
@@ -23,7 +25,7 @@ export function FullScreenButton() {
   }, []);
 
   return (
-    <Tooltip title={fullscreen ? 'Exit' : 'Full Screen'}>
+    <Tooltip title={fullscreen ? t('label_exit') : t('label_full_screen')}>
       <IconButton
         onClick={onToggleFullScreen}
         sx={{

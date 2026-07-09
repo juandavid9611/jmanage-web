@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -28,34 +29,75 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const STATUS_BADGE = {
-  live:       { label: 'En vivo',   color: 'error' },
-  finished:   { label: 'Final',     color: 'success' },
-  scheduled:  { label: 'Pendiente', color: 'warning' },
-  postponed:  { label: 'Aplazado',  color: 'warning' },
+  live: { label: 'label_live', color: 'error' },
+  finished: { label: 'label_final', color: 'success' },
+  scheduled: { label: 'pending', color: 'warning' },
+  postponed: { label: 'label_postponed', color: 'warning' },
 };
 
+// label values below are i18n keys, resolved via t() at render time.
+// `type` mirrors the object's own key — used for real comparisons (see EventBadge)
+// instead of comparing against the (now translated) label.
 export const EVENT_CONFIG = {
-  goal:             { icon: 'mdi:soccer',          color: 'success.main',  label: 'Gol' },
-  own_goal:         { icon: 'mdi:soccer',          color: 'error.main',    label: 'En propia' },
-  penalty_scored:   { icon: 'mdi:soccer',          color: 'success.main',  label: 'Penal' },
-  yellow_card:      { icon: 'mdi:card',            color: '#F5A623',       label: 'Amarilla' },
-  second_yellow:    { icon: 'mdi:card',            color: '#F5A623',       label: '2ª Amarilla' },
-  red_card:         { icon: 'mdi:card',            color: 'error.main',    label: 'Roja' },
-  substitution:     { icon: 'mdi:swap-vertical',   color: 'info.main',     label: 'Cambio' },
+  goal: { type: 'goal', icon: 'mdi:soccer', color: 'success.main', label: 'label_goal_singular' },
+  own_goal: { type: 'own_goal', icon: 'mdi:soccer', color: 'error.main', label: 'label_own_goal' },
+  penalty_scored: {
+    type: 'penalty_scored',
+    icon: 'mdi:soccer',
+    color: 'success.main',
+    label: 'label_penalty',
+  },
+  yellow_card: {
+    type: 'yellow_card',
+    icon: 'mdi:card',
+    color: '#F5A623',
+    label: 'label_yellow_card_singular_short',
+  },
+  second_yellow: {
+    type: 'second_yellow',
+    icon: 'mdi:card',
+    color: '#F5A623',
+    label: 'label_second_yellow',
+  },
+  red_card: {
+    type: 'red_card',
+    icon: 'mdi:card',
+    color: 'error.main',
+    label: 'label_red_card_singular_short',
+  },
+  substitution: {
+    type: 'substitution',
+    icon: 'mdi:swap-vertical',
+    color: 'info.main',
+    label: 'label_substitution',
+  },
 };
 
 // ----------------------------------------------------------------------
 
-export function MatchRow({ match, teams, players, tournamentId, onClick, onScoreClick, onEditSchedule, expanded, onToggle, publicMode = false }) {
-  const homeTeam = teams?.find((t) => t.id === match.home_team_id);
-  const awayTeam = teams?.find((t) => t.id === match.away_team_id);
-  const homeName = homeTeam?.short_name || homeTeam?.name || 'TBD';
-  const awayName = awayTeam?.short_name || awayTeam?.name || 'TBD';
+export function MatchRow({
+  match,
+  teams,
+  players,
+  tournamentId,
+  onClick,
+  onScoreClick,
+  onEditSchedule,
+  expanded,
+  onToggle,
+  publicMode = false,
+}) {
+  const { t } = useTranslation();
+  const homeTeam = teams?.find((team) => team.id === match.home_team_id);
+  const awayTeam = teams?.find((team) => team.id === match.away_team_id);
+  const homeName = homeTeam?.short_name || homeTeam?.name || t('label_tbd');
+  const awayName = awayTeam?.short_name || awayTeam?.name || t('label_tbd');
 
   const isFinished = match.status === 'finished';
-  const isLive     = match.status === 'live';
-  const isPending  = match.status === 'scheduled';
+  const isLive = match.status === 'live';
+  const isPending = match.status === 'scheduled';
 
   const badge = STATUS_BADGE[match.status] || STATUS_BADGE.scheduled;
 
@@ -63,13 +105,16 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
     <Box
       sx={{
         bgcolor: 'background.paper',
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
-        borderLeft: (t) =>
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
+        borderLeft: (theme) =>
           `2.5px solid ${
-            isLive      ? t.palette.error.main
-            : isFinished ? t.palette.success.main
-            : isPending  ? t.palette.warning.main
-            : alpha(t.palette.grey[500], 0.2)
+            isLive
+              ? theme.palette.error.main
+              : isFinished
+                ? theme.palette.success.main
+                : isPending
+                  ? theme.palette.warning.main
+                  : alpha(theme.palette.grey[500], 0.2)
           }`,
         borderRadius: 1,
         overflow: 'hidden',
@@ -87,9 +132,7 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
           px: 2,
           py: 1.5,
           cursor: onClick ? 'pointer' : 'default',
-          '&:hover': onClick
-            ? { bgcolor: (t) => alpha(t.palette.grey[500], 0.03) }
-            : {},
+          '&:hover': onClick ? { bgcolor: (theme) => alpha(theme.palette.grey[500], 0.03) } : {},
         }}
       >
         {/* Time / venue */}
@@ -109,17 +152,26 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
                   },
                 }}
               />
-              <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.7rem', color: 'error.main' }}>
+              <Typography
+                variant="caption"
+                sx={{ fontWeight: 700, fontSize: '0.7rem', color: 'error.main' }}
+              >
                 {match.minute || '--'}&#39;
               </Typography>
             </Stack>
           ) : (
-            <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem', color: 'text.secondary' }}>
+            <Typography
+              variant="caption"
+              sx={{ fontWeight: 600, fontSize: '0.75rem', color: 'text.secondary' }}
+            >
               {match.date ? fDateTime(match.date, 'DD MMM · HH:mm') : '--:--'}
             </Typography>
           )}
           {match.venue && (
-            <Typography variant="caption" sx={{ display: 'block', fontSize: '0.6rem', color: 'text.disabled', mt: 0.25 }}>
+            <Typography
+              variant="caption"
+              sx={{ display: 'block', fontSize: '0.6rem', color: 'text.disabled', mt: 0.25 }}
+            >
               {match.venue}
             </Typography>
           )}
@@ -149,14 +201,16 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
                   ...(isLive && { color: 'error.main' }),
                   ...(isFinished && {
                     color: 'success.main',
-                    bgcolor: (t) => alpha(t.palette.success.main, 0.08),
+                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
                   }),
                 }}
               >
                 {match.score_home ?? 0}·{match.score_away ?? 0}
               </Typography>
             ) : (
-              <Typography variant="caption" sx={{ color: 'text.disabled' }}>vs</Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                {t('label_vs')}
+              </Typography>
             )}
             <Typography variant="subtitle2" sx={{ fontWeight: 700, letterSpacing: -0.2 }}>
               {awayName}
@@ -171,8 +225,8 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
           </Stack>
 
           <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.25 }}>
-            {isFinished && 'Final'}
-            {isLive && `${match.half || ''}° tiempo`}
+            {isFinished && t('label_final')}
+            {isLive && `${match.half || ''}${t('label_half_suffix')}`}
             {match.group_name ? ` · ${match.group_name}` : ''}
           </Typography>
         </Box>
@@ -180,7 +234,7 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
         {/* Status chip + action */}
         <Stack alignItems="flex-end" spacing={0.75}>
           <Chip
-            label={badge.label}
+            label={t(badge.label)}
             color={badge.color}
             size="small"
             variant="soft"
@@ -191,9 +245,12 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
               size="small"
               variant="contained"
               sx={{ fontSize: '0.65rem', py: 0.5, px: 1.25, minWidth: 0 }}
-              onClick={(e) => { e.stopPropagation(); onScoreClick(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onScoreClick();
+              }}
             >
-              Registrar
+              {t('label_register')}
             </Button>
           )}
           {isFinished && onClick && (
@@ -201,15 +258,21 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
               size="small"
               variant="soft"
               sx={{ fontSize: '0.65rem', py: 0.5, px: 1.25, minWidth: 0 }}
-              onClick={(e) => { e.stopPropagation(); onClick(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+              }}
             >
-              Ver
+              {t('label_view')}
             </Button>
           )}
           {onEditSchedule && !publicMode && (
             <IconButton
               size="small"
-              onClick={(e) => { e.stopPropagation(); onEditSchedule(match); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditSchedule(match);
+              }}
               sx={{ color: 'text.disabled', '&:hover': { color: 'text.primary' } }}
             >
               <Iconify icon="mdi:calendar-edit" width={15} />
@@ -220,13 +283,13 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
         {/* Expand toggle */}
         <IconButton
           size="small"
-          onClick={(e) => { e.stopPropagation(); onToggle?.(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle?.();
+          }}
           sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}
         >
-          <Iconify
-            icon={expanded ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'}
-            width={18}
-          />
+          <Iconify icon={expanded ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} width={18} />
         </IconButton>
       </Box>
 
@@ -249,7 +312,17 @@ export function MatchRow({ match, teams, players, tournamentId, onClick, onScore
 
 // ----------------------------------------------------------------------
 
-function MatchEventPanel({ matchId, tournamentId, homeTeamId, awayTeamId, homeName, awayName, players, publicMode = false }) {
+function MatchEventPanel({
+  matchId,
+  tournamentId,
+  homeTeamId,
+  awayTeamId,
+  homeName,
+  awayName,
+  players,
+  publicMode = false,
+}) {
+  const { t } = useTranslation();
   const auth = useGetMatch(publicMode ? null : tournamentId, publicMode ? null : matchId);
   const pub = useGetPublicMatch(publicMode ? tournamentId : null, publicMode ? matchId : null);
   const match = publicMode ? pub.match : auth.match;
@@ -260,8 +333,8 @@ function MatchEventPanel({ matchId, tournamentId, homeTeamId, awayTeamId, homeNa
   return (
     <Box
       sx={{
-        borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
-        bgcolor: (t) => alpha(t.palette.grey[500], 0.02),
+        borderTop: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
+        bgcolor: (theme) => alpha(theme.palette.grey[500], 0.02),
         px: 2,
         py: 1.5,
       }}
@@ -277,7 +350,7 @@ function MatchEventPanel({ matchId, tournamentId, homeTeamId, awayTeamId, homeNa
           variant="caption"
           sx={{ color: 'text.disabled', display: 'block', textAlign: 'center', py: 1 }}
         >
-          Sin eventos registrados
+          {t('label_no_events_recorded')}
         </Typography>
       ) : (
         <Stack spacing={0}>
@@ -288,14 +361,25 @@ function MatchEventPanel({ matchId, tournamentId, homeTeamId, awayTeamId, homeNa
               gridTemplateColumns: '1fr 44px 1fr',
               mb: 0.75,
               pb: 0.75,
-              borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+              borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
             }}
           >
-            <Typography variant="caption" sx={{ fontSize: '0.6rem', color: 'text.disabled', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{ fontSize: '0.6rem', color: 'text.disabled', fontWeight: 600 }}
+            >
               {homeName}
             </Typography>
             <Box />
-            <Typography variant="caption" sx={{ fontSize: '0.6rem', color: 'text.disabled', fontWeight: 600, textAlign: 'right' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: '0.6rem',
+                color: 'text.disabled',
+                fontWeight: 600,
+                textAlign: 'right',
+              }}
+            >
               {awayName}
             </Typography>
           </Box>
@@ -355,14 +439,11 @@ function MatchEventPanel({ matchId, tournamentId, homeTeamId, awayTeamId, homeNa
 // ----------------------------------------------------------------------
 
 export function EventBadge({ cfg, player, assist, align }) {
+  const { t } = useTranslation();
   const isRight = align === 'right';
 
   return (
-    <Stack
-      direction={isRight ? 'row-reverse' : 'row'}
-      alignItems="flex-start"
-      spacing={0.75}
-    >
+    <Stack direction={isRight ? 'row-reverse' : 'row'} alignItems="flex-start" spacing={0.75}>
       <Box
         sx={{
           mt: 0.25,
@@ -373,36 +454,61 @@ export function EventBadge({ cfg, player, assist, align }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: (t) => alpha(
-            cfg.color.includes('.') ? t.palette[cfg.color.split('.')[0]][cfg.color.split('.')[1]] : cfg.color,
-            0.12
-          ),
+          bgcolor: (theme) =>
+            alpha(
+              cfg.color.includes('.')
+                ? theme.palette[cfg.color.split('.')[0]][cfg.color.split('.')[1]]
+                : cfg.color,
+              0.12
+            ),
         }}
       >
         <Iconify icon={cfg.icon} width={12} sx={{ color: cfg.color }} />
       </Box>
 
       <Box sx={{ textAlign: isRight ? 'right' : 'left' }}>
-        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.7rem', display: 'block' }}>
-          {player?.name || <Typography component="span" sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.65rem' }}>Jugador</Typography>}
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 600, fontSize: '0.7rem', display: 'block' }}
+        >
+          {player?.name || (
+            <Typography
+              component="span"
+              sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.65rem' }}
+            >
+              {t('label_player_singular')}
+            </Typography>
+          )}
         </Typography>
         {assist && (
-          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem', display: 'block' }}>
-            Asist. {assist.name}
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.disabled', fontSize: '0.6rem', display: 'block' }}
+          >
+            {t('label_assist_abbr')} {assist.name}
           </Typography>
         )}
-        {cfg.label === 'En propia' && (
-          <Typography variant="caption" sx={{ color: 'error.main', fontSize: '0.6rem', display: 'block' }}>
-            En propia
+        {cfg.type === 'own_goal' && (
+          <Typography
+            variant="caption"
+            sx={{ color: 'error.main', fontSize: '0.6rem', display: 'block' }}
+          >
+            {t('label_own_goal')}
           </Typography>
         )}
-        {cfg.label === 'Penal' && (
-          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem', display: 'block' }}>
-            Penalti
+        {cfg.type === 'penalty_scored' && (
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.disabled', fontSize: '0.6rem', display: 'block' }}
+          >
+            {t('label_penalty_kick')}
           </Typography>
         )}
-        {cfg.label === 'Cambio' && assist && (
-          <Typography variant="caption" sx={{ color: 'info.main', fontSize: '0.6rem', display: 'block' }}>
+        {cfg.type === 'substitution' && assist && (
+          <Typography
+            variant="caption"
+            sx={{ color: 'info.main', fontSize: '0.6rem', display: 'block' }}
+          >
             ↑ {assist.name}
           </Typography>
         )}
@@ -413,7 +519,18 @@ export function EventBadge({ cfg, player, assist, align }) {
 
 // ----------------------------------------------------------------------
 
-export function MatchList({ matches, teams, players, tournamentId, onMatchClick, onScoreClick, onEditSchedule, grouped = true, publicMode = false }) {
+export function MatchList({
+  matches,
+  teams,
+  players,
+  tournamentId,
+  onMatchClick,
+  onScoreClick,
+  onEditSchedule,
+  grouped = true,
+  publicMode = false,
+}) {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState(null);
 
   const toggle = (id) => setExpandedId((prev) => (prev === id ? null : id));
@@ -438,16 +555,16 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
         ))}
         {matches.length === 0 && (
           <Typography variant="body2" sx={{ color: 'text.disabled', py: 4, textAlign: 'center' }}>
-            No hay partidos
+            {t('label_no_matches')}
           </Typography>
         )}
       </Stack>
     );
   }
 
-  const live    = matches.filter((m) => m.status === 'live');
+  const live = matches.filter((m) => m.status === 'live');
   const pending = matches.filter((m) => m.status === 'scheduled');
-  const done    = matches.filter((m) => m.status === 'finished');
+  const done = matches.filter((m) => m.status === 'finished');
 
   const renderSection = (label, list, badgeColor) => {
     if (list.length === 0) return null;
@@ -457,7 +574,9 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
           <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
             {label}
           </Typography>
-          <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.08) }} />
+          <Box
+            sx={{ flex: 1, height: 1, bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08) }}
+          />
           <Chip
             label={list.length}
             size="small"
@@ -489,12 +608,12 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
 
   return (
     <Box>
-      {renderSection('En vivo', live, 'error')}
-      {renderSection('Pendientes', pending, 'warning')}
-      {renderSection('Finalizados', done, 'success')}
+      {renderSection(t('label_live'), live, 'error')}
+      {renderSection(t('label_pending_plural'), pending, 'warning')}
+      {renderSection(t('label_finished_plural'), done, 'success')}
       {matches.length === 0 && (
         <Typography variant="body2" sx={{ color: 'text.disabled', py: 4, textAlign: 'center' }}>
-          No hay partidos en esta jornada
+          {t('label_no_matches_this_matchday')}
         </Typography>
       )}
     </Box>
@@ -504,6 +623,7 @@ export function MatchList({ matches, teams, players, tournamentId, onMatchClick,
 // ----------------------------------------------------------------------
 
 export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
+  const { t } = useTranslation();
   const [datetime, setDatetime] = useState(null);
   const [venue, setVenue] = useState('');
   const [saving, setSaving] = useState(false);
@@ -523,10 +643,10 @@ export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
         date: datetime.toISOString(),
         venue,
       });
-      toast.success('Horario actualizado');
+      toast.success(t('label_schedule_updated'));
       onClose();
     } catch (err) {
-      toast.error(err.message || 'Error al guardar');
+      toast.error(err.message || t('label_error_saving'));
     } finally {
       setSaving(false);
     }
@@ -534,33 +654,35 @@ export function MatchScheduleDialog({ open, match, tournamentId, onClose }) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Horario y Sede</DialogTitle>
+      <DialogTitle>{t('label_schedule_and_venue')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <MobileDateTimePicker
-            label="Fecha y hora"
+            label={t('label_date_and_time')}
             value={datetime}
             onChange={setDatetime}
             slotProps={{ textField: { fullWidth: true } }}
           />
           <TextField
-            label="Sede"
+            label={t('label_venue')}
             value={venue}
             onChange={(e) => setVenue(e.target.value)}
             fullWidth
-            placeholder="Nombre del estadio o cancha"
+            placeholder={t('label_venue_placeholder')}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button variant="soft" color="inherit" onClick={onClose}>Cancelar</Button>
+        <Button variant="soft" color="inherit" onClick={onClose}>
+          {t('cancel')}
+        </Button>
         <LoadingButton
           variant="contained"
           loading={saving}
           disabled={!datetime || !datetime.isValid()}
           onClick={handleSave}
         >
-          Guardar
+          {t('label_save')}
         </LoadingButton>
       </DialogActions>
     </Dialog>

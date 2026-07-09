@@ -1,4 +1,5 @@
 import { m } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -17,6 +18,7 @@ import { useAuthContext } from 'src/auth/hooks';
 // ----------------------------------------------------------------------
 
 export function NavUpgrade({ sx, ...other }) {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
 
   return (
@@ -39,7 +41,7 @@ export function NavUpgrade({ sx, ...other }) {
               borderBottomLeftRadius: 2,
             }}
           >
-            {user?.role}
+            {t(user?.role)}
           </Label>
         </Box>
 
@@ -68,6 +70,7 @@ export function NavUpgrade({ sx, ...other }) {
 // ----------------------------------------------------------------------
 
 export function UpgradeBlock({ sx, ...other }) {
+  const { t } = useTranslation();
   return (
     <Stack
       sx={{
@@ -111,7 +114,7 @@ export function UpgradeBlock({ sx, ...other }) {
 
       <Stack alignItems="flex-start" sx={{ position: 'relative' }}>
         <Box component="span" sx={{ typography: 'h5', color: 'common.white' }}>
-          35% OFF
+          {t('label_35_off')}
         </Box>
 
         <Box
@@ -123,11 +126,11 @@ export function UpgradeBlock({ sx, ...other }) {
             typography: 'subtitle2',
           }}
         >
-          Power up Productivity!
+          {t('label_power_up_productivity')}
         </Box>
 
         <Button variant="contained" size="small" color="warning">
-          Upgrade to Pro
+          {t('upgrade_to_pro')}
         </Button>
       </Stack>
     </Stack>

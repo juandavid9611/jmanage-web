@@ -1,8 +1,9 @@
 import { z as zod } from 'zod';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useEffect, useCallback } from 'react';
 import { useForm, useFormContext } from 'react-hook-form';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -27,41 +28,47 @@ import { TournamentCreationSummary } from './tournament-creation-summary';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const SPORT_OPTIONS = [
-  { value: 'futbol', label: 'Fútbol' },
-  { value: 'baloncesto', label: 'Baloncesto' },
-  { value: 'voleibol', label: 'Voleibol' },
-  { value: 'tenis', label: 'Tenis' },
-  { value: 'padel', label: 'Pádel' },
-  { value: 'otro', label: 'Otro' },
+  { value: 'futbol', label: 'label_sport_futbol' },
+  { value: 'baloncesto', label: 'label_sport_baloncesto' },
+  { value: 'voleibol', label: 'label_sport_voleibol' },
+  { value: 'tenis', label: 'label_sport_tenis' },
+  { value: 'padel', label: 'label_sport_padel' },
+  { value: 'otro', label: 'label_sport_otro' },
 ];
 
+// label/desc/badge values below are i18n keys, resolved via t() at render time.
 const FORMAT_OPTIONS = [
   {
     value: 'hybrid',
-    label: 'Grupos + Knockout',
+    label: 'label_groups_and_knockout',
     icon: '⊞ →',
-    desc: 'Fase de grupos seguida de eliminación directa. El más completo.',
-    badge: 'Popular',
+    desc: 'label_format_hybrid_desc',
+    badge: 'label_popular',
   },
   {
     value: 'league',
-    label: 'Liga / Round Robin',
+    label: 'label_format_league',
     icon: '⊞',
-    desc: 'Todos contra todos. Gana quien más puntos acumule al final.',
+    desc: 'label_format_league_desc',
     badge: null,
   },
   {
     value: 'knockout',
-    label: 'Solo Knockout',
+    label: 'label_knockout',
     icon: '→',
-    desc: 'Eliminación directa desde el inicio. Rápido e intenso.',
+    desc: 'label_format_knockout_desc',
     badge: null,
   },
 ];
 
 const GROUP_SIZE_OPTIONS = [1, 2, 3, 4, 5, 6];
 
+// NOTE: These default tiebreaker labels are persisted verbatim as `tiebreaker_order`
+// values via the API and displayed as-is elsewhere (standings tiebreak explanations).
+// Translating them here would desync the stored value from other read paths;
+// left untranslated pending a backend schema change to store tiebreaker keys instead.
 const DEFAULT_TIEBREAKERS_FUTBOL = [
   'Puntos acumulados',
   'Diferencia de goles',
@@ -80,40 +87,43 @@ const DEFAULT_TIEBREAKERS_PUNTOS = [
 
 // ----------------------------------------------------------------------
 
-const WizardSchema = zod.object({
-  // Step 1
-  name: zod.string().min(1, 'El nombre es obligatorio'),
-  sport: zod.string().min(1, 'Selecciona un deporte'),
-  location: zod.string().optional(),
-  // Step 2
-  type: zod.string().min(1, 'Selecciona un formato'),
-  teams_per_group: zod.coerce.number().int().optional(),
-  legs: zod.coerce.number().int().optional(),
-  // Step 3
-  rules: zod.object({
-    points_per_win: zod.coerce.number().int().min(0),
-    points_per_draw: zod.coerce.number().int().min(0),
-    points_per_loss: zod.coerce.number().int().min(0),
-  }),
-  scoring_preset: zod.string().optional(),
-  // Step 4
-  tiebreaker_order: zod.array(zod.string()).optional(),
-  // Step 5
-  options: zod.object({
-    public_registration: zod.boolean(),
-    individual_stats: zod.boolean(),
-    public_results: zod.boolean(),
-    email_notifications: zod.boolean(),
-    extra_time: zod.boolean(),
-  }),
-});
+function getWizardSchema(t) {
+  return zod.object({
+    // Step 1
+    name: zod.string().min(1, { message: t('name_required') }),
+    sport: zod.string().min(1, { message: t('label_select_a_sport') }),
+    location: zod.string().optional(),
+    // Step 2
+    type: zod.string().min(1, { message: t('label_select_a_format') }),
+    teams_per_group: zod.coerce.number().int().optional(),
+    legs: zod.coerce.number().int().optional(),
+    // Step 3
+    rules: zod.object({
+      points_per_win: zod.coerce.number().int().min(0),
+      points_per_draw: zod.coerce.number().int().min(0),
+      points_per_loss: zod.coerce.number().int().min(0),
+    }),
+    scoring_preset: zod.string().optional(),
+    // Step 4
+    tiebreaker_order: zod.array(zod.string()).optional(),
+    // Step 5
+    options: zod.object({
+      public_registration: zod.boolean(),
+      individual_stats: zod.boolean(),
+      public_results: zod.boolean(),
+      email_notifications: zod.boolean(),
+      extra_time: zod.boolean(),
+    }),
+  });
+}
 
+// label values below are i18n keys, resolved via t() at render time.
 const STEPS = [
-  { key: 'identity', label: 'Identidad', number: '01' },
-  { key: 'format', label: 'Formato', number: '02' },
-  { key: 'scoring', label: 'Puntuación', number: '03' },
-  { key: 'tiebreakers', label: 'Desempates', number: '04' },
-  { key: 'options', label: 'Opciones', number: '05' },
+  { key: 'identity', label: 'label_step_identity', number: '01' },
+  { key: 'format', label: 'label_step_format', number: '02' },
+  { key: 'scoring', label: 'label_step_scoring', number: '03' },
+  { key: 'tiebreakers', label: 'label_step_tiebreakers', number: '04' },
+  { key: 'options', label: 'label_step_options', number: '05' },
 ];
 
 // Step validation: which fields must be valid to unlock the next step
@@ -128,6 +138,7 @@ const STEP_FIELDS = {
 // ----------------------------------------------------------------------
 
 export function TournamentCreationWizard() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
@@ -151,6 +162,8 @@ export function TournamentCreationWizard() {
     },
   };
 
+  const WizardSchema = useMemo(() => getWizardSchema(t), [t]);
+
   const methods = useForm({
     resolver: zodResolver(WizardSchema),
     defaultValues,
@@ -170,8 +183,17 @@ export function TournamentCreationWizard() {
   // Derive unlocked steps
   const getUnlockedSteps = useCallback(() => {
     const unlocked = new Set([0]);
-    if (values.name && values.sport) { unlocked.add(1); unlocked.add(2); unlocked.add(3); unlocked.add(4); }
-    if (values.type) { unlocked.add(2); unlocked.add(3); unlocked.add(4); }
+    if (values.name && values.sport) {
+      unlocked.add(1);
+      unlocked.add(2);
+      unlocked.add(3);
+      unlocked.add(4);
+    }
+    if (values.type) {
+      unlocked.add(2);
+      unlocked.add(3);
+      unlocked.add(4);
+    }
     return unlocked;
   }, [values.name, values.sport, values.type]);
 
@@ -222,20 +244,24 @@ export function TournamentCreationWizard() {
         options: data.options,
       };
       const result = await createTournament(payload);
-      toast.success('¡Torneo creado exitosamente!');
+      toast.success(t('label_tournament_created_successfully'));
       navigate(paths.dashboard.tournament.details(result.id));
     } catch (error) {
       console.error(error);
-      toast.error(error.message || 'Error al crear el torneo');
+      toast.error(error.message || t('label_error_creating_tournament'));
     }
   });
 
   // Structure preview calculations
-  const structurePreview = getStructurePreview(values);
+  const structurePreview = getStructurePreview(values, t);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
-      <Grid container spacing={0} sx={{ minHeight: 'calc(100vh - 64px)', maxWidth: 1440, mx: 'auto' }}>
+      <Grid
+        container
+        spacing={0}
+        sx={{ minHeight: 'calc(100vh - 64px)', maxWidth: 1440, mx: 'auto' }}
+      >
         {/* LEFT STEPPER */}
         <Grid
           xs={12}
@@ -255,20 +281,23 @@ export function TournamentCreationWizard() {
         </Grid>
 
         {/* MAIN FORM */}
-        <Grid xs={12} md={6.5} sx={{ p: { xs: 2, md: 5 }, overflowY: 'auto', maxHeight: { md: 'calc(100vh - 64px)' } }}>
+        <Grid
+          xs={12}
+          md={6.5}
+          sx={{ p: { xs: 2, md: 5 }, overflowY: 'auto', maxHeight: { md: 'calc(100vh - 64px)' } }}
+        >
           <Box sx={{ mb: 5 }}>
             <Typography
               variant="overline"
               sx={{ color: 'primary.main', letterSpacing: 2, mb: 1, display: 'block' }}
             >
-              Nuevo torneo
+              {t('label_new_tournament')}
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-              Crea tu torneo.
+              {t('label_create_your_tournament')}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 480 }}>
-              Cada sección se habilita conforme avanzas. El sistema ajusta las opciones según tus
-              decisiones anteriores.
+              {t('label_tournament_wizard_intro_hint')}
             </Typography>
           </Box>
 
@@ -288,7 +317,7 @@ export function TournamentCreationWizard() {
               onClick={handleBack}
               startIcon={<Iconify icon="eva:arrow-back-fill" />}
             >
-              Anterior
+              {t('label_previous')}
             </Button>
 
             {activeStep < STEPS.length - 1 ? (
@@ -297,7 +326,7 @@ export function TournamentCreationWizard() {
                 onClick={handleNext}
                 endIcon={<Iconify icon="eva:arrow-forward-fill" />}
               >
-                Siguiente
+                {t('label_next')}
               </Button>
             ) : (
               <LoadingButton
@@ -306,7 +335,7 @@ export function TournamentCreationWizard() {
                 loading={isSubmitting}
                 endIcon={<Iconify icon="eva:checkmark-circle-2-fill" />}
               >
-                Crear torneo
+                {t('label_create_tournament')}
               </LoadingButton>
             )}
           </Stack>
@@ -321,10 +350,7 @@ export function TournamentCreationWizard() {
             borderTop: { xs: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`, md: 'none' },
           }}
         >
-          <TournamentCreationSummary
-            values={values}
-            structurePreview={structurePreview}
-          />
+          <TournamentCreationSummary values={values} structurePreview={structurePreview} />
         </Grid>
       </Grid>
     </Form>
@@ -336,6 +362,7 @@ export function TournamentCreationWizard() {
 // ======================================================================
 
 function StepIdentity({ onSportChange }) {
+  const { t } = useTranslation();
   const { watch } = useFormContext();
   const sport = watch('sport');
 
@@ -345,22 +372,30 @@ function StepIdentity({ onSportChange }) {
   }, [sport, onSportChange]);
 
   return (
-    <StepSection number="01" title="Identidad">
+    <StepSection number="01" title={t('label_step_identity')}>
       <Stack spacing={3}>
-        <Field.Text name="name" label="Nombre del torneo" placeholder="Ej. Copa Verano 2025" />
+        <Field.Text
+          name="name"
+          label={t('label_tournament_name')}
+          placeholder={t('label_tournament_name_example')}
+        />
 
         <Grid container spacing={2}>
           <Grid xs={12} md={6}>
-            <Field.Select name="sport" label="Deporte">
+            <Field.Select name="sport" label={t('label_sport')}>
               {SPORT_OPTIONS.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
+                  {t(opt.label)}
                 </MenuItem>
               ))}
             </Field.Select>
           </Grid>
           <Grid xs={12} md={6}>
-            <Field.Text name="location" label="Sede / Ciudad" placeholder="Ej. Bogotá" />
+            <Field.Text
+              name="location"
+              label={t('label_venue_city')}
+              placeholder={t('label_city_example')}
+            />
           </Grid>
         </Grid>
       </Stack>
@@ -373,19 +408,16 @@ function StepIdentity({ onSportChange }) {
 // ======================================================================
 
 function StepFormat({ values, structurePreview }) {
-  const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
-    <StepSection number="02" title="Formato del torneo">
+    <StepSection number="02" title={t('label_tournament_format')}>
       <Stack spacing={3}>
         {/* Format cards */}
         <Grid container spacing={1.5}>
           {FORMAT_OPTIONS.map((opt) => (
             <Grid xs={12} sm={4} key={opt.value}>
-              <FormatCard
-                option={opt}
-                selected={values.type === opt.value}
-              />
+              <FormatCard option={opt} selected={values.type === opt.value} />
             </Grid>
           ))}
         </Grid>
@@ -395,10 +427,10 @@ function StepFormat({ values, structurePreview }) {
           <Grid container spacing={2}>
             {values.type !== 'league' && values.type !== 'knockout' && (
               <Grid xs={12} md={6}>
-                <Field.Select name="teams_per_group" label="Equipos clasificados por grupo">
+                <Field.Select name="teams_per_group" label={t('label_teams_per_group')}>
                   {GROUP_SIZE_OPTIONS.map((n) => (
                     <MenuItem key={n} value={n}>
-                      {n} equipos
+                      {n} {t('word_teams_lowercase')}
                     </MenuItem>
                   ))}
                 </Field.Select>
@@ -407,9 +439,9 @@ function StepFormat({ values, structurePreview }) {
 
             {values.type !== 'knockout' && (
               <Grid xs={12} md={6}>
-                <Field.Select name="legs" label="Vueltas">
-                  <MenuItem value={1}>Ida (1 vuelta)</MenuItem>
-                  <MenuItem value={2}>Ida y Vuelta (2 vueltas)</MenuItem>
+                <Field.Select name="legs" label={t('label_legs')}>
+                  <MenuItem value={1}>{t('label_single_leg')}</MenuItem>
+                  <MenuItem value={2}>{t('label_double_leg')}</MenuItem>
                 </Field.Select>
               </Grid>
             )}
@@ -421,15 +453,15 @@ function StepFormat({ values, structurePreview }) {
           <Card
             sx={{
               p: 2.5,
-              bgcolor: (t) => alpha(t.palette.primary.main, 0.04),
-              border: (t) => `1px solid ${alpha(t.palette.primary.main, 0.12)}`,
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+              border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
             }}
           >
             <Typography
               variant="overline"
               sx={{ color: 'primary.main', letterSpacing: 2, mb: 1, display: 'block' }}
             >
-              ✦ Vista previa de estructura
+              ✦ {t('label_structure_preview')}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {structurePreview.text}
@@ -442,6 +474,7 @@ function StepFormat({ values, structurePreview }) {
 }
 
 function FormatCard({ option, selected }) {
+  const { t } = useTranslation();
   const { setValue } = useFormContext();
 
   return (
@@ -455,7 +488,8 @@ function FormatCard({ option, selected }) {
         position: 'relative',
         border: (theme) =>
           `1.5px solid ${selected ? theme.palette.primary.main : alpha(theme.palette.grey[500], 0.12)}`,
-        bgcolor: (theme) => (selected ? alpha(theme.palette.primary.main, 0.08) : 'background.paper'),
+        bgcolor: (theme) =>
+          selected ? alpha(theme.palette.primary.main, 0.08) : 'background.paper',
         transition: 'all 0.2s',
         '&:hover': {
           borderColor: (theme) => alpha(theme.palette.grey[500], 0.24),
@@ -465,10 +499,10 @@ function FormatCard({ option, selected }) {
     >
       <Typography sx={{ fontSize: 22, mb: 1 }}>{option.icon}</Typography>
       <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-        {option.label}
+        {t(option.label)}
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.5 }}>
-        {option.desc}
+        {t(option.desc)}
       </Typography>
       {option.badge && (
         <Box
@@ -486,7 +520,7 @@ function FormatCard({ option, selected }) {
             letterSpacing: 0.5,
           }}
         >
-          {option.badge}
+          {t(option.badge)}
         </Box>
       )}
     </Card>
@@ -498,7 +532,7 @@ function FormatCard({ option, selected }) {
 // ======================================================================
 
 function StepScoring({ values, setValue }) {
-  const theme = useTheme();
+  const { t } = useTranslation();
   const isStandard = values.scoring_preset === 'standard';
 
   const handlePreset = (preset) => {
@@ -511,7 +545,7 @@ function StepScoring({ values, setValue }) {
   };
 
   return (
-    <StepSection number="03" title="Sistema de puntuación">
+    <StepSection number="03" title={t('label_scoring_system')}>
       <Stack spacing={3}>
         {/* Preset cards */}
         <Grid container spacing={1.5}>
@@ -521,15 +555,17 @@ function StepScoring({ values, setValue }) {
               sx={{
                 p: 2,
                 cursor: 'pointer',
-                border: (t) =>
-                  `1.5px solid ${isStandard ? t.palette.primary.main : alpha(t.palette.grey[500], 0.12)}`,
-                bgcolor: isStandard ? (t) => alpha(t.palette.primary.main, 0.08) : 'background.paper',
+                border: (theme) =>
+                  `1.5px solid ${isStandard ? theme.palette.primary.main : alpha(theme.palette.grey[500], 0.12)}`,
+                bgcolor: isStandard
+                  ? (theme) => alpha(theme.palette.primary.main, 0.08)
+                  : 'background.paper',
                 transition: 'all 0.2s',
               }}
             >
-              <Typography variant="subtitle2">Estándar FIFA</Typography>
+              <Typography variant="subtitle2">{t('label_standard_fifa')}</Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Victoria 3 pts · Empate 1 pt · Derrota 0 pts
+                {t('label_standard_scoring_example')}
               </Typography>
             </Card>
           </Grid>
@@ -539,15 +575,17 @@ function StepScoring({ values, setValue }) {
               sx={{
                 p: 2,
                 cursor: 'pointer',
-                border: (t) =>
-                  `1.5px solid ${!isStandard ? t.palette.primary.main : alpha(t.palette.grey[500], 0.12)}`,
-                bgcolor: !isStandard ? (t) => alpha(t.palette.primary.main, 0.08) : 'background.paper',
+                border: (theme) =>
+                  `1.5px solid ${!isStandard ? theme.palette.primary.main : alpha(theme.palette.grey[500], 0.12)}`,
+                bgcolor: !isStandard
+                  ? (theme) => alpha(theme.palette.primary.main, 0.08)
+                  : 'background.paper',
                 transition: 'all 0.2s',
               }}
             >
-              <Typography variant="subtitle2">Personalizado</Typography>
+              <Typography variant="subtitle2">{t('label_custom')}</Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Define tus propios valores de puntuación.
+                {t('label_define_custom_scoring_hint')}
               </Typography>
             </Card>
           </Grid>
@@ -556,13 +594,13 @@ function StepScoring({ values, setValue }) {
         {/* Scoring inputs */}
         <Grid container spacing={2}>
           <Grid xs={4}>
-            <ScoringInput label="Victoria" name="rules.points_per_win" />
+            <ScoringInput label={t('label_victory')} name="rules.points_per_win" />
           </Grid>
           <Grid xs={4}>
-            <ScoringInput label="Empate" name="rules.points_per_draw" />
+            <ScoringInput label={t('label_tie')} name="rules.points_per_draw" />
           </Grid>
           <Grid xs={4}>
-            <ScoringInput label="Derrota" name="rules.points_per_loss" />
+            <ScoringInput label={t('label_defeat')} name="rules.points_per_loss" />
           </Grid>
         </Grid>
       </Stack>
@@ -571,14 +609,12 @@ function StepScoring({ values, setValue }) {
 }
 
 function ScoringInput({ label, name }) {
-  const theme = useTheme();
-
   return (
     <Card
       sx={{
         p: 2,
         textAlign: 'center',
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
       }}
     >
       <Typography
@@ -590,7 +626,11 @@ function ScoringInput({ label, name }) {
       <Field.Text
         name={name}
         type="number"
-        inputProps={{ min: 0, max: 9, style: { textAlign: 'center', fontSize: 28, fontWeight: 600 } }}
+        inputProps={{
+          min: 0,
+          max: 9,
+          style: { textAlign: 'center', fontSize: 28, fontWeight: 600 },
+        }}
         sx={{
           '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
           '& .MuiInputBase-input': { color: 'primary.main' },
@@ -605,7 +645,7 @@ function ScoringInput({ label, name }) {
 // ======================================================================
 
 function StepTiebreakers({ values, setValue }) {
-  const theme = useTheme();
+  const { t } = useTranslation();
   const items = values.tiebreaker_order || [];
   const [dragIndex, setDragIndex] = useState(null);
 
@@ -623,10 +663,9 @@ function StepTiebreakers({ values, setValue }) {
   };
 
   return (
-    <StepSection number="04" title="Criterios de desempate">
+    <StepSection number="04" title={t('label_tiebreaker_criteria')}>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2.5, lineHeight: 1.7 }}>
-        Define el orden en que se resolverán los empates en la tabla. Arrastra para reordenar. El
-        sistema los aplicará automáticamente.
+        {t('label_tiebreaker_criteria_hint')}
       </Typography>
 
       <Stack spacing={0.75}>
@@ -644,11 +683,11 @@ function StepTiebreakers({ values, setValue }) {
               alignItems: 'center',
               gap: 1.5,
               cursor: 'grab',
-              border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+              border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
               transition: 'all 0.2s',
               opacity: dragIndex === index ? 0.4 : 1,
               '&:hover': {
-                borderColor: (t) => alpha(t.palette.grey[500], 0.24),
+                borderColor: (theme) => alpha(theme.palette.grey[500], 0.24),
               },
             }}
           >
@@ -673,38 +712,47 @@ function StepTiebreakers({ values, setValue }) {
 // STEP 5 — OPCIONES
 // ======================================================================
 
+// title/desc values below are i18n keys, resolved via t() at render time.
 const OPTION_TOGGLES = [
   {
     name: 'options.public_registration',
-    title: 'Inscripción pública',
-    desc: 'Los managers pueden registrar sus equipos con un link',
+    title: 'label_option_public_registration_title',
+    desc: 'label_option_public_registration_desc',
   },
   {
     name: 'options.individual_stats',
-    title: 'Estadísticas individuales',
-    desc: 'Goles, asistencias y tarjetas por jugador',
+    title: 'label_option_individual_stats_title',
+    desc: 'label_option_individual_stats_desc',
   },
   {
     name: 'options.public_results',
-    title: 'Resultados públicos',
-    desc: 'Tabla y resultados visibles sin login para todos',
+    title: 'label_option_public_results_title',
+    desc: 'label_option_public_results_desc',
   },
   {
     name: 'options.email_notifications',
-    title: 'Notificaciones por email',
-    desc: 'Avisar a los managers de partidos y resultados',
+    title: 'label_option_email_notifications_title',
+    desc: 'label_option_email_notifications_desc',
   },
   {
     name: 'options.extra_time',
-    title: 'Tiempo extra en knockout',
-    desc: 'Habilitar prórroga y penales en eliminatorias',
+    title: 'label_option_extra_time_title',
+    desc: 'label_option_extra_time_desc',
   },
 ];
 
 function StepOptions() {
+  const { t } = useTranslation();
   return (
-    <StepSection number="05" title="Opciones avanzadas">
-      <Stack spacing={0} divider={<Box sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}` }} />}>
+    <StepSection number="05" title={t('label_advanced_options')}>
+      <Stack
+        spacing={0}
+        divider={
+          <Box
+            sx={{ borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}` }}
+          />
+        }
+      >
         {OPTION_TOGGLES.map((opt) => (
           <Stack
             key={opt.name}
@@ -715,10 +763,10 @@ function StepOptions() {
           >
             <Box>
               <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {opt.title}
+                {t(opt.title)}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                {opt.desc}
+                {t(opt.desc)}
               </Typography>
             </Box>
             <Field.Switch name={opt.name} />
@@ -739,9 +787,9 @@ function StepSection({ number, title, children }) {
       sx={{
         mb: 3,
         p: 3,
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
         boxShadow: 'none',
-        bgcolor: (t) => alpha(t.palette.background.paper, 0.6),
+        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.6),
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2.5 }}>
@@ -753,7 +801,7 @@ function StepSection({ number, title, children }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
             color: 'primary.main',
             fontSize: 11,
             fontWeight: 600,
@@ -765,7 +813,12 @@ function StepSection({ number, title, children }) {
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {title}
         </Typography>
-        <Box sx={{ flex: 1, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }} />
+        <Box
+          sx={{
+            flex: 1,
+            borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+          }}
+        />
       </Stack>
       {children}
     </Card>
@@ -776,7 +829,7 @@ function StepSection({ number, title, children }) {
 // HELPERS — structure preview
 // ======================================================================
 
-function getStructurePreview(values) {
+function getStructurePreview(values, t) {
   const { type, teams_per_group } = values;
   if (!type) return { text: '', phases: [] };
 
@@ -784,31 +837,35 @@ function getStructurePreview(values) {
 
   if (type === 'hybrid') {
     return {
-      text: `Fase de grupos de ${gs} equipos por grupo, seguida de eliminación directa. Los mejores de cada grupo avanzan automáticamente.`,
+      text: `${t('label_structure_hybrid_prefix')} ${gs} ${t('word_teams_lowercase')} ${t('label_structure_hybrid_suffix')}`,
       phases: [
-        { name: 'Inscripción', detail: 'Equipos dinámicos', active: true },
-        { name: 'Fase de grupos', detail: `${gs} equipos/grupo`, pending: true },
-        { name: 'Knockout', detail: 'Se genera automáticamente', pending: true },
+        { name: t('label_inscription'), detail: t('label_dynamic_teams'), active: true },
+        {
+          name: t('label_group_stage'),
+          detail: `${gs} ${t('word_teams_lowercase')}/${t('label_group_singular_lowercase')}`,
+          pending: true,
+        },
+        { name: 'Knockout', detail: t('label_generated_automatically'), pending: true },
       ],
     };
   }
 
   if (type === 'league') {
     return {
-      text: 'Todos contra todos. Gana quien más puntos acumule al final de la temporada.',
+      text: t('label_structure_league_text'),
       phases: [
-        { name: 'Inscripción', detail: 'Equipos dinámicos', active: true },
-        { name: 'Round Robin', detail: 'Todos contra todos', pending: true },
+        { name: t('label_inscription'), detail: t('label_dynamic_teams'), active: true },
+        { name: 'Round Robin', detail: t('label_round_robin_detail'), pending: true },
       ],
     };
   }
 
   if (type === 'knockout') {
     return {
-      text: 'Eliminación directa desde el inicio. Desde los primeros partidos, perder significa quedar eliminado.',
+      text: t('label_structure_knockout_text'),
       phases: [
-        { name: 'Inscripción', detail: 'Equipos dinámicos', active: true },
-        { name: 'Knockout', detail: 'Eliminación directa', pending: true },
+        { name: t('label_inscription'), detail: t('label_dynamic_teams'), active: true },
+        { name: 'Knockout', detail: t('label_direct_elimination'), pending: true },
       ],
     };
   }

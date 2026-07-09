@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -14,6 +16,7 @@ import { CheckoutSummary } from './checkout-summary';
 // ----------------------------------------------------------------------
 
 export function CheckoutBillingAddress() {
+  const { t } = useTranslation();
   const checkout = useCheckoutContext();
 
   const addressForm = useBoolean();
@@ -23,8 +26,8 @@ export function CheckoutBillingAddress() {
       <Grid container spacing={3}>
         <Grid xs={12} md={8}>
           <EmptyContent
-            title="No hay direcciones guardadas"
-            description="Agrega una dirección para continuar con tu compra."
+            title={t('label_no_saved_addresses')}
+            description={t('label_add_address_to_continue')}
             sx={{ py: 5, mb: 3, borderRadius: 2, boxShadow: (theme) => theme.customShadows.card }}
           />
 
@@ -35,7 +38,7 @@ export function CheckoutBillingAddress() {
               onClick={checkout.onBackStep}
               startIcon={<Iconify icon="eva:arrow-ios-back-fill" />}
             >
-              Atrás
+              {t('label_back')}
             </Button>
 
             <Stack direction="row" spacing={1}>
@@ -45,7 +48,7 @@ export function CheckoutBillingAddress() {
                 variant="outlined"
                 onClick={() => checkout.onCreateBilling(null)}
               >
-                Continuar sin dirección
+                {t('label_continue_without_address')}
               </Button>
 
               <Button
@@ -54,7 +57,7 @@ export function CheckoutBillingAddress() {
                 onClick={addressForm.onTrue}
                 startIcon={<Iconify icon="mingcute:add-line" />}
               >
-                Nueva dirección
+                {t('label_new_address')}
               </Button>
             </Stack>
           </Stack>

@@ -8,12 +8,12 @@ import { Iconify } from 'src/components/iconify';
 
 export const _account = (user_id) => [
   {
-    label: 'Home',
+    label: 'nav_home',
     href: '/',
     icon: <Iconify icon="solar:home-angle-bold-duotone" />,
   },
   {
-    label: 'Profile',
+    label: 'nav_profile',
     href: paths.dashboard.user.ownEdit(user_id),
     icon: (
       <SvgIcon>
@@ -30,13 +30,13 @@ export const _account = (user_id) => [
     ),
   },
   {
-    label: 'Projects',
+    label: 'nav_projects',
     href: '#',
     icon: <Iconify icon="solar:notes-bold-duotone" />,
     info: '3',
   },
   {
-    label: 'Subscription',
+    label: 'nav_subscription',
     href: '#',
     icon: (
       <SvgIcon>
@@ -59,12 +59,12 @@ export const _account = (user_id) => [
     ),
   },
   {
-    label: 'Security',
+    label: 'nav_security',
     href: '#',
     icon: <Iconify icon="solar:shield-keyhole-bold-duotone" />,
   },
   {
-    label: 'Account settings',
+    label: 'nav_account_settings',
     href: '#',
     icon: <Iconify icon="solar:settings-bold-duotone" />,
   },

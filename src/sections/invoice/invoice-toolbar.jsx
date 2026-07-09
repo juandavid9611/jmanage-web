@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -20,6 +21,7 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export function InvoiceToolbar({ invoice, currentStatus, statusOptions, onChangeStatus }) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const view = useBoolean();
@@ -37,31 +39,31 @@ export function InvoiceToolbar({ invoice, currentStatus, statusOptions, onChange
         sx={{ mb: { xs: 3, md: 5 } }}
       >
         <Stack direction="row" spacing={1} flexGrow={1} sx={{ width: 1 }}>
-          <Tooltip title="Edit">
+          <Tooltip title={t('edit')}>
             <IconButton onClick={handleEdit}>
               <Iconify icon="solar:pen-bold" />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="View">
+          <Tooltip title={t('label_view')}>
             <IconButton onClick={view.onTrue}>
               <Iconify icon="solar:eye-bold" />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Print">
+          <Tooltip title={t('print')}>
             <IconButton>
               <Iconify icon="solar:printer-minimalistic-bold" />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Send">
+          <Tooltip title={t('send')}>
             <IconButton>
               <Iconify icon="iconamoon:send-fill" />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Share">
+          <Tooltip title={t('label_share')}>
             <IconButton>
               <Iconify icon="solar:share-bold" />
             </IconButton>
@@ -71,7 +73,7 @@ export function InvoiceToolbar({ invoice, currentStatus, statusOptions, onChange
         <TextField
           fullWidth
           select
-          label="Status"
+          label={t('status')}
           value={currentStatus}
           onChange={onChangeStatus}
           inputProps={{ id: `status-select-label` }}
@@ -90,7 +92,7 @@ export function InvoiceToolbar({ invoice, currentStatus, statusOptions, onChange
         <Box sx={{ height: 1, display: 'flex', flexDirection: 'column' }}>
           <DialogActions sx={{ p: 1.5 }}>
             <Button color="inherit" variant="contained" onClick={view.onFalse}>
-              Close
+              {t('close')}
             </Button>
           </DialogActions>
         </Box>

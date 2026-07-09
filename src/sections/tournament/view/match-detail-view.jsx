@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -47,28 +48,30 @@ import { EventBadge, EVENT_CONFIG, MatchScheduleDialog } from '../match-row';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const STATUS_ACTIONS = {
-  scheduled: { next: 'live', label: 'Iniciar Partido', icon: 'mdi:play' },
-  live: { next: 'finished', label: 'Finalizar', icon: 'mdi:whistle' },
+  scheduled: { next: 'live', label: 'label_start_match', icon: 'mdi:play' },
+  live: { next: 'finished', label: 'label_finish', icon: 'mdi:whistle' },
 };
 
 const STATUS_CHIP = {
-  live: { label: 'En Vivo', color: 'error' },
-  finished: { label: 'Finalizado', color: 'success' },
-  scheduled: { label: 'Programado', color: 'default' },
+  live: { label: 'label_live', color: 'error' },
+  finished: { label: 'label_finished', color: 'success' },
+  scheduled: { label: 'label_scheduled', color: 'default' },
 };
 
 const EVENT_TYPES = [
-  { value: 'goal', label: 'Gol' },
-  { value: 'own_goal', label: 'Autogol' },
-  { value: 'yellow_card', label: 'Tarjeta Amarilla' },
-  { value: 'red_card', label: 'Tarjeta Roja' },
-  { value: 'substitution', label: 'Cambio' },
-  { value: 'penalty_scored', label: 'Penal Anotado' },
-  { value: 'penalty_missed', label: 'Penal Fallado' },
+  { value: 'goal', label: 'label_goal_singular' },
+  { value: 'own_goal', label: 'label_own_goal' },
+  { value: 'yellow_card', label: 'label_yellow_card_full' },
+  { value: 'red_card', label: 'label_red_card_full' },
+  { value: 'substitution', label: 'label_substitution' },
+  { value: 'penalty_scored', label: 'label_penalty_scored_full' },
+  { value: 'penalty_missed', label: 'label_penalty_missed' },
 ];
 
 export function MatchDetailView() {
+  const { t } = useTranslation();
   const { id: tournamentId, matchId } = useParams();
   const navigate = useNavigate();
 
@@ -101,12 +104,12 @@ export function MatchDetailView() {
   }, [match]);
 
   if (matchLoading) return <LoadingScreen />;
-  if (!match) return <Typography>Partido no encontrado</Typography>;
+  if (!match) return <Typography>{t('label_match_not_found')}</Typography>;
 
-  const homeTeam = teams.find((t) => t.id === match.home_team_id);
-  const awayTeam = teams.find((t) => t.id === match.away_team_id);
-  const homeName = homeTeam?.short_name || homeTeam?.name || 'TBD';
-  const awayName = awayTeam?.short_name || awayTeam?.name || 'TBD';
+  const homeTeam = teams.find((team) => team.id === match.home_team_id);
+  const awayTeam = teams.find((team) => team.id === match.away_team_id);
+  const homeName = homeTeam?.short_name || homeTeam?.name || t('label_tbd');
+  const awayName = awayTeam?.short_name || awayTeam?.name || t('label_tbd');
   const events = match.events || [];
   const statusAction = STATUS_ACTIONS[match.status];
   const chipCfg = STATUS_CHIP[match.status] || STATUS_CHIP.scheduled;
@@ -126,11 +129,11 @@ export function MatchDetailView() {
       await updateMatch(tournamentId, matchId, { status: statusAction.next });
       toast.success(
         statusAction.next === 'finished'
-          ? 'Partido finalizado — marcador calculado desde eventos'
-          : 'Estado actualizado'
+          ? t('label_match_finished_score_calculated')
+          : t('label_status_updated')
       );
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     } finally {
       setIsSubmitting(false);
     }
@@ -140,9 +143,9 @@ export function MatchDetailView() {
     try {
       setIsSubmitting(true);
       await updateMatch(tournamentId, matchId, { status: 'live' });
-      toast.success('Partido reabierto');
+      toast.success(t('label_match_reopened'));
     } catch (error) {
-      toast.error(error.message || 'Error al reabrir el partido');
+      toast.error(error.message || t('label_error_reopening_match'));
     } finally {
       setIsSubmitting(false);
     }
@@ -154,9 +157,9 @@ export function MatchDetailView() {
       await createMatchEvent(matchId, { ...eventForm, minute: Number(eventForm.minute) });
       setEventDialog(false);
       setEventForm({ type: 'goal', minute: '', player_id: '', team_id: '', assist_player_id: '' });
-      toast.success('Evento registrado');
+      toast.success(t('label_event_registered'));
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     } finally {
       setIsSubmitting(false);
     }
@@ -165,10 +168,10 @@ export function MatchDetailView() {
   const handleDelete = async () => {
     try {
       await deleteMatch(tournamentId, matchId);
-      toast.success('Partido eliminado');
+      toast.success(t('label_match_deleted'));
       navigate(paths.dashboard.tournament.details(tournamentId));
     } catch (error) {
-      toast.error('Error al eliminar');
+      toast.error(t('label_error_deleting'));
     }
   };
 
@@ -185,22 +188,24 @@ export function MatchDetailView() {
       } = await createMatchCharges(tournamentId, matchId);
 
       if (created > 0) {
-        toast.success(`${created} cobro${created !== 1 ? 's' : ''} generado${created !== 1 ? 's' : ''}`);
+        toast.success(
+          `${created} ${created !== 1 ? t('label_charges_plural') : t('label_charge_singular')} ${created !== 1 ? t('label_generated_plural') : t('label_generated_singular')}`
+        );
       } else if (cardEventsFound === 0) {
-        toast.info('Este partido no tiene eventos de tarjeta registrados');
+        toast.info(t('label_match_has_no_card_events'));
       } else if (alreadyCharged > 0 && alreadyCharged === cardEventsFound) {
-        toast.info('Los cobros de este partido ya fueron generados');
+        toast.info(t('label_charges_already_generated'));
       } else if (noManager > 0) {
-        toast.warning('No se generaron cobros — los equipos no tienen un usuario registrado como manager');
+        toast.warning(t('label_no_charges_generated_no_manager'));
       } else if (noTeam > 0) {
-        toast.warning('No se generaron cobros — no se encontraron los equipos de los eventos');
+        toast.warning(t('label_no_charges_generated_no_team'));
       } else if (feeZero > 0) {
-        toast.warning('No se generaron cobros — verifica que las tarifas de tarjetas estén configuradas en el torneo');
+        toast.warning(t('label_no_charges_generated_fees_not_configured'));
       } else {
-        toast.warning('No se generaron cobros');
+        toast.warning(t('label_no_charges_generated'));
       }
     } catch (err) {
-      toast.error(err.message || 'Error al generar cobros');
+      toast.error(err.message || t('label_error_generating_charges'));
     } finally {
       setChargesLoading(false);
     }
@@ -210,9 +215,9 @@ export function MatchDetailView() {
     try {
       setIsSubmitting(true);
       await updateMatch(tournamentId, matchId, { notes });
-      toast.success('Observaciones guardadas exitosamente');
+      toast.success(t('label_notes_saved_successfully'));
     } catch (error) {
-      toast.error(error.message || 'Error al guardar observaciones');
+      toast.error(error.message || t('label_error_saving_notes'));
     } finally {
       setIsSubmitting(false);
     }
@@ -221,9 +226,9 @@ export function MatchDetailView() {
   const handleDeleteEvent = async (eventId) => {
     try {
       await deleteMatchEvent(matchId, eventId);
-      toast.success('Evento eliminado');
+      toast.success(t('label_event_deleted'));
     } catch (error) {
-      toast.error('Error al eliminar evento');
+      toast.error(t('label_error_deleting_event'));
     }
   };
 
@@ -248,7 +253,7 @@ export function MatchDetailView() {
     }
   });
 
-  const pendingAmount = (yellowCardsCount * 15000) + (redCardsCount * 30000);
+  const pendingAmount = yellowCardsCount * 15000 + redCardsCount * 30000;
 
   const scoreHome = isLive ? liveScoreHome : match.score_home === -1 ? '-' : match.score_home;
   const scoreAway = isLive ? liveScoreAway : match.score_away === -1 ? '-' : match.score_away;
@@ -259,12 +264,12 @@ export function MatchDetailView() {
   return (
     <DashboardContent maxWidth={false} sx={{ p: { xs: 0, md: 0 } }}>
       <CustomBreadcrumbs
-        heading="Detalle Partido"
+        heading={t('label_match_detail')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Torneos', href: paths.dashboard.tournament.root },
+          { name: t('label_dashboard'), href: paths.dashboard.root },
+          { name: t('tournaments'), href: paths.dashboard.tournament.root },
           { name: tournament?.name || '', href: paths.dashboard.tournament.details(tournamentId) },
-          { name: `${homeName} vs ${awayName}` },
+          { name: `${homeName} ${t('label_vs')} ${awayName}` },
         ]}
         sx={{ px: { xs: 2, md: 3.5 }, pt: { xs: 2, md: 2.75 }, pb: 0 }}
       />
@@ -273,7 +278,7 @@ export function MatchDetailView() {
       <Box
         sx={{
           bgcolor: 'background.paper',
-          borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+          borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
           px: { xs: 2, md: 3.5 },
           py: { xs: 3, md: 4 },
         }}
@@ -289,8 +294,11 @@ export function MatchDetailView() {
         >
           {/* Home */}
           <Stack alignItems="center" spacing={0.75}>
-            <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: -0.5, textAlign: 'center' }}>
-              {homeTeam?.name || 'Local'}
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 800, letterSpacing: -0.5, textAlign: 'center' }}
+            >
+              {homeTeam?.name || t('label_home_team')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
               {homeName}
@@ -328,7 +336,7 @@ export function MatchDetailView() {
             </Stack>
 
             <Chip
-              label={chipCfg.label}
+              label={t(chipCfg.label)}
               color={chipCfg.color}
               size="small"
               variant="soft"
@@ -342,10 +350,15 @@ export function MatchDetailView() {
             />
 
             {/* Meta row */}
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5, flexWrap: 'wrap' }}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              alignItems="center"
+              sx={{ mt: 0.5, flexWrap: 'wrap' }}
+            >
               {match.matchweek && (
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  Jornada {match.matchweek}
+                  {t('label_matchday')} {match.matchweek}
                 </Typography>
               )}
               {match.round && (
@@ -355,7 +368,11 @@ export function MatchDetailView() {
               )}
               {match.date && (
                 <Stack direction="row" spacing={0.5} alignItems="center">
-                  <Iconify icon="solar:calendar-date-bold" width={13} sx={{ color: 'text.disabled' }} />
+                  <Iconify
+                    icon="solar:calendar-date-bold"
+                    width={13}
+                    sx={{ color: 'text.disabled' }}
+                  />
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {fDateTime(match.date, 'DD MMM YYYY · HH:mm')}
                   </Typography>
@@ -383,8 +400,11 @@ export function MatchDetailView() {
 
           {/* Away */}
           <Stack alignItems="center" spacing={0.75}>
-            <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: -0.5, textAlign: 'center' }}>
-              {awayTeam?.name || 'Visitante'}
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 800, letterSpacing: -0.5, textAlign: 'center' }}
+            >
+              {awayTeam?.name || t('label_away_team')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
               {awayName}
@@ -397,7 +417,7 @@ export function MatchDetailView() {
       <Box
         sx={{
           bgcolor: 'background.paper',
-          borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+          borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
           px: { xs: 2, md: 3.5 },
           py: 1.25,
         }}
@@ -411,7 +431,7 @@ export function MatchDetailView() {
               loading={isSubmitting}
               onClick={handleStatusTransition}
             >
-              {statusAction.label}
+              {t(statusAction.label)}
             </LoadingButton>
           )}
           {isAdmin && isFinished && (
@@ -422,7 +442,7 @@ export function MatchDetailView() {
               loading={isSubmitting}
               onClick={handleReopen}
             >
-              Reabrir Partido
+              {t('label_reopen_match')}
             </LoadingButton>
           )}
           {isLive && (
@@ -432,7 +452,7 @@ export function MatchDetailView() {
               startIcon={<Iconify icon="mdi:plus" width={16} />}
               onClick={() => setEventDialog(true)}
             >
-              Evento
+              {t('label_event_singular')}
             </Button>
           )}
 
@@ -445,23 +465,40 @@ export function MatchDetailView() {
                 const v = String(s ?? '');
                 return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
               };
-              const POSITION_ES = {
-                Goalkeeper: 'Portero',
-                Defender: 'Defensa',
-                Midfielder: 'Centrocampista',
-                Forward: 'Delantero',
+              const POSITION_LABELS = {
+                Goalkeeper: t('label_position_goalkeeper'),
+                Defender: t('label_position_defender'),
+                Midfielder: t('label_position_midfielder'),
+                Forward: t('label_position_forward'),
               };
-              const rosterFor = (teamId) =>
-                (players || []).filter((p) => p.team_id === teamId);
+              const rosterFor = (teamId) => (players || []).filter((p) => p.team_id === teamId);
               const rows = [
-                ['Equipo', 'Jugador', 'Identificación', 'Camiseta', 'Posición'].join(','),
+                [
+                  t('team'),
+                  t('label_player_singular'),
+                  t('label_id_number'),
+                  t('label_jersey_number'),
+                  t('label_position'),
+                ].join(','),
                 ...rosterFor(match.home_team_id).map((p) =>
-                  [homeTeam?.name || homeName, p.name, p.id_number || '', p.number ?? '', POSITION_ES[p.position] || p.position || '']
+                  [
+                    homeTeam?.name || homeName,
+                    p.name,
+                    p.id_number || '',
+                    p.number ?? '',
+                    POSITION_LABELS[p.position] || p.position || '',
+                  ]
                     .map(esc)
                     .join(',')
                 ),
                 ...rosterFor(match.away_team_id).map((p) =>
-                  [awayTeam?.name || awayName, p.name, p.id_number || '', p.number ?? '', POSITION_ES[p.position] || p.position || '']
+                  [
+                    awayTeam?.name || awayName,
+                    p.name,
+                    p.id_number || '',
+                    p.number ?? '',
+                    POSITION_LABELS[p.position] || p.position || '',
+                  ]
                     .map(esc)
                     .join(',')
                 ),
@@ -474,14 +511,17 @@ export function MatchDetailView() {
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.href = url;
-              a.download = `plantillas-${homeName}-vs-${awayName}.csv`.replace(/\s+/g, '_');
+              a.download = `${t('label_rosters_filename')}-${homeName}-vs-${awayName}.csv`.replace(
+                /\s+/g,
+                '_'
+              );
               document.body.appendChild(a);
               a.click();
               document.body.removeChild(a);
               URL.revokeObjectURL(url);
             }}
           >
-            Descargar plantillas
+            {t('label_download_rosters')}
           </Button>
 
           {isFinished && match.round && (
@@ -493,22 +533,17 @@ export function MatchDetailView() {
               onClick={async () => {
                 try {
                   const winnerId =
-                    match.score_home > match.score_away
-                      ? match.home_team_id
-                      : match.away_team_id;
+                    match.score_home > match.score_away ? match.home_team_id : match.away_team_id;
                   await advanceWinner(tournamentId, matchId, winnerId);
-                  toast.success('Ganador avanzado al siguiente round');
+                  toast.success(t('label_winner_advanced_to_next_round'));
                   navigate(paths.dashboard.tournament.details(tournamentId));
                 } catch (error) {
-                  toast.error(error.message || 'Error al avanzar ganador');
+                  toast.error(error.message || t('label_error_advancing_winner'));
                 }
               }}
             >
-              Avanzar Ganador (
-              {match.score_home > match.score_away
-                ? homeTeam?.short_name
-                : awayTeam?.short_name}
-              )
+              {t('label_advance_winner')} (
+              {match.score_home > match.score_away ? homeTeam?.short_name : awayTeam?.short_name})
             </Button>
           )}
 
@@ -521,7 +556,7 @@ export function MatchDetailView() {
               startIcon={<Iconify icon="solar:dollar-minimalistic-bold" width={16} />}
               onClick={handleCreateCharges}
             >
-              Generar Cobros
+              {t('label_generate_charges')}
             </LoadingButton>
           )}
 
@@ -534,7 +569,7 @@ export function MatchDetailView() {
             startIcon={<Iconify icon="solar:trash-bin-trash-bold" width={16} />}
             onClick={handleDelete}
           >
-            Eliminar
+            {t('delete')}
           </Button>
         </Stack>
       </Box>
@@ -549,9 +584,15 @@ export function MatchDetailView() {
       >
         <Typography
           variant="overline"
-          sx={{ color: 'text.disabled', letterSpacing: 2, fontSize: '0.65rem', mb: 2, display: 'block' }}
+          sx={{
+            color: 'text.disabled',
+            letterSpacing: 2,
+            fontSize: '0.65rem',
+            mb: 2,
+            display: 'block',
+          }}
         >
-          Cronología del partido
+          {t('label_match_timeline')}
         </Typography>
 
         {sortedEvents.length === 0 ? (
@@ -559,7 +600,7 @@ export function MatchDetailView() {
             variant="caption"
             sx={{ color: 'text.disabled', display: 'block', textAlign: 'center', py: 4 }}
           >
-            Sin eventos registrados
+            {t('label_no_events_recorded')}
           </Typography>
         ) : (
           <Box sx={{ maxWidth: 640, mx: 'auto' }}>
@@ -570,7 +611,7 @@ export function MatchDetailView() {
                 gridTemplateColumns: '1fr 52px 1fr',
                 mb: 1.5,
                 pb: 1,
-                borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+                borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
               }}
             >
               <Typography
@@ -582,7 +623,12 @@ export function MatchDetailView() {
               <Box />
               <Typography
                 variant="caption"
-                sx={{ fontSize: '0.65rem', color: 'text.disabled', fontWeight: 600, textAlign: 'right' }}
+                sx={{
+                  fontSize: '0.65rem',
+                  color: 'text.disabled',
+                  fontWeight: 600,
+                  textAlign: 'right',
+                }}
               >
                 {awayName}
               </Typography>
@@ -636,7 +682,7 @@ export function MatchDetailView() {
                       gridTemplateColumns: '1fr 52px 1fr',
                       alignItems: 'center',
                       py: 0.75,
-                      borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.04)}`,
+                      borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.04)}`,
                       '&:last-child': { borderBottom: 'none' },
                     }}
                   >
@@ -664,35 +710,59 @@ export function MatchDetailView() {
       </Box>
 
       {/* ── Observaciones (Comments & Mocked Payments) ────────────────────── */}
-      <Box sx={{ px: { xs: 2, md: 3.5 }, py: 4, bgcolor: (t) => alpha(t.palette.grey[500], 0.02) }}>
-        <Typography variant="overline" sx={{ color: 'text.disabled', letterSpacing: 2, fontSize: '0.65rem', mb: 2, display: 'block' }}>
-          Observaciones del Oficial de Partido
+      <Box
+        sx={{
+          px: { xs: 2, md: 3.5 },
+          py: 4,
+          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.02),
+        }}
+      >
+        <Typography
+          variant="overline"
+          sx={{
+            color: 'text.disabled',
+            letterSpacing: 2,
+            fontSize: '0.65rem',
+            mb: 2,
+            display: 'block',
+          }}
+        >
+          {t('label_match_official_observations')}
         </Typography>
 
         <Box sx={{ maxWidth: 640, mx: 'auto' }}>
           {pendingAmount > 0 && (
             <Alert severity="warning" sx={{ mb: 3 }}>
-              Existen cobros pendientes por emitir: <strong>{yellowCardsCount} amarillas</strong> y <strong>{redCardsCount} rojas/doble amarilla</strong>, total de <strong>${pendingAmount.toLocaleString()}</strong> pendientes de cobro y pago.
+              {t('label_pending_charges_intro')}{' '}
+              <strong>
+                {yellowCardsCount} {t('label_yellow_cards_plural_short')}
+              </strong>{' '}
+              {t('label_and')}{' '}
+              <strong>
+                {redCardsCount} {t('label_reds_or_second_yellow')}
+              </strong>
+              , {t('label_total_of')} <strong>${pendingAmount.toLocaleString()}</strong>{' '}
+              {t('label_pending_payment_collection')}.
             </Alert>
           )}
 
           <TextField
-             fullWidth
-             multiline
-             rows={4}
-             placeholder="Agregar observaciones, incidentes o notas adicionales del partido..."
-             value={notes}
-             onChange={(e) => setNotes(e.target.value)}
+            fullWidth
+            multiline
+            rows={4}
+            placeholder={t('label_add_match_notes_placeholder')}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
           />
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
-            <LoadingButton 
-               variant="contained" 
-               size="small" 
-               loading={isSubmitting} 
-               onClick={handleSaveNotes}
-               disabled={notes === (match.notes || '')}
+            <LoadingButton
+              variant="contained"
+              size="small"
+              loading={isSubmitting}
+              onClick={handleSaveNotes}
+              disabled={notes === (match.notes || '')}
             >
-               Guardar Observaciones
+              {t('label_save_notes')}
             </LoadingButton>
           </Box>
         </Box>
@@ -707,46 +777,46 @@ export function MatchDetailView() {
       />
 
       <Dialog open={eventDialog} onClose={() => setEventDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Registrar Evento</DialogTitle>
+        <DialogTitle>{t('label_register_event')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               select
               fullWidth
-              label="Tipo"
+              label={t('label_type')}
               value={eventForm.type}
               onChange={(e) => setEventForm((f) => ({ ...f, type: e.target.value }))}
             >
-              {EVENT_TYPES.map((t) => (
-                <MenuItem key={t.value} value={t.value}>
-                  {t.label}
+              {EVENT_TYPES.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {t(opt.label)}
                 </MenuItem>
               ))}
             </TextField>
             <TextField
               fullWidth
               type="number"
-              label="Minuto"
+              label={t('label_minute')}
               value={eventForm.minute}
               onChange={(e) => setEventForm((f) => ({ ...f, minute: e.target.value }))}
             />
             <TextField
               select
               fullWidth
-              label="Equipo"
+              label={t('team')}
               value={eventForm.team_id}
               onChange={(e) => setEventForm((f) => ({ ...f, team_id: e.target.value }))}
             >
-              {[homeTeam, awayTeam].filter(Boolean).map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
+              {[homeTeam, awayTeam].filter(Boolean).map((team) => (
+                <MenuItem key={team.id} value={team.id}>
+                  {team.name}
                 </MenuItem>
               ))}
             </TextField>
             <TextField
               select
               fullWidth
-              label="Jugador"
+              label={t('label_player_singular')}
               value={eventForm.player_id}
               onChange={(e) => setEventForm((f) => ({ ...f, player_id: e.target.value }))}
             >
@@ -762,11 +832,11 @@ export function MatchDetailView() {
               <TextField
                 select
                 fullWidth
-                label="Asistencia (opcional)"
+                label={t('label_assist_optional')}
                 value={eventForm.assist_player_id}
                 onChange={(e) => setEventForm((f) => ({ ...f, assist_player_id: e.target.value }))}
               >
-                <MenuItem value="">Sin asistencia</MenuItem>
+                <MenuItem value="">{t('label_no_assist')}</MenuItem>
                 {matchPlayers
                   .filter((p) => !eventForm.team_id || p.team_id === eventForm.team_id)
                   .filter((p) => p.id !== eventForm.player_id)
@@ -780,9 +850,9 @@ export function MatchDetailView() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEventDialog(false)}>Cancelar</Button>
+          <Button onClick={() => setEventDialog(false)}>{t('cancel')}</Button>
           <LoadingButton variant="contained" loading={isSubmitting} onClick={handleAddEvent}>
-            Registrar
+            {t('label_register')}
           </LoadingButton>
         </DialogActions>
       </Dialog>

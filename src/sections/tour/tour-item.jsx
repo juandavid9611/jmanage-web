@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
@@ -21,6 +23,7 @@ import { useAuthContext } from 'src/auth/hooks';
 // ----------------------------------------------------------------------
 
 export function TourItem({ tour, onView, onEdit, onDelete }) {
+  const { t } = useTranslation();
   const popover = usePopover();
   const { user } = useAuthContext();
   const isAdmin = user.role === 'admin' || user.role === 'coach';
@@ -70,11 +73,13 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
           mr: 0.25,
         }}
       />
-      {tour.scores.home > tour.scores.away
-        ? 'Victory'
-        : tour.scores.home === tour.scores.away
-          ? 'Draw'
-          : 'Lose'}
+      {t(
+        tour.scores.home > tour.scores.away
+          ? 'label_match_result_win'
+          : tour.scores.home === tour.scores.away
+            ? 'label_match_result_draw'
+            : 'label_match_result_loss'
+      )}
     </Stack>
   );
 
@@ -109,7 +114,7 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
   const renderTexts = (
     <ListItemText
       sx={{ p: (theme) => theme.spacing(2.5, 2.5, 2, 2.5) }}
-      primary={`Posted date: ${fDateTime(tour.createdAt)}`}
+      primary={`${t('label_posted_date_colon')} ${fDateTime(tour.createdAt)}`}
       secondary={
         <Link
           component={RouterLink}
@@ -165,7 +170,7 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
               sx={{ color: userAssists ? 'success.main' : 'gray' }}
             />
           ),
-          label: `${Object.keys(tour?.bookers).length || 0} Booked${userAssists ? ' (You)' : ''}`,
+          label: `${Object.keys(tour?.bookers).length || 0} ${t('label_booked')}${userAssists ? ` (${t('label_you')})` : ''}`,
         },
         {
           icon: <Iconify icon="solar:clock-circle-bold" sx={{ color: 'info.main' }} />,
@@ -225,7 +230,7 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
               }}
             >
               <Iconify icon="solar:eye-bold" />
-              View
+              {t('label_view')}
             </MenuItem>
 
             <MenuItem
@@ -235,7 +240,7 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
               }}
             >
               <Iconify icon="solar:pen-bold" />
-              Edit
+              {t('edit')}
             </MenuItem>
 
             <MenuItem
@@ -246,7 +251,7 @@ export function TourItem({ tour, onView, onEdit, onDelete }) {
               sx={{ color: 'error.main' }}
             >
               <Iconify icon="solar:trash-bin-trash-bold" />
-              Delete
+              {t('delete')}
             </MenuItem>
           </MenuList>
         </CustomPopover>

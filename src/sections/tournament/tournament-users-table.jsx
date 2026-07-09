@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
@@ -16,6 +18,7 @@ import { EmptyContent } from 'src/components/empty-content';
  * (manager_name, contact_email, manager_user_ids) already lives on the team.
  */
 export function TournamentUsersTable({ teams, teamsLoading }) {
+  const { t } = useTranslation();
   if (teamsLoading) {
     return (
       <Stack spacing={1}>
@@ -27,7 +30,7 @@ export function TournamentUsersTable({ teams, teamsLoading }) {
   }
 
   if (!teams?.length) {
-    return <EmptyContent title="Sin equipos inscritos todavía" sx={{ py: 6 }} />;
+    return <EmptyContent title={t('label_no_teams_registered_yet')} sx={{ py: 6 }} />;
   }
 
   return (
@@ -46,7 +49,7 @@ export function TournamentUsersTable({ teams, teamsLoading }) {
               px: 2,
               py: 1.25,
               bgcolor: 'background.paper',
-              border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+              border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
               borderRadius: 1,
             }}
           >
@@ -60,10 +63,10 @@ export function TournamentUsersTable({ teams, teamsLoading }) {
               </Avatar>
               <Stack spacing={0.25}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  {team.manager_name || 'Sin encargado'}
+                  {team.manager_name || t('label_no_manager')}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                  {team.name} · {team.contact_email || 'Sin email'}
+                  {team.name} · {team.contact_email || t('label_no_email')}
                 </Typography>
               </Stack>
             </Stack>
@@ -72,7 +75,7 @@ export function TournamentUsersTable({ teams, teamsLoading }) {
               size="small"
               variant="soft"
               color={isRegistered ? 'success' : 'default'}
-              label={isRegistered ? 'Registrado' : 'Pendiente'}
+              label={isRegistered ? t('label_registered') : t('pending')}
             />
           </Box>
         );

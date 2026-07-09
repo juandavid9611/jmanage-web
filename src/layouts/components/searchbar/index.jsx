@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import parse from 'autosuggest-highlight/parse';
 import match from 'autosuggest-highlight/match';
 
@@ -29,6 +30,7 @@ import { groupItems, applyFilter, getAllItems } from './utils';
 // ----------------------------------------------------------------------
 
 export function Searchbar({ data: navItems = [], sx, ...other }) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   const router = useRouter();
@@ -162,7 +164,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }) {
           <InputBase
             fullWidth
             autoFocus
-            placeholder="Search..."
+            placeholder={t('search')}
             value={searchQuery}
             onChange={handleSearch}
             startAdornment={

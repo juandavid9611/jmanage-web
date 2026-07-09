@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -32,6 +33,7 @@ import { FileManagerFileDetails } from './file-manager-file-details';
 // ----------------------------------------------------------------------
 
 export function FileManagerTableRow({ row, selected, onSelectRow, onDeleteRow }) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   const { workspaceRole } = useWorkspace();
@@ -80,9 +82,9 @@ export function FileManagerTableRow({ row, selected, onSelectRow, onDeleteRow })
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Download started!');
+    toast.success(t('label_download_started'));
     popover.onClose();
-  }, [row.url, row.name, popover]);
+  }, [row.url, row.name, popover, t]);
 
   const defaultStyles = {
     borderTop: `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
@@ -122,7 +124,7 @@ export function FileManagerTableRow({ row, selected, onSelectRow, onDeleteRow })
             checked={selected}
             onDoubleClick={() => console.info('ON DOUBLE CLICK')}
             onClick={onSelectRow}
-            inputProps={{ id: `row-checkbox-${row.id}`, 'aria-label': `row-checkbox` }}
+            inputProps={{ id: `row-checkbox-${row.id}`, 'aria-label': t('label_row_checkbox') }}
           />
         </TableCell>
 
@@ -187,29 +189,28 @@ export function FileManagerTableRow({ row, selected, onSelectRow, onDeleteRow })
           {isViewableFile() && (
             <MenuItem onClick={handleView}>
               <Iconify icon="solar:eye-bold" />
-              Ver
+              {t('label_view')}
             </MenuItem>
           )}
 
           <MenuItem onClick={handleDownload}>
             <Iconify icon="solar:download-minimalistic-bold" />
-            Descargar
+            {t('label_download')}
           </MenuItem>
-
 
           <Divider sx={{ borderStyle: 'dashed' }} />
 
           {isAdmin && (
             <MenuItem
-            onClick={() => {
-              confirm.onTrue();
-              popover.onClose();
-            }}
-            sx={{ color: 'error.main' }}
-          >
-            <Iconify icon="solar:trash-bin-trash-bold" />
-            Eliminar
-          </MenuItem>
+              onClick={() => {
+                confirm.onTrue();
+                popover.onClose();
+              }}
+              sx={{ color: 'error.main' }}
+            >
+              <Iconify icon="solar:trash-bin-trash-bold" />
+              {t('delete')}
+            </MenuItem>
           )}
         </MenuList>
       </CustomPopover>
@@ -226,11 +227,11 @@ export function FileManagerTableRow({ row, selected, onSelectRow, onDeleteRow })
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Eliminar"
-        content="¿Estás seguro de eliminar?"
+        title={t('delete')}
+        content={t('label_confirm_delete_generic')}
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
-            Eliminar
+            {t('delete')}
           </Button>
         }
       />

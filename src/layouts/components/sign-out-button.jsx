@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@mui/material/Button';
 
@@ -10,6 +11,7 @@ import { signOut } from 'src/auth/context/amplify/action';
 // ----------------------------------------------------------------------
 
 export function SignOutButton({ onClose, ...other }) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   const { checkUserSession } = useAuthContext();
@@ -28,7 +30,7 @@ export function SignOutButton({ onClose, ...other }) {
 
   return (
     <Button fullWidth variant="soft" size="large" color="error" onClick={handleLogout} {...other}>
-      Logout
+      {t('logout')}
     </Button>
   );
 }

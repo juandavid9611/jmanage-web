@@ -110,7 +110,7 @@ export function UserTableRow({
 
         <TableCell>
           <Stack direction="row" alignItems="center">
-            <Tooltip title="Edición rápida" placement="top" arrow>
+            <Tooltip title={t('label_quick_edit')} placement="top" arrow>
               <IconButton
                 color={quickEdit.value ? 'inherit' : 'default'}
                 onClick={quickEdit.onTrue}

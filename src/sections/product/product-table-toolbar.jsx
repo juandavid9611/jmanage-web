@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Select from '@mui/material/Select';
 import MenuList from '@mui/material/MenuList';
@@ -18,6 +19,7 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export function ProductTableToolbar({ filters, options }) {
+  const { t } = useTranslation();
   const popover = usePopover();
 
   const local = useSetState({
@@ -58,15 +60,19 @@ export function ProductTableToolbar({ filters, options }) {
   return (
     <>
       <FormControl sx={{ flexShrink: 0, width: { xs: 1, md: 200 } }}>
-        <InputLabel htmlFor="product-filter-stock-select-label">Stock</InputLabel>
+        <InputLabel htmlFor="product-filter-stock-select-label">{t('label_stock')}</InputLabel>
 
         <Select
           multiple
           value={local.state.stock}
           onChange={handleChangeStock}
           onClose={handleFilterStock}
-          input={<OutlinedInput label="Stock" />}
-          renderValue={(selected) => selected.map((value) => value).join(', ')}
+          input={<OutlinedInput label={t('label_stock')} />}
+          renderValue={(selected) =>
+            selected
+              .map((value) => t(options.stocks.find((o) => o.value === value)?.label || value))
+              .join(', ')
+          }
           inputProps={{ id: 'product-filter-stock-select-label' }}
           sx={{ textTransform: 'capitalize' }}
         >
@@ -77,7 +83,7 @@ export function ProductTableToolbar({ filters, options }) {
                 size="small"
                 checked={local.state.stock.includes(option.value)}
               />
-              {option.label}
+              {t(option.label)}
             </MenuItem>
           ))}
           <MenuItem
@@ -90,20 +96,24 @@ export function ProductTableToolbar({ filters, options }) {
               bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
             }}
           >
-            Apply
+            {t('label_apply')}
           </MenuItem>
         </Select>
       </FormControl>
 
       <FormControl sx={{ flexShrink: 0, width: { xs: 1, md: 200 } }}>
-        <InputLabel htmlFor="product-filter-publish-select-label">Publish</InputLabel>
+        <InputLabel htmlFor="product-filter-publish-select-label">{t('label_publish')}</InputLabel>
         <Select
           multiple
           value={local.state.publish}
           onChange={handleChangePublish}
           onClose={handleFilterPublish}
-          input={<OutlinedInput label="Publish" />}
-          renderValue={(selected) => selected.map((value) => value).join(', ')}
+          input={<OutlinedInput label={t('label_publish')} />}
+          renderValue={(selected) =>
+            selected
+              .map((value) => t(options.publishs.find((o) => o.value === value)?.label || value))
+              .join(', ')
+          }
           inputProps={{ id: 'product-filter-publish-select-label' }}
           sx={{ textTransform: 'capitalize' }}
         >
@@ -114,7 +124,7 @@ export function ProductTableToolbar({ filters, options }) {
                 size="small"
                 checked={local.state.publish.includes(option.value)}
               />
-              {option.label}
+              {t(option.label)}
             </MenuItem>
           ))}
 
@@ -130,7 +140,7 @@ export function ProductTableToolbar({ filters, options }) {
               bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
             }}
           >
-            Apply
+            {t('label_apply')}
           </MenuItem>
         </Select>
       </FormControl>
@@ -148,7 +158,7 @@ export function ProductTableToolbar({ filters, options }) {
             }}
           >
             <Iconify icon="solar:printer-minimalistic-bold" />
-            Print
+            {t('print')}
           </MenuItem>
 
           <MenuItem
@@ -157,7 +167,7 @@ export function ProductTableToolbar({ filters, options }) {
             }}
           >
             <Iconify icon="solar:import-bold" />
-            Import
+            {t('import')}
           </MenuItem>
 
           <MenuItem
@@ -166,7 +176,7 @@ export function ProductTableToolbar({ filters, options }) {
             }}
           >
             <Iconify icon="solar:export-bold" />
-            Export
+            {t('export')}
           </MenuItem>
         </MenuList>
       </CustomPopover>

@@ -1,5 +1,6 @@
 import { mutate } from 'swr';
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -45,12 +46,12 @@ import { TeamSetupWizard } from './team-setup-wizard';
 
 const GROUP_COLORS = ['primary', 'info', 'warning', 'error', 'success', 'secondary'];
 
-
 // ======================================================================
 // MAIN COMPONENT
 // ======================================================================
 
 export function TeamList({ tournamentId, tournament, teams, groups }) {
+  const { t } = useTranslation();
   const [wizardMode, setWizardMode] = useState(null);
   const [groupDialog, setGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -69,12 +70,12 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
     async (teamId) => {
       try {
         await deleteTeam(tournamentId, teamId);
-        toast.success('Equipo eliminado');
+        toast.success(t('label_team_deleted'));
       } catch (error) {
-        toast.error('Error al eliminar equipo');
+        toast.error(t('label_error_deleting_team'));
       }
     },
-    [tournamentId]
+    [tournamentId, t]
   );
 
   const handleCreateGroup = async () => {
@@ -83,18 +84,18 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
       setGroupDialog(false);
       setGroupName('');
       setGroupSlots(2);
-      toast.success('Grupo creado');
+      toast.success(t('label_group_created'));
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     }
   };
 
   const handleDeleteGroup = async (groupId) => {
     try {
       await deleteGroup(tournamentId, groupId);
-      toast.success('Grupo eliminado');
+      toast.success(t('label_group_deleted'));
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     }
   };
 
@@ -107,14 +108,17 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
       if (newGroupId) {
         await assignTeamToGroup(tournamentId, newGroupId, teamId);
       }
-      toast.success('Equipo asignado');
+      toast.success(t('label_team_assigned'));
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     }
   };
 
   const handleRandomAssign = async () => {
-    if (!groups?.length) { toast.error('Crea grupos primero'); return; }
+    if (!groups?.length) {
+      toast.error(t('label_create_groups_first'));
+      return;
+    }
     setIsAssigning(true);
     try {
       const removeOps = groups.flatMap((g) =>
@@ -129,9 +133,9 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
       await Promise.all(assignOps);
       // Single revalidation after all ops complete
       mutate((key) => typeof key === 'string' && key.includes(tournamentId));
-      toast.success(`${shuffled.length} equipos asignados aleatoriamente`);
+      toast.success(`${shuffled.length} ${t('label_teams_assigned_randomly')}`);
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     } finally {
       setIsAssigning(false);
     }
@@ -156,17 +160,12 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
     <>
       {/* ── Inscription Progress Header ── */}
       <Card sx={{ px: 2.5, py: 1.5, mb: 2 }}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          spacing={2}
-        >
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
           <Stack direction="row" alignItems="center" spacing={2.5}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <Iconify icon="mdi:account-group" width={20} sx={{ color: 'primary.main' }} />
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                Inscripción
+                {t('label_inscription')}
               </Typography>
             </Stack>
 
@@ -175,7 +174,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                 {teams.length}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                /{totalTeams} equipos
+                /{totalTeams} {t('word_teams_lowercase')}
               </Typography>
             </Stack>
 
@@ -186,7 +185,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                 width: 120,
                 height: 4,
                 borderRadius: 1,
-                bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+                bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
                 '& .MuiLinearProgress-bar': {
                   borderRadius: 1,
                   bgcolor: inscriptionProgress >= 100 ? 'success.main' : 'primary.main',
@@ -194,7 +193,13 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
               }}
             />
 
-            <Typography variant="caption" sx={{ color: inscriptionProgress >= 100 ? 'success.main' : 'text.secondary', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: inscriptionProgress >= 100 ? 'success.main' : 'text.secondary',
+                fontWeight: 600,
+              }}
+            >
               {inscriptionProgress}%
             </Typography>
           </Stack>
@@ -206,7 +211,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
               startIcon={<Iconify icon="mingcute:add-line" />}
               onClick={() => setWizardMode('create')}
             >
-              Registrar Equipo
+              {t('label_register_team')}
             </Button>
           )}
         </Stack>
@@ -214,11 +219,21 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
 
       {/* ── Locked banner ── */}
       {isLocked && (
-        <Card sx={{ p: 1.5, mb: 2, bgcolor: 'warning.lighter', border: '1px solid', borderColor: 'warning.light' }}>
+        <Card
+          sx={{
+            p: 1.5,
+            mb: 2,
+            bgcolor: 'warning.lighter',
+            border: '1px solid',
+            borderColor: 'warning.light',
+          }}
+        >
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Iconify icon="mdi:lock-outline" sx={{ color: 'warning.dark' }} />
             <Typography variant="body2" color="warning.dark">
-              El torneo está {tournament.status === 'active' ? 'activo' : 'finalizado'}. No es posible modificar equipos.
+              {t('label_tournament_is')}{' '}
+              {tournament.status === 'active' ? t('label_active_masc') : t('label_finished_masc')}
+              {t('label_tournament_locked_teams_suffix')}
             </Typography>
           </Stack>
         </Card>
@@ -230,7 +245,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <Iconify icon="mdi:group" width={20} />
-              <Typography variant="subtitle1">Grupos</Typography>
+              <Typography variant="subtitle1">{t('label_groups')}</Typography>
             </Stack>
             <Stack direction="row" spacing={1}>
               {hasGroups && (
@@ -242,7 +257,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                   loading={isAssigning}
                   disabled={teams.length < 2 || isLocked}
                 >
-                  Asignar Aleatorio
+                  {t('label_random_assign')}
                 </LoadingButton>
               )}
               <Button
@@ -252,7 +267,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                 onClick={() => setGroupDialog(true)}
                 disabled={isLocked}
               >
-                Agregar Grupo
+                {t('label_add_group')}
               </Button>
             </Stack>
           </Stack>
@@ -262,13 +277,13 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
               sx={{
                 py: 4,
                 textAlign: 'center',
-                border: (t) => `2px dashed ${alpha(t.palette.grey[500], 0.12)}`,
+                border: (theme) => `2px dashed ${alpha(theme.palette.grey[500], 0.12)}`,
                 boxShadow: 'none',
               }}
             >
               <Iconify icon="mdi:group" width={40} sx={{ color: 'text.disabled', mb: 1 }} />
               <Typography variant="body2" color="text.secondary">
-                Sin grupos. Crea grupos para organizar los equipos.
+                {t('label_no_groups_create_hint')}
               </Typography>
             </Card>
           ) : (
@@ -282,8 +297,8 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
               }}
             >
               {groups.map((group, gi) => {
-                const groupTeams = teams.filter((t) =>
-                  group.teams?.some((gt) => gt.team_id === t.id)
+                const groupTeams = teams.filter((team) =>
+                  group.teams?.some((gt) => gt.team_id === team.id)
                 );
 
                 const accent = GROUP_COLORS[gi % GROUP_COLORS.length];
@@ -295,7 +310,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                       p: 0,
                       overflow: 'hidden',
                       boxShadow: 'none',
-                      border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+                      border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
                     }}
                   >
                     {/* Colored header */}
@@ -306,8 +321,9 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                       sx={{
                         px: 2,
                         py: 1.25,
-                        bgcolor: (t) => alpha(t.palette[accent].main, 0.06),
-                        borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+                        bgcolor: (theme) => alpha(theme.palette[accent].main, 0.06),
+                        borderBottom: (theme) =>
+                          `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
                       }}
                     >
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -321,7 +337,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                         />
                         <Typography variant="subtitle2">{group.name}</Typography>
                         <Chip
-                          label={`Cupos: ${group.advancement_slots || 2}`}
+                          label={`${t('label_slots')}: ${group.advancement_slots || 2}`}
                           size="small"
                           color={accent}
                           variant="soft"
@@ -329,7 +345,11 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                         />
                       </Stack>
                       {!isLocked && (
-                        <IconButton size="small" onClick={() => handleDeleteGroup(group.id)} sx={{ color: 'text.disabled' }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteGroup(group.id)}
+                          sx={{ color: 'text.disabled' }}
+                        >
                           <Iconify icon="solar:trash-bin-trash-bold" width={14} />
                         </IconButton>
                       )}
@@ -338,31 +358,36 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                     {/* Team list */}
                     <Stack sx={{ px: 2, py: 1.5 }}>
                       {groupTeams.length === 0 ? (
-                        <Typography variant="caption" color="text.disabled" sx={{ py: 1, textAlign: 'center' }}>
-                          Arrastra equipos aquí
+                        <Typography
+                          variant="caption"
+                          color="text.disabled"
+                          sx={{ py: 1, textAlign: 'center' }}
+                        >
+                          {t('label_drag_teams_here')}
                         </Typography>
                       ) : (
                         <Stack spacing={0.75}>
-                          {groupTeams.map((t) => (
-                            <Stack key={t.id} direction="row" alignItems="center" spacing={1.5}>
+                          {groupTeams.map((team) => (
+                            <Stack key={team.id} direction="row" alignItems="center" spacing={1.5}>
                               <Avatar
-                                src={t.logo_url || undefined}
+                                src={team.logo_url || undefined}
                                 sx={{
                                   width: 24,
                                   height: 24,
                                   fontSize: 10,
                                   fontWeight: 700,
-                                  bgcolor: t.primary_color || `${accent}.main`,
+                                  bgcolor: team.primary_color || `${accent}.main`,
                                   color: 'common.white',
                                 }}
                               >
-                                {!t.logo_url && (t.short_name || t.name?.slice(0, 2))?.toUpperCase()}
+                                {!team.logo_url &&
+                                  (team.short_name || team.name?.slice(0, 2))?.toUpperCase()}
                               </Avatar>
                               <Typography variant="body2" sx={{ fontWeight: 500, flex: 1 }} noWrap>
-                                {t.name}
+                                {team.name}
                               </Typography>
                               <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                                {t.short_name || ''}
+                                {team.short_name || ''}
                               </Typography>
                             </Stack>
                           ))}
@@ -383,16 +408,20 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
           sx={{
             p: 6,
             textAlign: 'center',
-            border: (t) => `2px dashed ${alpha(t.palette.grey[500], 0.16)}`,
+            border: (theme) => `2px dashed ${alpha(theme.palette.grey[500], 0.16)}`,
             boxShadow: 'none',
           }}
         >
-          <Iconify icon="mdi:shield-plus-outline" width={56} sx={{ color: 'text.disabled', mb: 2 }} />
+          <Iconify
+            icon="mdi:shield-plus-outline"
+            width={56}
+            sx={{ color: 'text.disabled', mb: 2 }}
+          />
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Sin equipos registrados
+            {t('label_no_teams_registered')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Comienza registrando el primer equipo del torneo.
+            {t('label_start_registering_first_team')}
           </Typography>
           {!isLocked && (
             <Button
@@ -400,7 +429,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
               startIcon={<Iconify icon="mingcute:add-line" />}
               onClick={() => setWizardMode('create')}
             >
-              Registrar primer equipo
+              {t('label_register_first_team')}
             </Button>
           )}
         </Card>
@@ -408,7 +437,12 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
         <Box
           gap={2}
           display="grid"
-          gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(3, 1fr)' }}
+          gridTemplateColumns={{
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)',
+            lg: 'repeat(3, 1fr)',
+          }}
         >
           {teams.map((team) => (
             <TeamOverviewCard
@@ -432,30 +466,37 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
         <DialogTitle sx={{ pb: 1 }}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <Iconify icon="mdi:group" width={24} sx={{ color: 'primary.main' }} />
-            <span>Nuevo Grupo</span>
+            <span>{t('label_new_group')}</span>
           </Stack>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-            Organiza los equipos en grupos para la fase clasificatoria.
+            {t('label_organize_teams_in_groups_hint')}
           </Typography>
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 1 }}>
             <TextField
               fullWidth
-              label="Nombre del Grupo"
+              label={t('label_group_name')}
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Grupo A"
+              placeholder={t('label_group_a_example')}
               autoFocus
               InputProps={{
                 startAdornment: (
-                  <Iconify icon="mdi:label-outline" width={20} sx={{ mr: 1, color: 'text.disabled' }} />
+                  <Iconify
+                    icon="mdi:label-outline"
+                    width={20}
+                    sx={{ mr: 1, color: 'text.disabled' }}
+                  />
                 ),
               }}
             />
             <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1.5, display: 'block' }}>
-                Cupos de clasificación (avanzan a siguiente ronda)
+              <Typography
+                variant="caption"
+                sx={{ color: 'text.secondary', mb: 1.5, display: 'block' }}
+              >
+                {t('label_classification_slots_hint')}
               </Typography>
               <Stack direction="row" spacing={1}>
                 {[1, 2, 3, 4].map((n) => (
@@ -468,20 +509,32 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
                       textAlign: 'center',
                       cursor: 'pointer',
                       border: '1.5px solid',
-                      borderColor: groupSlots === n ? 'primary.main' : (t) => alpha(t.palette.grey[500], 0.16),
-                      bgcolor: groupSlots === n ? (t) => alpha(t.palette.primary.main, 0.08) : 'transparent',
+                      borderColor:
+                        groupSlots === n
+                          ? 'primary.main'
+                          : (theme) => alpha(theme.palette.grey[500], 0.16),
+                      bgcolor:
+                        groupSlots === n
+                          ? (theme) => alpha(theme.palette.primary.main, 0.08)
+                          : 'transparent',
                       boxShadow: 'none',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        borderColor: (t) => alpha(t.palette.primary.main, 0.4),
+                        borderColor: (theme) => alpha(theme.palette.primary.main, 0.4),
                       },
                     }}
                   >
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: groupSlots === n ? 'primary.main' : 'text.primary' }}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 700,
+                        color: groupSlots === n ? 'primary.main' : 'text.primary',
+                      }}
+                    >
                       {n}
                     </Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      equipo{n > 1 ? 's' : ''}
+                      {n > 1 ? t('word_teams_lowercase') : t('word_team_lowercase')}
                     </Typography>
                   </Card>
                 ))}
@@ -491,7 +544,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button variant="outlined" color="inherit" onClick={() => setGroupDialog(false)}>
-            Cancelar
+            {t('cancel')}
           </Button>
           <Button
             variant="contained"
@@ -499,7 +552,7 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
             disabled={!groupName}
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Crear grupo
+            {t('label_create_group')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -511,20 +564,22 @@ export function TeamList({ tournamentId, tournament, teams, groups }) {
 // INVITATION BADGE
 // ======================================================================
 
+// label values below are i18n keys, resolved via t() at render time.
 const INVITATION_BADGE_CONFIG = {
-  pending:  { label: 'Pendiente', color: 'warning' },
-  accepted: { label: 'Aceptada',  color: 'success' },
-  expired:  { label: 'Expirada',  color: 'default' },
-  revoked:  { label: 'Revocada',  color: 'error'   },
+  pending: { label: 'pending', color: 'warning' },
+  accepted: { label: 'label_invitation_accepted', color: 'success' },
+  expired: { label: 'label_invitation_expired', color: 'default' },
+  revoked: { label: 'label_invitation_revoked', color: 'error' },
 };
 
 function InvitationBadge({ invitation }) {
+  const { t } = useTranslation();
   if (!invitation) return null;
   const cfg = INVITATION_BADGE_CONFIG[invitation.status];
   if (!cfg) return null;
   return (
     <Chip
-      label={cfg.label}
+      label={t(cfg.label)}
       size="small"
       color={cfg.color}
       variant="soft"
@@ -537,77 +592,101 @@ function InvitationBadge({ invitation }) {
 // TEAM OVERVIEW CARD
 // ======================================================================
 
-function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invitation, onEdit, onDelete, onAssignGroup }) {
+function TeamOverviewCard({
+  team,
+  tournamentId,
+  groups,
+  isLocked,
+  isAdmin,
+  invitation,
+  onEdit,
+  onDelete,
+  onAssignGroup,
+}) {
+  const { t } = useTranslation();
   const { players = [] } = useGetPlayers(tournamentId, team.id);
 
   // ── Invitation actions menu ──
   const popover = usePopover();
   const [invLoading, setInvLoading] = useState(false);
 
-  const handleResend = useCallback(async (e) => {
-    e.stopPropagation();
-    popover.onClose();
-    setInvLoading(true);
-    try {
-      await resendInvitation({ tournamentId, teamId: team.id });
-      toast.success('Invitación reenviada');
-    } catch (err) {
-      toast.error(err?.message || 'Error al reenviar invitación');
-    } finally {
-      setInvLoading(false);
-    }
-  }, [tournamentId, team.id, popover]);
+  const handleResend = useCallback(
+    async (e) => {
+      e.stopPropagation();
+      popover.onClose();
+      setInvLoading(true);
+      try {
+        await resendInvitation({ tournamentId, teamId: team.id });
+        toast.success(t('label_invitation_resent'));
+      } catch (err) {
+        toast.error(err?.message || t('label_error_resending_invitation'));
+      } finally {
+        setInvLoading(false);
+      }
+    },
+    [tournamentId, team.id, popover, t]
+  );
 
-  const handleRevoke = useCallback(async (e) => {
-    e.stopPropagation();
-    popover.onClose();
-    setInvLoading(true);
-    try {
-      await revokeInvitation({ tournamentId, teamId: team.id });
-      toast.success('Invitación revocada');
-    } catch (err) {
-      toast.error(err?.message || 'Error al revocar invitación');
-    } finally {
-      setInvLoading(false);
-    }
-  }, [tournamentId, team.id, popover]);
+  const handleRevoke = useCallback(
+    async (e) => {
+      e.stopPropagation();
+      popover.onClose();
+      setInvLoading(true);
+      try {
+        await revokeInvitation({ tournamentId, teamId: team.id });
+        toast.success(t('label_invitation_revoked_success'));
+      } catch (err) {
+        toast.error(err?.message || t('label_error_revoking_invitation'));
+      } finally {
+        setInvLoading(false);
+      }
+    },
+    [tournamentId, team.id, popover, t]
+  );
 
-  const currentGroupId = groups?.find((g) => g.teams?.some((gt) => gt.team_id === team.id))?.id || '';
+  const currentGroupId =
+    groups?.find((g) => g.teams?.some((gt) => gt.team_id === team.id))?.id || '';
   const currentGroup = groups?.find((g) => g.id === currentGroupId);
   const initials = team.short_name || team.name?.slice(0, 2)?.toUpperCase() || '?';
 
   // Count total uploaded documents across all types
-  const totalDocs = Object.values(team.documents || {}).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+  const totalDocs = Object.values(team.documents || {}).reduce(
+    (sum, arr) => sum + (arr?.length || 0),
+    0
+  );
 
   // Setup steps with completion status
   const setupSteps = [
     {
       key: 'identity',
-      label: 'Identidad',
+      label: t('label_identity'),
       icon: 'mdi:shield-check-outline',
       done: !!team.name && !!team.short_name,
-      detail: team.short_name ? `${team.name} (${team.short_name})` : team.name || 'Pendiente',
+      detail: team.short_name ? `${team.name} (${team.short_name})` : team.name || t('pending'),
     },
     {
       key: 'roster',
-      label: 'Plantilla',
+      label: t('label_squad'),
       icon: 'mdi:account-group-outline',
       done: players.length >= 30,
-      detail: `${players.length}/30 jugadores`,
+      detail: `${players.length}/30 ${t('word_players_lowercase')}`,
     },
     {
       key: 'documents',
-      label: 'Documentos',
+      label: t('label_documents'),
       icon: 'mdi:file-document-outline',
       done: totalDocs > 0,
-      detail: totalDocs > 0 ? `${totalDocs} archivo${totalDocs !== 1 ? 's' : ''}` : 'Pendiente',
+      detail:
+        totalDocs > 0
+          ? `${totalDocs} ${totalDocs !== 1 ? t('label_files_plural') : t('label_file_singular')}`
+          : t('pending'),
     },
     {
       key: 'rules',
-      label: 'Reglamento',
+      label: t('label_rules'),
       icon: 'mdi:gavel',
       done: !!team.rules_accepted,
-      detail: team.rules_accepted ? 'Aceptado' : 'Sin aceptar',
+      detail: team.rules_accepted ? t('label_accepted') : t('label_not_accepted'),
     },
   ];
 
@@ -622,10 +701,12 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
         overflow: 'hidden',
         cursor: isLocked ? 'default' : 'pointer',
         transition: 'all 0.2s',
-        '&:hover': isLocked ? {} : {
-          boxShadow: (t) => t.shadows[8],
-          transform: 'translateY(-2px)',
-        },
+        '&:hover': isLocked
+          ? {}
+          : {
+              boxShadow: (theme) => theme.shadows[8],
+              transform: 'translateY(-2px)',
+            },
       }}
       onClick={isLocked ? undefined : onEdit}
     >
@@ -655,7 +736,13 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
                 {team.name}
               </Typography>
               {currentGroup && (
-                <Chip label={currentGroup.name} size="small" color="primary" variant="soft" sx={{ height: 18, fontSize: 10 }} />
+                <Chip
+                  label={currentGroup.name}
+                  size="small"
+                  color="primary"
+                  variant="soft"
+                  sx={{ height: 18, fontSize: 10 }}
+                />
               )}
             </Stack>
             <Stack direction="row" alignItems="center" spacing={0.75}>
@@ -669,17 +756,33 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
           {/* Actions */}
           {!isLocked && (
             <Stack direction="row" spacing={0.25}>
-              <IconButton size="small" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              >
                 <Iconify icon="solar:pen-bold" width={14} />
               </IconButton>
-              <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
                 <Iconify icon="solar:trash-bin-trash-bold" width={14} />
               </IconButton>
               {isAdmin && team.contact_email && (
                 <IconButton
                   size="small"
                   disabled={invLoading}
-                  onClick={(e) => { e.stopPropagation(); popover.onOpen(e); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    popover.onOpen(e);
+                  }}
                   sx={{ color: 'text.secondary' }}
                 >
                   <Iconify icon="eva:more-vertical-fill" width={14} />
@@ -692,12 +795,12 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
           <CustomPopover open={popover.open} anchorEl={popover.anchorEl} onClose={popover.onClose}>
             <MenuItem onClick={handleResend} sx={{ fontSize: 13 }}>
               <Iconify icon="mdi:email-sync-outline" width={16} sx={{ mr: 1 }} />
-              Reenviar invitación
+              {t('label_resend_invitation')}
             </MenuItem>
             {invitation && invitation.status !== 'revoked' && (
               <MenuItem onClick={handleRevoke} sx={{ fontSize: 13, color: 'error.main' }}>
                 <Iconify icon="mdi:email-remove-outline" width={16} sx={{ mr: 1 }} />
-                Revocar invitación
+                {t('label_revoke_invitation')}
               </MenuItem>
             )}
           </CustomPopover>
@@ -713,7 +816,7 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
                 width: 60,
                 height: 4,
                 borderRadius: 1,
-                bgcolor: (t) => alpha(t.palette.grey[500], 0.1),
+                bgcolor: (theme) => alpha(theme.palette.grey[500], 0.1),
                 '& .MuiLinearProgress-bar': {
                   borderRadius: 1,
                   bgcolor: progressPercent === 100 ? 'success.main' : 'primary.main',
@@ -721,8 +824,14 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
               }}
             />
           </Box>
-          <Typography variant="caption" sx={{ color: progressPercent === 100 ? 'success.main' : 'text.secondary', fontWeight: 600 }}>
-            {completedSteps}/{totalSteps} pasos
+          <Typography
+            variant="caption"
+            sx={{
+              color: progressPercent === 100 ? 'success.main' : 'text.secondary',
+              fontWeight: 600,
+            }}
+          >
+            {completedSteps}/{totalSteps} {t('label_steps')}
           </Typography>
         </Stack>
 
@@ -739,8 +848,8 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
                   alignItems: 'center',
                   justifyContent: 'center',
                   bgcolor: step.done
-                    ? (t) => alpha(t.palette.success.main, 0.12)
-                    : (t) => alpha(t.palette.grey[500], 0.08),
+                    ? (theme) => alpha(theme.palette.success.main, 0.12)
+                    : (theme) => alpha(theme.palette.grey[500], 0.08),
                   flexShrink: 0,
                 }}
               >
@@ -760,7 +869,10 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
               >
                 {step.label}
               </Typography>
-              <Typography variant="caption" sx={{ color: step.done ? 'success.main' : 'text.disabled', fontSize: 10 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: step.done ? 'success.main' : 'text.disabled', fontSize: 10 }}
+              >
                 {step.detail}
               </Typography>
             </Stack>
@@ -775,7 +887,7 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
               select
               size="small"
               fullWidth
-              label="Grupo"
+              label={t('label_group')}
               value={currentGroupId}
               onChange={(e) => {
                 e.stopPropagation();
@@ -784,7 +896,7 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
               onClick={(e) => e.stopPropagation()}
               sx={{ '& .MuiInputBase-root': { fontSize: 12 } }}
             >
-              <MenuItem value="">Sin grupo</MenuItem>
+              <MenuItem value="">{t('label_no_group')}</MenuItem>
               {groups.map((g, gi) => (
                 <MenuItem key={g.id} value={g.id}>
                   <Stack direction="row" alignItems="center" spacing={1}>
@@ -808,5 +920,3 @@ function TeamOverviewCard({ team, tournamentId, groups, isLocked, isAdmin, invit
     </Card>
   );
 }
-
-

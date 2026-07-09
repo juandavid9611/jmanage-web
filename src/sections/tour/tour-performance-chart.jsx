@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -9,6 +11,7 @@ import { Chart, useChart } from 'src/components/chart';
 // ----------------------------------------------------------------------
 
 export function TourPerformanceChart({ bookers = [] }) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   const contributors = bookers
@@ -16,8 +19,8 @@ export function TourPerformanceChart({ bookers = [] }) {
     .sort((a, b) => b.goals + b.assists - (a.goals + a.assists))
     .slice(0, 8);
 
-  const names   = contributors.map((b) => b.name.split(' ')[0]);
-  const goals   = contributors.map((b) => b.goals);
+  const names = contributors.map((b) => b.name.split(' ')[0]);
+  const goals = contributors.map((b) => b.goals);
   const assists = contributors.map((b) => b.assists);
 
   const chartOptions = useChart({
@@ -67,13 +70,13 @@ export function TourPerformanceChart({ bookers = [] }) {
           justifyContent: 'center',
           gap: 1,
           minHeight: 160,
-          bgcolor: (t) => alpha(t.palette.grey[500], 0.04),
-          border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.2)}`,
+          bgcolor: alpha(theme.palette.grey[500], 0.04),
+          border: `1px dashed ${alpha(theme.palette.grey[500], 0.2)}`,
         }}
       >
         <Iconify icon="mdi:soccer" width={32} sx={{ color: 'text.disabled' }} />
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Sin anotaciones registradas
+          {t('label_no_scoring_recorded')}
         </Typography>
       </Card>
     );
@@ -84,10 +87,10 @@ export function TourPerformanceChart({ bookers = [] }) {
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 1 }}>
         <Stack spacing={0.25}>
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Aportaciones por Jugador
+            {t('label_contributions_by_player')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Goles y asistencias en este partido
+            {t('label_goals_and_assists_in_match')}
           </Typography>
         </Stack>
         <Iconify icon="mdi:chart-bar" width={20} sx={{ color: 'text.disabled', mt: 0.5 }} />
@@ -96,8 +99,8 @@ export function TourPerformanceChart({ bookers = [] }) {
       <Chart
         type="bar"
         series={[
-          { name: 'Goles', data: goals },
-          { name: 'Asistencias', data: assists },
+          { name: t('word_goals'), data: goals },
+          { name: t('label_assists'), data: assists },
         ]}
         options={chartOptions}
         height={Math.max(contributors.length * 52, 160)}

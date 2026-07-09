@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { useParams } from 'src/routes/hooks';
 
@@ -9,9 +10,12 @@ import { OrderDetailsView } from 'src/sections/order/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Order details | Dashboard - ${CONFIG.appName}` };
-
 export default function Page() {
+  const { t } = useTranslation();
+  const metadata = {
+    title: `${t('page_title_order_details')} | ${t('label_dashboard')} - ${CONFIG.appName}`,
+  };
+
   const { id = '' } = useParams();
 
   const { order, orderLoading, orderError } = useGetOrder(id);

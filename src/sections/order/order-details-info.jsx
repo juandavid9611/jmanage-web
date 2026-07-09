@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -18,16 +20,16 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 const PAYMENT_STATUS_LABEL = {
-  paid: { text: 'Pagado', color: 'success' },
-  pending: { text: 'Pendiente', color: 'warning' },
-  overdue: { text: 'Vencido', color: 'error' },
-  canceled: { text: 'Cancelado', color: 'default' },
-  approval_pending: { text: 'Aprobando', color: 'info' },
+  paid: { text: 'paid', color: 'success' },
+  pending: { text: 'pending', color: 'warning' },
+  overdue: { text: 'overdue', color: 'error' },
+  canceled: { text: 'label_canceled', color: 'default' },
+  approval_pending: { text: 'label_approving', color: 'info' },
 };
 
 const PAYMENT_METHOD_LABEL = {
-  cash: { text: 'Efectivo', icon: 'solar:wad-of-money-bold' },
-  creditcard: { text: 'Tarjeta crédito / débito', icon: 'solar:card-bold' },
+  cash: { text: 'word_cash', icon: 'solar:wad-of-money-bold' },
+  creditcard: { text: 'word_credit_debit_card', icon: 'solar:card-bold' },
   paypal: { text: 'PayPal', icon: 'logos:paypal' },
 };
 
@@ -49,13 +51,14 @@ export function OrderDetailsInfo({
   shippingAddress,
   paymentRequestId,
 }) {
+  const { t } = useTranslation();
   const { paymentRequest } = useGetPaymentRequest(paymentRequestId);
 
   const paymentMethod = PAYMENT_METHOD_LABEL[payment?.payment];
 
   const renderCustomer = (
     <>
-      <CardHeader title="Cliente" />
+      <CardHeader title={t('label_customer')} />
       <Stack direction="row" sx={{ p: 3 }}>
         <Avatar
           alt={customer?.name}
@@ -78,10 +81,10 @@ export function OrderDetailsInfo({
 
   const renderDelivery = (
     <>
-      <CardHeader title="Entrega" />
+      <CardHeader title={t('label_delivery')} />
       <Stack spacing={1.5} sx={{ p: 3 }}>
-        <Row label="Tipo">{delivery?.deliveryType}</Row>
-        <Row label="Costo">
+        <Row label={t('word_type')}>{delivery?.deliveryType && t(delivery.deliveryType)}</Row>
+        <Row label={t('word_cost')}>
           {delivery?.shipmentAmount != null
             ? `$${Number(delivery.shipmentAmount).toLocaleString()}`
             : '—'}
@@ -92,23 +95,23 @@ export function OrderDetailsInfo({
 
   const renderShipping = (
     <>
-      <CardHeader title="Dirección" />
+      <CardHeader title={t('address')} />
       <Stack spacing={1.5} sx={{ p: 3 }}>
-        <Row label="Dirección">{shippingAddress?.fullAddress}</Row>
-        {shippingAddress?.company && <Row label="Empresa">{shippingAddress.company}</Row>}
-        {customer?.phoneNumber && <Row label="Teléfono">{customer.phoneNumber}</Row>}
+        <Row label={t('address')}>{shippingAddress?.fullAddress}</Row>
+        {shippingAddress?.company && <Row label={t('company')}>{shippingAddress.company}</Row>}
+        {customer?.phoneNumber && <Row label={t('phone_number')}>{customer.phoneNumber}</Row>}
       </Stack>
     </>
   );
 
   const renderPayment = (
     <>
-      <CardHeader title="Método de pago" />
+      <CardHeader title={t('label_payment_method')} />
       <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 3 }}>
         {paymentMethod ? (
           <>
             <Iconify icon={paymentMethod.icon} width={24} />
-            <Typography variant="body2">{paymentMethod.text}</Typography>
+            <Typography variant="body2">{t(paymentMethod.text)}</Typography>
           </>
         ) : (
           <Typography variant="body2" color="text.secondary">
@@ -122,7 +125,7 @@ export function OrderDetailsInfo({
   const renderPaymentRequest = paymentRequestId ? (
     <>
       <CardHeader
-        title="Solicitud de pago"
+        title={t('label_payment_request')}
         action={
           <Button
             component={RouterLink}
@@ -130,24 +133,26 @@ export function OrderDetailsInfo({
             size="small"
             endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
           >
-            Ver
+            {t('label_view')}
           </Button>
         }
       />
       <Stack spacing={1.5} sx={{ p: 3 }}>
-        <Row label="Estado">
+        <Row label={t('status')}>
           {paymentRequest?.status ? (
             <Label color={PAYMENT_STATUS_LABEL[paymentRequest.status]?.color || 'default'}>
-              {PAYMENT_STATUS_LABEL[paymentRequest.status]?.text || paymentRequest.status}
+              {PAYMENT_STATUS_LABEL[paymentRequest.status]?.text
+                ? t(PAYMENT_STATUS_LABEL[paymentRequest.status].text)
+                : paymentRequest.status}
             </Label>
           ) : null}
         </Row>
-        <Row label="Monto">
+        <Row label={t('amount')}>
           {paymentRequest?.totalAmount != null
             ? `$${Number(paymentRequest.totalAmount).toLocaleString()}`
             : null}
         </Row>
-        <Row label="Vencimiento">{paymentRequest?.dueDate}</Row>
+        <Row label={t('due_date')}>{paymentRequest?.dueDate}</Row>
       </Stack>
     </>
   ) : null;

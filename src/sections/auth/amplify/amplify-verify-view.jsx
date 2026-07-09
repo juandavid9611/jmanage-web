@@ -1,6 +1,7 @@
 import { z as zod } from 'zod';
-import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Link from '@mui/material/Link';
@@ -24,21 +25,24 @@ import { confirmSignUp, resendSignUpCode } from 'src/auth/context/amplify';
 
 // ----------------------------------------------------------------------
 
-export const VerifySchema = zod.object({
-  code: zod
-    .string()
-    .min(1, { message: 'El código es requerido!' })
-    .min(6, { message: 'El código debe tener al menos 6 caracteres!' }),
-  email: zod
-    .string()
-    .min(1, { message: 'El correo es requerido!' })
-    .email({ message: 'El correo debe ser una dirección de correo electrónico válida!' }),
-});
+export function getVerifySchema(t) {
+  return zod.object({
+    code: zod
+      .string()
+      .min(1, { message: t('code_required') })
+      .min(6, { message: t('code_min') }),
+    email: zod
+      .string()
+      .min(1, { message: t('email_required') })
+      .email({ message: t('email_invalid') }),
+  });
+}
 
 // ----------------------------------------------------------------------
 
 export function AmplifyVerifyView() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const searchParams = useSearchParams();
 
@@ -47,6 +51,8 @@ export function AmplifyVerifyView() {
   const { countdown, counting, startCountdown } = useCountdownSeconds(60);
 
   const defaultValues = { code: '', email: email || '' };
+
+  const VerifySchema = useMemo(() => getVerifySchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(VerifySchema),
@@ -85,10 +91,10 @@ export function AmplifyVerifyView() {
       <EmailInboxIcon sx={{ mx: 'auto' }} />
 
       <Stack spacing={1} sx={{ mt: 3, mb: 5, textAlign: 'center', whiteSpace: 'pre-line' }}>
-        <Typography variant="h5">¡Por favor verifica tu correo!</Typography>
+        <Typography variant="h5">{t('verify_email_heading')}</Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {`Hemos enviado un código de confirmación de 6 dígitos a tu correo. \nPor favor ingresa el código en el cuadro de abajo para verificar tu correo.`}
+          {t('verify_email_body')}
         </Typography>
       </Stack>
     </>
@@ -98,8 +104,8 @@ export function AmplifyVerifyView() {
     <Stack spacing={3}>
       <Field.Text
         name="email"
-        label="Dirección de correo electrónico"
-        placeholder="ejemplo@gmail.com"
+        label={t('email_address')}
+        placeholder={t('email_placeholder_example')}
         InputLabelProps={{ shrink: true }}
       />
 
@@ -111,13 +117,13 @@ export function AmplifyVerifyView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Verificando..."
+        loadingIndicator={t('verifying')}
       >
-        Verificar
+        {t('verify')}
       </LoadingButton>
 
       <Typography variant="body2" sx={{ mx: 'auto' }}>
-        {`¿No tienes un código? `}
+        {`${t('no_code_yet')} `}
         <Link
           variant="subtitle2"
           onClick={handleResendCode}
@@ -126,7 +132,7 @@ export function AmplifyVerifyView() {
             ...(counting && { color: 'text.disabled', pointerEvents: 'none' }),
           }}
         >
-          Reenviar código {counting && `(${countdown}s)`}
+          {t('resend_code')} {counting && `(${countdown}s)`}
         </Link>
       </Typography>
 
@@ -138,7 +144,7 @@ export function AmplifyVerifyView() {
         sx={{ gap: 0.5, alignSelf: 'center', alignItems: 'center', display: 'inline-flex' }}
       >
         <Iconify width={16} icon="eva:arrow-ios-back-fill" />
-        Regresar a iniciar sesión
+        {t('back_to_sign_in')}
       </Link>
     </Stack>
   );

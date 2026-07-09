@@ -3,22 +3,28 @@ import { _tags } from './assets';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 export const TOUR_DETAILS_TABS = [
-  { label: 'Tour content', value: 'content' },
-  { label: 'Booker', value: 'bookers' },
+  { label: 'label_tour_content', value: 'content' },
+  { label: 'label_booker', value: 'bookers' },
 ];
 
+// label values below are i18n keys, resolved via t() at render time.
 export const TOUR_SORT_OPTIONS = [
-  { label: 'Latest', value: 'latest' },
-  { label: 'Popular', value: 'popular' },
-  { label: 'Oldest', value: 'oldest' },
+  { label: 'label_latest', value: 'latest' },
+  { label: 'label_popular', value: 'popular' },
+  { label: 'label_oldest', value: 'oldest' },
 ];
 
+// label values below are i18n keys, resolved via t() at render time.
 export const TOUR_PUBLISH_OPTIONS = [
-  { label: 'Published', value: 'published' },
-  { label: 'Draft', value: 'draft' },
+  { label: 'label_published', value: 'published' },
+  { label: 'draft', value: 'draft' },
 ];
 
+// label === value here since these values are stored/matched as-is (tour.services).
+// 'training'/'match' resolve through the existing generic keys; proper nouns
+// (league/workspace names) fall through t()'s missing-key fallback unchanged.
 export const TOUR_SERVICE_OPTIONS = [
   { label: 'Vittoria Masculino', value: 'Vittoria Masculino' },
   { label: 'Vittoria Femenino', value: 'Vittoria Femenino' },

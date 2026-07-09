@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { CONFIG } from 'src/config-global';
 import { AuthCenteredLayout } from 'src/layouts/auth-centered';
@@ -7,9 +8,10 @@ import { InvitationAcceptView } from 'src/sections/invitation/invitation-accept-
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Aceptar invitación | ${CONFIG.site.name}` };
-
 export default function InvitationAcceptPage() {
+  const { t } = useTranslation();
+  const metadata = { title: `${t('page_title_accept_invitation')} | ${CONFIG.site.name}` };
+
   return (
     <>
       <Helmet>

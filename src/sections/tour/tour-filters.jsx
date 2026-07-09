@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -23,6 +24,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 // ----------------------------------------------------------------------
 
 export function TourFilters({ open, onOpen, onClose, filters, options, canReset, dateError }) {
+  const { t } = useTranslation();
+
   const handleFilterServices = useCallback(
     (newValue) => {
       const checked = filters.state.services.includes(newValue)
@@ -59,10 +62,10 @@ export function TourFilters({ open, onOpen, onClose, filters, options, canReset,
     <>
       <Box display="flex" alignItems="center" sx={{ py: 2, pr: 1, pl: 2.5 }}>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Filters
+          {t('filters')}
         </Typography>
 
-        <Tooltip title="Reset">
+        <Tooltip title={t('label_reset')}>
           <IconButton onClick={filters.onResetState}>
             <Badge color="error" variant="dot" invisible={!canReset}>
               <Iconify icon="solar:restart-bold" />
@@ -82,24 +85,24 @@ export function TourFilters({ open, onOpen, onClose, filters, options, canReset,
   const renderDateRange = (
     <Box display="flex" flexDirection="column">
       <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-        Durations
+        {t('label_durations')}
       </Typography>
 
       <DatePicker
-        label="Start date"
+        label={t('start_date')}
         value={filters.state.startDate}
         onChange={handleFilterStartDate}
         sx={{ mb: 2.5 }}
       />
 
       <DatePicker
-        label="End date"
+        label={t('end_date')}
         value={filters.state.endDate}
         onChange={handleFilterEndDate}
         slotProps={{
           textField: {
             error: dateError,
-            helperText: dateError ? 'End date must be later than start date' : null,
+            helperText: dateError ? t('label_end_date_must_be_later') : null,
           },
         }}
       />
@@ -109,7 +112,7 @@ export function TourFilters({ open, onOpen, onClose, filters, options, canReset,
   const renderTourGuide = (
     <Box display="flex" flexDirection="column">
       <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-        Tour guide
+        {t('label_tour_guide')}
       </Typography>
 
       <Autocomplete
@@ -119,7 +122,9 @@ export function TourFilters({ open, onOpen, onClose, filters, options, canReset,
         value={filters.state.tourGuides}
         onChange={(event, newValue) => handleFilterTourGuide(newValue)}
         getOptionLabel={(option) => option.name}
-        renderInput={(params) => <TextField placeholder="Select Tour Guides" {...params} />}
+        renderInput={(params) => (
+          <TextField placeholder={t('label_select_tour_guides')} {...params} />
+        )}
         renderOption={(props, tourGuide) => (
           <li {...props} key={tourGuide.id}>
             <Avatar
@@ -151,7 +156,7 @@ export function TourFilters({ open, onOpen, onClose, filters, options, canReset,
   const renderServices = (
     <Box display="flex" flexDirection="column">
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Services
+        {t('label_services')}
       </Typography>
       {options.services.map((option) => (
         <FormControlLabel
@@ -162,7 +167,7 @@ export function TourFilters({ open, onOpen, onClose, filters, options, canReset,
               onClick={() => handleFilterServices(option)}
             />
           }
-          label={option}
+          label={t(option)}
         />
       ))}
     </Box>
@@ -180,7 +185,7 @@ export function TourFilters({ open, onOpen, onClose, filters, options, canReset,
         }
         onClick={onOpen}
       >
-        Filters
+        {t('filters')}
       </Button>
 
       <Drawer

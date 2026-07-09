@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Chip from '@mui/material/Chip';
 
@@ -7,6 +8,7 @@ import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-r
 // ----------------------------------------------------------------------
 
 export function UserTableFiltersResult({ filters, onResetPage, totalResults, sx }) {
+  const { t } = useTranslation();
   const handleRemoveKeyword = useCallback(() => {
     onResetPage();
     filters.setState({ name: '' });
@@ -34,22 +36,22 @@ export function UserTableFiltersResult({ filters, onResetPage, totalResults, sx 
 
   return (
     <FiltersResult totalResults={totalResults} onReset={handleReset} sx={sx}>
-      <FiltersBlock label="Estado:" isShow={filters.state.status !== 'all'}>
+      <FiltersBlock label={t('filter_label_status')} isShow={filters.state.status !== 'all'}>
         <Chip
           {...chipProps}
-          label={filters.state.status}
+          label={t(filters.state.status)}
           onDelete={handleRemoveStatus}
           sx={{ textTransform: 'capitalize' }}
         />
       </FiltersBlock>
 
-      <FiltersBlock label="Grupo:" isShow={!!filters.state.group.length}>
+      <FiltersBlock label={t('filter_label_group')} isShow={!!filters.state.group.length}>
         {filters.state.group.map((item) => (
           <Chip {...chipProps} key={item} label={item} onDelete={() => handleRemoveGroup(item)} />
         ))}
       </FiltersBlock>
 
-      <FiltersBlock label="Palabra clave:" isShow={!!filters.state.name}>
+      <FiltersBlock label={t('filter_label_keyword')} isShow={!!filters.state.name}>
         <Chip {...chipProps} label={filters.state.name} onDelete={handleRemoveKeyword} />
       </FiltersBlock>
     </FiltersResult>

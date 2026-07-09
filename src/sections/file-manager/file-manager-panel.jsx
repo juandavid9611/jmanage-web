@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -10,15 +12,9 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function FileManagerPanel({
-  sx,
-  link,
-  title,
-  subtitle,
-  collapse,
-  onCollapse,
-  ...other
-}) {
+export function FileManagerPanel({ sx, link, title, subtitle, collapse, onCollapse, ...other }) {
+  const { t } = useTranslation();
+
   return (
     <Stack direction="row" alignItems="center" sx={{ mb: 3, ...sx }} {...other}>
       <Stack flexGrow={1}>
@@ -37,7 +33,7 @@ export function FileManagerPanel({
           color="inherit"
           endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
         >
-          View all
+          {t('label_view_all')}
         </Button>
       )}
 

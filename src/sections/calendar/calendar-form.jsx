@@ -1,8 +1,8 @@
 import { z as zod } from 'zod';
-import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
+import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -32,22 +32,24 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-export const EventSchema = zod.object({
-  title: zod
-    .string()
-    .min(1, { message: 'Title is required!' })
-    .max(100, { message: 'Title must be less than 100 characters' }),
-  location: zod.string().max(100, { message: 'Location must be less than 100 characters' }),
-  description: zod.string().max(300, { message: 'Description must be less than 300 characters' }),
-  // Not required
-  color: zod.string(),
-  allDay: zod.boolean(),
-  createTour: zod.boolean(),
-  start: zod.union([zod.string(), zod.number()]),
-  end: zod.union([zod.string(), zod.number()]),
-  category: zod.string().min(1, { message: 'Category is required!' }),
-  group: zod.string().min(1, { message: 'Group is required!' }),
-});
+export function getEventSchema(t) {
+  return zod.object({
+    title: zod
+      .string()
+      .min(1, { message: t('title_required') })
+      .max(100, { message: t('label_title_max_100') }),
+    location: zod.string().max(100, { message: t('label_location_max_100') }),
+    description: zod.string().max(300, { message: t('label_description_max_300') }),
+    // Not required
+    color: zod.string(),
+    allDay: zod.boolean(),
+    createTour: zod.boolean(),
+    start: zod.union([zod.string(), zod.number()]),
+    end: zod.union([zod.string(), zod.number()]),
+    category: zod.string().min(1, { message: t('category_required') }),
+    group: zod.string().min(1, { message: t('group_required') }),
+  });
+}
 
 // ----------------------------------------------------------------------
 
@@ -60,6 +62,8 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const [isParticipating, setIsParticipating] = useState(
     (currentEvent?.participants && user?.id in currentEvent.participants) || false
   );
+  const EventSchema = useMemo(() => getEventSchema(t), [t]);
+
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(EventSchema),
@@ -99,10 +103,10 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       if (!dateError) {
         if (currentEvent?.id) {
           await updateEvent(eventData, selectedWorkspace?.id);
-          toast.success('Update success!');
+          toast.success(t('update_success'));
         } else {
           await createEvent(eventData, selectedWorkspace?.id);
-          toast.success('Create success!');
+          toast.success(t('create_success'));
         }
         onClose();
         reset();
@@ -117,35 +121,35 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       try {
         setIsParticipating(event.target.checked);
         await participateEvent(`${currentEvent?.id}`, event.target.checked, selectedWorkspace?.id);
-        toast.success('Inscrito satisfactoriamente!');
+        toast.success(t('label_participate_success'));
       } catch (error) {
         console.error(error);
       }
     },
-    [currentEvent?.id, setIsParticipating, selectedWorkspace?.id]
+    [currentEvent?.id, setIsParticipating, selectedWorkspace?.id, t]
   );
 
   const onDelete = useCallback(async () => {
     try {
       await deleteEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
-      toast.success('Delete success!');
+      toast.success(t('delete_success'));
       onClose();
     } catch (error) {
       console.error(error);
     }
-  }, [currentEvent?.id, onClose, selectedWorkspace?.id]);
+  }, [currentEvent?.id, onClose, selectedWorkspace?.id, t]);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
         <Stack spacing={3}>
-          <Field.Text name="title" label="Title" disabled={!isAdminOrCoach} />
+          <Field.Text name="title" label={t('title')} disabled={!isAdminOrCoach} />
 
-          <Field.Text name="location" label="Ubicación" disabled={!isAdminOrCoach} />
+          <Field.Text name="location" label={t('label_location')} disabled={!isAdminOrCoach} />
 
           <Field.Text
             name="description"
-            label="Description"
+            label={t('label_description')}
             multiline
             rows={2}
             disabled={!isAdminOrCoach}
@@ -154,7 +158,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
             <Field.Select
               name="category"
-              label="Category"
+              label={t('category')}
               InputLabelProps={{ shrink: true }}
               disabled={!isAdminOrCoach}
             >
@@ -170,7 +174,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
                 control={
                   <Switch checked={isParticipating} onChange={handleChangeIsParticipating} />
                 }
-                label="Inscribirme"
+                label={t('label_sign_up')}
               />
             )}
           </Stack>
@@ -192,7 +196,11 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
             </Field.Select>
 
             {!currentEvent?.createTour && isAdminOrCoach && (
-               <Field.Switch name="createTour" label="Crear post" disabled={!isAdminOrCoach} />
+              <Field.Switch
+                name="createTour"
+                label={t('label_create_post')}
+                disabled={!isAdminOrCoach}
+              />
             )}
             {currentEvent?.createTour && currentEvent?.tourId && (
               <Button
@@ -203,20 +211,24 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
                   router.push(paths.dashboard.admin.tour.details(currentEvent?.tourId))
                 }
               >
-                Ir a post
+                {t('label_go_to_post')}
               </Button>
             )}
           </Stack>
 
-          <Field.MobileDateTimePicker name="start" label="Start date" disabled={!isAdminOrCoach} />
+          <Field.MobileDateTimePicker
+            name="start"
+            label={t('start_date')}
+            disabled={!isAdminOrCoach}
+          />
 
           <Field.MobileDateTimePicker
             name="end"
-            label="End date"
+            label={t('end_date')}
             slotProps={{
               textField: {
                 error: dateError,
-                helperText: dateError ? 'End date must be later than start date' : null,
+                helperText: dateError ? t('label_end_date_must_be_later') : null,
               },
             }}
             disabled={!isAdminOrCoach}
@@ -239,7 +251,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
       <DialogActions sx={{ flexShrink: 0 }}>
         {!!currentEvent?.id && isAdminOrCoach && (
-          <Tooltip title="Delete event">
+          <Tooltip title={t('label_delete_event')}>
             <IconButton onClick={onDelete}>
               <Iconify icon="solar:trash-bin-trash-bold" />
             </IconButton>
@@ -249,7 +261,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
         <Box sx={{ flexGrow: 1 }} />
 
         <Button variant="outlined" color="inherit" onClick={onClose}>
-          Close
+          {t('label_close')}
         </Button>
 
         {isAdminOrCoach && (

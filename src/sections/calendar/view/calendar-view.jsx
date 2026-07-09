@@ -216,7 +216,7 @@ export function CalendarView() {
         }}
       >
         <DialogTitle sx={{ minHeight: 76 }}>
-          {openForm && <> {currentEvent?.id ? 'Edit' : 'Add'} event</>}
+          {openForm && (currentEvent?.id ? t('label_edit_event') : t('new_event'))}
         </DialogTitle>
 
         <CalendarForm

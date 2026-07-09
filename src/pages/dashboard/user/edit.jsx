@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { useParams } from 'src/routes/hooks';
 
@@ -11,9 +12,12 @@ import { UserEditView } from 'src/sections/user/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `User edit | Dashboard - ${CONFIG.site.name}` };
-
 export default function Page() {
+  const { t } = useTranslation();
+  const metadata = {
+    title: `${t('page_title_user_edit')} | ${t('label_dashboard')} - ${CONFIG.site.name}`,
+  };
+
   const { id = '' } = useParams();
 
   const { user, userLoading } = useGetUser(id);

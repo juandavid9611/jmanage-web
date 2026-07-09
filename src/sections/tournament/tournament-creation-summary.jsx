@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -9,17 +11,19 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const REQUIREMENTS = [
-  { key: 'name', label: 'Nombre del torneo', check: (v) => !!v.name },
-  { key: 'sport', label: 'Deporte', check: (v) => !!v.sport },
-  { key: 'format', label: 'Formato', check: (v) => !!v.type },
-  { key: 'scoring', label: 'Sistema de puntuación', check: () => true },
-  { key: 'tiebreak', label: 'Criterios de desempate', check: () => true },
+  { key: 'name', label: 'label_tournament_name', check: (v) => !!v.name },
+  { key: 'sport', label: 'label_sport', check: (v) => !!v.sport },
+  { key: 'format', label: 'label_format', check: (v) => !!v.type },
+  { key: 'scoring', label: 'label_scoring_system', check: () => true },
+  { key: 'tiebreak', label: 'label_tiebreaker_criteria', check: () => true },
 ];
 
 // ----------------------------------------------------------------------
 
 export function TournamentCreationSummary({ values, structurePreview }) {
+  const { t } = useTranslation();
   // Calculate completeness
   const completedCount = REQUIREMENTS.filter((r) => r.check(values)).length;
   const percentage = Math.round((completedCount / REQUIREMENTS.length) * 100);
@@ -40,7 +44,7 @@ export function TournamentCreationSummary({ values, structurePreview }) {
       <Box>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Configuración completa
+            {t('label_setup_complete')}
           </Typography>
           <Typography
             variant="caption"
@@ -55,7 +59,7 @@ export function TournamentCreationSummary({ values, structurePreview }) {
           sx={{
             height: 3,
             borderRadius: 1,
-            bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+            bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
             '& .MuiLinearProgress-bar': {
               borderRadius: 1,
               bgcolor: 'primary.main',
@@ -69,12 +73,12 @@ export function TournamentCreationSummary({ values, structurePreview }) {
       {/* Structure visual */}
       <Box>
         <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-          Estructura del torneo
+          {t('label_tournament_structure')}
         </Typography>
         <Card
           sx={{
             p: 2,
-            border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+            border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
             boxShadow: 'none',
           }}
         >
@@ -82,15 +86,21 @@ export function TournamentCreationSummary({ values, structurePreview }) {
             spacing={0}
             divider={
               <Box
-                sx={{ borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.06)}` }}
+                sx={{
+                  borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.06)}`,
+                }}
               />
             }
           >
             {(structurePreview?.phases?.length > 0
               ? structurePreview.phases
               : [
-                  { name: 'Inscripción', detail: 'Esperando configuración', active: false },
-                  { name: 'Fase de grupos', detail: '—', active: false },
+                  {
+                    name: t('label_inscription'),
+                    detail: t('label_waiting_for_configuration'),
+                    active: false,
+                  },
+                  { name: t('label_group_stage'), detail: '—', active: false },
                   { name: 'Knockout', detail: '—', active: false },
                 ]
             ).map((phase) => (
@@ -110,7 +120,7 @@ export function TournamentCreationSummary({ values, structurePreview }) {
                       ? 'primary.main'
                       : phase.pending
                         ? 'info.main'
-                        : (t) => alpha(t.palette.grey[500], 0.2),
+                        : (theme) => alpha(theme.palette.grey[500], 0.2),
                     flexShrink: 0,
                   }}
                 />
@@ -138,8 +148,8 @@ export function TournamentCreationSummary({ values, structurePreview }) {
               px: 1.5,
               py: 1,
               borderRadius: 1,
-              bgcolor: (t) => alpha(t.palette.primary.main, 0.04),
-              borderLeft: (t) => `2px solid ${alpha(t.palette.primary.main, 0.3)}`,
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+              borderLeft: (theme) => `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
             }}
           >
             <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
@@ -154,7 +164,7 @@ export function TournamentCreationSummary({ values, structurePreview }) {
       {/* Requirements */}
       <Box>
         <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-          Pendiente
+          {t('pending')}
         </Typography>
         <Stack spacing={0.5}>
           {REQUIREMENTS.map((req) => {
@@ -166,9 +176,7 @@ export function TournamentCreationSummary({ values, structurePreview }) {
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    bgcolor: done
-                      ? 'primary.main'
-                      : (t) => alpha(t.palette.grey[500], 0.2),
+                    bgcolor: done ? 'primary.main' : (theme) => alpha(theme.palette.grey[500], 0.2),
                     flexShrink: 0,
                   }}
                 />
@@ -179,14 +187,10 @@ export function TournamentCreationSummary({ values, structurePreview }) {
                     flex: 1,
                   }}
                 >
-                  {req.label}
+                  {t(req.label)}
                 </Typography>
                 {done && (
-                  <Iconify
-                    icon="eva:checkmark-fill"
-                    width={14}
-                    sx={{ color: 'primary.main' }}
-                  />
+                  <Iconify icon="eva:checkmark-fill" width={14} sx={{ color: 'primary.main' }} />
                 )}
               </Stack>
             );
@@ -195,7 +199,13 @@ export function TournamentCreationSummary({ values, structurePreview }) {
       </Box>
 
       {/* Status message instead of duplicate CTA */}
-      <Box sx={{ mt: 'auto', pt: 2, borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}` }}>
+      <Box
+        sx={{
+          mt: 'auto',
+          pt: 2,
+          borderTop: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
+        }}
+      >
         <Typography
           variant="caption"
           sx={{
@@ -206,8 +216,8 @@ export function TournamentCreationSummary({ values, structurePreview }) {
           }}
         >
           {percentage === 100
-            ? '✓ Listo para crear el torneo'
-            : 'Completa los campos requeridos para continuar'}
+            ? `✓ ${t('label_ready_to_create_tournament')}`
+            : t('label_complete_required_fields_to_continue')}
         </Typography>
       </Box>
     </Stack>
@@ -220,7 +230,7 @@ function Divider() {
   return (
     <Box
       sx={{
-        borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.08)}`,
+        borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.08)}`,
       }}
     />
   );

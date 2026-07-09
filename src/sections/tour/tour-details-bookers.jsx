@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -24,26 +25,30 @@ import { IncrementerButton } from './components/incrementer-button';
 // ----------------------------------------------------------------------
 
 export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
-  const [bookers, setBookers]  = useState(initialBookers);
-  const { selectedWorkspace }  = useWorkspace();
+  const { t } = useTranslation();
+  const [bookers, setBookers] = useState(initialBookers);
+  const { selectedWorkspace } = useWorkspace();
 
   const handleClick = useCallback(
     async (booker, field, newValue) => {
       try {
-        await patchBooker(tourId, booker.id, { name: field, value: String(newValue) }, selectedWorkspace?.id);
+        await patchBooker(
+          tourId,
+          booker.id,
+          { name: field, value: String(newValue) },
+          selectedWorkspace?.id
+        );
       } catch (error) {
-        toast.error('Error actualizando jugador');
+        toast.error(t('label_error_updating_player'));
         console.error(error);
       }
-      setBookers((prev) =>
-        prev.map((b) => (b.id === booker.id ? { ...b, [field]: newValue } : b))
-      );
+      setBookers((prev) => prev.map((b) => (b.id === booker.id ? { ...b, [field]: newValue } : b)));
     },
-    [tourId, selectedWorkspace?.id]
+    [tourId, selectedWorkspace?.id, t]
   );
 
-  const maxGoals   = Math.max(...bookers.map((b) => b.goals), 1);
-  const approved   = bookers.filter((b) => b.approved).length;
+  const maxGoals = Math.max(...bookers.map((b) => b.goals), 1);
+  const approved = bookers.filter((b) => b.approved).length;
   const unapproved = bookers.length - approved;
 
   return (
@@ -53,17 +58,17 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        sx={{ px: 2.5, py: 2, bgcolor: (t) => alpha(t.palette.grey[500], 0.04) }}
+        sx={{ px: 2.5, py: 2, bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04) }}
       >
         <Stack direction="row" alignItems="center" spacing={1.5}>
           <Iconify icon="mdi:account-group" width={20} sx={{ color: 'primary.main' }} />
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Plantilla del Partido
+            {t('label_match_roster')}
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1}>
           <Chip
-            label={`${approved} confirmados`}
+            label={`${approved} ${t('label_confirmed_plural')}`}
             size="small"
             color="success"
             variant="soft"
@@ -71,7 +76,7 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
           />
           {unapproved > 0 && (
             <Chip
-              label={`${unapproved} pendientes`}
+              label={`${unapproved} ${t('label_pending_plural')}`}
               size="small"
               color="warning"
               variant="soft"
@@ -91,12 +96,28 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
           gap: 1,
           px: 2.5,
           py: 1,
-          bgcolor: (t) => alpha(t.palette.grey[500], 0.04),
-          borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.1)}`,
+          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+          borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.1)}`,
         }}
       >
-        {['', 'Jugador', 'Contribución', 'Goles/Asist.', 'Incidencias', 'Estado'].map((h) => (
-          <Typography key={h} variant="caption" sx={{ fontWeight: 700, color: 'text.disabled', letterSpacing: 0.4, fontSize: '0.65rem' }}>
+        {[
+          '',
+          t('word_player'),
+          t('label_contribution'),
+          t('label_goals_assists_short'),
+          t('label_incidents'),
+          t('status'),
+        ].map((h) => (
+          <Typography
+            key={h}
+            variant="caption"
+            sx={{
+              fontWeight: 700,
+              color: 'text.disabled',
+              letterSpacing: 0.4,
+              fontSize: '0.65rem',
+            }}
+          >
             {h.toUpperCase()}
           </Typography>
         ))}
@@ -120,8 +141,9 @@ export function TourDetailsBookers({ tourId, bookers: initialBookers }) {
 // ── PlayerRow ──────────────────────────────────────────────────────────
 
 function PlayerRow({ booker, maxGoals, onSelected }) {
+  const { t } = useTranslation();
   const contribution = booker.goals + booker.assists;
-  const maxContrib   = maxGoals + 3; // rough scale ceiling
+  const maxContrib = maxGoals + 3; // rough scale ceiling
 
   return (
     <Box
@@ -133,7 +155,7 @@ function PlayerRow({ booker, maxGoals, onSelected }) {
         px: 2.5,
         py: 1.25,
         transition: 'background 0.15s',
-        '&:hover': { bgcolor: (t) => alpha(t.palette.grey[500], 0.04) },
+        '&:hover': { bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04) },
       }}
     >
       {/* Avatar */}
@@ -180,12 +202,18 @@ function PlayerRow({ booker, maxGoals, onSelected }) {
               width: 56,
               height: 3,
               borderRadius: 2,
-              bgcolor: (t) => alpha(t.palette.grey[500], 0.1),
-              '& .MuiLinearProgress-bar': { borderRadius: 2, bgcolor: booker.mvp ? 'warning.main' : 'primary.main' },
+              bgcolor: (theme) => alpha(theme.palette.grey[500], 0.1),
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 2,
+                bgcolor: booker.mvp ? 'warning.main' : 'primary.main',
+              },
             }}
           />
           {contribution > 0 && (
-            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem', fontWeight: 700 }}>
+            <Typography
+              variant="caption"
+              sx={{ color: 'text.disabled', fontSize: '0.6rem', fontWeight: 700 }}
+            >
               {contribution}pts
             </Typography>
           )}
@@ -201,7 +229,12 @@ function PlayerRow({ booker, maxGoals, onSelected }) {
             size="small"
             color="primary"
             variant="soft"
-            sx={{ height: 20, fontSize: '0.68rem', fontWeight: 800, '& .MuiChip-icon': { ml: 0.5 } }}
+            sx={{
+              height: 20,
+              fontSize: '0.68rem',
+              fontWeight: 800,
+              '& .MuiChip-icon': { ml: 0.5 },
+            }}
           />
         )}
         {booker.assists > 0 && (
@@ -211,11 +244,18 @@ function PlayerRow({ booker, maxGoals, onSelected }) {
             size="small"
             color="warning"
             variant="soft"
-            sx={{ height: 20, fontSize: '0.68rem', fontWeight: 800, '& .MuiChip-icon': { ml: 0.5 } }}
+            sx={{
+              height: 20,
+              fontSize: '0.68rem',
+              fontWeight: 800,
+              '& .MuiChip-icon': { ml: 0.5 },
+            }}
           />
         )}
         {booker.goals === 0 && booker.assists === 0 && (
-          <Typography variant="caption" sx={{ color: 'text.disabled' }}>—</Typography>
+          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+            —
+          </Typography>
         )}
       </Stack>
 
@@ -258,7 +298,7 @@ function PlayerRow({ booker, maxGoals, onSelected }) {
             sx={{ p: 0.5 }}
           />
         </Tooltip>
-        <Tooltip title="Llegada tarde">
+        <Tooltip title={t('label_late_arrival')}>
           <Checkbox
             size="small"
             color="info"
@@ -269,7 +309,7 @@ function PlayerRow({ booker, maxGoals, onSelected }) {
             sx={{ p: 0.5 }}
           />
         </Tooltip>
-        <Tooltip title="Tarjeta amarilla">
+        <Tooltip title={t('label_yellow_card_singular')}>
           <Checkbox
             size="small"
             color="warning"
@@ -280,7 +320,7 @@ function PlayerRow({ booker, maxGoals, onSelected }) {
             sx={{ p: 0.5 }}
           />
         </Tooltip>
-        <Tooltip title="Tarjeta roja">
+        <Tooltip title={t('label_red_card_singular')}>
           <Checkbox
             size="small"
             color="error"
@@ -302,7 +342,7 @@ function PlayerRow({ booker, maxGoals, onSelected }) {
         onClick={() => onSelected('approved', !booker.approved)}
         sx={{ fontSize: '0.7rem', fontWeight: 700, minWidth: 0, px: 1.25, py: 0.5 }}
       >
-        {booker.approved ? 'Conf.' : 'Aprobar'}
+        {booker.approved ? t('label_confirmed_abbr') : t('label_approve')}
       </Button>
     </Box>
   );

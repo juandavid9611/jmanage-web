@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -16,6 +18,11 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
+const PUBLISH_LABEL = {
+  published: 'label_published',
+  draft: 'draft',
+};
+
 export function TourDetailsToolbar({
   publish,
   backLink,
@@ -26,6 +33,7 @@ export function TourDetailsToolbar({
   sx,
   ...other
 }) {
+  const { t } = useTranslation();
   const popover = usePopover();
 
   const { workspaceRole } = useWorkspace();
@@ -39,13 +47,13 @@ export function TourDetailsToolbar({
           href={backLink}
           startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16} />}
         >
-          Back
+          {t('label_back')}
         </Button>
 
         <Box sx={{ flexGrow: 1 }} />
 
         {publish === 'published' && (
-          <Tooltip title="Go Live">
+          <Tooltip title={t('label_go_live')}>
             <IconButton component={RouterLink} href={liveLink}>
               <Iconify icon="eva:external-link-fill" />
             </IconButton>
@@ -54,7 +62,7 @@ export function TourDetailsToolbar({
 
         {isAdmin && (
           <>
-            <Tooltip title="Edit">
+            <Tooltip title={t('edit')}>
               <IconButton component={RouterLink} href={editLink}>
                 <Iconify icon="solar:pen-bold" />
               </IconButton>
@@ -64,12 +72,12 @@ export function TourDetailsToolbar({
               color="inherit"
               variant="contained"
               loading={!publish}
-              loadingIndicator="Loading…"
+              loadingIndicator={t('label_loading_ellipsis')}
               endIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
               onClick={popover.onOpen}
               sx={{ textTransform: 'capitalize' }}
             >
-              {publish}
+              {t(PUBLISH_LABEL[publish] || publish)}
             </LoadingButton>
           </>
         )}
@@ -93,7 +101,7 @@ export function TourDetailsToolbar({
             >
               {option.value === 'published' && <Iconify icon="eva:cloud-upload-fill" />}
               {option.value === 'draft' && <Iconify icon="solar:file-text-bold" />}
-              {option.label}
+              {t(option.label)}
             </MenuItem>
           ))}
         </MenuList>

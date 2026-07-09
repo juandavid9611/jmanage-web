@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMemo, Fragment, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -32,30 +33,31 @@ import { Iconify } from 'src/components/iconify';
 
 // ── Layout constants ──────────────────────────────────────────────────
 
-const CARD_H   = 122;   // match card height px
-const CARD_GAP = 20;    // gap between cards in same round
-const COL_W    = 252;   // column width px
-const COL_GAP  = 56;    // gap between columns (connector SVG width)
-const HEADER_H = 48;    // round header row height
+const CARD_H = 122; // match card height px
+const CARD_GAP = 20; // gap between cards in same round
+const COL_W = 252; // column width px
+const COL_GAP = 56; // gap between columns (connector SVG width)
+const HEADER_H = 48; // round header row height
 
 // ── Static maps ───────────────────────────────────────────────────────
 
 const ROUND_ORDER = ['roundOf32', 'roundOf16', 'quarterFinals', 'semiFinals', 'final'];
 
+// label values below are i18n keys, resolved via t() at render time.
 const ROUND_LABELS = {
-  roundOf32:    'Dieciseisavos',
-  roundOf16:    'Octavos',
-  quarterFinals:'Cuartos',
-  semiFinals:   'Semifinales',
-  final:        'Gran Final',
+  roundOf32: 'label_round_of_32',
+  roundOf16: 'label_round_of_16',
+  quarterFinals: 'label_quarter_finals',
+  semiFinals: 'label_semi_finals',
+  final: 'label_grand_final',
 };
 
 const ROUND_SHORT = {
-  roundOf32:    '32',
-  roundOf16:    '16',
-  quarterFinals:'QF',
-  semiFinals:   'SF',
-  final:        'GF',
+  roundOf32: '32',
+  roundOf16: '16',
+  quarterFinals: 'QF',
+  semiFinals: 'SF',
+  final: 'GF',
 };
 
 const ALPHA = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -71,7 +73,8 @@ export function BracketView({
   bracket: bracketProp,
   bracketLoading: bracketLoadingProp,
 }) {
-  const navigate  = useNavigate();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const fetched = useGetBracket(readOnly ? null : tournamentId);
   const bracket = readOnly ? bracketProp : fetched.bracket;
   const bracketLoading = readOnly ? bracketLoadingProp : fetched.bracketLoading;
@@ -79,26 +82,24 @@ export function BracketView({
   const [generateDialog, setGenerateDialog] = useState({ open: false, source: null });
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const isHybrid  = tournament?.type === 'hybrid';
+  const isHybrid = tournament?.type === 'hybrid';
   const hasGroups = tournament?.groups?.length > 0;
   const canGenerate =
-    !readOnly &&
-    tournament?.status === 'active' &&
-    (tournament?.type === 'knockout' || isHybrid);
+    !readOnly && tournament?.status === 'active' && (tournament?.type === 'knockout' || isHybrid);
 
   // Build ordered round entries from bracket object
   const roundEntries = useMemo(() => {
     if (!bracket || typeof bracket !== 'object') return [];
-    const known   = ROUND_ORDER.filter((k) => bracket[k] && Array.isArray(bracket[k]));
+    const known = ROUND_ORDER.filter((k) => bracket[k] && Array.isArray(bracket[k]));
     const unknown = Object.keys(bracket).filter(
       (k) => !ROUND_ORDER.includes(k) && Array.isArray(bracket[k])
     );
     return [...known, ...unknown].map((key) => ({
       key,
-      label:    ROUND_LABELS[key] || key,
+      label: t(ROUND_LABELS[key] || key),
       matchups: bracket[key],
     }));
-  }, [bracket]);
+  }, [bracket, t]);
 
   const hasRounds = roundEntries.length > 0;
 
@@ -127,10 +128,10 @@ export function BracketView({
   // Find champion — only set once the final match has a winner
   const finalist = useMemo(() => {
     if (!hasRounds) return null;
-    const lastRound   = roundEntries[roundEntries.length - 1];
+    const lastRound = roundEntries[roundEntries.length - 1];
     const finalMatchup = lastRound?.matchups[0];
     if (!finalMatchup?.winner_team_id) return null;
-    return teams?.find((t) => t.id === finalMatchup.winner_team_id) || null;
+    return teams?.find((team) => team.id === finalMatchup.winner_team_id) || null;
   }, [roundEntries, hasRounds, teams]);
 
   // Build finalist's round-by-round path
@@ -141,19 +142,21 @@ export function BracketView({
         (m) => m.team1_id === finalist.id || m.team2_id === finalist.id
       );
       if (!mu) return [];
-      const isTeam1   = mu.team1_id === finalist.id;
+      const isTeam1 = mu.team1_id === finalist.id;
       const opponentId = isTeam1 ? mu.team2_id : mu.team1_id;
-      const opponent  = teams?.find((t) => t.id === opponentId);
+      const opponent = teams?.find((team) => team.id === opponentId);
       const champScore = isTeam1 ? mu.score?.team1 : mu.score?.team2;
-      const opScore   = isTeam1 ? mu.score?.team2 : mu.score?.team1;
-      return [{
-        roundLabel: round.label,
-        opponent:   opponent?.short_name || opponent?.name || '???',
-        champScore,
-        opScore,
-        won:      mu.winner_team_id === finalist.id,
-        finished: !!mu.winner_team_id,
-      }];
+      const opScore = isTeam1 ? mu.score?.team2 : mu.score?.team1;
+      return [
+        {
+          roundLabel: round.label,
+          opponent: opponent?.short_name || opponent?.name || '???',
+          champScore,
+          opScore,
+          won: mu.winner_team_id === finalist.id,
+          finished: !!mu.winner_team_id,
+        },
+      ];
     });
   }, [finalist, roundEntries, teams]);
 
@@ -175,9 +178,9 @@ export function BracketView({
   // Round status summary (finished / live counts)
   const roundStatus = useCallback(
     (round) => {
-      const total    = round.matchups.length;
+      const total = round.matchups.length;
       const finished = round.matchups.filter((m) => !!m.winner_team_id).length;
-      const live     = round.matchups.filter((m) => {
+      const live = round.matchups.filter((m) => {
         const match = m.match_id ? matchMap[m.match_id] : null;
         return match?.status === 'live';
       }).length;
@@ -191,21 +194,24 @@ export function BracketView({
       setIsGenerating(true);
       try {
         if (source === 'seeds') {
-          const teamSeeds = teams.map((t, i) => ({ team_id: t.id, seed: t.seed || i + 1 }));
+          const teamSeeds = teams.map((team, i) => ({
+            team_id: team.id,
+            seed: team.seed || i + 1,
+          }));
           await generateBracket(tournamentId, { source: 'seeds', teams: teamSeeds });
-          toast.success('Cuadro generado desde seeds');
+          toast.success(t('label_bracket_generated_from_seeds'));
         } else {
           await generateBracket(tournamentId, { source: 'groups' });
-          toast.success('Cuadro generado desde clasificación de grupos');
+          toast.success(t('label_bracket_generated_from_groups'));
         }
         setGenerateDialog({ open: false, source: null });
       } catch (error) {
-        toast.error(error.message || 'Error');
+        toast.error(error.message || t('label_error_generic'));
       } finally {
         setIsGenerating(false);
       }
     },
-    [tournamentId, teams]
+    [tournamentId, teams, t]
   );
 
   const handleCreateMatch = useCallback(
@@ -214,23 +220,23 @@ export function BracketView({
         const match = await createMatch(tournamentId, {
           home_team_id: matchup.team1_id,
           away_team_id: matchup.team2_id,
-          date:  new Date().toISOString(),
+          date: new Date().toISOString(),
           round: roundKey,
         });
         await updateBracketSlot(tournamentId, {
-          round:      roundKey,
+          round: roundKey,
           match_index: matchIdx,
-          team1_id:   matchup.team1_id,
-          team2_id:   matchup.team2_id,
-          match_id:   match.id,
+          team1_id: matchup.team1_id,
+          team2_id: matchup.team2_id,
+          match_id: match.id,
         });
-        toast.success('Partido creado');
+        toast.success(t('label_match_created'));
         navigate(paths.dashboard.tournament.matchDetail(tournamentId, match.id));
       } catch (error) {
-        toast.error(error.message || 'Error al crear partido');
+        toast.error(error.message || t('label_error_creating_match'));
       }
     },
-    [tournamentId, navigate]
+    [tournamentId, navigate, t]
   );
 
   if (bracketLoading) {
@@ -256,15 +262,17 @@ export function BracketView({
             p: 4,
             textAlign: 'center',
             boxShadow: 'none',
-            border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+            border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
           }}
         >
           <Iconify icon="mdi:tournament" width={64} sx={{ color: 'text.disabled', mb: 2 }} />
-          <Typography variant="h6" sx={{ mb: 1 }}>Sin cuadro de eliminación</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            {t('label_no_bracket_yet')}
+          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             {canGenerate
-              ? 'Genera el cuadro desde seeds o desde la clasificación de grupos'
-              : 'Activa el torneo para poder generar el cuadro eliminatorio'}
+              ? t('label_generate_bracket_hint')
+              : t('label_activate_tournament_to_generate_bracket')}
           </Typography>
           {canGenerate && (
             <Stack direction="row" spacing={2} justifyContent="center">
@@ -274,7 +282,7 @@ export function BracketView({
                 onClick={() => setGenerateDialog({ open: true, source: 'seeds' })}
                 disabled={teams.length < 2}
               >
-                Desde Seeds
+                {t('label_from_seeds')}
               </Button>
               {isHybrid && hasGroups && (
                 <Button
@@ -282,7 +290,7 @@ export function BracketView({
                   startIcon={<Iconify icon="mdi:podium" />}
                   onClick={() => setGenerateDialog({ open: true, source: 'groups' })}
                 >
-                  Desde Clasificación
+                  {t('label_from_standings')}
                 </Button>
               )}
             </Stack>
@@ -308,7 +316,7 @@ export function BracketView({
   return (
     <Stack
       direction="row"
-      sx={{ bgcolor: (t) => alpha(t.palette.grey[500], 0.01), overflow: 'hidden' }}
+      sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.01), overflow: 'hidden' }}
     >
       {/* ═══ Bracket canvas ═══ */}
       <Box sx={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', p: { xs: 2, md: 3 } }}>
@@ -322,7 +330,7 @@ export function BracketView({
               startIcon={<Iconify icon="mdi:refresh" />}
               onClick={() => setGenerateDialog({ open: true, source: 'seeds' })}
             >
-              Regenerar desde Seeds
+              {t('label_regenerate_from_seeds')}
             </Button>
             {isHybrid && hasGroups && (
               <Button
@@ -331,7 +339,7 @@ export function BracketView({
                 startIcon={<Iconify icon="mdi:refresh" />}
                 onClick={() => setGenerateDialog({ open: true, source: 'groups' })}
               >
-                Recalcular desde Clasificación
+                {t('label_recalculate_from_standings')}
               </Button>
             )}
           </Stack>
@@ -339,9 +347,8 @@ export function BracketView({
 
         {/* Bracket row */}
         <Box sx={{ display: 'flex', alignItems: 'flex-start', minWidth: canvasW }}>
-
           {roundEntries.map((round, rIdx) => {
-            const count    = round.matchups.length;
+            const count = round.matchups.length;
             const nextRound = roundEntries[rIdx + 1];
             const { total, finished, live } = roundStatus(round);
 
@@ -349,28 +356,24 @@ export function BracketView({
               <Fragment key={round.key}>
                 {/* ── Round column ── */}
                 <Box sx={{ width: COL_W, flexShrink: 0 }}>
-                  <RoundHeader
-                    label={round.label}
-                    finished={finished}
-                    total={total}
-                    live={live}
-                  />
+                  <RoundHeader label={round.label} finished={finished} total={total} live={live} />
 
                   {/* Cards area */}
                   <Box sx={{ position: 'relative', height: totalH }}>
                     {round.matchups.map((matchup, mIdx) => {
-                      const team1  = teams?.find((t) => t.id === matchup.team1_id);
-                      const team2  = teams?.find((t) => t.id === matchup.team2_id);
-                      const match  = matchup.match_id ? matchMap[matchup.match_id] : null;
+                      const team1 = teams?.find((team) => team.id === matchup.team1_id);
+                      const team2 = teams?.find((team) => team.id === matchup.team2_id);
+                      const match = matchup.match_id ? matchMap[matchup.match_id] : null;
                       const isFinished = !!matchup.winner_team_id;
-                      const isLive     = match?.status === 'live';
-                      const hasMatch   = !!matchup.match_id;
-                      const canCreate  = !readOnly && matchup.team1_id && matchup.team2_id && !hasMatch;
+                      const isLive = match?.status === 'live';
+                      const hasMatch = !!matchup.match_id;
+                      const canCreate =
+                        !readOnly && matchup.team1_id && matchup.team2_id && !hasMatch;
 
                       const shortKey = ROUND_SHORT[round.key] || round.key;
                       const matchLabel =
                         round.key === 'final'
-                          ? 'Gran Final'
+                          ? t('label_grand_final')
                           : `${shortKey} · ${round.key === 'semiFinals' ? ALPHA[mIdx] : mIdx + 1}`;
 
                       return (
@@ -392,12 +395,20 @@ export function BracketView({
                               ? () =>
                                   navigate(
                                     readOnly
-                                      ? paths.publicTournaments.match(tournamentId, matchup.match_id)
-                                      : paths.dashboard.tournament.matchDetail(tournamentId, matchup.match_id)
+                                      ? paths.publicTournaments.match(
+                                          tournamentId,
+                                          matchup.match_id
+                                        )
+                                      : paths.dashboard.tournament.matchDetail(
+                                          tournamentId,
+                                          matchup.match_id
+                                        )
                                   )
                               : undefined
                           }
-                          onCreate={readOnly ? undefined : () => handleCreateMatch(round.key, mIdx, matchup)}
+                          onCreate={
+                            readOnly ? undefined : () => handleCreateMatch(round.key, mIdx, matchup)
+                          }
                         />
                       );
                     })}
@@ -443,9 +454,14 @@ export function BracketView({
               <Iconify icon="mdi:trophy" width={16} sx={{ color: 'warning.main' }} />
               <Typography
                 variant="caption"
-                sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.7rem', letterSpacing: 0.5 }}
+                sx={{
+                  fontWeight: 700,
+                  color: 'text.secondary',
+                  fontSize: '0.7rem',
+                  letterSpacing: 0.5,
+                }}
               >
-                CAMPEÓN
+                {t('label_champion').toUpperCase()}
               </Typography>
             </Stack>
 
@@ -468,7 +484,7 @@ export function BracketView({
         sx={{
           width: 220,
           flexShrink: 0,
-          borderLeft: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+          borderLeft: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
           bgcolor: 'background.paper',
           overflowY: 'auto',
           p: 2,
@@ -499,6 +515,7 @@ export function BracketView({
 // ── RoundHeader ───────────────────────────────────────────────────────
 
 function RoundHeader({ label, finished, total, live }) {
+  const { t } = useTranslation();
   const allDone = total > 0 && finished === total;
 
   let statusEl = null;
@@ -515,8 +532,11 @@ function RoundHeader({ label, finished, total, live }) {
             '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.2 } },
           }}
         />
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.65rem' }}>
-          {live} EN VIVO
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.65rem' }}
+        >
+          {live} {t('label_live').toUpperCase()}
         </Typography>
       </Stack>
     );
@@ -542,7 +562,7 @@ function RoundHeader({ label, finished, total, live }) {
   } else {
     statusEl = (
       <Chip
-        label="Pendiente"
+        label={t('pending')}
         size="small"
         variant="soft"
         sx={{ height: 20, fontSize: '0.62rem', fontWeight: 600, color: 'text.disabled' }}
@@ -586,6 +606,7 @@ function MatchCard({
   onNavigate,
   onCreate,
 }) {
+  const { t } = useTranslation();
   const isWinner1 = matchup.winner_team_id === matchup.team1_id;
   const isWinner2 = matchup.winner_team_id === matchup.team2_id;
 
@@ -593,7 +614,7 @@ function MatchCard({
   if (isFinished) {
     statusEl = (
       <Chip
-        label="Final"
+        label={t('label_final')}
         size="small"
         color="success"
         variant="soft"
@@ -613,7 +634,10 @@ function MatchCard({
             '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.2 } },
           }}
         />
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.65rem' }}>
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.65rem' }}
+        >
           {match?.minute || '--'}&#39;
         </Typography>
       </Stack>
@@ -621,7 +645,7 @@ function MatchCard({
   } else {
     statusEl = (
       <Chip
-        label="Pendiente"
+        label={t('pending')}
         size="small"
         variant="soft"
         sx={{ height: 20, fontSize: '0.6rem', fontWeight: 600, color: 'text.disabled' }}
@@ -630,8 +654,8 @@ function MatchCard({
   }
 
   const dateVenue = match?.date ? fDate(match.date, 'MMM d') : null;
-  const venue     = match?.venue || matchup.venue;
-  const footer    = [dateVenue, venue].filter(Boolean).join(' · ');
+  const venue = match?.venue || matchup.venue;
+  const footer = [dateVenue, venue].filter(Boolean).join(' · ');
 
   return (
     <Box
@@ -642,14 +666,14 @@ function MatchCard({
         height: CARD_H,
         top: topPx,
         bgcolor: 'background.paper',
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.14)}`,
-        borderLeft: (t) =>
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.14)}`,
+        borderLeft: (theme) =>
           `3px solid ${
             isFinished
-              ? t.palette.success.main
+              ? theme.palette.success.main
               : isLive
-                ? t.palette.error.main
-                : alpha(t.palette.grey[500], 0.2)
+                ? theme.palette.error.main
+                : alpha(theme.palette.grey[500], 0.2)
           }`,
         borderRadius: 1.5,
         overflow: 'hidden',
@@ -664,7 +688,10 @@ function MatchCard({
         alignItems="center"
         sx={{ px: 1.25, pt: 0.75, pb: 0.25, flexShrink: 0 }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.6rem' }}>
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 600, color: 'text.disabled', fontSize: '0.6rem' }}
+        >
           {matchLabel}
         </Typography>
         {statusEl}
@@ -680,7 +707,14 @@ function MatchCard({
       />
 
       {/* Separator */}
-      <Box sx={{ height: '1px', bgcolor: (t) => alpha(t.palette.grey[500], 0.08), mx: 1.25, flexShrink: 0 }} />
+      <Box
+        sx={{
+          height: '1px',
+          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
+          mx: 1.25,
+          flexShrink: 0,
+        }}
+      />
 
       {/* Team 2 */}
       <TeamRow
@@ -713,12 +747,19 @@ function MatchCard({
               minWidth: 0,
               height: 22,
               ...(isFinished
-                ? { bgcolor: (t) => alpha(t.palette.grey[500], 0.1), color: 'text.secondary' }
-                : { bgcolor: 'grey.900', color: 'common.white', '&:hover': { bgcolor: 'grey.800' } }),
+                ? {
+                    bgcolor: (theme) => alpha(theme.palette.grey[500], 0.1),
+                    color: 'text.secondary',
+                  }
+                : {
+                    bgcolor: 'grey.900',
+                    color: 'common.white',
+                    '&:hover': { bgcolor: 'grey.800' },
+                  }),
             }}
             onClick={onNavigate}
           >
-            {isFinished ? 'Editar' : 'Registrar'}
+            {isFinished ? t('edit') : t('label_register')}
           </Button>
         )}
         {canCreate && (
@@ -728,7 +769,7 @@ function MatchCard({
             sx={{ fontSize: '0.6rem', py: 0.25, px: 1, minWidth: 0, height: 22 }}
             onClick={onCreate}
           >
-            Crear
+            {t('label_create')}
           </Button>
         )}
       </Stack>
@@ -739,12 +780,19 @@ function MatchCard({
 // ── TeamRow ───────────────────────────────────────────────────────────
 
 function TeamRow({ seed, team, score, isWinner, isLoser }) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1.25, py: 0.625, flex: 1 }}>
       {seed != null && (
         <Typography
           variant="caption"
-          sx={{ fontSize: '0.6rem', fontWeight: 500, color: 'text.disabled', width: 16, flexShrink: 0 }}
+          sx={{
+            fontSize: '0.6rem',
+            fontWeight: 500,
+            color: 'text.disabled',
+            width: 16,
+            flexShrink: 0,
+          }}
         >
           {seed}
         </Typography>
@@ -760,8 +808,11 @@ function TeamRow({ seed, team, score, isWinner, isLoser }) {
         }}
       >
         {team?.short_name || team?.name || (
-          <Box component="span" sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.7rem' }}>
-            Por definir
+          <Box
+            component="span"
+            sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.7rem' }}
+          >
+            {t('label_tbd')}
           </Box>
         )}
       </Typography>
@@ -793,7 +844,7 @@ function BracketConnectors({ fromCount, toCount, totalH }) {
     const i2 = 2 * k + 1;
     const y1 = (totalH * (2 * i1 + 1)) / (2 * fromCount);
     const y2 = (totalH * (2 * i2 + 1)) / (2 * fromCount);
-    const yt = (totalH * (2 * k + 1))  / (2 * toCount);
+    const yt = (totalH * (2 * k + 1)) / (2 * toCount);
     const cx = COL_GAP * 0.6;
 
     pathDefs.push(
@@ -840,17 +891,18 @@ function StraightConnector({ totalH }) {
 // ── ChampionCard ──────────────────────────────────────────────────────
 
 function ChampionCard({ team }) {
+  const { t } = useTranslation();
   const decided = !!team;
 
   return (
     <Box
       sx={{
         width: '80%',
-        border: (t) =>
-          `1.5px solid ${decided ? alpha(t.palette.warning.main, 0.35) : alpha(t.palette.grey[500], 0.14)}`,
+        border: (theme) =>
+          `1.5px solid ${decided ? alpha(theme.palette.warning.main, 0.35) : alpha(theme.palette.grey[500], 0.14)}`,
         borderRadius: 2,
-        bgcolor: (t) =>
-          decided ? alpha(t.palette.warning.main, 0.04) : alpha(t.palette.grey[500], 0.02),
+        bgcolor: (theme) =>
+          decided ? alpha(theme.palette.warning.main, 0.04) : alpha(theme.palette.grey[500], 0.02),
         p: 2.5,
         textAlign: 'center',
       }}
@@ -858,9 +910,16 @@ function ChampionCard({ team }) {
       <Typography sx={{ fontSize: '2rem', lineHeight: 1, mb: 1 }}>🏆</Typography>
       <Typography
         variant="caption"
-        sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.65rem', display: 'block', mb: 1, letterSpacing: 1 }}
+        sx={{
+          fontWeight: 700,
+          color: 'warning.main',
+          fontSize: '0.65rem',
+          display: 'block',
+          mb: 1,
+          letterSpacing: 1,
+        }}
       >
-        CAMPEÓN
+        {t('label_champion').toUpperCase()}
       </Typography>
       <Typography
         variant="subtitle1"
@@ -871,7 +930,7 @@ function ChampionCard({ team }) {
           fontSize: decided ? '1rem' : '0.85rem',
         }}
       >
-        {team?.short_name || team?.name || 'Por definir'}
+        {team?.short_name || team?.name || t('label_tbd')}
       </Typography>
     </Box>
   );
@@ -880,6 +939,7 @@ function ChampionCard({ team }) {
 // ── ChampionSidebar ───────────────────────────────────────────────────
 
 function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
+  const { t } = useTranslation();
   const champName = finalist ? (finalist.short_name || finalist.name || '').toUpperCase() : '';
   const wins = champPath.filter((s) => s.won).length;
   const totalGF = champPath.reduce((acc, s) => acc + (s.champScore || 0), 0);
@@ -894,7 +954,8 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
           variant="caption"
           sx={{ fontWeight: 700, color: 'text.disabled', fontSize: '0.62rem', letterSpacing: 0.5 }}
         >
-          RUTA DEL CAMPEÓN{champName ? ` · ${champName}` : ''}
+          {t('label_champion_path').toUpperCase()}
+          {champName ? ` · ${champName}` : ''}
         </Typography>
       </Stack>
 
@@ -904,8 +965,8 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
           <Box
             sx={{
               p: 1.5,
-              bgcolor: (t) => alpha(t.palette.warning.main, 0.04),
-              border: (t) => `1px solid ${alpha(t.palette.warning.main, 0.18)}`,
+              bgcolor: (theme) => alpha(theme.palette.warning.main, 0.04),
+              border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.18)}`,
               borderRadius: 1.5,
             }}
           >
@@ -913,7 +974,9 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
               {finalist.short_name || finalist.name}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
-              {wins}V · {totalGF} GF · {totalGC} GC
+              {wins}
+              {t('label_wins_abbr')} · {totalGF} {t('label_gf_abbr')} · {totalGC}{' '}
+              {t('label_ga_abbr')}
             </Typography>
           </Box>
 
@@ -929,7 +992,7 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
               <Box
                 sx={{
                   p: 1.25,
-                  border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+                  border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
                   borderRadius: 1.25,
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -937,7 +1000,7 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
                 }}
               >
                 <Typography variant="caption" sx={{ fontWeight: 500, fontSize: '0.75rem' }}>
-                  vs {step.opponent}
+                  {t('label_vs')} {step.opponent}
                 </Typography>
                 {step.finished ? (
                   <Typography
@@ -952,7 +1015,7 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
                   </Typography>
                 ) : (
                   <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>
-                    Pendiente
+                    {t('pending')}
                   </Typography>
                 )}
               </Box>
@@ -961,7 +1024,7 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
         </>
       ) : (
         <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-          Sin finalista aún
+          {t('label_no_finalist_yet')}
         </Typography>
       )}
 
@@ -971,15 +1034,20 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
           <Box sx={{ pt: 0.5 }}>
             <Typography
               variant="caption"
-              sx={{ fontWeight: 700, color: 'text.disabled', fontSize: '0.62rem', letterSpacing: 0.5 }}
+              sx={{
+                fontWeight: 700,
+                color: 'text.disabled',
+                fontSize: '0.62rem',
+                letterSpacing: 0.5,
+              }}
             >
-              PARTIDOS ACTIVOS
+              {t('label_active_matches').toUpperCase()}
             </Typography>
           </Box>
           <Stack spacing={1}>
             {activeBracketMatches.map((match) => {
-              const home   = teams?.find((t) => t.id === match.home_team_id);
-              const away   = teams?.find((t) => t.id === match.away_team_id);
+              const home = teams?.find((team) => team.id === match.home_team_id);
+              const away = teams?.find((team) => team.id === match.away_team_id);
               const isLive = match.status === 'live';
 
               return (
@@ -987,15 +1055,15 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
                   key={match.id}
                   sx={{
                     p: 1.25,
-                    border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
-                    borderLeft: (t) =>
-                      `3px solid ${isLive ? t.palette.error.main : alpha(t.palette.grey[500], 0.2)}`,
+                    border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+                    borderLeft: (theme) =>
+                      `3px solid ${isLive ? theme.palette.error.main : alpha(theme.palette.grey[500], 0.2)}`,
                     borderRadius: 1.25,
                   }}
                 >
                   <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
-                      {home?.short_name || '?'} vs {away?.short_name || '?'}
+                      {home?.short_name || '?'} {t('label_vs')} {away?.short_name || '?'}
                     </Typography>
                     {isLive ? (
                       <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -1006,21 +1074,30 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
                             borderRadius: '50%',
                             bgcolor: 'error.main',
                             animation: 'blink 1.4s ease-in-out infinite',
-                            '@keyframes blink': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.2 } },
+                            '@keyframes blink': {
+                              '0%,100%': { opacity: 1 },
+                              '50%': { opacity: 0.2 },
+                            },
                           }}
                         />
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.65rem' }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.65rem' }}
+                        >
                           {match.minute || '--'}&#39;
                         </Typography>
                       </Stack>
                     ) : (
-                      <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'text.disabled', fontSize: '0.65rem' }}
+                      >
                         {match.date ? fDate(match.date, 'MMM d') : '—'}
                       </Typography>
                     )}
                   </Stack>
                   <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.6rem' }}>
-                    {match.round ? (ROUND_LABELS[match.round] || match.round) : '—'}
+                    {match.round ? t(ROUND_LABELS[match.round] || match.round) : '—'}
                   </Typography>
                 </Box>
               );
@@ -1035,26 +1112,29 @@ function ChampionSidebar({ finalist, champPath, activeBracketMatches, teams }) {
 // ── GenerateDialog ────────────────────────────────────────────────────
 
 function GenerateDialog({ open, source, hasRounds, teams, isGenerating, onClose, onConfirm }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{hasRounds ? 'Regenerar Cuadro' : 'Generar Cuadro'}</DialogTitle>
+      <DialogTitle>
+        {hasRounds ? t('label_regenerate_bracket') : t('label_generate_bracket')}
+      </DialogTitle>
       <DialogContent>
         <DialogContentText>
           {source === 'seeds'
-            ? `Se generará el cuadro usando los seeds actuales de los ${teams.length} equipos.`
-            : 'Se generará el cuadro tomando los clasificados de cada grupo según las posiciones actuales.'}
-          {hasRounds && ' Esto reemplazará el cuadro actual.'}
+            ? `${t('label_bracket_generate_from_seeds_prefix')} ${teams.length} ${t('word_teams').toLowerCase()}.`
+            : t('label_bracket_generate_from_groups')}
+          {hasRounds && ` ${t('label_bracket_will_replace_current')}`}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={onClose}>{t('cancel')}</Button>
         <LoadingButton
           variant="contained"
           color={hasRounds ? 'warning' : 'primary'}
           loading={isGenerating}
           onClick={onConfirm}
         >
-          {hasRounds ? 'Regenerar' : 'Generar'}
+          {hasRounds ? t('label_regenerate') : t('label_generate')}
         </LoadingButton>
       </DialogActions>
     </Dialog>

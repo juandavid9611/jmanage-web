@@ -1,5 +1,7 @@
 import { z as zod } from 'zod';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Link from '@mui/material/Link';
@@ -20,21 +22,26 @@ import { resetPassword } from 'src/auth/context/amplify';
 
 // ----------------------------------------------------------------------
 
-export const ResetPasswordSchema = zod.object({
-  email: zod
-    .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
-});
+export function getResetPasswordSchema(t) {
+  return zod.object({
+    email: zod
+      .string()
+      .min(1, { message: t('email_required') })
+      .email({ message: t('email_invalid') }),
+  });
+}
 
 // ----------------------------------------------------------------------
 
 export function AmplifyResetPasswordView() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const defaultValues = {
     email: '',
   };
+
+  const ResetPasswordSchema = useMemo(() => getResetPasswordSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(ResetPasswordSchema),
@@ -64,11 +71,10 @@ export function AmplifyResetPasswordView() {
       <PasswordIcon sx={{ mx: 'auto' }} />
 
       <Stack spacing={1} sx={{ mt: 3, mb: 5, textAlign: 'center', whiteSpace: 'pre-line' }}>
-        <Typography variant="h5">Olvidaste tu contraseña?</Typography>
+        <Typography variant="h5">{t('forgot_password')}</Typography>
 
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Ingresa la dirección de correo electrónico asociada a tu cuenta y te enviaremos un enlace
-          para restablecer tu contraseña.
+          {t('reset_password_body')}
         </Typography>
       </Stack>
     </>
@@ -79,8 +85,8 @@ export function AmplifyResetPasswordView() {
       <Field.Text
         autoFocus
         name="email"
-        label="Correo"
-        placeholder="ejemplo@gmail.com"
+        label={t('email_label')}
+        placeholder={t('email_placeholder_example')}
         InputLabelProps={{ shrink: true }}
       />
 
@@ -90,9 +96,9 @@ export function AmplifyResetPasswordView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Enviando solicitud..."
+        loadingIndicator={t('sending_request')}
       >
-        Enviar solicitud
+        {t('send_request')}
       </LoadingButton>
 
       <Link
@@ -103,7 +109,7 @@ export function AmplifyResetPasswordView() {
         sx={{ gap: 0.5, alignSelf: 'center', alignItems: 'center', display: 'inline-flex' }}
       >
         <Iconify width={16} icon="eva:arrow-ios-back-fill" />
-        Regresar a iniciar sesión
+        {t('back_to_sign_in')}
       </Link>
     </Stack>
   );

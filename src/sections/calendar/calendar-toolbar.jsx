@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
 import Button from '@mui/material/Button';
@@ -12,11 +14,12 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const VIEW_OPTIONS = [
-  { value: 'dayGridMonth', label: 'Month', icon: 'mingcute:calendar-month-line' },
-  { value: 'timeGridWeek', label: 'Week', icon: 'mingcute:calendar-week-line' },
-  { value: 'timeGridDay', label: 'Day', icon: 'mingcute:calendar-day-line' },
-  { value: 'listWeek', label: 'Agenda', icon: 'fluent:calendar-agenda-24-regular' },
+  { value: 'dayGridMonth', label: 'label_month', icon: 'mingcute:calendar-month-line' },
+  { value: 'timeGridWeek', label: 'label_week', icon: 'mingcute:calendar-week-line' },
+  { value: 'timeGridDay', label: 'label_day', icon: 'mingcute:calendar-day-line' },
+  { value: 'listWeek', label: 'label_agenda', icon: 'fluent:calendar-agenda-24-regular' },
 ];
 
 // ----------------------------------------------------------------------
@@ -32,6 +35,8 @@ export function CalendarToolbar({
   onChangeView,
   onOpenFilters,
 }) {
+  const { t } = useTranslation();
+
   const popover = usePopover();
 
   const selectedItem = VIEW_OPTIONS.filter((item) => item.value === view)[0];
@@ -52,7 +57,7 @@ export function CalendarToolbar({
           endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
           sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
         >
-          {selectedItem.label}
+          {t(selectedItem.label)}
         </Button>
 
         <Stack direction="row" alignItems="center" spacing={1}>
@@ -69,7 +74,7 @@ export function CalendarToolbar({
 
         <Stack direction="row" alignItems="center" spacing={1}>
           <Button size="small" color="error" variant="contained" onClick={onToday}>
-            Today
+            {t('label_today')}
           </Button>
 
           <IconButton onClick={onOpenFilters}>
@@ -111,7 +116,7 @@ export function CalendarToolbar({
               }}
             >
               <Iconify icon={viewOption.icon} />
-              {viewOption.label}
+              {t(viewOption.label)}
             </MenuItem>
           ))}
         </MenuList>

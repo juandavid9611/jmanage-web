@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -29,20 +30,32 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // ----------------------------------------------------------------------
 
+// values below are i18n keys, resolved via t() at render time.
 const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+  'month_jan_full',
+  'month_feb_full',
+  'month_mar_full',
+  'month_apr_full',
+  'month_may_full',
+  'month_jun_full',
+  'month_jul_full',
+  'month_aug_full',
+  'month_sep_full',
+  'month_oct_full',
+  'month_nov_full',
+  'month_dec_full',
 ];
 
-function monthLabel(month) {
+function monthLabel(month, t) {
   if (!month) return '';
   const [year, m] = month.split('-');
-  return `${MONTH_NAMES[parseInt(m, 10) - 1]} ${year}`;
+  return `${t(MONTH_NAMES[parseInt(m, 10) - 1])} ${year}`;
 }
 
 // ----------------------------------------------------------------------
 
 export function VotacionesListView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { selectedWorkspace, workspaceRole } = useWorkspace();
   const isAdmin = workspaceRole === 'admin';
@@ -51,38 +64,47 @@ export function VotacionesListView() {
   const confirmDelete = useBoolean();
   const [votationToDelete, setVotationToDelete] = useState(null);
 
-  const handleDeleteClick = useCallback((e, v) => {
-    e.stopPropagation();
-    setVotationToDelete(v);
-    confirmDelete.onTrue();
-  }, [confirmDelete]);
+  const handleDeleteClick = useCallback(
+    (e, v) => {
+      e.stopPropagation();
+      setVotationToDelete(v);
+      confirmDelete.onTrue();
+    },
+    [confirmDelete]
+  );
 
   const handleConfirmDelete = useCallback(async () => {
     if (!votationToDelete) return;
     try {
       await apiDeleteVotation(votationToDelete.id, selectedWorkspace?.id);
-      toast.success('Votación eliminada');
+      toast.success(t('label_votation_deleted'));
     } catch {
-      toast.error('Error al eliminar la votación');
+      toast.error(t('label_error_deleting_votation'));
     } finally {
       confirmDelete.onFalse();
       setVotationToDelete(null);
     }
-  }, [votationToDelete, selectedWorkspace?.id, confirmDelete]);
+  }, [votationToDelete, selectedWorkspace?.id, confirmDelete, t]);
 
-  const handleCardClick = useCallback((v) => {
-    navigate(paths.dashboard.votaciones.detail(v.id), {
-      state: { monthLabel: monthLabel(v.month) },
-    });
-  }, [navigate]);
+  const handleCardClick = useCallback(
+    (v) => {
+      navigate(paths.dashboard.votaciones.detail(v.id), {
+        state: { monthLabel: monthLabel(v.month, t) },
+      });
+    },
+    [navigate, t]
+  );
 
   // Last closed votation with a winner (includes tied+resolved via tiebreaker)
   const closedWithWinner = votations
-    .filter((v) =>
-      (v.status === 'closed' && (v.winner_id || v.winnerId)) ||
-      (v.status === 'tied' && v.tiebreaker_winner)
+    .filter(
+      (v) =>
+        (v.status === 'closed' && (v.winner_id || v.winnerId)) ||
+        (v.status === 'tied' && v.tiebreaker_winner)
     )
-    .sort((a, b) => (b.created_at || b.createdAt || '').localeCompare(a.created_at || a.createdAt || ''));
+    .sort((a, b) =>
+      (b.created_at || b.createdAt || '').localeCompare(a.created_at || a.createdAt || '')
+    );
   const lastWinner = closedWithWinner[0] || null;
 
   const totalOpen = votations.filter((v) => v.status === 'open').length;
@@ -93,8 +115,8 @@ export function VotacionesListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Votaciones"
-        links={[{ name: 'Votaciones' }]}
+        heading={t('label_votations')}
+        links={[{ name: t('label_votations') }]}
         action={
           isAdmin ? (
             <Button
@@ -102,7 +124,7 @@ export function VotacionesListView() {
               startIcon={<Iconify icon="solar:cup-star-bold" />}
               onClick={() => navigate(paths.dashboard.votaciones.new)}
             >
-              Nueva Votación
+              {t('label_new_vote')}
             </Button>
           ) : null
         }
@@ -115,17 +137,17 @@ export function VotacionesListView() {
       {/* Stats row */}
       {!votationsLoading && votations.length > 0 && (
         <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
-          <StatChip label="Total" value={votations.length} />
-          <StatChip label="Abiertas" value={totalOpen} color="success" />
-          <StatChip label="Cerradas" value={totalClosed} color="default" />
+          <StatChip label={t('total')} value={votations.length} />
+          <StatChip label={t('label_open_plural')} value={totalOpen} color="success" />
+          <StatChip label={t('label_closed_plural')} value={totalClosed} color="default" />
         </Stack>
       )}
 
       {/* List */}
       {!votationsLoading && votations.length === 0 && (
         <EmptyContent
-          title="Sin votaciones"
-          description={isAdmin ? 'Crea la primera votación del mes.' : 'Aún no hay votaciones activas.'}
+          title={t('label_no_votations')}
+          description={isAdmin ? t('label_create_first_votation') : t('label_no_active_votations')}
           sx={{ py: 8 }}
         />
       )}
@@ -151,18 +173,21 @@ export function VotacionesListView() {
       <ConfirmDialog
         open={confirmDelete.value}
         onClose={confirmDelete.onFalse}
-        title="Eliminar votación"
+        title={t('label_delete_votation')}
         content={
           votationToDelete ? (
             <>
-              ¿Eliminar la votación de{' '}
-              <strong>Jugador del mes — {monthLabel(votationToDelete.month)}</strong>? Esta acción no se puede deshacer.
+              {t('label_delete_votation_of')}{' '}
+              <strong>
+                {t('label_player_of_the_month')} — {monthLabel(votationToDelete.month, t)}
+              </strong>
+              ? {t('label_action_cannot_be_undone')}
             </>
           ) : null
         }
         action={
           <Button variant="contained" color="error" onClick={handleConfirmDelete}>
-            Eliminar
+            {t('delete')}
           </Button>
         }
       />
@@ -173,6 +198,7 @@ export function VotacionesListView() {
 // ----------------------------------------------------------------------
 
 function LastWinnerCard({ votation, onViewDetails }) {
+  const { t } = useTranslation();
   const winner =
     votation.tiebreaker_winner ||
     (votation.candidates || []).find((c) => c.id === (votation.winner_id || votation.winnerId));
@@ -188,17 +214,21 @@ function LastWinnerCard({ votation, onViewDetails }) {
       sx={{
         mb: 4,
         p: 3,
-        background: (t) =>
-          `linear-gradient(135deg, ${alpha(t.palette.warning.main, 0.08)} 0%, ${alpha(t.palette.warning.light, 0.04)} 100%)`,
-        border: (t) => `1px solid ${alpha(t.palette.warning.main, 0.24)}`,
+        background: (theme) =>
+          `linear-gradient(135deg, ${alpha(theme.palette.warning.main, 0.08)} 0%, ${alpha(theme.palette.warning.light, 0.04)} 100%)`,
+        border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.24)}`,
         cursor: 'pointer',
         transition: 'box-shadow 0.2s',
-        '&:hover': { boxShadow: (t) => t.shadows[4] },
+        '&:hover': { boxShadow: (theme) => theme.shadows[4] },
       }}
       onClick={() => onViewDetails(votation)}
     >
       <Stack direction="row" alignItems="center" spacing={2.5}>
-        <Iconify icon="solar:cup-star-bold" width={40} sx={{ color: 'warning.main', flexShrink: 0 }} />
+        <Iconify
+          icon="solar:cup-star-bold"
+          width={40}
+          sx={{ color: 'warning.main', flexShrink: 0 }}
+        />
 
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
           <Avatar
@@ -209,26 +239,34 @@ function LastWinnerCard({ votation, onViewDetails }) {
               height: 56,
               fontSize: '1.3rem',
               flexShrink: 0,
-              border: (t) => `2px solid ${t.palette.warning.main}`,
+              border: (theme) => `2px solid ${theme.palette.warning.main}`,
             }}
           >
             {winner.name?.charAt(0)}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: 'warning.main', letterSpacing: 1.5, lineHeight: 1 }}>
-              Último jugador del mes · {monthLabel(votation.month)}
+            <Typography
+              variant="overline"
+              sx={{ color: 'warning.main', letterSpacing: 1.5, lineHeight: 1 }}
+            >
+              {t('label_last_player_of_the_month')} · {monthLabel(votation.month, t)}
             </Typography>
             <Typography variant="h5" fontWeight={700} noWrap>
               {winner.name}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-              {winnerVotes} de {totalVotes} {totalVotes === 1 ? 'voto' : 'votos'} ·{' '}
-              {winner.training_pct}% asistencia
+              {winnerVotes} {t('label_of')} {totalVotes}{' '}
+              {totalVotes === 1 ? t('label_vote_singular') : t('label_votes_plural')} ·{' '}
+              {winner.training_pct}% {t('word_attendance')}
             </Typography>
           </Box>
         </Stack>
 
-        <Iconify icon="eva:arrow-ios-forward-fill" width={20} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+        <Iconify
+          icon="eva:arrow-ios-forward-fill"
+          width={20}
+          sx={{ color: 'text.disabled', flexShrink: 0 }}
+        />
       </Stack>
     </Card>
   );
@@ -252,6 +290,7 @@ function StatChip({ label, value, color = 'primary' }) {
 // ----------------------------------------------------------------------
 
 function VotationRow({ votation, isAdmin, onClick, onDelete }) {
+  const { t } = useTranslation();
   const isOpen = votation.status === 'open';
   const isTied = votation.status === 'tied';
   const tiebreakerWinner = votation.tiebreaker_winner || null;
@@ -270,47 +309,65 @@ function VotationRow({ votation, isAdmin, onClick, onDelete }) {
         py: 2,
         cursor: 'pointer',
         transition: 'box-shadow 0.2s',
-        '&:hover': { boxShadow: (t) => t.shadows[4] },
+        '&:hover': { boxShadow: (theme) => theme.shadows[4] },
       }}
     >
       <Stack direction="row" alignItems="center" spacing={2}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 0.5 }}>
-            <Label color={isOpen ? 'success' : (isTied && !tieResolved) ? 'warning' : 'default'}>
-              {isOpen ? 'Abierta' : (isTied && !tieResolved) ? 'Empate' : 'Cerrada'}
+            <Label color={isOpen ? 'success' : isTied && !tieResolved ? 'warning' : 'default'}>
+              {t(
+                isOpen
+                  ? 'label_open_singular'
+                  : isTied && !tieResolved
+                    ? 'label_match_result_draw'
+                    : 'label_closed_singular'
+              )}
             </Label>
             {tieResolved && (
               <Label color="warning" sx={{ opacity: 0.6 }}>
-                Desempate
+                {t('label_tiebreaker')}
               </Label>
             )}
             <Typography variant="subtitle1" fontWeight={600} noWrap>
-              Jugador del mes — {monthLabel(votation.month)}
+              {t('label_player_of_the_month')} — {monthLabel(votation.month, t)}
             </Typography>
           </Stack>
 
           <Stack direction="row" spacing={2.5} flexWrap="wrap">
             <Stack direction="row" alignItems="center" spacing={0.5}>
-              <Iconify icon="solar:users-group-rounded-bold" width={14} sx={{ color: 'text.disabled' }} />
+              <Iconify
+                icon="solar:users-group-rounded-bold"
+                width={14}
+                sx={{ color: 'text.disabled' }}
+              />
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {eligibleCandidates} candidatos
+                {eligibleCandidates} {t('label_candidates')}
               </Typography>
             </Stack>
             <Stack direction="row" alignItems="center" spacing={0.5}>
               <Iconify icon="solar:cup-star-bold" width={14} sx={{ color: 'text.disabled' }} />
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {totalVotes} {totalVotes === 1 ? 'voto' : 'votos'}
+                {totalVotes} {totalVotes === 1 ? t('label_vote_singular') : t('label_votes_plural')}
               </Typography>
             </Stack>
             <Stack direction="row" alignItems="center" spacing={0.5}>
-              <Iconify icon="solar:shield-minimalistic-bold" width={14} sx={{ color: 'text.disabled' }} />
+              <Iconify
+                icon="solar:shield-minimalistic-bold"
+                width={14}
+                sx={{ color: 'text.disabled' }}
+              />
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Mín. {votation.min_pct ?? votation.minPct}%
+                {t('label_min_abbr')} {votation.min_pct ?? votation.minPct}%
               </Typography>
             </Stack>
             {(winner || tiebreakerWinner) && !isOpen && (
               <Stack direction="row" alignItems="center" spacing={0.5}>
-                <Iconify icon="solar:medal-ribbons-star-bold" width={14} sx={{ color: 'warning.main' }} />
+                <Iconify
+                  icon="solar:medal-ribbons-star-bold"
+                  width={14}
+                  sx={{ color: 'warning.main' }}
+                />
                 <Typography variant="caption" sx={{ color: 'warning.main', fontWeight: 600 }}>
                   {(winner || tiebreakerWinner).name}
                 </Typography>
@@ -321,7 +378,7 @@ function VotationRow({ votation, isAdmin, onClick, onDelete }) {
 
         <Stack direction="row" alignItems="center" spacing={0.5}>
           {isAdmin && (
-            <Tooltip title="Eliminar">
+            <Tooltip title={t('delete')}>
               <IconButton
                 size="small"
                 color="error"

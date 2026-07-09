@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -59,8 +60,8 @@ import { TournamentConfigSummary } from '../tournament-config-summary';
 /**
  * Determine the default active phase based on tournament state.
  */
-function getDefaultPhase(tournament, teams) {
-  const phases = getPhases(tournament, teams);
+function getDefaultPhase(tournament, teams, t) {
+  const phases = getPhases(tournament, teams, undefined, undefined, t);
 
   // Find the first 'active' phase
   const activePhase = phases.find((p) => p.state === 'active');
@@ -77,6 +78,7 @@ function getDefaultPhase(tournament, teams) {
 // ----------------------------------------------------------------------
 
 export function TournamentDetailView() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -115,7 +117,7 @@ export function TournamentDetailView() {
 
   // Resolve active phase (lazy init after tournament loads)
   const currentPhase =
-    activePhase || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
+    activePhase || (tournament ? getDefaultPhase(tournament, teams, t) : 'configuracion');
 
   // Derive current matchweek
   const currentMw = tournament?.current_matchweek || 1;
@@ -143,12 +145,12 @@ export function TournamentDetailView() {
   const handleDelete = useCallback(async () => {
     try {
       await deleteTournament(id);
-      toast.success('Torneo eliminado');
+      toast.success(t('label_tournament_deleted'));
       navigate(paths.dashboard.tournament.root);
     } catch (error) {
-      toast.error('Error al eliminar');
+      toast.error(t('label_error_deleting'));
     }
-  }, [id, navigate]);
+  }, [id, navigate, t]);
 
   const handleStatusChange = useCallback(
     async (newStatus) => {
@@ -159,18 +161,18 @@ export function TournamentDetailView() {
         setFinishDialog(false);
         toast.success(
           newStatus === 'active'
-            ? 'Torneo activado'
+            ? t('label_tournament_activated')
             : newStatus === 'finished'
-              ? 'Torneo finalizado'
-              : 'Estado actualizado'
+              ? t('label_tournament_finished')
+              : t('label_status_updated')
         );
       } catch (error) {
-        toast.error(error.message || 'Error al cambiar estado');
+        toast.error(error.message || t('label_error_changing_status'));
       } finally {
         setIsSubmitting(false);
       }
     },
-    [id]
+    [id, t]
   );
 
   const handleAdvanceMatchweek = useCallback(async () => {
@@ -186,20 +188,22 @@ export function TournamentDetailView() {
         const mwMatches = res.data || [];
         const unfinished = mwMatches.filter((m) => m.status !== 'finished');
         if (unfinished.length > 0) {
-          toast.error(`Faltan ${unfinished.length} partido(s) por finalizar en Jornada ${mw}`);
+          toast.error(
+            `${t('label_missing_matches_prefix')} ${unfinished.length} ${t('label_matches_pending_finish_suffix')} ${t('label_matchday')} ${mw}`
+          );
           return;
         }
       }
 
       const nextMw = mw + 1;
       await updateTournament(id, { current_matchweek: nextMw });
-      toast.success(`Avanzado a Jornada ${nextMw}`);
+      toast.success(`${t('label_advanced_to')} ${t('label_matchday')} ${nextMw}`);
     } catch (error) {
-      toast.error(error.message || 'Error');
+      toast.error(error.message || t('label_error_generic'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [id, tournament]);
+  }, [id, tournament, t]);
 
   const handleGenerateSchedule = useCallback(async () => {
     try {
@@ -215,14 +219,14 @@ export function TournamentDetailView() {
       const result = await generateSchedule(id, payload);
       setScheduleDialog(false);
       toast.success(
-        `${result.matches_created} partidos generados (${result.matchweeks_generated} jornadas)`
+        `${result.matches_created} ${t('label_matches_lowercase')} ${t('label_generated_plural')} (${result.matchweeks_generated} ${t('label_matchdays_lowercase')})`
       );
     } catch (error) {
-      toast.error(error.message || 'Error al generar calendario');
+      toast.error(error.message || t('label_error_generating_schedule'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [id, scheduleForm]);
+  }, [id, scheduleForm, t]);
 
   const handleMatchClick = useCallback(
     (match) => {
@@ -243,7 +247,7 @@ export function TournamentDetailView() {
   }, []);
 
   if (tournamentLoading) return <LoadingScreen />;
-  if (!tournament) return <Typography>Torneo no encontrado</Typography>;
+  if (!tournament) return <Typography>{t('label_tournament_not_found')}</Typography>;
 
   const isLeague = tournament.type === 'league';
   const isHybrid = tournament.type === 'hybrid';
@@ -270,7 +274,7 @@ export function TournamentDetailView() {
       />
 
       {/* ═══ Phase Content ═══ */}
-      <Box sx={{ bgcolor: (t) => alpha(t.palette.grey[500], 0.02), minHeight: 400 }}>
+      <Box sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.02), minHeight: 400 }}>
         {/* ── CONFIGURACIÓN: Tournament overview, stats ── */}
         {currentPhase === 'configuracion' && (
           <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
@@ -293,7 +297,11 @@ export function TournamentDetailView() {
             <Grid
               xs={12}
               md={6}
-              sx={{ borderRight: (t) => ({ md: `1px solid ${alpha(t.palette.grey[500], 0.12)}` }) }}
+              sx={{
+                borderRight: (theme) => ({
+                  md: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+                }),
+              }}
             >
               {(isLeague || isHybrid) && totalMw > 0 && (
                 <MatchweekTimeline
@@ -309,10 +317,16 @@ export function TournamentDetailView() {
               <Box sx={{ p: { xs: 2, md: 3 } }}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
                   <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
-                    {activeMw === null ? 'Todos los partidos' : `Jornada ${activeMw}`}
+                    {activeMw === null
+                      ? t('label_all_matches')
+                      : `${t('label_matchday')} ${activeMw}`}
                   </Typography>
                   <Box
-                    sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.08) }}
+                    sx={{
+                      flex: 1,
+                      height: 1,
+                      bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
+                    }}
                   />
                 </Stack>
 
@@ -325,8 +339,8 @@ export function TournamentDetailView() {
                 ) : allMatches.length === 0 ? (
                   <EmptyContent
                     filled
-                    title="No hay partidos"
-                    description="Aún no se ha generado el calendario de la fase de grupos"
+                    title={t('label_no_matches')}
+                    description={t('label_no_group_stage_schedule_yet')}
                     action={
                       <Button
                         variant="contained"
@@ -334,7 +348,7 @@ export function TournamentDetailView() {
                         onClick={() => setScheduleDialog(true)}
                         disabled={teams.length < 2 || isSubmitting}
                       >
-                        Generar Calendario
+                        {t('label_generate_schedule')}
                       </Button>
                     }
                     sx={{ py: 6 }}
@@ -389,19 +403,19 @@ export function TournamentDetailView() {
           <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
             <Box>
               <Typography variant="h6" sx={{ mb: 1.5 }}>
-                Goleadores
+                {t('label_top_scorers')}
               </Typography>
               <PlayerRankingTable tournamentId={id} metric="goals" />
             </Box>
             <Box>
               <Typography variant="h6" sx={{ mb: 1.5 }}>
-                Asistencias
+                {t('label_assists')}
               </Typography>
               <PlayerRankingTable tournamentId={id} metric="assists" />
             </Box>
             <Box>
               <Typography variant="h6" sx={{ mb: 1.5 }}>
-                Amonestaciones
+                {t('label_disciplinary_record')}
               </Typography>
               <PlayerRankingTable tournamentId={id} metric="cards" />
             </Box>
@@ -418,66 +432,64 @@ export function TournamentDetailView() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Activar Torneo</DialogTitle>
+        <DialogTitle>{t('label_activate_tournament')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Al activar el torneo no podrás agregar ni eliminar equipos. ¿Confirmas que deseas
-            activar <strong>{tournament.name}</strong>?
+            {t('label_activate_tournament_warning')} <strong>{tournament.name}</strong>?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setActivateDialog(false)}>Cancelar</Button>
+          <Button onClick={() => setActivateDialog(false)}>{t('cancel')}</Button>
           <LoadingButton
             variant="contained"
             color="success"
             loading={isSubmitting}
             onClick={() => handleStatusChange('active')}
           >
-            Activar
+            {t('label_activate')}
           </LoadingButton>
         </DialogActions>
       </Dialog>
 
       {/* Finish confirmation */}
       <Dialog open={finishDialog} onClose={() => setFinishDialog(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Finalizar Torneo</DialogTitle>
+        <DialogTitle>{t('label_finish_tournament')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Esto marcará el torneo como <strong>Finalizado</strong>. Podrás reabrirlo si es
-            necesario. ¿Confirmas?
+            {t('label_finish_tournament_warning')} <strong>{t('status_finished')}</strong>.{' '}
+            {t('label_reopen_hint_and_confirm')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setFinishDialog(false)}>Cancelar</Button>
+          <Button onClick={() => setFinishDialog(false)}>{t('cancel')}</Button>
           <LoadingButton
             variant="contained"
             color="info"
             loading={isSubmitting}
             onClick={() => handleStatusChange('finished')}
           >
-            Finalizar
+            {t('label_finish')}
           </LoadingButton>
         </DialogActions>
       </Dialog>
 
       {/* Delete confirmation (existing) */}
       <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Eliminar Torneo</DialogTitle>
+        <DialogTitle>{t('label_delete_tournament')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Esta acción no se puede deshacer. ¿Confirmas que deseas eliminar{' '}
-            <strong>{tournament.name}</strong>?
+            {t('label_action_cannot_be_undone')} <strong>{tournament.name}</strong>?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialog(false)}>Cancelar</Button>
+          <Button onClick={() => setDeleteDialog(false)}>{t('cancel')}</Button>
           <LoadingButton
             variant="contained"
             color="error"
             loading={isSubmitting}
             onClick={handleDelete}
           >
-            Eliminar
+            {t('delete')}
           </LoadingButton>
         </DialogActions>
       </Dialog>
@@ -489,13 +501,13 @@ export function TournamentDetailView() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Generar Calendario</DialogTitle>
+        <DialogTitle>{t('label_generate_schedule')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               fullWidth
               type="date"
-              label="Fecha de inicio"
+              label={t('label_start_date')}
               value={scheduleForm.start_date}
               onChange={(e) => setScheduleForm((f) => ({ ...f, start_date: e.target.value }))}
               InputLabelProps={{ shrink: true }}
@@ -503,7 +515,7 @@ export function TournamentDetailView() {
             <TextField
               fullWidth
               type="number"
-              label="Días entre jornadas"
+              label={t('label_days_between_matchdays')}
               value={scheduleForm.match_interval_days}
               onChange={(e) =>
                 setScheduleForm((f) => ({ ...f, match_interval_days: Number(e.target.value) }))
@@ -511,7 +523,7 @@ export function TournamentDetailView() {
             />
             <TextField
               fullWidth
-              label="Sede por defecto (opcional)"
+              label={t('label_default_venue_optional')}
               value={scheduleForm.default_venue}
               onChange={(e) => setScheduleForm((f) => ({ ...f, default_venue: e.target.value }))}
             />
@@ -519,12 +531,12 @@ export function TournamentDetailView() {
               <TextField
                 fullWidth
                 select
-                label="Grupo (opcional)"
+                label={t('label_group_optional')}
                 value={scheduleForm.group_id}
                 onChange={(e) => setScheduleForm((f) => ({ ...f, group_id: e.target.value }))}
-                helperText="Dejar vacío para generar para todos los equipos"
+                helperText={t('label_leave_empty_for_all_teams_hint')}
               >
-                <MenuItem value="">Todos los equipos</MenuItem>
+                <MenuItem value="">{t('label_all_teams')}</MenuItem>
                 {groups.map((g) => (
                   <MenuItem key={g.id} value={g.id}>
                     {g.name}
@@ -535,13 +547,13 @@ export function TournamentDetailView() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setScheduleDialog(false)}>Cancelar</Button>
+          <Button onClick={() => setScheduleDialog(false)}>{t('cancel')}</Button>
           <LoadingButton
             variant="contained"
             loading={isSubmitting}
             onClick={handleGenerateSchedule}
           >
-            Generar
+            {t('label_generate')}
           </LoadingButton>
         </DialogActions>
       </Dialog>
@@ -561,12 +573,17 @@ export function TournamentDetailView() {
         onClose={() => setDisciplineOpen(false)}
         PaperProps={{ sx: { width: { xs: '100%', sm: 520, md: 640 } } }}
       >
-        <Box sx={{ p: 2.5, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
+        <Box
+          sx={{
+            p: 2.5,
+            borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+          }}
+        >
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Stack>
-              <Typography variant="h6">Sanciones</Typography>
+              <Typography variant="h6">{t('label_sanctions')}</Typography>
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                Tarjetas por equipo, jugador y partido
+                {t('label_cards_by_team_player_match')}
               </Typography>
             </Stack>
             <IconButton onClick={() => setDisciplineOpen(false)}>
@@ -592,12 +609,17 @@ export function TournamentDetailView() {
         onClose={() => setUsersOpen(false)}
         PaperProps={{ sx: { width: { xs: '100%', sm: 520, md: 640 } } }}
       >
-        <Box sx={{ p: 2.5, borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
+        <Box
+          sx={{
+            p: 2.5,
+            borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+          }}
+        >
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Stack>
-              <Typography variant="h6">Usuarios</Typography>
+              <Typography variant="h6">{t('label_users')}</Typography>
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                Encargados de equipo del torneo
+                {t('label_tournament_team_managers')}
               </Typography>
             </Stack>
             <IconButton onClick={() => setUsersOpen(false)}>

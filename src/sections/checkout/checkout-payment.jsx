@@ -1,5 +1,7 @@
 import { z as zod } from 'zod';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Button from '@mui/material/Button';
@@ -22,23 +24,24 @@ import { CheckoutPaymentMethods } from './checkout-payment-methods';
 
 // ----------------------------------------------------------------------
 
+// label/description values below are i18n keys, resolved via t() at render time.
 const DELIVERY_OPTIONS = [
   {
     value: 0,
-    label: 'Entrega en el lugar',
-    description: 'Recoge tu pedido en la tienda sin costo.',
+    label: 'label_delivery_pickup',
+    description: 'label_delivery_pickup_desc',
     disabled: false,
   },
   {
     value: 10,
-    label: 'Standard',
-    description: 'Entrega en 3-5 días.',
+    label: 'word_standard',
+    description: 'label_delivery_standard_desc',
     disabled: true,
   },
   {
     value: 20,
-    label: 'Express',
-    description: 'Entrega en 2-3 días.',
+    label: 'word_express',
+    description: 'label_delivery_express_desc',
     disabled: true,
   },
 ];
@@ -47,38 +50,43 @@ const PAYMENT_OPTIONS = [
   {
     value: 'paypal',
     label: 'PayPal',
-    description: 'Paga con tu cuenta de PayPal.',
+    description: 'label_payment_paypal_desc',
     disabled: true,
   },
   {
     value: 'creditcard',
-    label: 'Tarjeta crédito / débito',
-    description: 'Aceptamos Mastercard, Visa, Discover y Stripe.',
+    label: 'word_credit_debit_card',
+    description: 'label_payment_card_desc',
     disabled: true,
   },
   {
     value: 'cash',
-    label: 'Efectivo',
-    description: 'Paga en efectivo al recibir tu pedido.',
+    label: 'word_cash',
+    description: 'label_payment_cash_desc',
     disabled: false,
   },
 ];
 
 const CARD_OPTIONS = [];
 
-export const PaymentSchema = zod.object({
-  payment: zod.string().min(1, { message: 'Selecciona un método de pago' }),
-  delivery: zod.number(),
-});
+export function getPaymentSchema(t) {
+  return zod.object({
+    payment: zod.string().min(1, { message: t('label_select_payment_method') }),
+    delivery: zod.number(),
+  });
+}
 
 // ----------------------------------------------------------------------
 
 export function CheckoutPayment() {
+  const { t } = useTranslation();
   const checkout = useCheckoutContext();
   const { selectedWorkspace } = useWorkspace();
   const { user } = useAuthContext();
 
   const defaultValues = { delivery: 0, payment: 'cash' };
+
+  const PaymentSchema = useMemo(() => getPaymentSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(PaymentSchema),
@@ -112,13 +120,13 @@ export function CheckoutPayment() {
           avatarUrl: user?.photoURL,
         },
         shippingAddress: {
-          fullAddress: checkout.billing?.fullAddress || 'Entrega en el lugar',
+          fullAddress: checkout.billing?.fullAddress || t('label_delivery_pickup'),
           addressType: checkout.billing?.addressType || 'Pickup',
           company: checkout.billing?.company || '',
         },
         delivery: {
           shipmentAmount: data.delivery,
-          deliveryType: deliveryOption?.label || 'Entrega en el lugar',
+          deliveryType: deliveryOption?.label || 'label_delivery_pickup',
         },
         payment: {
           payment: data.payment,
@@ -157,7 +165,7 @@ export function CheckoutPayment() {
             onClick={checkout.onBackStep}
             startIcon={<Iconify icon="eva:arrow-ios-back-fill" />}
           >
-            Atrás
+            {t('label_back')}
           </Button>
         </Grid>
 
@@ -179,7 +187,7 @@ export function CheckoutPayment() {
             variant="contained"
             loading={isSubmitting}
           >
-            Completar orden
+            {t('label_complete_order')}
           </LoadingButton>
         </Grid>
       </Grid>

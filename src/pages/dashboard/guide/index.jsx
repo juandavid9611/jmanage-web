@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { CONFIG } from 'src/config-global';
 
@@ -6,9 +7,10 @@ import { GuideView } from 'src/sections/guide/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Guia de inicio | ${CONFIG.site.name}` };
-
 export default function Page() {
+  const { t } = useTranslation();
+  const metadata = { title: `${t('nav_getting_started_guide')} | ${CONFIG.site.name}` };
+
   return (
     <>
       <Helmet>

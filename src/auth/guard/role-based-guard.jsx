@@ -1,4 +1,5 @@
 import { m } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -10,19 +11,19 @@ import { varBounce, MotionContainer } from 'src/components/animate';
 // ----------------------------------------------------------------------
 
 export function RoleBasedGuard({ sx, children, hasContent, currentRole, acceptRoles }) {
+  const { t } = useTranslation();
+
   if (typeof acceptRoles !== 'undefined' && !acceptRoles.includes(currentRole)) {
     return hasContent ? (
       <Container component={MotionContainer} sx={{ textAlign: 'center', ...sx }}>
         <m.div variants={varBounce().in}>
           <Typography variant="h3" sx={{ mb: 2 }}>
-            Permission denied
+            {t('permission_denied')}
           </Typography>
         </m.div>
 
         <m.div variants={varBounce().in}>
-          <Typography sx={{ color: 'text.secondary' }}>
-            You do not have permission to access this page.
-          </Typography>
+          <Typography sx={{ color: 'text.secondary' }}>{t('permission_denied_body')}</Typography>
         </m.div>
 
         <m.div variants={varBounce().in}>

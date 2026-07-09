@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -29,6 +30,7 @@ import { SignOutButton } from './sign-out-button';
 // ----------------------------------------------------------------------
 
 export function AccountDrawer({ data = [], sx, ...other }) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   const router = useRouter();
@@ -122,8 +124,8 @@ export function AccountDrawer({ data = [], sx, ...other }) {
                   key={accountId}
                   title={
                     isActive
-                      ? `Active account: ${accountName} (${role})`
-                      : `Switch to: ${accountName} (${role})`
+                      ? `${t('label_active_account')}: ${accountName} (${t(role)})`
+                      : `${t('label_switch_to')}: ${accountName} (${t(role)})`
                   }
                 >
                   <Box
@@ -182,14 +184,16 @@ export function AccountDrawer({ data = [], sx, ...other }) {
             }}
           >
             {data.map((option) => {
-              const rootLabel = pathname.includes('/dashboard') ? 'Home' : 'Dashboard';
+              const rootLabel = pathname.includes('/dashboard') ? 'nav_home' : 'nav_dashboard';
 
               const rootHref = pathname.includes('/dashboard') ? '/' : paths.dashboard.root;
 
               return (
                 <MenuItem
                   key={option.label}
-                  onClick={() => handleClickItem(option.label === 'Home' ? rootHref : option.href)}
+                  onClick={() =>
+                    handleClickItem(option.label === 'nav_home' ? rootHref : option.href)
+                  }
                   sx={{
                     py: 1,
                     color: 'text.secondary',
@@ -200,7 +204,7 @@ export function AccountDrawer({ data = [], sx, ...other }) {
                   {option.icon}
 
                   <Box component="span" sx={{ ml: 2 }}>
-                    {option.label === 'Home' ? rootLabel : option.label}
+                    {t(option.label === 'nav_home' ? rootLabel : option.label)}
                   </Box>
 
                   {option.info && (

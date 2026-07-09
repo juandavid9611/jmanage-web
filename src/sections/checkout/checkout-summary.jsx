@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -15,16 +17,17 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, onApplyDiscount }) {
-  const displayShipping = shipping !== null ? 'Free' : '-';
+  const { t } = useTranslation();
+  const displayShipping = shipping !== null ? t('word_free') : '-';
 
   return (
     <Card sx={{ mb: 3 }}>
       <CardHeader
-        title="Order summary"
+        title={t('label_order_summary')}
         action={
           onEdit && (
             <Button size="small" onClick={onEdit} startIcon={<Iconify icon="solar:pen-bold" />}>
-              Edit
+              {t('edit')}
             </Button>
           )
         }
@@ -37,7 +40,7 @@ export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, o
             variant="body2"
             sx={{ flexGrow: 1, color: 'text.secondary' }}
           >
-            Sub total
+            {t('label_subtotal')}
           </Typography>
           <Typography component="span" variant="subtitle2">
             {fCurrency(subtotal)}
@@ -50,7 +53,7 @@ export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, o
             variant="body2"
             sx={{ flexGrow: 1, color: 'text.secondary' }}
           >
-            Discount
+            {t('label_discount')}
           </Typography>
           <Typography component="span" variant="subtitle2">
             {discount ? fCurrency(-discount) : '-'}
@@ -63,7 +66,7 @@ export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, o
             variant="body2"
             sx={{ flexGrow: 1, color: 'text.secondary' }}
           >
-            Shipping
+            {t('label_shipping')}
           </Typography>
           <Typography component="span" variant="subtitle2">
             {shipping ? fCurrency(shipping) : displayShipping}
@@ -74,7 +77,7 @@ export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, o
 
         <Box display="flex">
           <Typography component="span" variant="subtitle1" sx={{ flexGrow: 1 }}>
-            Total
+            {t('total')}
           </Typography>
 
           <Box sx={{ textAlign: 'right' }}>
@@ -86,7 +89,7 @@ export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, o
               {fCurrency(total)}
             </Typography>
             <Typography variant="caption" sx={{ fontStyle: 'italic' }}>
-              (VAT included if applicable)
+              {t('label_vat_included_if_applicable')}
             </Typography>
           </Box>
         </Box>
@@ -94,13 +97,13 @@ export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, o
         {onApplyDiscount && (
           <TextField
             fullWidth
-            placeholder="Discount codes / Gifts"
+            placeholder={t('label_discount_codes_gifts')}
             value="DISCOUNT5"
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
                   <Button color="primary" onClick={() => onApplyDiscount(5)} sx={{ mr: -0.5 }}>
-                    Apply
+                    {t('label_apply')}
                   </Button>
                 </InputAdornment>
               ),

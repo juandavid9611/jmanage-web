@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
@@ -29,20 +30,21 @@ import { ProductDetailsDescription } from '../product-details-description';
 
 // ----------------------------------------------------------------------
 
+// title/description values below are i18n keys, resolved via t() at render time.
 const SUMMARY = [
   {
-    title: '100% original',
-    description: 'Chocolate bar candy canes ice cream toffee cookie halvah.',
+    title: 'label_summary_original_title',
+    description: 'label_summary_original_desc',
     icon: 'solar:verified-check-bold',
   },
   {
-    title: '10 days replacement',
-    description: 'Marshmallow biscuit donut dragée fruitcake wafer.',
+    title: 'label_summary_replacement_title',
+    description: 'label_summary_replacement_desc',
     icon: 'solar:clock-circle-bold',
   },
   {
-    title: 'Year warranty',
-    description: 'Cotton candy gingerbread cake I love sugar sweet.',
+    title: 'label_summary_warranty_title',
+    description: 'label_summary_warranty_desc',
     icon: 'solar:shield-check-bold',
   },
 ];
@@ -50,6 +52,7 @@ const SUMMARY = [
 // ----------------------------------------------------------------------
 
 export function ProductDetailsView({ product, error, loading }) {
+  const { t } = useTranslation();
   const tabs = useTabs('description');
 
   const [publish, setPublish] = useState('');
@@ -77,7 +80,7 @@ export function ProductDetailsView({ product, error, loading }) {
       <DashboardContent sx={{ pt: 5 }}>
         <EmptyContent
           filled
-          title="Product not found!"
+          title={t('label_product_not_found')}
           action={
             <Button
               component={RouterLink}
@@ -85,7 +88,7 @@ export function ProductDetailsView({ product, error, loading }) {
               startIcon={<Iconify width={16} icon="eva:arrow-ios-back-fill" />}
               sx={{ mt: 3 }}
             >
-              Back to list
+              {t('label_back_to_list')}
             </Button>
           }
           sx={{ py: 10, height: 'auto', flexGrow: 'unset' }}
@@ -126,11 +129,11 @@ export function ProductDetailsView({ product, error, loading }) {
             <Iconify icon={item.icon} width={32} sx={{ color: 'primary.main' }} />
 
             <Typography variant="subtitle1" sx={{ mb: 1, mt: 2 }}>
-              {item.title}
+              {t(item.title)}
             </Typography>
 
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {item.description}
+              {t(item.description)}
             </Typography>
           </Box>
         ))}
@@ -147,8 +150,8 @@ export function ProductDetailsView({ product, error, loading }) {
           }}
         >
           {[
-            { value: 'description', label: 'Description' },
-            { value: 'reviews', label: `Reviews (${product?.reviews.length})` },
+            { value: 'description', label: t('label_description') },
+            { value: 'reviews', label: `${t('label_reviews')} (${product?.reviews.length})` },
           ].map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} />
           ))}

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Stack from '@mui/material/Stack';
 import Checkbox from '@mui/material/Checkbox';
 import Typography from '@mui/material/Typography';
@@ -13,6 +15,8 @@ export function TableSelectedAction({
   sx,
   ...other
 }) {
+  const { t } = useTranslation();
+
   if (!numSelected) {
     return null;
   }
@@ -51,7 +55,7 @@ export function TableSelectedAction({
           ...(dense && { ml: 3 }),
         }}
       >
-        {numSelected} selected
+        {numSelected} {t('label_selected')}
       </Typography>
 
       {action && action}

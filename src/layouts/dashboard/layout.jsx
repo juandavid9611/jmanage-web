@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
@@ -23,12 +24,13 @@ import { NavHorizontal } from './nav-horizontal';
 import { _account } from '../config-nav-account';
 import { HeaderBase } from '../core/header-base';
 import { LayoutSection } from '../core/layout-section';
-import { teamOwnerNavData } from '../config-nav-team-owner';
-import { navData as dashboardNavData } from '../config-nav-dashboard';
+import { getTeamOwnerNavData } from '../config-nav-team-owner';
+import { getNavData as getDashboardNavData } from '../config-nav-dashboard';
 
 // ----------------------------------------------------------------------
 
 export function DashboardLayout({ sx, children, data }) {
+  const { t } = useTranslation();
   const theme = useTheme();
 
   const mobileNavOpen = useBoolean();
@@ -48,8 +50,8 @@ export function DashboardLayout({ sx, children, data }) {
     user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club';
   const defaultNavData =
     activeRole === 'team_owner'
-      ? teamOwnerNavData
-      : filterClubOnlyNav(dashboardNavData, activeAccountType);
+      ? getTeamOwnerNavData(t)
+      : filterClubOnlyNav(getDashboardNavData(t), activeAccountType);
   const navData = data?.nav ?? defaultNavData;
 
   const isNavMini = settings.navLayout === 'mini';
@@ -91,7 +93,6 @@ export function DashboardLayout({ sx, children, data }) {
               signIn: false,
               purchase: false,
               helpLink: false,
-              localization: false,
             }}
             slots={{
               topArea: (

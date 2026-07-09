@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -52,8 +53,8 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-function getDefaultPhase(tournament, teams) {
-  const phases = getPhases(tournament, teams);
+function getDefaultPhase(tournament, teams, t) {
+  const phases = getPhases(tournament, teams, undefined, undefined, t);
   const active = phases.find((p) => p.state === 'active');
   if (active) return active.key;
   const lastDone = [...phases].reverse().find((p) => p.state === 'done');
@@ -68,6 +69,7 @@ function getDefaultPhase(tournament, teams) {
  * The owner's team is highlighted via highlightTeamId.
  */
 function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, onBack }) {
+  const { t } = useTranslation();
   const [activePhase, setActivePhase] = useState(initialPhase);
   const [selectedMw, setSelectedMw] = useState(undefined);
 
@@ -90,14 +92,14 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
   );
 
   const currentPhase =
-    activePhase || (tournament ? getDefaultPhase(tournament, teams) : 'configuracion');
+    activePhase || (tournament ? getDefaultPhase(tournament, teams, t) : 'configuracion');
 
   const isKnockoutPhase = currentPhase === 'eliminatorias';
 
   if (tournamentLoading) return <LoadingScreen />;
 
   if (!tournament) {
-    return <EmptyContent title="Torneo no encontrado" sx={{ py: 8 }} />;
+    return <EmptyContent title={t('label_tournament_not_found')} sx={{ py: 8 }} />;
   }
 
   return (
@@ -123,7 +125,7 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
       />
 
       {/* Phase content */}
-      <Box sx={{ bgcolor: (t) => alpha(t.palette.grey[500], 0.02), minHeight: 400 }}>
+      <Box sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.02), minHeight: 400 }}>
         {/* ── RESUMEN (configuracion) ── */}
         {currentPhase === 'configuracion' && (
           <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
@@ -146,7 +148,9 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
               xs={12}
               md={6}
               sx={{
-                borderRight: (t) => ({ md: `1px solid ${alpha(t.palette.grey[500], 0.12)}` }),
+                borderRight: (theme) => ({
+                  md: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+                }),
               }}
             >
               {totalMw > 0 && (
@@ -163,13 +167,15 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
               <Box sx={{ p: { xs: 2, md: 3 } }}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
                   <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
-                    {activeMw === null ? 'Todos los partidos' : `Jornada ${activeMw}`}
+                    {activeMw === null
+                      ? t('label_all_matches')
+                      : `${t('label_matchday')} ${activeMw}`}
                   </Typography>
                   <Box
                     sx={{
                       flex: 1,
                       height: 1,
-                      bgcolor: (t) => alpha(t.palette.grey[500], 0.08),
+                      bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
                     }}
                   />
                 </Stack>
@@ -225,25 +231,36 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
           <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
             <Box>
               <Typography variant="h6" sx={{ mb: 1.5 }}>
-                Goleadores
+                {t('label_top_scorers')}
               </Typography>
-              <PlayerRankingTable tournamentId={tournamentId} metric="goals" highlightTeamId={highlightTeamId} />
+              <PlayerRankingTable
+                tournamentId={tournamentId}
+                metric="goals"
+                highlightTeamId={highlightTeamId}
+              />
             </Box>
             <Box>
               <Typography variant="h6" sx={{ mb: 1.5 }}>
-                Asistencias
+                {t('label_assists')}
               </Typography>
-              <PlayerRankingTable tournamentId={tournamentId} metric="assists" highlightTeamId={highlightTeamId} />
+              <PlayerRankingTable
+                tournamentId={tournamentId}
+                metric="assists"
+                highlightTeamId={highlightTeamId}
+              />
             </Box>
             <Box>
               <Typography variant="h6" sx={{ mb: 1.5 }}>
-                Amonestaciones
+                {t('label_cautions')}
               </Typography>
-              <PlayerRankingTable tournamentId={tournamentId} metric="cards" highlightTeamId={highlightTeamId} />
+              <PlayerRankingTable
+                tournamentId={tournamentId}
+                metric="cards"
+                highlightTeamId={highlightTeamId}
+              />
             </Box>
           </Stack>
         )}
-
       </Box>
     </DashboardContent>
   );
@@ -255,14 +272,15 @@ function TournamentView({ tournamentId, highlightTeamId, initialPhase = null, on
  * Top strip showing the team owner's team info + tournament context.
  */
 function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
-  const myTeam = teams?.find((t) => t.id === highlightTeamId);
+  const { t } = useTranslation();
+  const myTeam = teams?.find((team) => team.id === highlightTeamId);
 
   return (
     <Box
       sx={{
         px: { xs: 2, md: 5 },
         py: 2,
-        borderBottom: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+        borderBottom: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
         bgcolor: 'background.paper',
       }}
     >
@@ -275,7 +293,7 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
             startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={18} />}
             sx={{ mr: 1, flexShrink: 0 }}
           >
-            Mis torneos
+            {t('label_my_tournaments')}
           </Button>
         )}
         {/* Team logo + name */}
@@ -288,7 +306,7 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
                 sx={{
                   width: 44,
                   height: 44,
-                  border: (t) => `2px solid ${t.palette.primary.main}`,
+                  border: (theme) => `2px solid ${theme.palette.primary.main}`,
                 }}
               />
             ) : (
@@ -297,11 +315,11 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
                   width: 44,
                   height: 44,
                   borderRadius: 1,
-                  bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: (t) => `2px solid ${t.palette.primary.main}`,
+                  border: (theme) => `2px solid ${theme.palette.primary.main}`,
                 }}
               >
                 <Iconify icon="mdi:shield-half-full" width={24} sx={{ color: 'primary.main' }} />
@@ -312,7 +330,7 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
                 {myTeam.name}
               </Typography>
               <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
-                Mi equipo
+                {t('label_my_team')}
               </Typography>
             </Stack>
           </Stack>
@@ -324,7 +342,7 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
             sx={{
               width: '1px',
               height: 32,
-              bgcolor: (t) => alpha(t.palette.grey[500], 0.2),
+              bgcolor: (theme) => alpha(theme.palette.grey[500], 0.2),
               alignSelf: 'stretch',
               display: { xs: 'none', sm: 'block' },
             }}
@@ -350,11 +368,12 @@ function TeamStrip({ tournament, teams, highlightTeamId, onBack }) {
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const POSITION_LABEL = {
-  Goalkeeper: 'Portero',
-  Defender: 'Defensa',
-  Midfielder: 'Centrocampista',
-  Forward: 'Delantero',
+  Goalkeeper: 'position_goalkeeper',
+  Defender: 'position_defender',
+  Midfielder: 'position_midfielder',
+  Forward: 'position_forward',
 };
 const POSITION_ORDER = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 const POSITION_COLOR = {
@@ -375,10 +394,13 @@ function getInitials(name) {
  * Player card with avatar, jersey number, position pill, and three-dot menu.
  */
 function PlayerRow({ player, onEdit, onDelete }) {
+  const { t } = useTranslation();
   const popover = usePopover();
   const hasPhoto = !!player.avatar_url;
   const positionColor = POSITION_COLOR[player.position] || 'primary';
-  const positionLabel = POSITION_LABEL[player.position] || player.position;
+  const positionLabel = POSITION_LABEL[player.position]
+    ? t(POSITION_LABEL[player.position])
+    : player.position;
 
   return (
     <Box
@@ -386,12 +408,12 @@ function PlayerRow({ player, onEdit, onDelete }) {
         position: 'relative',
         p: 1.5,
         borderRadius: 1.5,
-        border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+        border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
         bgcolor: 'background.paper',
         transition: 'all 0.15s',
         '&:hover': {
-          borderColor: (t) => alpha(t.palette.primary.main, 0.4),
-          boxShadow: (t) => t.customShadows?.z8 || '0 4px 12px rgba(0,0,0,0.06)',
+          borderColor: (theme) => alpha(theme.palette.primary.main, 0.4),
+          boxShadow: (theme) => theme.customShadows?.z8 || '0 4px 12px rgba(0,0,0,0.06)',
         },
       }}
     >
@@ -404,7 +426,7 @@ function PlayerRow({ player, onEdit, onDelete }) {
             sx={{
               width: 56,
               height: 56,
-              bgcolor: (t) => alpha(t.palette[positionColor].main, 0.12),
+              bgcolor: (theme) => alpha(theme.palette[positionColor].main, 0.12),
               color: `${positionColor}.dark`,
               fontWeight: 700,
               fontSize: '1rem',
@@ -423,7 +445,7 @@ function PlayerRow({ player, onEdit, onDelete }) {
                 px: 0.6,
                 borderRadius: 1,
                 bgcolor: 'background.paper',
-                border: (t) => `1.5px solid ${t.palette.text.primary}`,
+                border: (theme) => `1.5px solid ${theme.palette.text.primary}`,
                 color: 'text.primary',
                 display: 'flex',
                 alignItems: 'center',
@@ -440,11 +462,7 @@ function PlayerRow({ player, onEdit, onDelete }) {
 
         {/* Identity stack */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            variant="subtitle2"
-            sx={{ fontWeight: 700, lineHeight: 1.2, mb: 0.5 }}
-            noWrap
-          >
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2, mb: 0.5 }} noWrap>
             {player.name}
           </Typography>
           <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.25 }}>
@@ -480,7 +498,7 @@ function PlayerRow({ player, onEdit, onDelete }) {
           sx={{ fontSize: 13 }}
         >
           <Iconify icon="solar:pen-bold" width={16} sx={{ mr: 1 }} />
-          Editar
+          {t('edit')}
         </MenuItem>
         <MenuItem
           onClick={() => {
@@ -490,7 +508,7 @@ function PlayerRow({ player, onEdit, onDelete }) {
           sx={{ fontSize: 13, color: 'error.main' }}
         >
           <Iconify icon="solar:trash-bin-trash-bold" width={16} sx={{ mr: 1 }} />
-          Eliminar
+          {t('delete')}
         </MenuItem>
       </CustomPopover>
     </Box>
@@ -503,7 +521,8 @@ function PlayerRow({ player, onEdit, onDelete }) {
  * My team's player roster with CRUD affordances for team owners.
  */
 function MyTeamRoster({ tournamentId, teamId, teams }) {
-  const myTeam = teams?.find((t) => t.id === teamId);
+  const { t } = useTranslation();
+  const myTeam = teams?.find((team) => team.id === teamId);
   const { players, playersLoading } = useGetPlayers(tournamentId, teamId);
 
   const [addOpen, setAddOpen] = useState(false);
@@ -519,14 +538,14 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
     setDeleting(true);
     try {
       await deletePlayer(tournamentId, deletePlayer_.id);
-      toast.success('Jugador eliminado');
+      toast.success(t('label_player_deleted'));
       setDeletePlayer_(null);
     } catch (err) {
-      toast.error(err?.message || 'Error al eliminar jugador');
+      toast.error(err?.message || t('label_error_deleting_player'));
     } finally {
       setDeleting(false);
     }
-  }, [tournamentId, deletePlayer_]);
+  }, [tournamentId, deletePlayer_, t]);
 
   if (!myTeam) return null;
 
@@ -534,14 +553,16 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
     <Box>
       {/* Header */}
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="h6">Plantel — {myTeam.name}</Typography>
+        <Typography variant="h6">
+          {t('label_roster')} — {myTeam.name}
+        </Typography>
         <Button
           size="small"
           variant="contained"
           startIcon={<Iconify icon="mingcute:add-line" width={16} />}
           onClick={() => setAddOpen(true)}
         >
-          Agregar jugador
+          {t('label_add_player')}
         </Button>
       </Stack>
 
@@ -552,7 +573,7 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
           ))}
         </Stack>
       ) : !players?.length ? (
-        <EmptyContent title="Sin jugadores registrados" sx={{ py: 4 }} />
+        <EmptyContent title={t('label_no_players_registered')} sx={{ py: 4 }} />
       ) : (
         <Stack spacing={3}>
           {POSITION_ORDER.map((position) => {
@@ -562,12 +583,18 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
               <Box key={position}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                    {POSITION_LABEL[position]}
+                    {t(POSITION_LABEL[position])}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {group.length}
                   </Typography>
-                  <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.12) }} />
+                  <Box
+                    sx={{
+                      flex: 1,
+                      height: 1,
+                      bgcolor: (theme) => alpha(theme.palette.grey[500], 0.12),
+                    }}
+                  />
                 </Stack>
                 <Box
                   display="grid"
@@ -588,12 +615,18 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
               <Box>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                    Sin posición
+                    {t('label_no_position')}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {other.length}
                   </Typography>
-                  <Box sx={{ flex: 1, height: 1, bgcolor: (t) => alpha(t.palette.grey[500], 0.12) }} />
+                  <Box
+                    sx={{
+                      flex: 1,
+                      height: 1,
+                      bgcolor: (theme) => alpha(theme.palette.grey[500], 0.12),
+                    }}
+                  />
                 </Stack>
                 <Box
                   display="grid"
@@ -631,8 +664,8 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
       <ConfirmDialog
         open={!!deletePlayer_}
         onClose={() => setDeletePlayer_(null)}
-        title="Eliminar jugador"
-        content={`¿Estás seguro de que deseas eliminar a ${deletePlayer_?.name}? Esta acción no se puede deshacer.`}
+        title={t('label_delete_player')}
+        content={`${t('label_confirm_delete_player_prefix')} ${deletePlayer_?.name}? ${t('label_action_cannot_be_undone')}`}
         action={
           <LoadingButton
             variant="contained"
@@ -640,7 +673,7 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
             loading={deleting}
             onClick={handleConfirmDelete}
           >
-            Eliminar
+            {t('delete')}
           </LoadingButton>
         }
       />
@@ -681,6 +714,7 @@ function getFirstName(user) {
  * Team owner welcome landing — greeting + one rich card per managed team.
  */
 function TeamOwnerWelcome({ teams, onEnter }) {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const firstName = getFirstName(user);
 
@@ -689,12 +723,13 @@ function TeamOwnerWelcome({ teams, onEnter }) {
       <Stack spacing={3}>
         <Box>
           <Typography variant="h4" sx={{ mb: 0.5 }}>
-            Bienvenido{firstName ? `, ${firstName}` : ''} 👋
+            {t('label_welcome')}
+            {firstName ? `, ${firstName}` : ''} 👋
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {teams.length === 1
-              ? 'Este es el equipo que gestionas hoy.'
-              : 'Estos son los equipos que gestionas hoy.'}
+              ? t('label_this_is_team_you_manage_today')
+              : t('label_these_are_teams_you_manage_today')}
           </Typography>
         </Box>
 
@@ -722,6 +757,7 @@ function formatDate(date) {
 }
 
 function RichTeamCard({ entry, onEnter }) {
+  const { t } = useTranslation();
   const { tournament } = useGetTournament(entry.tournament_id);
   const { teams: tournamentTeams } = useGetTeams(entry.tournament_id);
   const { players } = useGetPlayers(entry.tournament_id, entry.tournament_team_id);
@@ -735,8 +771,8 @@ function RichTeamCard({ entry, onEnter }) {
   const ROSTER_MAX = 30;
   const rosterDone = playerCount >= ROSTER_MAX;
 
-  const otherTeams = (tournamentTeams || []).filter((t) => t.id !== entry.tournament_team_id);
-  const myTeam = (tournamentTeams || []).find((t) => t.id === entry.tournament_team_id);
+  const otherTeams = (tournamentTeams || []).filter((team) => team.id !== entry.tournament_team_id);
+  const myTeam = (tournamentTeams || []).find((team) => team.id === entry.tournament_team_id);
 
   return (
     <Card>
@@ -755,7 +791,7 @@ function RichTeamCard({ entry, onEnter }) {
                 sx={{
                   width: 56,
                   height: 56,
-                  bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
                   color: 'primary.main',
                 }}
               >
@@ -767,9 +803,9 @@ function RichTeamCard({ entry, onEnter }) {
                 sx={{
                   width: 56,
                   height: 56,
-                  bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                   color: 'primary.main',
-                  border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                  border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
                 }}
               >
                 <Iconify icon="mdi:trophy-outline" width={28} />
@@ -781,7 +817,7 @@ function RichTeamCard({ entry, onEnter }) {
                 {entry.team_name}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-                Tu equipo en <strong>{entry.tournament_name}</strong>
+                {t('label_your_team_in')} <strong>{entry.tournament_name}</strong>
               </Typography>
             </Box>
           </Stack>
@@ -798,13 +834,13 @@ function RichTeamCard({ entry, onEnter }) {
               borderRadius: 1.5,
               fontWeight: 700,
               color: 'primary.dark',
-              bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
               '&:hover': {
-                bgcolor: (t) => alpha(t.palette.primary.main, 0.2),
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
               },
             }}
           >
-            Entrar al torneo
+            {t('label_enter_tournament')}
           </Button>
         </Stack>
 
@@ -831,13 +867,17 @@ function RichTeamCard({ entry, onEnter }) {
           {startDate && (
             <Stack direction="row" alignItems="center" spacing={0.75}>
               <Iconify icon="solar:calendar-bold" width={16} />
-              <Typography variant="body2">Inicia {formatDate(startDate)}</Typography>
+              <Typography variant="body2">
+                {t('label_starts')} {formatDate(startDate)}
+              </Typography>
             </Stack>
           )}
           {drawDate && (
             <Stack direction="row" alignItems="center" spacing={0.75}>
               <Iconify icon="mdi:dice-multiple" width={16} />
-              <Typography variant="body2">Sorteo {formatDate(drawDate)}</Typography>
+              <Typography variant="body2">
+                {t('label_draw')} {formatDate(drawDate)}
+              </Typography>
             </Stack>
           )}
         </Stack>
@@ -855,29 +895,35 @@ function RichTeamCard({ entry, onEnter }) {
           xs={12}
           md={otherTeams.length > 0 ? 7 : 12}
           sx={{
-            borderRight: (t) => ({
-              md: otherTeams.length > 0 ? `1px solid ${alpha(t.palette.grey[500], 0.12)}` : 'none',
+            borderRight: (theme) => ({
+              md:
+                otherTeams.length > 0
+                  ? `1px solid ${alpha(theme.palette.grey[500], 0.12)}`
+                  : 'none',
             }),
           }}
         >
           <CardContent sx={{ pb: 2 }}>
-            <Typography variant="overline" sx={{ color: 'text.disabled', display: 'block', mb: 1.5 }}>
-              Próximos pasos
+            <Typography
+              variant="overline"
+              sx={{ color: 'text.disabled', display: 'block', mb: 1.5 }}
+            >
+              {t('label_next_steps')}
             </Typography>
             <Stack spacing={1.25}>
-              <ChecklistItem done label="Aceptaste la invitación" />
+              <ChecklistItem done label={t('label_accepted_invitation')} />
               <ChecklistItem
                 done={rosterDone}
-                label="Confirma tu plantel"
-                hint={`${playerCount}/${ROSTER_MAX} jugadores`}
+                label={t('label_confirm_your_roster')}
+                hint={`${playerCount}/${ROSTER_MAX} ${t('label_players_lowercase')}`}
                 progress={{ value: playerCount, max: ROSTER_MAX }}
-                actionLabel={rosterDone ? undefined : 'Registrar'}
+                actionLabel={rosterDone ? undefined : t('label_register')}
                 onAction={rosterDone ? undefined : () => onEnter(entry, 'inscripcion')}
               />
               <ChecklistItem
                 done={false}
-                label="Espera el sorteo de grupos"
-                hint={drawDate ? formatDate(drawDate) : 'Pronto'}
+                label={t('label_wait_for_group_draw')}
+                hint={drawDate ? formatDate(drawDate) : t('label_soon')}
               />
             </Stack>
           </CardContent>
@@ -888,8 +934,8 @@ function RichTeamCard({ entry, onEnter }) {
             xs={12}
             md={5}
             sx={{
-              borderTop: (t) => ({
-                xs: `1px solid ${alpha(t.palette.grey[500], 0.12)}`,
+              borderTop: (theme) => ({
+                xs: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
                 md: 'none',
               }),
             }}
@@ -899,7 +945,7 @@ function RichTeamCard({ entry, onEnter }) {
                 variant="overline"
                 sx={{ color: 'text.disabled', display: 'block', mb: 1 }}
               >
-                Equipos participantes ({otherTeams.length + 1})
+                {t('label_participating_teams')} ({otherTeams.length + 1})
               </Typography>
               <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                 <Chip
@@ -909,20 +955,20 @@ function RichTeamCard({ entry, onEnter }) {
                   variant="filled"
                   sx={{ fontWeight: 600 }}
                 />
-                {otherTeams.map((t) => (
-                  <Chip key={t.id} size="small" label={t.name} variant="outlined" />
+                {otherTeams.map((team) => (
+                  <Chip key={team.id} size="small" label={team.name} variant="outlined" />
                 ))}
               </Stack>
             </CardContent>
           </Grid>
         )}
       </Grid>
-
     </Card>
   );
 }
 
 function TournamentCountdown({ targetDate }) {
+  const { t } = useTranslation();
   const countdown = useCountdownDate(targetDate);
 
   return (
@@ -933,7 +979,7 @@ function TournamentCountdown({ targetDate }) {
           variant="overline"
           sx={{ color: 'text.disabled', letterSpacing: 2, display: 'block', mb: 1.5 }}
         >
-          El torneo comienza en
+          {t('label_tournament_starts_in')}
         </Typography>
         <Stack
           direction="row"
@@ -944,10 +990,10 @@ function TournamentCountdown({ targetDate }) {
           }
           sx={{ typography: { xs: 'h4', sm: 'h3' } }}
         >
-          <TimeBlock value={countdown.days} label="días" />
-          <TimeBlock value={countdown.hours} label="horas" />
-          <TimeBlock value={countdown.minutes} label="min" />
-          <TimeBlock value={countdown.seconds} label="seg" />
+          <TimeBlock value={countdown.days} label={t('label_days_abbr')} />
+          <TimeBlock value={countdown.hours} label={t('label_hours_abbr')} />
+          <TimeBlock value={countdown.minutes} label={t('label_minutes_abbr')} />
+          <TimeBlock value={countdown.seconds} label={t('label_seconds_abbr')} />
         </Stack>
       </Box>
     </>
@@ -957,9 +1003,7 @@ function TournamentCountdown({ targetDate }) {
 function TimeBlock({ value, label }) {
   return (
     <Box sx={{ textAlign: 'center', minWidth: 48 }}>
-      <Box sx={{ fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-        {value}
-      </Box>
+      <Box sx={{ fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</Box>
       <Typography
         variant="caption"
         sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}
@@ -971,15 +1015,17 @@ function TimeBlock({ value, label }) {
 }
 
 function ChecklistItem({ done, label, hint, actionLabel, onAction, progress }) {
-  const pct = progress
-    ? Math.min(100, Math.round((progress.value / progress.max) * 100))
-    : null;
+  const pct = progress ? Math.min(100, Math.round((progress.value / progress.max) * 100)) : null;
   return (
     <Stack direction="row" alignItems={progress ? 'flex-start' : 'center'} spacing={1.5}>
       <Iconify
         icon={done ? 'solar:check-circle-bold' : 'solar:check-circle-line-duotone'}
         width={20}
-        sx={{ color: done ? 'success.main' : 'text.disabled', flexShrink: 0, mt: progress ? 0.25 : 0 }}
+        sx={{
+          color: done ? 'success.main' : 'text.disabled',
+          flexShrink: 0,
+          mt: progress ? 0.25 : 0,
+        }}
       />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -998,7 +1044,7 @@ function ChecklistItem({ done, label, hint, actionLabel, onAction, progress }) {
               mt: 0.75,
               height: 6,
               borderRadius: 1,
-              bgcolor: (t) => alpha(t.palette.grey[500], 0.12),
+              bgcolor: (theme) => alpha(theme.palette.grey[500], 0.12),
               '& .MuiLinearProgress-bar': {
                 borderRadius: 1,
                 bgcolor: done ? 'success.main' : 'primary.main',
@@ -1022,6 +1068,7 @@ function ChecklistItem({ done, label, hint, actionLabel, onAction, progress }) {
  * Root view: resolves the team owner's tournament(s) and renders the appropriate UI.
  */
 export function TeamOwnerTournamentView() {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState(null);
   const { teams, teamsLoading } = useGetMyTeamOwnerTeams();
 
@@ -1031,8 +1078,8 @@ export function TeamOwnerTournamentView() {
     return (
       <DashboardContent>
         <EmptyContent
-          title="Sin torneo asignado"
-          description="No eres responsable de ningún equipo en un torneo activo."
+          title={t('label_no_tournament_assigned')}
+          description={t('label_no_tournament_assigned_desc')}
           sx={{ py: 10 }}
         />
       </DashboardContent>

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Table from '@mui/material/Table';
@@ -16,6 +18,7 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export function TopScorersTable({ tournamentId, publicMode = false }) {
+  const { t } = useTranslation();
   const auth = useGetTopScorers(publicMode ? null : tournamentId);
   const pub = useGetPublicTopScorers(publicMode ? tournamentId : null);
   const { scorers, scorersLoading } = publicMode ? pub : auth;
@@ -27,14 +30,14 @@ export function TopScorersTable({ tournamentId, publicMode = false }) {
           <TableHead>
             <TableRow>
               <TableCell width={50}>#</TableCell>
-              <TableCell>Jugador</TableCell>
-              <TableCell>Equipo</TableCell>
+              <TableCell>{t('label_player_singular')}</TableCell>
+              <TableCell>{t('team')}</TableCell>
               <TableCell align="center">
                 <Iconify icon="mdi:soccer" width={18} sx={{ verticalAlign: 'middle' }} />
-                {' Goles'}
+                {` ${t('word_goals')}`}
               </TableCell>
-              <TableCell align="center">Penales</TableCell>
-              <TableCell align="center">Autogoles</TableCell>
+              <TableCell align="center">{t('label_penalties')}</TableCell>
+              <TableCell align="center">{t('label_own_goals')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -69,12 +72,8 @@ export function TopScorersTable({ tournamentId, publicMode = false }) {
                     {row.goals}
                   </Typography>
                 </TableCell>
-                <TableCell align="center">
-                  {row.penalties > 0 ? row.penalties : '-'}
-                </TableCell>
-                <TableCell align="center">
-                  {row.own_goals > 0 ? row.own_goals : '-'}
-                </TableCell>
+                <TableCell align="center">{row.penalties > 0 ? row.penalties : '-'}</TableCell>
+                <TableCell align="center">{row.own_goals > 0 ? row.own_goals : '-'}</TableCell>
               </TableRow>
             ))}
             {scorersLoading &&
@@ -90,7 +89,7 @@ export function TopScorersTable({ tournamentId, publicMode = false }) {
             {scorers.length === 0 && !scorersLoading && (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                  No hay goles registrados aún
+                  {t('label_no_goals_recorded_yet')}
                 </TableCell>
               </TableRow>
             )}

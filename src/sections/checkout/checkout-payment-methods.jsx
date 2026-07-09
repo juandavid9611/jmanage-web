@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import Box from '@mui/material/Box';
@@ -22,6 +23,7 @@ import { PaymentNewCardForm } from '../payment/payment-new-card-form';
 // ----------------------------------------------------------------------
 
 export function CheckoutPaymentMethods({ name, options, ...other }) {
+  const { t } = useTranslation();
   const { control } = useFormContext();
 
   const openForm = useBoolean();
@@ -29,7 +31,7 @@ export function CheckoutPaymentMethods({ name, options, ...other }) {
   return (
     <>
       <Card {...other}>
-        <CardHeader title="Pago" />
+        <CardHeader title={t('payment')} />
 
         <Controller
           name={name}
@@ -67,7 +69,7 @@ export function CheckoutPaymentMethods({ name, options, ...other }) {
       </Card>
 
       <Dialog fullWidth maxWidth="xs" open={openForm.value} onClose={openForm.onFalse}>
-        <DialogTitle> Add new card </DialogTitle>
+        <DialogTitle> {t('label_add_new_card')} </DialogTitle>
 
         <DialogContent sx={{ overflow: 'unset' }}>
           <PaymentNewCardForm />
@@ -75,11 +77,11 @@ export function CheckoutPaymentMethods({ name, options, ...other }) {
 
         <DialogActions>
           <Button color="inherit" variant="outlined" onClick={openForm.onFalse}>
-            Cancel
+            {t('cancel')}
           </Button>
 
           <Button color="inherit" variant="contained" onClick={openForm.onFalse}>
-            Add
+            {t('label_add')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -90,6 +92,7 @@ export function CheckoutPaymentMethods({ name, options, ...other }) {
 // ----------------------------------------------------------------------
 
 function OptionItem({ sx, option, onOpen, selected, disabled, isCredit, cardOptions, ...other }) {
+  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -122,9 +125,9 @@ function OptionItem({ sx, option, onOpen, selected, disabled, isCredit, cardOpti
           flexDirection="column"
           sx={{ typography: 'subtitle1' }}
         >
-          {option.label}
+          {t(option.label)}
           <Box component="span" sx={{ typography: 'body2', color: 'text.secondary' }}>
-            {option.description}
+            {t(option.description)}
           </Box>
         </Box>
 
@@ -142,7 +145,7 @@ function OptionItem({ sx, option, onOpen, selected, disabled, isCredit, cardOpti
 
       {isCredit && (
         <Box sx={{ px: 3 }}>
-          <TextField select fullWidth label="Card" SelectProps={{ native: true }}>
+          <TextField select fullWidth label={t('label_card')} SelectProps={{ native: true }}>
             {cardOptions.map((card) => (
               <option key={card.value} value={card.value}>
                 {card.label}
@@ -157,7 +160,7 @@ function OptionItem({ sx, option, onOpen, selected, disabled, isCredit, cardOpti
             onClick={onOpen}
             sx={{ my: 3 }}
           >
-            Add new card
+            {t('label_add_new_card')}
           </Button>
         </Box>
       )}

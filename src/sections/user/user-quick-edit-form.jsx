@@ -19,19 +19,25 @@ import { updateUserMetrics } from 'src/actions/user';
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
 
-export const UserQuickEditSchema = zod.object({
-  asistencia_entrenos: zod.number().min(1, { message: 'Asistencia a entrenos es requerido!' }),
-  asistencia_partidos: zod.number().min(1, { message: 'Asistencia a partidos es requerido!' }),
-  puntualidad_pagos: zod.number().min(1, { message: 'Puntualidad en pagos es requerido!' }),
-  llegadas_tarde: zod.number().min(1, { message: 'Llegadas tarde es requerido!' }),
-  deuda_acumulada: zod.number().min(1, { message: 'Deuda acumulada es requerido!' }),
-  total: zod.number().min(1, { message: 'Total es requerido!' }),
-  puntaje_asistencia: zod.number().max(3, { message: 'Puntaje asistencia es requerido!' }),
-  puntaje_asistencia_description: zod.string(),
-});
+export function getUserQuickEditSchema(t) {
+  return zod.object({
+    asistencia_entrenos: zod
+      .number()
+      .min(1, { message: t('metric_attendance_trainings_required') }),
+    asistencia_partidos: zod.number().min(1, { message: t('metric_attendance_matches_required') }),
+    puntualidad_pagos: zod.number().min(1, { message: t('metric_payment_punctuality_required') }),
+    llegadas_tarde: zod.number().min(1, { message: t('metric_late_arrivals_required') }),
+    deuda_acumulada: zod.number().min(1, { message: t('metric_accumulated_debt_required') }),
+    total: zod.number().min(1, { message: t('metric_total_required') }),
+    puntaje_asistencia: zod.number().max(3, { message: t('metric_attendance_score_required') }),
+    puntaje_asistencia_description: zod.string(),
+  });
+}
 
 export function UserQuickEditForm({ currentUser, open, onClose }) {
   const { t } = useTranslation();
+
+  const UserQuickEditSchema = useMemo(() => getUserQuickEditSchema(t), [t]);
 
   const defaultValues = useMemo(
     () => ({
@@ -68,9 +74,9 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
 
     try {
       toast.promise(promise, {
-        loading: 'Loading...',
+        loading: t('label_loading'),
         success: t('update_metrics_success'),
-        error: 'Update error!',
+        error: t('label_update_error'),
       });
 
       await promise;
@@ -90,11 +96,13 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
       PaperProps={{ sx: { maxWidth: 720 } }}
     >
       <Form methods={methods} onSubmit={onSubmit}>
-        <DialogTitle>Quick Metrics Update</DialogTitle>
+        <DialogTitle>{t('label_quick_metrics_update')}</DialogTitle>
         <DialogContent>
           <Alert variant="outlined" severity="info" sx={{ mb: 3 }}>
             <Typography>
-              Update the metrics for <strong>{currentUser?.name}</strong> user of group{' '}
+              {`${t('label_update_metrics_for')} `}
+              <strong>{currentUser?.name}</strong>
+              {` ${t('label_user_of_group')} `}
               <strong>{currentUser?.group}</strong>
             </Typography>
           </Alert>
@@ -104,25 +112,41 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
             display="grid"
             gridTemplateColumns={{ xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' }}
           >
-            <Field.Text name="asistencia_entrenos" label="Asistencia entrenos" type="number" />
-            <Field.Text name="asistencia_partidos" label="Asistencia partidos" type="number" />
-            <Field.Text name="puntualidad_pagos" label="Puntualidad pagos" type="number" />
-            <Field.Text name="llegadas_tarde" label="Llegadas tarde" type="number" />
-            <Field.Text name="deuda_acumulada" label="Deuda acumulada" type="number" />
-            <Field.Text name="total" label="Total" type="number" />
-            <Field.Text name="puntaje_asistencia" label="Puntaje asistencia" type="number" />
+            <Field.Text
+              name="asistencia_entrenos"
+              label={t('metric_attendance_trainings')}
+              type="number"
+            />
+            <Field.Text
+              name="asistencia_partidos"
+              label={t('metric_attendance_matches')}
+              type="number"
+            />
+            <Field.Text
+              name="puntualidad_pagos"
+              label={t('metric_payment_punctuality')}
+              type="number"
+            />
+            <Field.Text name="llegadas_tarde" label={t('metric_late_arrivals')} type="number" />
+            <Field.Text name="deuda_acumulada" label={t('metric_accumulated_debt')} type="number" />
+            <Field.Text name="total" label={t('total')} type="number" />
+            <Field.Text
+              name="puntaje_asistencia"
+              label={t('metric_attendance_score')}
+              type="number"
+            />
             <Field.Text
               name="puntaje_asistencia_description"
-              label="Descripción puntaje asistencia"
+              label={t('metric_attendance_score_description')}
             />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>
-            Cancel
+            {t('cancel')}
           </Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Update
+            {t('update')}
           </LoadingButton>
         </DialogActions>
       </Form>

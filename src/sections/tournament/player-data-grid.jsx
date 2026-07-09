@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -13,14 +14,16 @@ import { Iconify } from 'src/components/iconify';
 
 const POSITION_OPTIONS = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 
+// label values below are i18n keys, resolved via t() at render time.
 const POSITION_LABELS = {
-  Goalkeeper: 'Portero',
-  Defender: 'Defensa',
-  Midfielder: 'Centrocampista',
-  Forward: 'Delantero',
+  Goalkeeper: 'label_position_goalkeeper',
+  Defender: 'label_position_defender',
+  Midfielder: 'label_position_midfielder',
+  Forward: 'label_position_forward',
 };
 
 export function PlayerDataGrid({ tournamentId, teamId, players }) {
+  const { t } = useTranslation();
   const [rows, setRows] = useState([]);
   const [saving, setSaving] = useState(false);
 
@@ -52,7 +55,7 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
         if (newRow.isNew) {
           // Create via API
           if (!newRow.name) {
-            toast.error('El nombre es obligatorio');
+            toast.error(t('name_required'));
             return oldRow;
           }
           const payload = {
@@ -63,7 +66,7 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
           const created = await createPlayer(tournamentId, teamId, payload);
           // Remove from local rows — it'll appear from the API players on next render
           setRows((prev) => prev.filter((r) => r.id !== newRow.id));
-          toast.success(`${newRow.name} agregado`);
+          toast.success(`${newRow.name} ${t('label_added')}`);
           return { ...newRow, id: created.id, isNew: false };
         }
 
@@ -74,16 +77,16 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
           position: newRow.position || 'Forward',
         };
         await updatePlayer(tournamentId, newRow.id, payload);
-        toast.success(`${newRow.name} actualizado`);
+        toast.success(`${newRow.name} ${t('label_updated')}`);
         return newRow;
       } catch (error) {
-        toast.error(error.message || 'Error al guardar');
+        toast.error(error.message || t('label_error_saving'));
         return oldRow;
       } finally {
         setSaving(false);
       }
     },
-    [tournamentId, teamId]
+    [tournamentId, teamId, t]
   );
 
   const handleDelete = useCallback(
@@ -95,12 +98,12 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
           return;
         }
         await deletePlayer(tournamentId, playerId);
-        toast.success('Jugador eliminado');
+        toast.success(t('label_player_deleted'));
       } catch (error) {
-        toast.error(error.message || 'Error al eliminar');
+        toast.error(error.message || t('label_error_deleting'));
       }
     },
-    [tournamentId]
+    [tournamentId, t]
   );
 
   const columns = [
@@ -115,19 +118,20 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
     },
     {
       field: 'name',
-      headerName: 'Nombre',
+      headerName: t('label_name'),
       flex: 1,
       minWidth: 160,
       editable: true,
     },
     {
       field: 'position',
-      headerName: 'Posición',
+      headerName: t('label_position'),
       width: 140,
       editable: true,
       type: 'singleSelect',
       valueOptions: POSITION_OPTIONS,
-      renderCell: (params) => POSITION_LABELS[params.value] || params.value || '—',
+      renderCell: (params) =>
+        POSITION_LABELS[params.value] ? t(POSITION_LABELS[params.value]) : params.value || '—',
     },
     {
       field: 'actions',
@@ -138,7 +142,7 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
         <GridActionsCellItem
           key="delete"
           icon={<Iconify icon="solar:trash-bin-trash-bold" width={18} />}
-          label="Eliminar"
+          label={t('delete')}
           onClick={() => handleDelete(params.id)}
           color="error"
         />,
@@ -154,7 +158,7 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
           startIcon={<Iconify icon="mingcute:add-line" />}
           onClick={handleAddRow}
         >
-          Agregar Jugador
+          {t('label_add_player')}
         </Button>
       </Box>
 
@@ -183,8 +187,8 @@ export function PlayerDataGrid({ tournamentId, teamId, players }) {
           border: 'none',
         }}
         localeText={{
-          noRowsLabel: 'Sin jugadores — haz clic en "Agregar Jugador"',
-          MuiTablePagination: { labelRowsPerPage: 'Filas:' },
+          noRowsLabel: `${t('label_no_players_click_hint_prefix')} "${t('label_add_player')}"`,
+          MuiTablePagination: { labelRowsPerPage: t('label_rows_colon') },
         }}
       />
     </Box>

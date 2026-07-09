@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -24,34 +25,36 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const STATUS_META = {
-  draft:     { label: 'Borrador',   color: 'default', accent: 'grey.400' },
-  active:    { label: 'Activo',     color: 'success', accent: 'success.main' },
-  finished:  { label: 'Finalizado', color: 'info',    accent: 'info.main' },
-  cancelled: { label: 'Cancelado',  color: 'error',   accent: 'error.main' },
+  draft: { label: 'draft', color: 'default', accent: 'grey.400' },
+  active: { label: 'active', color: 'success', accent: 'success.main' },
+  finished: { label: 'status_finished', color: 'info', accent: 'info.main' },
+  cancelled: { label: 'cancelled', color: 'error', accent: 'error.main' },
 };
 
 const TYPE_LABEL = {
-  league:   'Liga',
-  knockout: 'Eliminación',
-  hybrid:   'Híbrido',
+  league: 'tournament_type_league',
+  knockout: 'tournament_type_knockout',
+  hybrid: 'tournament_type_hybrid',
 };
 
 const TYPE_COLOR = {
-  league:   'primary',
+  league: 'primary',
   knockout: 'warning',
-  hybrid:   'secondary',
+  hybrid: 'secondary',
 };
 
 const TYPE_ICON = {
-  league:   'mdi:table',
+  league: 'mdi:table',
   knockout: 'mdi:tournament',
-  hybrid:   'mdi:trophy-outline',
+  hybrid: 'mdi:trophy-outline',
 };
 
 // ----------------------------------------------------------------------
 
 export function TournamentCard({ tournament, onDelete }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const popover = usePopover();
 
@@ -68,12 +71,12 @@ export function TournamentCard({ tournament, onDelete }) {
     popover.onClose();
     try {
       await deleteTournament(id);
-      toast.success('Torneo eliminado');
+      toast.success(t('label_tournament_deleted'));
       onDelete?.(id);
     } catch (error) {
-      toast.error(error.message || 'Error al eliminar');
+      toast.error(error.message || t('label_error_deleting'));
     }
-  }, [id, onDelete, popover]);
+  }, [id, onDelete, popover, t]);
 
   return (
     <>
@@ -84,7 +87,7 @@ export function TournamentCard({ tournament, onDelete }) {
           position: 'relative',
           overflow: 'hidden',
           transition: 'all 0.2s ease-in-out',
-          '&:hover': { transform: 'translateY(-4px)', boxShadow: (t) => t.shadows[16] },
+          '&:hover': { transform: 'translateY(-4px)', boxShadow: (theme) => theme.shadows[16] },
         }}
       >
         {/* Status accent bar */}
@@ -108,9 +111,13 @@ export function TournamentCard({ tournament, onDelete }) {
 
         {/* Card body */}
         <Stack sx={{ flex: 1, pl: 2.5, pr: 2, pt: 2.5, pb: 0 }} spacing={0}>
-
           {/* Top row: type icon + season | status chip + overflow */}
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1.75 }}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            sx={{ mb: 1.75 }}
+          >
             <Stack direction="row" alignItems="center" spacing={1}>
               {logo_url ? (
                 <Avatar
@@ -127,7 +134,8 @@ export function TournamentCard({ tournament, onDelete }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    bgcolor: (t) => alpha(t.palette[TYPE_COLOR[type] || 'primary'].main, 0.08),
+                    bgcolor: (theme) =>
+                      alpha(theme.palette[TYPE_COLOR[type] || 'primary'].main, 0.08),
                     flexShrink: 0,
                   }}
                 >
@@ -139,11 +147,21 @@ export function TournamentCard({ tournament, onDelete }) {
                 </Box>
               )}
               <Box>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: `${TYPE_COLOR[type] || 'primary'}.main`, lineHeight: 1 }}>
-                  {TYPE_LABEL[type] || type}
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 600,
+                    color: `${TYPE_COLOR[type] || 'primary'}.main`,
+                    lineHeight: 1,
+                  }}
+                >
+                  {TYPE_LABEL[type] ? t(TYPE_LABEL[type]) : type}
                 </Typography>
                 {season && (
-                  <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', lineHeight: 1.4 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: 'text.disabled', display: 'block', lineHeight: 1.4 }}
+                  >
                     {season}
                   </Typography>
                 )}
@@ -151,7 +169,7 @@ export function TournamentCard({ tournament, onDelete }) {
             </Stack>
 
             <Stack direction="row" alignItems="center" spacing={0.5}>
-              <Chip label={meta.label} color={meta.color} size="small" variant="soft" />
+              <Chip label={t(meta.label)} color={meta.color} size="small" variant="soft" />
               <IconButton size="small" onClick={popover.onOpen}>
                 <Iconify icon="eva:more-vertical-fill" width={20} />
               </IconButton>
@@ -168,17 +186,15 @@ export function TournamentCard({ tournament, onDelete }) {
             <Iconify icon="mdi:shield-half-full" width={13} sx={{ color: 'text.disabled' }} />
             <Typography variant="caption" sx={{ color: 'text.disabled' }}>
               {teamCount > 0
-                ? `${teamCount} equipo${teamCount !== 1 ? 's' : ''}${numTeams > 0 ? ` / ${numTeams}` : ''}`
-                : 'Sin equipos'}
+                ? `${teamCount} ${teamCount !== 1 ? t('word_teams_lowercase') : t('word_team_lowercase')}${numTeams > 0 ? ` / ${numTeams}` : ''}`
+                : t('label_no_teams')}
             </Typography>
           </Stack>
 
           <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
 
           {/* Status-specific section */}
-          {status === 'draft' && (
-            <DraftSection teamCount={teamCount} numTeams={numTeams} />
-          )}
+          {status === 'draft' && <DraftSection teamCount={teamCount} numTeams={numTeams} />}
           {status === 'active' && (
             <ActiveSection
               type={type}
@@ -187,14 +203,12 @@ export function TournamentCard({ tournament, onDelete }) {
               matchweekPct={matchweekPct}
             />
           )}
-          {status === 'finished' && (
-            <FinishedSection tournament={tournament} />
-          )}
+          {status === 'finished' && <FinishedSection tournament={tournament} />}
           {status === 'cancelled' && (
             <Stack direction="row" alignItems="center" spacing={1}>
               <Iconify icon="mdi:cancel" width={15} sx={{ color: 'error.main' }} />
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Torneo cancelado
+                {t('label_tournament_cancelled')}
               </Typography>
             </Stack>
           )}
@@ -209,7 +223,7 @@ export function TournamentCard({ tournament, onDelete }) {
             endIcon={<Iconify icon="eva:arrow-forward-fill" />}
             onClick={() => navigate(paths.dashboard.tournament.details(id))}
           >
-            Gestionar
+            {t('label_manage')}
           </Button>
         </Box>
       </Card>
@@ -223,11 +237,11 @@ export function TournamentCard({ tournament, onDelete }) {
           }}
         >
           <Iconify icon="solar:pen-bold" />
-          Editar
+          {t('edit')}
         </MenuItem>
         <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
           <Iconify icon="solar:trash-bin-trash-bold" />
-          Eliminar
+          {t('delete')}
         </MenuItem>
       </CustomPopover>
     </>
@@ -237,6 +251,7 @@ export function TournamentCard({ tournament, onDelete }) {
 // ----------------------------------------------------------------------
 
 function DraftSection({ teamCount, numTeams }) {
+  const { t } = useTranslation();
   const filledPct = numTeams > 0 ? Math.min((teamCount / numTeams) * 100, 100) : 0;
 
   return (
@@ -244,16 +259,22 @@ function DraftSection({ teamCount, numTeams }) {
       <Stack direction="row" alignItems="center" spacing={0.75}>
         <Iconify icon="mdi:pencil-circle-outline" width={15} sx={{ color: 'text.disabled' }} />
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Inscripción abierta
+          {t('label_registration_open')}
         </Typography>
       </Stack>
       {numTeams > 0 && (
         <Box>
           <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
             <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-              Equipos inscritos
+              {t('label_registered_teams')}
             </Typography>
-            <Typography variant="caption" sx={{ fontWeight: 700, color: teamCount >= numTeams ? 'success.main' : 'text.secondary' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 700,
+                color: teamCount >= numTeams ? 'success.main' : 'text.secondary',
+              }}
+            >
               {teamCount} / {numTeams}
             </Typography>
           </Stack>
@@ -263,7 +284,7 @@ function DraftSection({ teamCount, numTeams }) {
             sx={{
               height: 5,
               borderRadius: 1,
-              bgcolor: (t) => alpha(t.palette.grey[500], 0.1),
+              bgcolor: (theme) => alpha(theme.palette.grey[500], 0.1),
               '& .MuiLinearProgress-bar': { borderRadius: 1 },
             }}
           />
@@ -276,6 +297,7 @@ function DraftSection({ teamCount, numTeams }) {
 // ----------------------------------------------------------------------
 
 function ActiveSection({ type, currentMw, totalMw, matchweekPct }) {
+  const { t } = useTranslation();
   const inKnockoutPhase =
     type === 'knockout' || (type === 'hybrid' && totalMw > 0 && currentMw >= totalMw);
 
@@ -294,7 +316,7 @@ function ActiveSection({ type, currentMw, totalMw, matchweekPct }) {
           }}
         />
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Fase eliminatoria en curso
+          {t('label_knockout_phase_in_progress')}
         </Typography>
       </Stack>
     );
@@ -307,8 +329,12 @@ function ActiveSection({ type, currentMw, totalMw, matchweekPct }) {
           <Stack direction="row" alignItems="center" spacing={0.75}>
             <Iconify icon="mdi:calendar-today" width={15} sx={{ color: 'success.main' }} />
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Jornada {currentMw}
-              <Typography component="span" variant="caption" sx={{ color: 'text.disabled', ml: 0.25 }}>
+              {t('label_matchday')} {currentMw}
+              <Typography
+                component="span"
+                variant="caption"
+                sx={{ color: 'text.disabled', ml: 0.25 }}
+              >
                 / {totalMw}
               </Typography>
             </Typography>
@@ -324,7 +350,7 @@ function ActiveSection({ type, currentMw, totalMw, matchweekPct }) {
           sx={{
             height: 5,
             borderRadius: 1,
-            bgcolor: (t) => alpha(t.palette.success.main, 0.1),
+            bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
             '& .MuiLinearProgress-bar': { borderRadius: 1 },
           }}
         />
@@ -346,7 +372,7 @@ function ActiveSection({ type, currentMw, totalMw, matchweekPct }) {
         }}
       />
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        Torneo en curso
+        {t('label_tournament_in_progress')}
       </Typography>
     </Stack>
   );
@@ -355,6 +381,7 @@ function ActiveSection({ type, currentMw, totalMw, matchweekPct }) {
 // ----------------------------------------------------------------------
 
 function FinishedSection({ tournament }) {
+  const { t } = useTranslation();
   const winner = tournament.winner_team_name || tournament.winner;
 
   if (winner) {
@@ -367,14 +394,23 @@ function FinishedSection({ tournament }) {
           px: 1.5,
           py: 1.25,
           borderRadius: 1.5,
-          bgcolor: (t) => alpha(t.palette.warning.main, 0.06),
-          border: (t) => `1px solid ${alpha(t.palette.warning.main, 0.18)}`,
+          bgcolor: (theme) => alpha(theme.palette.warning.main, 0.06),
+          border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.18)}`,
         }}
       >
         <Iconify icon="mdi:trophy" width={22} sx={{ color: 'warning.main', flexShrink: 0 }} />
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" sx={{ color: 'warning.dark', fontWeight: 700, display: 'block', lineHeight: 1, mb: 0.25 }}>
-            Campeón
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'warning.dark',
+              fontWeight: 700,
+              display: 'block',
+              lineHeight: 1,
+              mb: 0.25,
+            }}
+          >
+            {t('label_champion')}
           </Typography>
           <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
             {winner}
@@ -388,7 +424,7 @@ function FinishedSection({ tournament }) {
     <Stack direction="row" alignItems="center" spacing={0.75}>
       <Iconify icon="mdi:check-circle" width={16} sx={{ color: 'info.main' }} />
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        Torneo finalizado
+        {t('label_tournament_finished')}
       </Typography>
     </Stack>
   );

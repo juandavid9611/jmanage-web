@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -24,6 +25,7 @@ import { OrderDetailsHistory } from '../order-details-history';
 // ----------------------------------------------------------------------
 
 export function OrderDetailsView({ order, loading, error }) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState(order?.status);
   const [providerCheck, setProviderCheck] = useState(order?.providerCheck || null);
   const [deliveryCheck, setDeliveryCheck] = useState(order?.deliveryCheck || null);
@@ -37,10 +39,10 @@ export function OrderDetailsView({ order, loading, error }) {
       } catch (err) {
         console.error(err);
         setStatus(previous);
-        toast.error(err?.detail || 'No se pudo actualizar el estado');
+        toast.error(err?.detail || t('label_status_update_failed'));
       }
     },
-    [order?.id, status]
+    [order?.id, status, t]
   );
 
   const handleToggleProviderCheck = useCallback(
@@ -53,10 +55,10 @@ export function OrderDetailsView({ order, loading, error }) {
       } catch (err) {
         console.error(err);
         setProviderCheck(previous);
-        toast.error(err?.detail || 'No se pudo guardar el cambio');
+        toast.error(err?.detail || t('label_save_change_failed'));
       }
     },
-    [order?.id, providerCheck]
+    [order?.id, providerCheck, t]
   );
 
   const handleToggleDeliveryCheck = useCallback(
@@ -69,10 +71,10 @@ export function OrderDetailsView({ order, loading, error }) {
       } catch (err) {
         console.error(err);
         setDeliveryCheck(previous);
-        toast.error(err?.detail || 'No se pudo guardar el cambio');
+        toast.error(err?.detail || t('label_save_change_failed'));
       }
     },
-    [order?.id, deliveryCheck]
+    [order?.id, deliveryCheck, t]
   );
 
   if (loading) {
@@ -84,7 +86,7 @@ export function OrderDetailsView({ order, loading, error }) {
       <DashboardContent>
         <EmptyContent
           filled
-          title="Order not found!"
+          title={t('label_order_not_found')}
           action={
             <Button
               component={RouterLink}
@@ -92,7 +94,7 @@ export function OrderDetailsView({ order, loading, error }) {
               startIcon={<Iconify width={16} icon="eva:arrow-ios-back-fill" />}
               sx={{ mt: 3 }}
             >
-              Back to list
+              {t('label_back_to_list')}
             </Button>
           }
           sx={{ py: 10, height: 'auto', flexGrow: 'unset' }}

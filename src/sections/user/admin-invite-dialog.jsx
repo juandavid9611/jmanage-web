@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Stack from '@mui/material/Stack';
 import Dialog from '@mui/material/Dialog';
@@ -20,6 +21,7 @@ import { Iconify } from 'src/components/iconify';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function AdminInviteDialog({ open, onClose }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,16 +34,16 @@ export function AdminInviteDialog({ open, onClose }) {
 
   const handleSubmit = async () => {
     if (!EMAIL_REGEX.test(email)) {
-      setError('Ingresa un correo válido');
+      setError(t('label_enter_valid_email'));
       return;
     }
     setIsSubmitting(true);
     try {
       await createAdminInvitation({ email });
-      toast.success(`Invitación enviada a ${email}`);
+      toast.success(`${t('label_invitation_sent_to')} ${email}`);
       handleClose();
     } catch (submitError) {
-      toast.error(submitError?.response?.data?.detail || 'Error al enviar la invitación');
+      toast.error(submitError?.response?.data?.detail || t('label_invitation_send_error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -52,17 +54,17 @@ export function AdminInviteDialog({ open, onClose }) {
       <DialogTitle sx={{ pb: 1 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Iconify icon="mdi:shield-account-outline" width={24} sx={{ color: 'primary.main' }} />
-          <span>Crear administrador</span>
+          <span>{t('label_create_admin')}</span>
         </Stack>
         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-          Enviaremos un enlace de invitación para que configure su cuenta.
+          {t('label_admin_invite_body')}
         </Typography>
       </DialogTitle>
       <DialogContent>
         <TextField
           fullWidth
           autoFocus
-          label="Correo"
+          label={t('email_label')}
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
@@ -75,7 +77,7 @@ export function AdminInviteDialog({ open, onClose }) {
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2.5 }}>
         <Button variant="soft" color="inherit" onClick={handleClose}>
-          Cancelar
+          {t('cancel')}
         </Button>
         <LoadingButton
           variant="contained"
@@ -83,7 +85,7 @@ export function AdminInviteDialog({ open, onClose }) {
           loading={isSubmitting}
           startIcon={<Iconify icon="mingcute:add-line" />}
         >
-          Enviar invitación
+          {t('label_send_invitation')}
         </LoadingButton>
       </DialogActions>
     </Dialog>

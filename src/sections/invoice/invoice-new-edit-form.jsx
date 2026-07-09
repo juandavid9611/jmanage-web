@@ -42,27 +42,32 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 import { InvoiceNewEditStatusDate } from './invoice-new-edit-status-date';
 
-export const NewInvoiceSchema = zod
-  .object({
-    concept: zod.string().min(1, { message: '¡El concepto es requerido!' }),
-    description: zod.string().min(1, { message: '¡La descripción es requerida!' }),
-    createDate: schemaHelper.date({
-      message: { required_error: '¡La fecha de creación es requerida!' },
-    }),
-    dueDate: schemaHelper.date({
-      message: { required_error: '¡La fecha de vencimiento es requerida!' },
-    }),
-    status: zod.string().min(1, { message: '¡El estado es requerido!' }),
-    category: zod.string().min(1, { message: '¡La categoría es requerida!' }),
-    group: zod.string().min(1, { message: '¡El grupo es requerido!' }),
-    paymentRequestTo: zod.any().array().min(1, { message: '¡El destinatario es requerido!' }),
-    userPrice: zod.number().min(1, { message: '¡El monto debe ser mayor a 0!' }),
-    overduePrice: zod.number(),
-  })
-  .refine((data) => !fIsAfter(data.createDate, data.dueDate), {
-    message: '¡La fecha de vencimiento no puede ser anterior a la fecha de creación!',
-    path: ['dueDate'],
-  });
+export function getNewInvoiceSchema(t) {
+  return zod
+    .object({
+      concept: zod.string().min(1, { message: t('concept_required') }),
+      description: zod.string().min(1, { message: t('description_required') }),
+      createDate: schemaHelper.date({
+        message: { required_error: t('create_date_required') },
+      }),
+      dueDate: schemaHelper.date({
+        message: { required_error: t('due_date_required') },
+      }),
+      status: zod.string().min(1, { message: t('status_required') }),
+      category: zod.string().min(1, { message: t('category_required') }),
+      group: zod.string().min(1, { message: t('group_required') }),
+      paymentRequestTo: zod
+        .any()
+        .array()
+        .min(1, { message: t('payment_request_to_required') }),
+      userPrice: zod.number().min(1, { message: t('user_price_required') }),
+      overduePrice: zod.number(),
+    })
+    .refine((data) => !fIsAfter(data.createDate, data.dueDate), {
+      message: t('due_date_before_create_date'),
+      path: ['dueDate'],
+    });
+}
 
 // ----------------------------------------------------------------------
 
@@ -104,6 +109,8 @@ export function InvoiceNewEditForm({ currentInvoice }) {
     [currentInvoice, workspaceGroup]
   );
 
+  const NewInvoiceSchema = useMemo(() => getNewInvoiceSchema(t), [t]);
+
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(NewInvoiceSchema),
@@ -140,10 +147,10 @@ export function InvoiceNewEditForm({ currentInvoice }) {
           selectedWorkspace?.id,
           currentInvoice.orderId
         );
-        toast.success('¡Actualizado con éxito!');
+        toast.success(t('update_success'));
       } else {
         await createPaymentRequests(data, selectedWorkspace?.id);
-        toast.success('¡Creado con éxito!');
+        toast.success(t('create_success'));
       }
     } catch (error) {
       toast.error(error.message);
@@ -170,9 +177,9 @@ export function InvoiceNewEditForm({ currentInvoice }) {
 
         const allPromises = Promise.all(uploadPromises);
         toast.promise(allPromises, {
-          loading: 'Cargando...',
-          success: () => 'Todos los archivos se subieron correctamente',
-          error: 'Error al subir el archivo',
+          loading: t('label_loading'),
+          success: () => t('label_all_files_uploaded'),
+          error: t('label_file_upload_error'),
         });
         const file_names = values.images.map((file) => file.name);
         await requestPaymentRequestApproval(
@@ -183,10 +190,10 @@ export function InvoiceNewEditForm({ currentInvoice }) {
         );
         router.push(paths.dashboard.user.invoice.invoiceList);
       } catch (error) {
-        console.error('Error al subir el archivo', error);
+        console.error(t('label_file_upload_error'), error);
       }
     },
-    [values.images, values.id, router, selectedWorkspace?.id, currentInvoice?.orderId]
+    [values.images, values.id, router, selectedWorkspace?.id, currentInvoice?.orderId, t]
   );
 
   const handleRemoveFile = useCallback(
@@ -274,18 +281,18 @@ export function InvoiceNewEditForm({ currentInvoice }) {
                   disabled={isUser}
                 >
                   {[
-                    { value: 'Entrenos', label: 'Entrenos' },
-                    { value: 'Sansiones', label: 'Sansiones' },
-                    { value: 'Indumentarias', label: 'Indumentarias' },
-                    { value: 'Torneos', label: 'Torneos' },
-                    { value: 'tournament_fine', label: 'Sanciones' },
+                    { value: 'Entrenos', label: 'category_trainings' },
+                    { value: 'Sansiones', label: 'category_sanctions' },
+                    { value: 'Indumentarias', label: 'category_gear' },
+                    { value: 'Torneos', label: 'tournaments' },
+                    { value: 'tournament_fine', label: 'category_tournament_fine' },
                   ].map((category) => (
                     <MenuItem
                       key={category.value}
                       value={category.value}
                       sx={{ textTransform: 'capitalize' }}
                     >
-                      {category.label}
+                      {t(category.label)}
                     </MenuItem>
                   ))}
                 </Field.Select>

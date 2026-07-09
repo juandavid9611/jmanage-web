@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
@@ -7,7 +9,14 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function VotationCreationStepper({ steps, activeStep, unlockedSteps, stepValues, onStepClick }) {
+export function VotationCreationStepper({
+  steps,
+  activeStep,
+  unlockedSteps,
+  stepValues,
+  onStepClick,
+}) {
+  const { t } = useTranslation();
   const isStepDone = (index) => {
     if (index === 0) return !!stepValues?.config && stepValues.config !== '—';
     if (index === 1) return !!stepValues?.candidatos && stepValues.candidatos !== '—';
@@ -24,11 +33,8 @@ export function VotationCreationStepper({ steps, activeStep, unlockedSteps, step
         top: { md: 0 },
       }}
     >
-      <Typography
-        variant="overline"
-        sx={{ color: 'text.disabled', letterSpacing: 2, mb: 2 }}
-      >
-        Nueva votación
+      <Typography variant="overline" sx={{ color: 'text.disabled', letterSpacing: 2, mb: 2 }}>
+        {t('label_new_votation_overline')}
       </Typography>
 
       <Stack spacing={0.25} sx={{ flex: 1 }}>
@@ -53,13 +59,13 @@ export function VotationCreationStepper({ steps, activeStep, unlockedSteps, step
                   cursor: isLocked ? 'not-allowed' : 'pointer',
                   opacity: isLocked ? 0.35 : 1,
                   bgcolor: isActive
-                    ? (t) => alpha(t.palette.primary.main, 0.06)
+                    ? (theme) => alpha(theme.palette.primary.main, 0.06)
                     : 'transparent',
                   transition: 'all 0.2s',
                   '&:hover': {
                     bgcolor: isLocked
                       ? 'transparent'
-                      : (t) => alpha(t.palette.primary.main, 0.04),
+                      : (theme) => alpha(theme.palette.primary.main, 0.04),
                   },
                 }}
               >
@@ -75,26 +81,22 @@ export function VotationCreationStepper({ steps, activeStep, unlockedSteps, step
                     fontFamily: 'monospace',
                     fontWeight: 600,
                     flexShrink: 0,
-                    border: (t) =>
+                    border: (theme) =>
                       `1.5px solid ${
                         isDone || isActive
-                          ? t.palette.primary.main
-                          : alpha(t.palette.grey[500], 0.24)
+                          ? theme.palette.primary.main
+                          : alpha(theme.palette.grey[500], 0.24)
                       }`,
                     bgcolor: isDone
-                      ? (t) => alpha(t.palette.primary.main, 0.1)
+                      ? (theme) => alpha(theme.palette.primary.main, 0.1)
                       : 'transparent',
                     color: isDone || isActive ? 'primary.main' : 'text.disabled',
                     ...(isActive && {
-                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.primary.main, 0.08)}`,
+                      boxShadow: (theme) => `0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`,
                     }),
                   }}
                 >
-                  {isDone ? (
-                    <Iconify icon="eva:checkmark-fill" width={14} />
-                  ) : (
-                    step.number
-                  )}
+                  {isDone ? <Iconify icon="eva:checkmark-fill" width={14} /> : step.number}
                 </Box>
 
                 <Box sx={{ minWidth: 0 }}>
@@ -105,7 +107,7 @@ export function VotationCreationStepper({ steps, activeStep, unlockedSteps, step
                       color: isActive || isDone ? 'text.primary' : 'text.secondary',
                     }}
                   >
-                    {step.label}
+                    {t(step.label)}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -130,8 +132,8 @@ export function VotationCreationStepper({ steps, activeStep, unlockedSteps, step
                     height: 12,
                     ml: '26px',
                     bgcolor: isDone
-                      ? (t) => alpha(t.palette.primary.main, 0.2)
-                      : (t) => alpha(t.palette.grey[500], 0.12),
+                      ? (theme) => alpha(theme.palette.primary.main, 0.2)
+                      : (theme) => alpha(theme.palette.grey[500], 0.12),
                     transition: 'background-color 0.3s',
                   }}
                 />

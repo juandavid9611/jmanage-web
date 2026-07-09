@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -15,6 +17,7 @@ import { SvgColor } from 'src/components/svg-color';
 // ----------------------------------------------------------------------
 
 export function FileUpgrade({ userId, sx, ...other }) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const router = useRouter();
 
@@ -56,7 +59,7 @@ export function FileUpgrade({ userId, sx, ...other }) {
 
       <Stack spacing={3} sx={{ alignItems: 'flex-start' }}>
         <Typography variant="h6" sx={{ maxWidth: 160 }}>
-          No olvides actualizar tus datos personales
+          {t('label_dont_forget_update_profile')}
         </Typography>
 
         <Button
@@ -64,7 +67,7 @@ export function FileUpgrade({ userId, sx, ...other }) {
           variant="contained"
           onClick={() => router.push(paths.dashboard.user.ownEdit(userId))}
         >
-          Actualizar perfil
+          {t('label_update_profile')}
         </Button>
       </Stack>
     </Card>

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
@@ -23,9 +25,12 @@ import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
+import { ORDER_STATUS_OPTIONS } from './order-status';
+
 // ----------------------------------------------------------------------
 
 export function OrderTableRow({ row, selected, onViewRow, onSelectRow, onDeleteRow }) {
+  const { t } = useTranslation();
   const confirm = useBoolean();
 
   const collapse = useBoolean();
@@ -38,7 +43,7 @@ export function OrderTableRow({ row, selected, onViewRow, onSelectRow, onDeleteR
         <Checkbox
           checked={selected}
           onClick={onSelectRow}
-          inputProps={{ id: `row-checkbox-${row.id}`, 'aria-label': `Row checkbox` }}
+          inputProps={{ id: `row-checkbox-${row.id}`, 'aria-label': t('label_row_checkbox') }}
         />
       </TableCell>
 
@@ -94,7 +99,9 @@ export function OrderTableRow({ row, selected, onViewRow, onSelectRow, onDeleteR
             'default'
           }
         >
-          {row.status}
+          {t(
+            ORDER_STATUS_OPTIONS.find((option) => option.value === row.status)?.label || row.status
+          )}
         </Label>
       </TableCell>
 
@@ -207,7 +214,7 @@ export function OrderTableRow({ row, selected, onViewRow, onSelectRow, onDeleteR
             sx={{ color: 'error.main' }}
           >
             <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
+            {t('delete')}
           </MenuItem>
 
           <MenuItem
@@ -217,7 +224,7 @@ export function OrderTableRow({ row, selected, onViewRow, onSelectRow, onDeleteR
             }}
           >
             <Iconify icon="solar:eye-bold" />
-            View
+            {t('label_view')}
           </MenuItem>
         </MenuList>
       </CustomPopover>
@@ -225,11 +232,11 @@ export function OrderTableRow({ row, selected, onViewRow, onSelectRow, onDeleteR
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
-        content="Are you sure want to delete?"
+        title={t('delete')}
+        content={t('label_confirm_delete_generic')}
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
-            Delete
+            {t('delete')}
           </Button>
         }
       />

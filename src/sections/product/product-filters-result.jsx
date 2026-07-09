@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 
@@ -8,6 +10,7 @@ import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-r
 // ----------------------------------------------------------------------
 
 export function ProductFiltersResult({ filters, totalResults, sx }) {
+  const { t } = useTranslation();
   const handleRemoveGender = (inputValue) => {
     const newValue = filters.state.gender.filter((item) => item !== inputValue);
 
@@ -34,17 +37,17 @@ export function ProductFiltersResult({ filters, totalResults, sx }) {
 
   return (
     <FiltersResult totalResults={totalResults} onReset={filters.onResetState} sx={sx}>
-      <FiltersBlock label="Gender:" isShow={!!filters.state.gender.length}>
+      <FiltersBlock label={t('label_gender_colon')} isShow={!!filters.state.gender.length}>
         {filters.state.gender.map((item) => (
           <Chip {...chipProps} key={item} label={item} onDelete={() => handleRemoveGender(item)} />
         ))}
       </FiltersBlock>
 
-      <FiltersBlock label="Category:" isShow={filters.state.category !== 'all'}>
+      <FiltersBlock label={t('label_category_colon')} isShow={filters.state.category !== 'all'}>
         <Chip {...chipProps} label={filters.state.category} onDelete={handleRemoveCategory} />
       </FiltersBlock>
 
-      <FiltersBlock label="Colors:" isShow={!!filters.state.colors.length}>
+      <FiltersBlock label={t('label_colors_colon')} isShow={!!filters.state.colors.length}>
         {filters.state.colors.map((item) => (
           <Chip
             {...chipProps}
@@ -68,7 +71,7 @@ export function ProductFiltersResult({ filters, totalResults, sx }) {
       </FiltersBlock>
 
       <FiltersBlock
-        label="Price:"
+        label={t('label_price_colon')}
         isShow={filters.state.priceRange[0] !== 0 || filters.state.priceRange[1] !== 200}
       >
         <Chip
@@ -78,7 +81,7 @@ export function ProductFiltersResult({ filters, totalResults, sx }) {
         />
       </FiltersBlock>
 
-      <FiltersBlock label="Rating:" isShow={!!filters.state.rating}>
+      <FiltersBlock label={t('label_rating_colon')} isShow={!!filters.state.rating}>
         <Chip {...chipProps} label={filters.state.rating} onDelete={handleRemoveRating} />
       </FiltersBlock>
     </FiltersResult>

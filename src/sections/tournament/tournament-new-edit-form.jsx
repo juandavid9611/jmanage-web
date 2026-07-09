@@ -1,7 +1,8 @@
 import { z as zod } from 'zod';
-import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useRef, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
@@ -31,40 +32,58 @@ import { Form, Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
+// label values below are i18n keys, resolved via t() at render time.
 const TOURNAMENT_TYPE_OPTIONS = [
-  { value: 'league', label: 'Liga' },
-  { value: 'knockout', label: 'Eliminación Directa' },
-  { value: 'hybrid', label: 'Híbrido (Grupos + Eliminación)' },
+  { value: 'league', label: 'label_format_league_short' },
+  { value: 'knockout', label: 'label_direct_elimination' },
+  { value: 'hybrid', label: 'label_hybrid_groups_and_elimination' },
 ];
 
 const LEGS_OPTIONS = [
-  { value: 1, label: 'Ida (1 vuelta)' },
-  { value: 2, label: 'Ida y Vuelta (2 vueltas)' },
+  { value: 1, label: 'label_single_leg' },
+  { value: 2, label: 'label_double_leg' },
 ];
 
 const NUM_TEAMS_OPTIONS = [4, 8, 12, 16, 20, 24, 32];
 
-const TournamentSchema = zod.object({
-  name: zod.string().min(1, 'El nombre es obligatorio'),
-  season: zod.string().optional(),
-  type: zod.enum(['league', 'knockout', 'hybrid']),
-  is_public: zod.boolean().optional(),
-  payments_enabled: zod.boolean().optional(),
-  num_teams: zod.coerce.number().int().min(2).optional().or(zod.literal('')),
-  description: zod.string().optional(),
-  location: zod.string().optional(),
-  start_date: zod.string().optional(),
-  end_date: zod.string().optional(),
-  rules: zod.object({
-    points_per_win: zod.coerce.number().int().min(0, 'Debe ser 0 o más'),
-    points_per_draw: zod.coerce.number().int().min(0, 'Debe ser 0 o más'),
-    points_per_loss: zod.coerce.number().int().min(0, 'Debe ser 0 o más'),
-    total_matchweeks: zod.coerce.number().int().min(1, 'Debe ser al menos 1'),
-    legs: zod.coerce.number().int().refine((v) => v === 1 || v === 2, { message: 'Debe ser 1 o 2' }),
-    yellow_card_fee: zod.coerce.number().int().min(0).optional().or(zod.literal('')),
-    red_card_fee: zod.coerce.number().int().min(0).optional().or(zod.literal('')),
-  }),
-});
+function getTournamentSchema(t) {
+  return zod.object({
+    name: zod.string().min(1, { message: t('name_required') }),
+    season: zod.string().optional(),
+    type: zod.enum(['league', 'knockout', 'hybrid']),
+    is_public: zod.boolean().optional(),
+    payments_enabled: zod.boolean().optional(),
+    num_teams: zod.coerce.number().int().min(2).optional().or(zod.literal('')),
+    description: zod.string().optional(),
+    location: zod.string().optional(),
+    start_date: zod.string().optional(),
+    end_date: zod.string().optional(),
+    rules: zod.object({
+      points_per_win: zod.coerce
+        .number()
+        .int()
+        .min(0, { message: t('label_must_be_0_or_more') }),
+      points_per_draw: zod.coerce
+        .number()
+        .int()
+        .min(0, { message: t('label_must_be_0_or_more') }),
+      points_per_loss: zod.coerce
+        .number()
+        .int()
+        .min(0, { message: t('label_must_be_0_or_more') }),
+      total_matchweeks: zod.coerce
+        .number()
+        .int()
+        .min(1, { message: t('label_must_be_at_least_1') }),
+      legs: zod.coerce
+        .number()
+        .int()
+        .refine((v) => v === 1 || v === 2, { message: t('label_must_be_1_or_2') }),
+      yellow_card_fee: zod.coerce.number().int().min(0).optional().or(zod.literal('')),
+      red_card_fee: zod.coerce.number().int().min(0).optional().or(zod.literal('')),
+    }),
+  });
+}
 
 async function uploadLogoToS3(file, presignedUrl) {
   await fetch(presignedUrl, {
@@ -77,6 +96,7 @@ async function uploadLogoToS3(file, presignedUrl) {
 // ----------------------------------------------------------------------
 
 export function TournamentNewEditForm({ currentTournament }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const isEdit = !!currentTournament;
   const fileInputRef = useRef(null);
@@ -105,6 +125,8 @@ export function TournamentNewEditForm({ currentTournament }) {
       red_card_fee: currentTournament?.rules?.red_card_fee ?? '',
     },
   };
+
+  const TournamentSchema = useMemo(() => getTournamentSchema(t), [t]);
 
   const methods = useForm({
     resolver: zodResolver(TournamentSchema),
@@ -157,7 +179,7 @@ export function TournamentNewEditForm({ currentTournament }) {
           payload.logo_url = '';
         }
         await updateTournament(currentTournament.id, payload);
-        toast.success('Torneo actualizado');
+        toast.success(t('label_tournament_updated'));
         navigate(paths.dashboard.tournament.root);
       } else {
         // Create first, then upload logo
@@ -172,15 +194,15 @@ export function TournamentNewEditForm({ currentTournament }) {
             await uploadLogoToS3(logoFile, presignedUrl);
             await updateTournament(created.id, { logo_url: key });
           } catch {
-            toast.warning('Torneo creado, pero el logo no pudo subirse');
+            toast.warning(t('label_tournament_created_but_logo_upload_failed'));
           }
         }
-        toast.success('Torneo creado');
+        toast.success(t('label_tournament_created'));
         navigate(paths.dashboard.tournament.details(created.id));
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.message || 'Error al guardar');
+      toast.error(error.message || t('label_error_saving'));
     }
   });
 
@@ -196,7 +218,7 @@ export function TournamentNewEditForm({ currentTournament }) {
             <Stack direction="row" spacing={2.5} alignItems="flex-start" sx={{ mb: 3 }}>
               {/* Logo picker */}
               <Box sx={{ position: 'relative', flexShrink: 0 }}>
-                <Tooltip title="Cambiar logo">
+                <Tooltip title={t('label_change_logo')}>
                   <Avatar
                     src={logoPreview || undefined}
                     variant="rounded"
@@ -209,7 +231,7 @@ export function TournamentNewEditForm({ currentTournament }) {
                       bgcolor: 'primary.main',
                       borderRadius: 2,
                       cursor: 'pointer',
-                      border: (t) => `2px solid ${alpha(t.palette.grey[500], 0.16)}`,
+                      border: (theme) => `2px solid ${alpha(theme.palette.grey[500], 0.16)}`,
                       '&:hover': { opacity: 0.8 },
                       transition: 'opacity 0.2s',
                     }}
@@ -269,13 +291,17 @@ export function TournamentNewEditForm({ currentTournament }) {
 
               {/* Name + season */}
               <Stack spacing={2} sx={{ flex: 1 }}>
-                <Field.Text name="name" label="Nombre del Torneo" required />
+                <Field.Text name="name" label={t('label_tournament_name')} required />
                 <Grid container spacing={2}>
                   <Grid xs={12} sm={6}>
-                    <Field.Text name="season" label="Temporada" placeholder="2026-A" />
+                    <Field.Text name="season" label={t('label_season')} placeholder="2026-A" />
                   </Grid>
                   <Grid xs={12} sm={6}>
-                    <Field.Text name="location" label="Sede / Ciudad" placeholder="Bogotá" />
+                    <Field.Text
+                      name="location"
+                      label={t('label_venue_city')}
+                      placeholder={t('label_city_example_bogota')}
+                    />
                   </Grid>
                 </Grid>
               </Stack>
@@ -286,29 +312,29 @@ export function TournamentNewEditForm({ currentTournament }) {
             <Stack spacing={2.5}>
               <Field.Text
                 name="description"
-                label="Descripción"
+                label={t('label_description')}
                 multiline
                 rows={2}
-                placeholder="Descripción opcional del torneo..."
+                placeholder={t('label_tournament_description_placeholder')}
               />
 
               <Grid container spacing={2}>
                 <Grid xs={12} sm={4}>
-                  <Field.Select name="type" label="Tipo de Torneo">
+                  <Field.Select name="type" label={t('label_tournament_type')}>
                     {TOURNAMENT_TYPE_OPTIONS.map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
-                        {opt.label}
+                        {t(opt.label)}
                       </MenuItem>
                     ))}
                   </Field.Select>
                 </Grid>
 
                 <Grid xs={12} sm={4}>
-                  <Field.Select name="num_teams" label="Equipos (capacidad)">
-                    <MenuItem value="">Sin límite</MenuItem>
+                  <Field.Select name="num_teams" label={t('label_teams_capacity')}>
+                    <MenuItem value="">{t('label_no_limit')}</MenuItem>
                     {NUM_TEAMS_OPTIONS.map((n) => (
                       <MenuItem key={n} value={n}>
-                        {n} equipos
+                        {n} {t('word_teams_lowercase')}
                       </MenuItem>
                     ))}
                   </Field.Select>
@@ -317,16 +343,16 @@ export function TournamentNewEditForm({ currentTournament }) {
                 <Grid xs={12} sm={4}>
                   <Field.Switch
                     name="is_public"
-                    label="Torneo público"
-                    helperText="Visible sin iniciar sesión"
+                    label={t('label_public_tournament')}
+                    helperText={t('label_visible_without_login')}
                   />
                 </Grid>
 
                 <Grid xs={12} sm={4}>
                   <Field.Switch
                     name="payments_enabled"
-                    label="Pagos habilitados"
-                    helperText="Permite cobros por tarjetas"
+                    label={t('label_payments_enabled')}
+                    helperText={t('label_allow_card_charges_hint')}
                   />
                 </Grid>
               </Grid>
@@ -335,7 +361,7 @@ export function TournamentNewEditForm({ currentTournament }) {
                 <Grid xs={12} sm={6}>
                   <Field.Text
                     name="start_date"
-                    label="Fecha de inicio"
+                    label={t('label_start_date')}
                     type="date"
                     InputLabelProps={{ shrink: true }}
                   />
@@ -343,7 +369,7 @@ export function TournamentNewEditForm({ currentTournament }) {
                 <Grid xs={12} sm={6}>
                   <Field.Text
                     name="end_date"
-                    label="Fecha de fin"
+                    label={t('label_end_date')}
                     type="date"
                     InputLabelProps={{ shrink: true }}
                   />
@@ -358,26 +384,42 @@ export function TournamentNewEditForm({ currentTournament }) {
           {tournamentType !== 'knockout' && (
             <Card sx={{ p: 3 }}>
               <Typography variant="h6" sx={{ mb: 3 }}>
-                Reglas
+                {t('label_rules')}
               </Typography>
 
               <Stack spacing={2}>
                 {showLeagueRules && (
                   <>
-                    <Field.Text name="rules.points_per_win" label="Puntos por Victoria" type="number" />
-                    <Field.Text name="rules.points_per_draw" label="Puntos por Empate" type="number" />
-                    <Field.Text name="rules.points_per_loss" label="Puntos por Derrota" type="number" />
+                    <Field.Text
+                      name="rules.points_per_win"
+                      label={t('label_points_per_win')}
+                      type="number"
+                    />
+                    <Field.Text
+                      name="rules.points_per_draw"
+                      label={t('label_points_per_draw')}
+                      type="number"
+                    />
+                    <Field.Text
+                      name="rules.points_per_loss"
+                      label={t('label_points_per_loss')}
+                      type="number"
+                    />
                   </>
                 )}
 
                 {showMatchweeks && (
-                  <Field.Text name="rules.total_matchweeks" label="Total Jornadas" type="number" />
+                  <Field.Text
+                    name="rules.total_matchweeks"
+                    label={t('label_total_matchweeks')}
+                    type="number"
+                  />
                 )}
 
-                <Field.Select name="rules.legs" label="Vueltas">
+                <Field.Select name="rules.legs" label={t('label_legs')}>
                   {LEGS_OPTIONS.map((opt) => (
                     <MenuItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {t(opt.label)}
                     </MenuItem>
                   ))}
                 </Field.Select>
@@ -386,13 +428,13 @@ export function TournamentNewEditForm({ currentTournament }) {
                   <>
                     <Field.Text
                       name="rules.yellow_card_fee"
-                      label="Multa Amarilla"
+                      label={t('label_yellow_card_fee')}
                       type="number"
                       InputProps={{ inputProps: { min: 0 } }}
                     />
                     <Field.Text
                       name="rules.red_card_fee"
-                      label="Multa Roja / Doble Amarilla"
+                      label={t('label_red_card_fee')}
                       type="number"
                       InputProps={{ inputProps: { min: 0 } }}
                     />
@@ -406,7 +448,7 @@ export function TournamentNewEditForm({ currentTournament }) {
         <Grid xs={12}>
           <Stack alignItems="flex-end">
             <LoadingButton type="submit" size="large" variant="contained" loading={isSubmitting}>
-              {isEdit ? 'Guardar Cambios' : 'Crear Torneo'}
+              {isEdit ? t('label_save_changes') : t('label_create_tournament')}
             </LoadingButton>
           </Stack>
         </Grid>

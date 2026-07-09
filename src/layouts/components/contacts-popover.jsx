@@ -1,4 +1,5 @@
 import { m } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import Badge from '@mui/material/Badge';
 import Avatar from '@mui/material/Avatar';
@@ -17,6 +18,7 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export function ContactsPopover({ data = [], sx, ...other }) {
+  const { t } = useTranslation();
   const popover = usePopover();
 
   return (
@@ -51,7 +53,7 @@ export function ContactsPopover({ data = [], sx, ...other }) {
         }}
       >
         <Typography variant="h6" sx={{ p: 1.5 }}>
-          Contacts <span>({data.length})</span>
+          {t('label_contacts')} <span>({data.length})</span>
         </Typography>
 
         <Scrollbar sx={{ height: 320, width: 320 }}>

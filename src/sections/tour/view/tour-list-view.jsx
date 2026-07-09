@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
@@ -18,13 +19,24 @@ import { TourSeasonStats } from '../tour-season-stats';
 
 // ----------------------------------------------------------------------
 
+// values below are i18n keys, resolved via t() at render time.
 const MONTH_NAMES = [
-  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+  'month_jan_abbr',
+  'month_feb_abbr',
+  'month_mar_abbr',
+  'month_apr_abbr',
+  'month_may_abbr',
+  'month_jun_abbr',
+  'month_jul_abbr',
+  'month_aug_abbr',
+  'month_sep_abbr',
+  'month_oct_abbr',
+  'month_nov_abbr',
+  'month_dec_abbr',
 ];
 
-function getTs(t) {
-  const s = t.available?.startDate;
+function getTs(tour) {
+  const s = tour.available?.startDate;
   if (!s) return 0;
   const n = Number(s);
   return Number.isFinite(n) ? n : new Date(s).getTime();
@@ -33,23 +45,24 @@ function getTs(t) {
 // ----------------------------------------------------------------------
 
 export function TourListView() {
+  const { t } = useTranslation();
   const { selectedWorkspace } = useWorkspace();
   const { tours } = useGetTours(selectedWorkspace?.id, 'match');
 
   // Derive available months from tours, sorted newest first
   const months = useMemo(() => {
     const seen = new Map();
-    tours.forEach((t) => {
-      const ts = getTs(t);
+    tours.forEach((tour) => {
+      const ts = getTs(tour);
       if (!ts) return;
       const d = new Date(ts);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       if (!seen.has(key)) {
-        seen.set(key, { key, label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}` });
+        seen.set(key, { key, label: `${t(MONTH_NAMES[d.getMonth()])} ${d.getFullYear()}` });
       }
     });
     return [...seen.values()].sort((a, b) => b.key.localeCompare(a.key));
-  }, [tours]);
+  }, [tours, t]);
 
   // Default to the current (or most recent) month
   const defaultMonth = useMemo(() => {
@@ -65,8 +78,8 @@ export function TourListView() {
     const filtered =
       activeMonth === 'all'
         ? tours
-        : tours.filter((t) => {
-            const ts = getTs(t);
+        : tours.filter((tour) => {
+            const ts = getTs(tour);
             if (!ts) return false;
             const d = new Date(ts);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -74,16 +87,24 @@ export function TourListView() {
           });
 
     const now = Date.now();
-    const upcoming = orderBy(filtered.filter((t) => getTs(t) >= now), ['available.startDate'], ['asc']);
-    const past = orderBy(filtered.filter((t) => getTs(t) < now), ['available.startDate'], ['desc']);
+    const upcoming = orderBy(
+      filtered.filter((tour) => getTs(tour) >= now),
+      ['available.startDate'],
+      ['asc']
+    );
+    const past = orderBy(
+      filtered.filter((tour) => getTs(tour) < now),
+      ['available.startDate'],
+      ['desc']
+    );
     return [...upcoming, ...past];
   }, [tours, activeMonth]);
 
   const countFor = (key) =>
     key === 'all'
       ? tours.length
-      : tours.filter((t) => {
-          const ts = getTs(t);
+      : tours.filter((tour) => {
+          const ts = getTs(tour);
           if (!ts) return false;
           const d = new Date(ts);
           return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === key;
@@ -92,8 +113,8 @@ export function TourListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Partidos"
-        links={[{ name: 'Partidos' }]}
+        heading={t('label_matches')}
+        links={[{ name: t('label_matches') }]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
@@ -105,13 +126,13 @@ export function TourListView() {
           onChange={(_, v) => setSelectedMonth(v)}
           variant="scrollable"
           scrollButtons="auto"
-          sx={{ mb: 3, borderBottom: (t) => `1px solid ${t.palette.divider}` }}
+          sx={{ mb: 3, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}
         >
           <Tab
             value="all"
             label={
               <span>
-                Todos{' '}
+                {t('all')}{' '}
                 <Label color="default" sx={{ ml: 0.75 }}>
                   {tours.length}
                 </Label>

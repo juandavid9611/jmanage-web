@@ -15,7 +15,7 @@ export function OwnUserEditView({ user: currentUser }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Tu Perfil"
+        heading={t('label_your_profile')}
         links={[
           {
             name: t('app'),

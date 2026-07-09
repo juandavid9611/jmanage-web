@@ -1,9 +1,11 @@
+// label values below are i18n keys, resolved via t() at render time.
 export const PRODUCT_GENDER_OPTIONS = [
-  { label: 'Men', value: 'Men' },
-  { label: 'Women', value: 'Women' },
-  { label: 'Kids', value: 'Kids' },
+  { label: 'word_men', value: 'Men' },
+  { label: 'word_women', value: 'Women' },
+  { label: 'kids', value: 'Kids' },
 ];
 
+// Filter values matched directly against product.category in mock data — not translated.
 export const PRODUCT_CATEGORY_OPTIONS = ['Shose', 'Apparel', 'Accessories'];
 
 export const PRODUCT_RATING_OPTIONS = ['up4Star', 'up3Star', 'up2Star', 'up1Star'];
@@ -20,14 +22,14 @@ export const PRODUCT_COLOR_OPTIONS = [
 ];
 
 export const PRODUCT_COLOR_NAME_OPTIONS = [
-  { value: '#FF4842', label: 'Red' },
-  { value: '#1890FF', label: 'Blue' },
-  { value: '#FFC0CB', label: 'Pink' },
-  { value: '#00AB55', label: 'Green' },
-  { value: '#FFC107', label: 'Yellow' },
-  { value: '#7F00FF', label: 'Violet' },
-  { value: '#000000', label: 'Black' },
-  { value: '#FFFFFF', label: 'White' },
+  { value: '#FF4842', label: 'word_red' },
+  { value: '#1890FF', label: 'word_blue' },
+  { value: '#FFC0CB', label: 'word_pink' },
+  { value: '#00AB55', label: 'word_green' },
+  { value: '#FFC107', label: 'word_yellow' },
+  { value: '#7F00FF', label: 'word_violet' },
+  { value: '#000000', label: 'word_black' },
+  { value: '#FFFFFF', label: 'word_white' },
 ];
 
 export const PRODUCT_SIZE_OPTIONS = [
@@ -45,30 +47,32 @@ export const PRODUCT_SIZE_OPTIONS = [
 ];
 
 export const PRODUCT_STOCK_OPTIONS = [
-  { value: 'in stock', label: 'In stock' },
-  { value: 'low stock', label: 'Low stock' },
-  { value: 'out of stock', label: 'Out of stock' },
+  { value: 'in stock', label: 'label_in_stock' },
+  { value: 'low stock', label: 'label_low_stock' },
+  { value: 'out of stock', label: 'label_out_of_stock' },
 ];
 
 export const PRODUCT_PUBLISH_OPTIONS = [
-  { value: 'published', label: 'Published' },
-  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'label_published' },
+  { value: 'draft', label: 'draft' },
 ];
 
 export const PRODUCT_SORT_OPTIONS = [
-  { value: 'featured', label: 'Featured' },
-  { value: 'newest', label: 'Newest' },
-  { value: 'priceDesc', label: 'Price: High - Low' },
-  { value: 'priceAsc', label: 'Price: Low - High' },
+  { value: 'featured', label: 'label_featured' },
+  { value: 'newest', label: 'label_newest' },
+  { value: 'priceDesc', label: 'label_price_high_low' },
+  { value: 'priceAsc', label: 'label_price_low_high' },
 ];
 
+// group/classify values below are matched against product data — not translated.
 export const PRODUCT_CATEGORY_GROUP_OPTIONS = [
   { group: 'Clothing', classify: ['Shirts', 'T-shirts', 'Jeans', 'Leather', 'Accessories'] },
   { group: 'Tailored', classify: ['Suits', 'Blazers', 'Trousers', 'Waistcoats', 'Apparel'] },
   { group: 'Accessories', classify: ['Shoes', 'Backpacks and bags', 'Bracelets', 'Face masks'] },
 ];
 
-export const PRODUCT_CHECKOUT_STEPS = ['Cart', 'Billing & address', 'Payment'];
+// values below are i18n keys, resolved via t() at render time (see checkout-steps.jsx).
+export const PRODUCT_CHECKOUT_STEPS = ['label_cart', 'label_billing_and_address', 'payment'];
 
 // ----------------------------------------------------------------------
 

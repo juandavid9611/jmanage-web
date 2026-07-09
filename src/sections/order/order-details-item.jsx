@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -21,34 +23,35 @@ export function OrderDetailsItems({
   items = [],
   totalAmount,
 }) {
+  const { t } = useTranslation();
   const renderTotal = (
     <Stack spacing={2} alignItems="flex-end" sx={{ p: 3, textAlign: 'right', typography: 'body2' }}>
       <Stack direction="row">
-        <Box sx={{ color: 'text.secondary' }}>Subtotal</Box>
+        <Box sx={{ color: 'text.secondary' }}>{t('label_subtotal')}</Box>
         <Box sx={{ width: 160, typography: 'subtitle2' }}>{fCurrency(subtotal) || '-'}</Box>
       </Stack>
 
       <Stack direction="row">
-        <Box sx={{ color: 'text.secondary' }}>Shipping</Box>
+        <Box sx={{ color: 'text.secondary' }}>{t('label_shipping')}</Box>
         <Box sx={{ width: 160, ...(shipping && { color: 'error.main' }) }}>
           {shipping ? `- ${fCurrency(shipping)}` : '-'}
         </Box>
       </Stack>
 
       <Stack direction="row">
-        <Box sx={{ color: 'text.secondary' }}>Discount</Box>
+        <Box sx={{ color: 'text.secondary' }}>{t('label_discount')}</Box>
         <Box sx={{ width: 160, ...(discount && { color: 'error.main' }) }}>
           {discount ? `- ${fCurrency(discount)}` : '-'}
         </Box>
       </Stack>
 
       <Stack direction="row">
-        <Box sx={{ color: 'text.secondary' }}>Taxes</Box>
+        <Box sx={{ color: 'text.secondary' }}>{t('label_taxes')}</Box>
         <Box sx={{ width: 160 }}>{taxes ? fCurrency(taxes) : '-'}</Box>
       </Stack>
 
       <Stack direction="row" sx={{ typography: 'subtitle1' }}>
-        <div>Total</div>
+        <div>{t('total')}</div>
         <Box sx={{ width: 160 }}>{fCurrency(totalAmount) || '-'}</Box>
       </Stack>
     </Stack>
@@ -57,7 +60,7 @@ export function OrderDetailsItems({
   return (
     <Card>
       <CardHeader
-        title="Details"
+        title={t('details')}
         action={
           <IconButton>
             <Iconify icon="solar:pen-bold" />
