@@ -72,7 +72,9 @@ export function UserTableRow({
           </Stack>
         </TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
+        {!isTournamentAccount && (
+          <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
+        )}
 
         {isTournamentAccount ? (
           <TableCell sx={{ whiteSpace: 'nowrap' }}>{teamName || '—'}</TableCell>

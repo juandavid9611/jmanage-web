@@ -66,14 +66,15 @@ const CLUB_TABLE_HEAD = [
 ];
 
 // Tournament accounts: "users" are mostly team owners/managers — club-membership
-// fields (identity card, jersey number, EPS) don't apply; show which team instead.
+// fields (identity card, jersey number, EPS, phone) don't apply; show which team
+// instead. Trailing blank entry matches the row's unlabeled actions column.
 const TOURNAMENT_TABLE_HEAD = [
   { id: '', width: 88 },
   { id: 'name', label: 'name' },
-  { id: 'phoneNumber', label: 'phone_number', width: 180 },
   { id: 'team', label: 'team', width: 260 },
   { id: 'role', label: 'role', width: 100 },
   { id: 'confirmationStatus', label: 'status', width: 100 },
+  { id: '', width: 88 },
 ];
 
 // ----------------------------------------------------------------------
