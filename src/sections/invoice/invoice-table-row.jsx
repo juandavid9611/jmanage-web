@@ -101,7 +101,14 @@ export function InvoiceTableRow({
         <TableCell>
           <ListItemText
             primary={row.concept}
+            secondary={row.description}
             primaryTypographyProps={{ typography: 'body2', noWrap: true }}
+            secondaryTypographyProps={{
+              mt: 0.5,
+              component: 'span',
+              typography: 'caption',
+              noWrap: true,
+            }}
           />
         </TableCell>
 
