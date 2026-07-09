@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import MenuList from '@mui/material/MenuList';
@@ -9,6 +11,7 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export function TourSort({ sort, onSort, sortOptions }) {
+  const { t } = useTranslation();
   const popover = usePopover();
 
   return (
@@ -24,7 +27,7 @@ export function TourSort({ sort, onSort, sortOptions }) {
         }
         sx={{ fontWeight: 'fontWeightSemiBold' }}
       >
-        Sort by:
+        {t('label_sort_by')}:
         <Box
           component="span"
           sx={{ ml: 0.5, fontWeight: 'fontWeightBold', textTransform: 'capitalize' }}
@@ -44,7 +47,7 @@ export function TourSort({ sort, onSort, sortOptions }) {
                 onSort(option.value);
               }}
             >
-              {option.label}
+              {t(option.label)}
             </MenuItem>
           ))}
         </MenuList>

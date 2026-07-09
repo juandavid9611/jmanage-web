@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { paths } from 'src/routes/paths';
 
 import { useWorkspaceChangeRedirect } from 'src/hooks/use-workspace-change-redirect';
@@ -12,6 +14,7 @@ import { TourNewEditForm } from '../tour-new-edit-form';
 // ----------------------------------------------------------------------
 
 export function TourEditView({ tour }) {
+  const { t } = useTranslation();
   // Redirect to tour list when workspace changes
   const { isRedirecting } = useWorkspaceChangeRedirect(paths.dashboard.admin.tour.root);
 
@@ -22,10 +25,10 @@ export function TourEditView({ tour }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Edit"
+        heading={t('edit')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Tour', href: paths.dashboard.admin.tour.root },
+          { name: t('label_dashboard'), href: paths.dashboard.root },
+          { name: t('tour'), href: paths.dashboard.admin.tour.root },
           { name: tour?.name },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

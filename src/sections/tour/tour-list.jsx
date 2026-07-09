@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
@@ -23,15 +25,17 @@ function resultOf(scores) {
   return 'draw';
 }
 
+// label values below are i18n keys, resolved via t() at render time.
 const RESULT_CONFIG = {
-  win:  { color: 'success.main', border: 'success.main', label: 'V' },
-  draw: { color: 'warning.main', border: 'warning.main', label: 'E' },
-  loss: { color: 'error.main',   border: 'error.main',   label: 'D' },
+  win: { color: 'success.main', border: 'success.main', label: 'label_result_abbr_win' },
+  draw: { color: 'warning.main', border: 'warning.main', label: 'label_result_abbr_draw' },
+  loss: { color: 'error.main', border: 'error.main', label: 'label_result_abbr_loss' },
 };
 
 // ----------------------------------------------------------------------
 
 function MatchTourRow({ tour }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuthContext();
 
@@ -48,10 +52,10 @@ function MatchTourRow({ tour }) {
         px: 2.5,
         py: 1.75,
         cursor: 'pointer',
-        borderLeft: (t) =>
-          `3px solid ${cfg ? t.palette[result === 'win' ? 'success' : result === 'loss' ? 'error' : 'warning'].main : alpha(t.palette.grey[500], 0.24)}`,
+        borderLeft: (theme) =>
+          `3px solid ${cfg ? theme.palette[result === 'win' ? 'success' : result === 'loss' ? 'error' : 'warning'].main : alpha(theme.palette.grey[500], 0.24)}`,
         transition: 'box-shadow 0.2s',
-        '&:hover': { boxShadow: (t) => t.shadows[4] },
+        '&:hover': { boxShadow: (theme) => theme.shadows[4] },
       }}
     >
       <Stack direction="row" alignItems="center" spacing={2}>
@@ -72,7 +76,11 @@ function MatchTourRow({ tour }) {
           </Typography>
           {tour.location && (
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.25 }}>
-              <Iconify icon="mingcute:location-fill" width={12} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+              <Iconify
+                icon="mingcute:location-fill"
+                width={12}
+                sx={{ color: 'text.disabled', flexShrink: 0 }}
+              />
               <Typography variant="caption" sx={{ color: 'text.secondary' }} noWrap>
                 {tour.location}
               </Typography>
@@ -89,23 +97,43 @@ function MatchTourRow({ tour }) {
               sx={{
                 fontWeight: 700,
                 fontSize: '0.8rem',
-                bgcolor: (t) => alpha(t.palette[result === 'win' ? 'success' : result === 'loss' ? 'error' : 'warning'].main, 0.1),
+                bgcolor: (theme) =>
+                  alpha(
+                    theme.palette[
+                      result === 'win' ? 'success' : result === 'loss' ? 'error' : 'warning'
+                    ].main,
+                    0.1
+                  ),
                 color: cfg.color,
                 border: 'none',
               }}
             />
-            <Typography variant="caption" sx={{ color: cfg.color, fontWeight: 700, fontSize: '0.65rem', lineHeight: 1 }}>
-              {result === 'win' ? 'Victoria' : result === 'loss' ? 'Derrota' : 'Empate'}
+            <Typography
+              variant="caption"
+              sx={{ color: cfg.color, fontWeight: 700, fontSize: '0.65rem', lineHeight: 1 }}
+            >
+              {t(
+                result === 'win'
+                  ? 'label_match_result_win'
+                  : result === 'loss'
+                    ? 'label_match_result_loss'
+                    : 'label_match_result_draw'
+              )}
             </Typography>
           </Stack>
         ) : (
           <Typography variant="caption" sx={{ color: 'text.disabled', flexShrink: 0 }}>
-            Pendiente
+            {t('label_match_result_pending')}
           </Typography>
         )}
 
         {/* Attendance */}
-        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0, minWidth: 56 }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={0.5}
+          sx={{ flexShrink: 0, minWidth: 56 }}
+        >
           <Iconify
             icon="solar:users-group-rounded-bold"
             width={14}
@@ -113,7 +141,10 @@ function MatchTourRow({ tour }) {
           />
           <Typography
             variant="caption"
-            sx={{ color: userBooked ? 'success.main' : 'text.secondary', fontWeight: userBooked ? 700 : 400 }}
+            sx={{
+              color: userBooked ? 'success.main' : 'text.secondary',
+              fontWeight: userBooked ? 700 : 400,
+            }}
           >
             {bookerCount}
           </Typography>
@@ -122,7 +153,11 @@ function MatchTourRow({ tour }) {
           )}
         </Stack>
 
-        <Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ color: 'text.disabled', flexShrink: 0 }} />
+        <Iconify
+          icon="eva:arrow-ios-forward-fill"
+          width={18}
+          sx={{ color: 'text.disabled', flexShrink: 0 }}
+        />
       </Stack>
     </Card>
   );
