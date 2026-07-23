@@ -25,8 +25,16 @@ export function useGetVotations(workspaceId) {
 }
 
 export function useGetVotation(votationId, workspaceId) {
-  const { data, isLoading, error, isValidating, mutate: revalidate } = useSWR(
-    votationId && workspaceId ? [`${URL}/${votationId}`, { params: { workspace_id: workspaceId } }] : null,
+  const {
+    data,
+    isLoading,
+    error,
+    isValidating,
+    mutate: revalidate,
+  } = useSWR(
+    votationId && workspaceId
+      ? [`${URL}/${votationId}`, { params: { workspace_id: workspaceId } }]
+      : null,
     fetcher
   );
 
@@ -44,9 +52,9 @@ export function useGetVotation(votationId, workspaceId) {
 
 // ----------------------------------------------------------------------
 
-export async function previewCandidates(workspaceId, month, minPct) {
+export async function previewCandidates(workspaceId, minPct, periodParams) {
   const res = await axiosInstance.get(`${URL}/preview`, {
-    params: { workspace_id: workspaceId, month, min_pct: minPct },
+    params: { workspace_id: workspaceId, min_pct: minPct, ...periodParams },
   });
   return res.data;
 }
@@ -58,10 +66,9 @@ export async function createVotation(payload, workspaceId) {
 }
 
 export async function castVote(votationId, candidateId, workspaceId) {
-  const res = await axiosInstance.post(
-    `${URL}/${votationId}/vote?workspace_id=${workspaceId}`,
-    { candidate_id: candidateId }
-  );
+  const res = await axiosInstance.post(`${URL}/${votationId}/vote?workspace_id=${workspaceId}`, {
+    candidate_id: candidateId,
+  });
   mutate((key) => typeof key === 'string' && key.startsWith(`${URL}/${votationId}`));
   return res.data;
 }
@@ -72,9 +79,7 @@ export async function deleteVotation(votationId, workspaceId) {
 }
 
 export async function closeVotation(votationId, workspaceId) {
-  const res = await axiosInstance.patch(
-    `${URL}/${votationId}/close?workspace_id=${workspaceId}`
-  );
+  const res = await axiosInstance.patch(`${URL}/${votationId}/close?workspace_id=${workspaceId}`);
   mutate((key) => typeof key === 'string' && key.startsWith(`${URL}/${votationId}`));
   return res.data;
 }

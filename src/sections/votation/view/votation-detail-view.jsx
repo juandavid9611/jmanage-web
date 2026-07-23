@@ -39,6 +39,8 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { useAuthContext } from 'src/auth/hooks';
 
+import { periodLabel, playerOfPeriodLabel } from '../votation-utils';
+
 // ----------------------------------------------------------------------
 
 const PODIUM_COLORS = {
@@ -65,7 +67,7 @@ export function VotationDetailView() {
     selectedWorkspace?.id
   );
 
-  const monthLabelText = state?.monthLabel || votation?.month || '';
+  const periodLabelText = state?.periodLabel || (votation ? periodLabel(votation, t) : '');
 
   const myVote = votation?.votes?.[user?.sub];
 
@@ -183,7 +185,7 @@ export function VotationDetailView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading={`${t('label_player_of_the_month')} — ${monthLabelText}`}
+        heading={`${playerOfPeriodLabel(votation, t)} — ${periodLabelText}`}
         links={[
           { name: t('label_votations'), href: paths.dashboard.votaciones.root },
           { name: t('label_votation') },
@@ -289,6 +291,7 @@ export function VotationDetailView() {
           winner={votation.candidates.find((c) => c.id === votation.winner_id)}
           votes={getVotesForCandidate(votation.winner_id)}
           totalVotes={totalVotes}
+          playerOfPeriodLabelText={playerOfPeriodLabel(votation, t)}
         />
       )}
 
@@ -950,7 +953,7 @@ function VoterChips({ voters }) {
 
 // ----------------------------------------------------------------------
 
-function WinnerBanner({ winner, votes, totalVotes }) {
+function WinnerBanner({ winner, votes, totalVotes, playerOfPeriodLabelText }) {
   const { t } = useTranslation();
   if (!winner) return null;
 
@@ -990,7 +993,7 @@ function WinnerBanner({ winner, votes, totalVotes }) {
               variant="overline"
               sx={{ color: 'warning.main', letterSpacing: 1.5, lineHeight: 1 }}
             >
-              {t('label_player_of_the_month')}
+              {playerOfPeriodLabelText}
             </Typography>
             <Typography variant="h4" fontWeight={700}>
               {winner.name}

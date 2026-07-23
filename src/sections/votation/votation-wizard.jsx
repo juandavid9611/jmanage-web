@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { z as zod } from 'zod';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
@@ -20,6 +21,8 @@ import { alpha, useTheme } from '@mui/material/styles';
 
 import { paths } from 'src/routes/paths';
 
+import { fIsAfter } from 'src/utils/format-time';
+
 import { useGetTours } from 'src/actions/tours';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { createVotation, previewCandidates as apiPreviewCandidates } from 'src/actions/votation';
@@ -28,6 +31,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
+import { formStateToPeriodLabel } from './votation-utils';
 import { VotationCreationStepper } from './votation-creation-stepper';
 
 // ----------------------------------------------------------------------
@@ -57,10 +61,47 @@ const STEPS = [
 ];
 
 function getWizardSchema(t) {
-  return zod.object({
-    month: zod.string().min(1, t('label_select_a_month')),
-    min_pct: zod.coerce.number().int().min(0).max(100),
-  });
+  return zod
+    .object({
+      period_type: zod.enum(['month', 'semester']),
+      month: zod.string().optional(),
+      start_date: zod.union([zod.number(), zod.string(), zod.date(), zod.null()]).optional(),
+      end_date: zod.union([zod.number(), zod.string(), zod.date(), zod.null()]).optional(),
+      min_pct: zod.coerce.number().int().min(0).max(100),
+    })
+    .superRefine((data, ctx) => {
+      if (data.period_type === 'month') {
+        if (!data.month) {
+          ctx.addIssue({
+            code: zod.ZodIssueCode.custom,
+            message: t('label_select_a_month'),
+            path: ['month'],
+          });
+        }
+        return;
+      }
+      if (!data.start_date) {
+        ctx.addIssue({
+          code: zod.ZodIssueCode.custom,
+          message: t('label_select_a_start_date'),
+          path: ['start_date'],
+        });
+      }
+      if (!data.end_date) {
+        ctx.addIssue({
+          code: zod.ZodIssueCode.custom,
+          message: t('label_select_an_end_date'),
+          path: ['end_date'],
+        });
+      }
+      if (data.start_date && data.end_date && !fIsAfter(data.end_date, data.start_date)) {
+        ctx.addIssue({
+          code: zod.ZodIssueCode.custom,
+          message: t('label_end_date_must_be_later'),
+          path: ['end_date'],
+        });
+      }
+    });
 }
 
 function getDateParts(startDate) {
@@ -105,7 +146,13 @@ export function VotationWizard() {
 
   const methods = useForm({
     resolver: zodResolver(WizardSchema),
-    defaultValues: { month: '', min_pct: 70 },
+    defaultValues: {
+      period_type: 'month',
+      month: '',
+      start_date: null,
+      end_date: null,
+      min_pct: 70,
+    },
     mode: 'onChange',
   });
 
@@ -119,14 +166,17 @@ export function VotationWizard() {
 
   const eligibleCount = candidates.filter((c) => c.eligible).length;
 
+  const hasPeriodSelected =
+    values.period_type === 'semester' ? !!(values.start_date && values.end_date) : !!values.month;
+
   const getUnlockedSteps = useCallback(() => {
     const unlocked = new Set([0]);
-    if (values.month) {
+    if (hasPeriodSelected) {
       unlocked.add(1);
       if (candidates.length > 0) unlocked.add(2);
     }
     return unlocked;
-  }, [values.month, candidates.length]);
+  }, [hasPeriodSelected, candidates.length]);
 
   const unlockedSteps = getUnlockedSteps();
 
@@ -139,14 +189,26 @@ export function VotationWizard() {
 
   const handleNext = useCallback(async () => {
     if (activeStep === 0) {
-      const valid = await trigger(['month', 'min_pct']);
+      const isSemester = values.period_type === 'semester';
+      const valid = await trigger(
+        isSemester
+          ? ['period_type', 'start_date', 'end_date', 'min_pct']
+          : ['period_type', 'month', 'min_pct']
+      );
       if (!valid) return;
       setLoadingPreview(true);
       try {
+        const periodParams = isSemester
+          ? {
+              period_type: 'semester',
+              start_date: dayjs(values.start_date).format('YYYY-MM-DD'),
+              end_date: dayjs(values.end_date).format('YYYY-MM-DD'),
+            }
+          : { period_type: 'month', month: values.month };
         const computed = await apiPreviewCandidates(
           selectedWorkspace?.id,
-          values.month,
-          values.min_pct
+          values.min_pct,
+          periodParams
         );
         setCandidates(computed);
       } catch {
@@ -157,7 +219,17 @@ export function VotationWizard() {
       }
     }
     setActiveStep((prev) => Math.min(prev + 1, STEPS.length - 1));
-  }, [activeStep, trigger, selectedWorkspace?.id, values.month, values.min_pct, t]);
+  }, [
+    activeStep,
+    trigger,
+    selectedWorkspace?.id,
+    values.period_type,
+    values.month,
+    values.start_date,
+    values.end_date,
+    values.min_pct,
+    t,
+  ]);
 
   const handleBack = useCallback(() => {
     setActiveStep((prev) => Math.max(prev - 1, 0));
@@ -171,10 +243,10 @@ export function VotationWizard() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      const monthLabel = monthOptions.find((o) => o.value === data.month)?.label || data.month;
+      const periodLabelText = formStateToPeriodLabel(data, monthOptions, t);
       const payload = {
         workspace_id: selectedWorkspace?.id,
-        month: data.month,
+        period_type: data.period_type,
         min_pct: data.min_pct,
         candidates: candidates
           .filter((c) => c.eligible)
@@ -190,11 +262,17 @@ export function VotationWizard() {
             eligible: true,
           })),
       };
+      if (data.period_type === 'semester') {
+        payload.start_date = dayjs(data.start_date).format('YYYY-MM-DD');
+        payload.end_date = dayjs(data.end_date).format('YYYY-MM-DD');
+      } else {
+        payload.month = data.month;
+      }
       const created = await createVotation(payload, selectedWorkspace?.id);
       toast.success(t('label_votation_opened_successfully'));
-      // Pass month label via state since the API doesn't store it
+      // Pass the period label via state since the API doesn't store a rendered label
       navigate(paths.dashboard.votaciones.detail(created.id), {
-        state: { votationId: created.id, monthLabel },
+        state: { votationId: created.id, periodLabel: periodLabelText },
       });
     } catch (error) {
       toast.error(t('label_error_opening_votation'));
@@ -203,8 +281,8 @@ export function VotationWizard() {
 
   // Stepper step values for the sidebar
   const stepValues = {
-    config: values.month
-      ? `${monthOptions.find((o) => o.value === values.month)?.label || values.month} · ${t('word_min')} ${values.min_pct}%`
+    config: hasPeriodSelected
+      ? `${formStateToPeriodLabel(values, monthOptions, t)} · ${t('word_min')} ${values.min_pct}%`
       : '—',
     candidatos: candidates.length > 0 ? `${eligibleCount} ${t('label_eligible_plural')}` : '—',
     confirmar: eligibleCount > 0 ? t('label_ready') : '—',
@@ -253,7 +331,11 @@ export function VotationWizard() {
               {t('label_new_votation_overline')}
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-              {t('label_player_of_the_month_period')}
+              {t(
+                values.period_type === 'semester'
+                  ? 'label_player_of_the_semester_period'
+                  : 'label_player_of_the_month_period'
+              )}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 520 }}>
               {t('label_wizard_intro_body')}
@@ -261,7 +343,9 @@ export function VotationWizard() {
           </Box>
 
           {/* Step 1 — Config */}
-          {activeStep === 0 && <StepConfig monthOptions={monthOptions} />}
+          {activeStep === 0 && (
+            <StepConfig monthOptions={monthOptions} periodType={values.period_type} />
+          )}
 
           {/* Step 2 — Candidates */}
           {activeStep === 1 && (
@@ -271,7 +355,8 @@ export function VotationWizard() {
           {/* Step 3 — Confirm */}
           {activeStep === 2 && (
             <StepConfirm
-              monthLabel={monthOptions.find((o) => o.value === values.month)?.label || values.month}
+              periodLabel={formStateToPeriodLabel(values, monthOptions, t)}
+              periodType={values.period_type}
               minPct={values.min_pct}
               candidates={candidates}
             />
@@ -317,25 +402,54 @@ export function VotationWizard() {
 
 // ----------------------------------------------------------------------
 
-function StepConfig({ monthOptions }) {
+function StepConfig({ monthOptions, periodType }) {
   const { t } = useTranslation();
   return (
     <Stack spacing={3} sx={{ maxWidth: 480 }}>
       <Box>
         <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
-          {t('label_evaluation_month')}
+          {t('label_votation_type')}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-          {t('label_training_attendance_calculated_note')}
-        </Typography>
-        <Field.Select name="month" label={t('label_month')} size="medium">
-          {monthOptions.map((opt) => (
-            <MenuItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </MenuItem>
-          ))}
-        </Field.Select>
+        <Field.RadioGroup
+          row
+          name="period_type"
+          options={[
+            { label: t('label_votation_type_monthly'), value: 'month' },
+            { label: t('label_votation_type_semester'), value: 'semester' },
+          ]}
+        />
       </Box>
+
+      {periodType === 'semester' ? (
+        <Box>
+          <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
+            {t('label_evaluation_period')}
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+            {t('label_training_attendance_calculated_note_period')}
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Field.DatePicker name="start_date" label={t('start_date')} />
+            <Field.DatePicker name="end_date" label={t('end_date')} />
+          </Stack>
+        </Box>
+      ) : (
+        <Box>
+          <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
+            {t('label_evaluation_month')}
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+            {t('label_training_attendance_calculated_note')}
+          </Typography>
+          <Field.Select name="month" label={t('label_month')} size="medium">
+            {monthOptions.map((opt) => (
+              <MenuItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </MenuItem>
+            ))}
+          </Field.Select>
+        </Box>
+      )}
 
       <Box>
         <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
@@ -553,7 +667,7 @@ function CandidateCard({ candidate, onToggle }) {
 
 // ----------------------------------------------------------------------
 
-function StepConfirm({ monthLabel, minPct, candidates }) {
+function StepConfirm({ periodLabel, periodType, minPct, candidates }) {
   const { t } = useTranslation();
   const eligible = candidates.filter((c) => c.eligible);
 
@@ -582,10 +696,10 @@ function StepConfirm({ monthLabel, minPct, candidates }) {
         <Stack spacing={1.5}>
           <Stack direction="row" justifyContent="space-between">
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {t('label_month')}
+              {t(periodType === 'semester' ? 'label_evaluation_period' : 'label_month')}
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {monthLabel}
+              {periodLabel}
             </Typography>
           </Stack>
           <Stack direction="row" justifyContent="space-between">
