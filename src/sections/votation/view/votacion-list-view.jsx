@@ -28,29 +28,7 @@ import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-// ----------------------------------------------------------------------
-
-// values below are i18n keys, resolved via t() at render time.
-const MONTH_NAMES = [
-  'month_jan_full',
-  'month_feb_full',
-  'month_mar_full',
-  'month_apr_full',
-  'month_may_full',
-  'month_jun_full',
-  'month_jul_full',
-  'month_aug_full',
-  'month_sep_full',
-  'month_oct_full',
-  'month_nov_full',
-  'month_dec_full',
-];
-
-function monthLabel(month, t) {
-  if (!month) return '';
-  const [year, m] = month.split('-');
-  return `${t(MONTH_NAMES[parseInt(m, 10) - 1])} ${year}`;
-}
+import { periodLabel, playerOfPeriodLabel, lastPlayerOfPeriodLabel } from '../votation-utils';
 
 // ----------------------------------------------------------------------
 
@@ -89,7 +67,7 @@ export function VotacionesListView() {
   const handleCardClick = useCallback(
     (v) => {
       navigate(paths.dashboard.votaciones.detail(v.id), {
-        state: { monthLabel: monthLabel(v.month, t) },
+        state: { periodLabel: periodLabel(v, t) },
       });
     },
     [navigate, t]
@@ -179,7 +157,7 @@ export function VotacionesListView() {
             <>
               {t('label_delete_votation_of')}{' '}
               <strong>
-                {t('label_player_of_the_month')} — {monthLabel(votationToDelete.month, t)}
+                {playerOfPeriodLabel(votationToDelete, t)} — {periodLabel(votationToDelete, t)}
               </strong>
               ? {t('label_action_cannot_be_undone')}
             </>
@@ -249,7 +227,7 @@ function LastWinnerCard({ votation, onViewDetails }) {
               variant="overline"
               sx={{ color: 'warning.main', letterSpacing: 1.5, lineHeight: 1 }}
             >
-              {t('label_last_player_of_the_month')} · {monthLabel(votation.month, t)}
+              {lastPlayerOfPeriodLabel(votation, t)} · {periodLabel(votation, t)}
             </Typography>
             <Typography variant="h5" fontWeight={700} noWrap>
               {winner.name}
@@ -330,7 +308,7 @@ function VotationRow({ votation, isAdmin, onClick, onDelete }) {
               </Label>
             )}
             <Typography variant="subtitle1" fontWeight={600} noWrap>
-              {t('label_player_of_the_month')} — {monthLabel(votation.month, t)}
+              {playerOfPeriodLabel(votation, t)} — {periodLabel(votation, t)}
             </Typography>
           </Stack>
 
