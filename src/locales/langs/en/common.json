@@ -1344,6 +1344,8 @@
   "label_player_jersey_hint": "Player's jersey number",
   "label_no_assist": "No assist",
   "label_assist_optional": "Assist (optional)",
+  "label_player_out": "Player out",
+  "label_player_in": "Player in",
   "label_edit_player": "Edit Player",
   "label_player_created": "Player created",
   "label_player_updated": "Player updated",

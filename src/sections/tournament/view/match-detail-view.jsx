@@ -816,7 +816,11 @@ export function MatchDetailView() {
             <TextField
               select
               fullWidth
-              label={t('label_player_singular')}
+              label={
+                eventForm.type === 'substitution'
+                  ? t('label_player_out')
+                  : t('label_player_singular')
+              }
               value={eventForm.player_id}
               onChange={(e) => setEventForm((f) => ({ ...f, player_id: e.target.value }))}
             >
@@ -828,15 +832,21 @@ export function MatchDetailView() {
                   </MenuItem>
                 ))}
             </TextField>
-            {['goal', 'penalty_scored'].includes(eventForm.type) && (
+            {['goal', 'penalty_scored', 'substitution'].includes(eventForm.type) && (
               <TextField
                 select
                 fullWidth
-                label={t('label_assist_optional')}
+                label={
+                  eventForm.type === 'substitution'
+                    ? t('label_player_in')
+                    : t('label_assist_optional')
+                }
                 value={eventForm.assist_player_id}
                 onChange={(e) => setEventForm((f) => ({ ...f, assist_player_id: e.target.value }))}
               >
-                <MenuItem value="">{t('label_no_assist')}</MenuItem>
+                {eventForm.type !== 'substitution' && (
+                  <MenuItem value="">{t('label_no_assist')}</MenuItem>
+                )}
                 {matchPlayers
                   .filter((p) => !eventForm.team_id || p.team_id === eventForm.team_id)
                   .filter((p) => p.id !== eventForm.player_id)
@@ -851,7 +861,12 @@ export function MatchDetailView() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEventDialog(false)}>{t('cancel')}</Button>
-          <LoadingButton variant="contained" loading={isSubmitting} onClick={handleAddEvent}>
+          <LoadingButton
+            variant="contained"
+            loading={isSubmitting}
+            disabled={eventForm.type === 'substitution' && !eventForm.assist_player_id}
+            onClick={handleAddEvent}
+          >
             {t('label_register')}
           </LoadingButton>
         </DialogActions>
