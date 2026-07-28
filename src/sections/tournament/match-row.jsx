@@ -49,6 +49,12 @@ export const EVENT_CONFIG = {
     color: 'success.main',
     label: 'label_penalty',
   },
+  penalty_missed: {
+    type: 'penalty_missed',
+    icon: 'mdi:target',
+    color: 'error.main',
+    label: 'label_penalty_missed',
+  },
   yellow_card: {
     type: 'yellow_card',
     icon: 'mdi:card',

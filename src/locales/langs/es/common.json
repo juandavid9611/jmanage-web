@@ -1344,6 +1344,8 @@
   "label_player_jersey_hint": "Dorsal del jugador",
   "label_no_assist": "Sin asistencia",
   "label_assist_optional": "Asistencia (opcional)",
+  "label_player_out": "Jugador que sale",
+  "label_player_in": "Jugador que entra",
   "label_edit_player": "Editar Jugador",
   "label_player_created": "Jugador creado",
   "label_player_updated": "Jugador actualizado",
