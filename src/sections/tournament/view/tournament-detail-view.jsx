@@ -46,6 +46,7 @@ import { useAuthContext } from 'src/auth/hooks';
 import { TeamList } from '../team-list';
 import { BracketView } from '../bracket-view';
 import { StatsOverview } from '../stats-overview';
+import { PlayerSearchBox } from '../player-search';
 import { StandingsSidebar } from '../standings-sidebar';
 import { MatchweekTimeline } from '../matchweek-timeline';
 import { PlayerRankingTable } from '../player-ranking-table';
@@ -272,6 +273,17 @@ export function TournamentDetailView() {
         onOpenDiscipline={() => setDisciplineOpen(true)}
         onOpenUsers={canViewTournamentPayments ? () => setUsersOpen(true) : undefined}
       />
+
+      {/* ═══ Player Search — persistent regardless of active phase ═══ */}
+      <Box sx={{ px: { xs: 2, md: 3 }, py: 1.5 }}>
+        <PlayerSearchBox
+          players={players}
+          teams={teams}
+          matches={allMatches}
+          tournamentId={id}
+          onMatchClick={handleMatchClick}
+        />
+      </Box>
 
       {/* ═══ Phase Content ═══ */}
       <Box sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.02), minHeight: 400 }}>
