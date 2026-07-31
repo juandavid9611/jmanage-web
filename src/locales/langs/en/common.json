@@ -1801,5 +1801,8 @@
   "label_next_steps_title": "Next steps",
   "label_next_steps_desc": "You now have the app installed and notifications enabled. Explore everything SportsManage has to offer.",
   "label_next_steps_documents_desc": "Access all files and documents shared by your club.",
-  "label_go_to_documents": "Go to Documents"
+  "label_go_to_documents": "Go to Documents",
+  "label_search_player_placeholder": "Search player...",
+  "label_no_players_found": "No players found",
+  "label_no_matches_scheduled_yet": "No matches scheduled yet"
 }
