@@ -288,7 +288,7 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
         {rows.map((row, idx) => {
           const team = teams?.find((tm) => tm.id === row.team_id);
           const name = team?.short_name || team?.name || '—';
-          const isTop = idx < 2;
+          const isTop = idx < 4;
           const gd = row.goal_difference;
 
           return (
@@ -411,8 +411,8 @@ function StandingsTable({ rows, teams, liveTeamIds }) {
                 </Typography>
               </Box>
 
-              {/* Promotion line after position 2 */}
-              {idx === 1 && rows.length > 2 && (
+              {/* Promotion line after position 4 */}
+              {idx === 3 && rows.length > 4 && (
                 <Divider
                   sx={{
                     mx: 1,
