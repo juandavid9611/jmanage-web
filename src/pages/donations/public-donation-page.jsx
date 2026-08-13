@@ -13,6 +13,9 @@ export default function PublicDonationPage() {
     <>
       <Helmet>
         <title>{metadata.title}</title>
+        <meta name="description" content={t('donations_hero_description')} />
+        <meta property="og:title" content={t('donations_campaign_title')} />
+        <meta property="og:description" content={t('donations_hero_description')} />
       </Helmet>
       <PublicDonationView />
     </>
