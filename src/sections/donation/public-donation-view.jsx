@@ -16,8 +16,10 @@ import { DonationContributionsList } from './donation-contributions-list';
 
 export function PublicDonationView() {
   const { t } = useTranslation();
-  const { totalAmountCop, contributionCount, summaryLoading } = useGetDonationSummary();
-  const { contributions, contributionsLoading } = useGetDonationContributions(20);
+  const { totalAmountCop, contributionCount, summaryLoading, summaryError } =
+    useGetDonationSummary();
+  const { contributions, contributionsLoading, contributionsError } =
+    useGetDonationContributions(20);
 
   return (
     <>
@@ -33,11 +35,15 @@ export function PublicDonationView() {
         <Card sx={{ p: 5, mb: 5, textAlign: 'center' }}>
           {summaryLoading ? (
             <CircularProgress />
+          ) : summaryError ? (
+            <Typography variant="body1" sx={{ color: 'error.main' }}>
+              {t('donations_summary_error')}
+            </Typography>
           ) : (
             <>
-              <Typography variant="h1">{fCurrency(totalAmountCop)}</Typography>
+              <Typography variant="h1">{fCurrency(totalAmountCop, { currency: 'COP' })}</Typography>
               <Typography variant="subtitle1" sx={{ color: 'text.secondary', mt: 1 }}>
-                {contributionCount}
+                {t('donations_contributions_count', { count: contributionCount })}
               </Typography>
             </>
           )}
@@ -47,7 +53,16 @@ export function PublicDonationView() {
           {t('donations_recent_title')}
         </Typography>
 
-        <DonationContributionsList contributions={contributions} loading={contributionsLoading} />
+        {contributionsError ? (
+          <Card sx={{ p: 3, textAlign: 'center', color: 'error.main' }}>
+            {t('donations_list_error')}
+          </Card>
+        ) : (
+          <DonationContributionsList
+            contributions={contributions}
+            loading={contributionsLoading}
+          />
+        )}
       </Container>
     </>
   );

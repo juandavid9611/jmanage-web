@@ -1817,5 +1817,8 @@
   "donations_record_button": "Record contribution",
   "donations_record_success": "Contribution recorded",
   "donations_amount_required": "Amount must be greater than zero",
-  "donations_donor_name_required": "Donor name is required unless anonymous"
+  "donations_donor_name_required": "Donor name is required unless anonymous",
+  "donations_summary_error": "We couldn't load the campaign total. Please try again shortly.",
+  "donations_list_error": "We couldn't load recent contributions. Please try again shortly.",
+  "donations_contributions_count": "{{count}} contributions"
 }

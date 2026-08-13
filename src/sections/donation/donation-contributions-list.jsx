@@ -50,7 +50,9 @@ export function DonationContributionsList({ contributions, loading }) {
                 </Typography>
               )}
             </Box>
-            <Typography variant="subtitle1">{fCurrency(contribution.amountCop)}</Typography>
+            <Typography variant="subtitle1">
+              {fCurrency(contribution.amountCop, { currency: 'COP' })}
+            </Typography>
           </Stack>
         ))}
       </Stack>

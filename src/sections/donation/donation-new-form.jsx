@@ -57,7 +57,7 @@ export function DonationNewForm() {
       toast.success(t('donations_record_success'));
       reset();
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error?.detail || error.message || t('something_went_wrong'));
     }
   });
 
