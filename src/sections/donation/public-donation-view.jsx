@@ -447,6 +447,7 @@ export function PublicDonationView() {
             <DonationContributionsList
               contributions={contributions}
               loading={contributionsLoading}
+              showAmounts={false}
             />
           )}
         </Container>

@@ -47,6 +47,7 @@ import { PlayerFormDialog } from 'src/sections/tournament/player-form-dialog';
 import { MatchweekTimeline } from 'src/sections/tournament/matchweek-timeline';
 import { PlayerRankingTable } from 'src/sections/tournament/player-ranking-table';
 import { getPhases, TournamentBanner } from 'src/sections/tournament/tournament-banner';
+import { DonationDashboardBanner } from 'src/sections/donation/donation-dashboard-banner';
 import { TournamentConfigSummary } from 'src/sections/tournament/tournament-config-summary';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -721,6 +722,8 @@ function TeamOwnerWelcome({ teams, onEnter }) {
   return (
     <DashboardContent>
       <Stack spacing={3}>
+        <DonationDashboardBanner />
+
         <Box>
           <Typography variant="h4" sx={{ mb: 0.5 }}>
             {t('label_welcome')}
@@ -1077,11 +1080,14 @@ export function TeamOwnerTournamentView() {
   if (!teams?.length) {
     return (
       <DashboardContent>
-        <EmptyContent
-          title={t('label_no_tournament_assigned')}
-          description={t('label_no_tournament_assigned_desc')}
-          sx={{ py: 10 }}
-        />
+        <Stack spacing={3}>
+          <DonationDashboardBanner />
+          <EmptyContent
+            title={t('label_no_tournament_assigned')}
+            description={t('label_no_tournament_assigned_desc')}
+            sx={{ py: 10 }}
+          />
+        </Stack>
       </DashboardContent>
     );
   }
