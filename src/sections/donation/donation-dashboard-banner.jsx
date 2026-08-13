@@ -20,11 +20,12 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export function DonationDashboardBanner() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { totalAmountCop, contributionCount, summaryLoading, summaryError } =
     useGetDonationSummary();
 
   const totalImpactCop = (Number(totalAmountCop) || 0) * 2;
+  const donationPath = paths.publicDonations.localized(i18n.resolvedLanguage);
 
   return (
     <Card
@@ -107,7 +108,7 @@ export function DonationDashboardBanner() {
             <Button
               variant="contained"
               color="warning"
-              href={`${paths.publicDonations.root}#como-donar`}
+              href={`${donationPath}#como-donar`}
               startIcon={<Iconify icon="solar:heart-bold" />}
             >
               {t('dashboard_donations_cta')}
@@ -115,7 +116,7 @@ export function DonationDashboardBanner() {
             <Button
               variant="soft"
               color="inherit"
-              href={paths.publicDonations.root}
+              href={donationPath}
               endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
             >
               {t('dashboard_donations_learn_more')}

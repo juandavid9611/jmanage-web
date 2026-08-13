@@ -41,7 +41,7 @@ const ICONS = {
 
 // ----------------------------------------------------------------------
 
-export function getNavData(t) {
+export function getNavData(t, language) {
   return [
     /**
      * Overview
@@ -131,7 +131,7 @@ export function getNavData(t) {
         },
         {
           title: t('nav_donations'),
-          path: paths.publicDonations.root,
+          path: paths.publicDonations.localized(language),
           icon: <Iconify icon="solar:hand-heart-bold-duotone" />,
           roles: ['admin', 'user'],
         },

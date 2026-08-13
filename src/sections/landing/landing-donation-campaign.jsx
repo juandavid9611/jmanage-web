@@ -25,13 +25,14 @@ import { Iconify } from 'src/components/iconify';
 const EXAMPLE_AMOUNT_COP = 10000;
 
 export function LandingDonationCampaign() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const prefersReducedMotion = useReducedMotion();
   const { totalAmountCop, contributionCount, summaryLoading, summaryError } =
     useGetDonationSummary();
 
   const communityTotal = Number(totalAmountCop) || 0;
   const totalImpact = communityTotal * 2;
+  const donationPath = paths.publicDonations.localized(i18n.resolvedLanguage);
   const motionProps = prefersReducedMotion
     ? {}
     : {
@@ -126,7 +127,7 @@ export function LandingDonationCampaign() {
                 size="large"
                 variant="contained"
                 color="warning"
-                href={paths.publicDonations.root}
+                href={donationPath}
                 startIcon={<Iconify icon="solar:heart-bold" />}
               >
                 {t('home_donations_cta')}
@@ -135,7 +136,7 @@ export function LandingDonationCampaign() {
                 size="large"
                 variant="soft"
                 color="inherit"
-                href={`${paths.publicDonations.root}#como-donar`}
+                href={`${donationPath}#como-donar`}
                 endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
               >
                 {t('donations_how_title')}
