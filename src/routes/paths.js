@@ -23,6 +23,7 @@ export const paths = {
   },
   publicDonations: {
     root: '/donations',
+    localized: (language = 'es') => `/${language === 'en' ? 'en' : 'es'}/donations`,
   },
   // AUTH
   auth: {

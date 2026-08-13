@@ -13,7 +13,7 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-export function LanguagePopover({ data = [], sx, ...other }) {
+export function LanguagePopover({ data = [], sx, onLanguageChange, ...other }) {
   const popover = usePopover();
 
   const { onChangeLang, currentLang } = useTranslate();
@@ -21,9 +21,10 @@ export function LanguagePopover({ data = [], sx, ...other }) {
   const handleChangeLang = useCallback(
     (newLang) => {
       onChangeLang(newLang);
+      onLanguageChange?.(newLang);
       popover.onClose();
     },
-    [onChangeLang, popover]
+    [onChangeLang, onLanguageChange, popover]
   );
 
   return (

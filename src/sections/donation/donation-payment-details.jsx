@@ -15,7 +15,6 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 const ACCOUNT_NUMBER = '61900000397';
-const TRANSFER_KEY = '319 389 8560';
 const WHATSAPP_NUMBER = '573193898560';
 
 export function DonationPaymentDetails() {
@@ -26,11 +25,6 @@ export function DonationPaymentDetails() {
   const paymentDetails = [
     { label: t('donations_bank_label'), value: t('donations_bank_value'), copyValue: null },
     { label: t('donations_account_label'), value: ACCOUNT_NUMBER, copyValue: ACCOUNT_NUMBER },
-    {
-      label: t('donations_key_label'),
-      value: TRANSFER_KEY,
-      copyValue: TRANSFER_KEY.replaceAll(' ', ''),
-    },
     {
       label: t('donations_holder_label'),
       value: 'Nicolle Angarita Marín',

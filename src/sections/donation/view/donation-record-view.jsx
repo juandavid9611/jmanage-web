@@ -15,7 +15,7 @@ import { DonationNewForm } from '../donation-new-form';
 import { DonationContributionsList } from '../donation-contributions-list';
 
 export function DonationRecordView() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { contributions, contributionsLoading } = useGetDonationContributions(20);
 
   return (
@@ -30,7 +30,7 @@ export function DonationRecordView() {
           <Button
             variant="soft"
             color="inherit"
-            href={paths.publicDonations.root}
+            href={paths.publicDonations.localized(i18n.resolvedLanguage)}
             target="_blank"
             rel="noopener noreferrer"
             endIcon={<Iconify icon="solar:external-link-outline" />}

@@ -4561,7 +4561,7 @@ function AnimatedDiv({ children }) {
 
 export function LandingPage() {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const pageProgress = useScrollProgress();
 
   // Hero domain auto-cycle
@@ -6332,7 +6332,10 @@ export function LandingPage() {
                     { label: 'footer_link_features', href: '#features' },
                     { label: 'footer_link_live_results', href: '#' },
                     { label: 'footer_link_stats', href: '#' },
-                    { label: 'nav_donations', href: paths.publicDonations.root },
+                    {
+                      label: 'nav_donations',
+                      href: paths.publicDonations.localized(i18n.resolvedLanguage),
+                    },
                   ],
                 },
                 {

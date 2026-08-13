@@ -10,8 +10,10 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { paths } from 'src/routes/paths';
+import { useRouter, usePathname } from 'src/routes/hooks';
 
 import { varAlpha } from 'src/theme/styles';
+import { languages, fallbackLng } from 'src/locales/config-locales';
 import { LanguagePopover } from 'src/layouts/components/language-popover';
 
 import { Logo } from 'src/components/logo';
@@ -41,8 +43,21 @@ const LANGS = [
  *   landing page itself; '/' on other pages so links become '/#lifecycle' etc.
  */
 export function LandingNav({ basePath = '' }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const router = useRouter();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const activeLanguage = languages.includes(i18n.resolvedLanguage)
+    ? i18n.resolvedLanguage
+    : fallbackLng;
+  const donationPath = paths.publicDonations.localized(activeLanguage);
+  const isDonationPage = /^\/(en|es)\/donations\/?$/.test(pathname);
+
+  const handleLanguageChange = (newLanguage) => {
+    if (isDonationPage) {
+      router.replace(`${paths.publicDonations.localized(newLanguage)}${window.location.hash}`);
+    }
+  };
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
@@ -90,7 +105,13 @@ export function LandingNav({ basePath = '' }) {
               <Typography
                 key={link.label}
                 component="a"
-                href={link.absolute ? link.href : `${basePath}${link.href}`}
+                href={
+                  link.label === 'nav_donations'
+                    ? donationPath
+                    : link.absolute
+                      ? link.href
+                      : `${basePath}${link.href}`
+                }
                 variant="body2"
                 sx={{
                   fontWeight: 500,
@@ -106,12 +127,12 @@ export function LandingNav({ basePath = '' }) {
           </Stack>
 
           <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-            <LanguagePopover data={LANGS} />
+            <LanguagePopover data={LANGS} onLanguageChange={handleLanguageChange} />
 
             <Tooltip title={t('nav_donations')}>
               <IconButton
                 component="a"
-                href={paths.publicDonations.root}
+                href={donationPath}
                 aria-label={t('nav_donations')}
                 sx={{ display: { xs: 'inline-flex', md: 'none' }, color: 'warning.dark' }}
               >

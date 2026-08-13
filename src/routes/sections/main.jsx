@@ -40,6 +40,7 @@ export const mainRoutes = [
       },
       { path: 'invite/:token', element: <InvitationAcceptPage /> },
       { path: 'donations', element: <PublicDonationPage /> },
+      { path: ':language/donations', element: <PublicDonationPage /> },
     ],
   },
 ];
