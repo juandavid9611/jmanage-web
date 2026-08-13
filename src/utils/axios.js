@@ -65,4 +65,5 @@ export const endpoints = {
   tournaments: '/tournaments',
   notifications: '/notifications',
   votations: '/votations',
+  donations: '/donations',
 };
