@@ -174,6 +174,7 @@ export function getNavData(t) {
           path: paths.dashboard.donations.root,
           icon: <Iconify icon="solar:clipboard-add-bold-duotone" />,
           roles: ['admin'],
+          clubOnly: true,
         },
       ],
     },
