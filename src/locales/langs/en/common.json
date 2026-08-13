@@ -1804,5 +1804,10 @@
   "label_go_to_documents": "Go to Documents",
   "label_search_player_placeholder": "Search player...",
   "label_no_players_found": "No players found",
-  "label_no_matches_scheduled_yet": "No matches scheduled yet"
+  "label_no_matches_scheduled_yet": "No matches scheduled yet",
+  "donations_campaign_title": "Colombia Earthquake Relief",
+  "donations_campaign_subtitle": "Every contribution helps rebuild. Thank you for your solidarity.",
+  "donations_recent_title": "Recent contributions",
+  "donations_none_yet": "No contributions recorded yet — be the first.",
+  "donations_anonymous": "Anonymous"
 }

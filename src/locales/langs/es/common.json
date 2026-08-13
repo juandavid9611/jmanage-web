@@ -1804,5 +1804,10 @@
   "label_go_to_documents": "Ir a Documentos",
   "label_search_player_placeholder": "Buscar jugador...",
   "label_no_players_found": "No se encontraron jugadores",
-  "label_no_matches_scheduled_yet": "Aún no hay partidos programados"
+  "label_no_matches_scheduled_yet": "Aún no hay partidos programados",
+  "donations_campaign_title": "Terremoto en Colombia - Fondo de Ayuda",
+  "donations_campaign_subtitle": "Cada aporte ayuda a reconstruir. Gracias por tu solidaridad.",
+  "donations_recent_title": "Aportes recientes",
+  "donations_none_yet": "Aún no hay aportes registrados — sé el primero.",
+  "donations_anonymous": "Anónimo"
 }
