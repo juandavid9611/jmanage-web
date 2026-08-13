@@ -1809,5 +1809,13 @@
   "donations_campaign_subtitle": "Every contribution helps rebuild. Thank you for your solidarity.",
   "donations_recent_title": "Recent contributions",
   "donations_none_yet": "No contributions recorded yet — be the first.",
-  "donations_anonymous": "Anonymous"
+  "donations_anonymous": "Anonymous",
+  "donations_donor_name": "Donor name",
+  "donations_amount": "Amount (COP)",
+  "donations_message": "Message (optional)",
+  "donations_anonymous_checkbox": "Record as anonymous",
+  "donations_record_button": "Record contribution",
+  "donations_record_success": "Contribution recorded",
+  "donations_amount_required": "Amount must be greater than zero",
+  "donations_donor_name_required": "Donor name is required unless anonymous"
 }

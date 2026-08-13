@@ -1809,5 +1809,13 @@
   "donations_campaign_subtitle": "Cada aporte ayuda a reconstruir. Gracias por tu solidaridad.",
   "donations_recent_title": "Aportes recientes",
   "donations_none_yet": "Aún no hay aportes registrados — sé el primero.",
-  "donations_anonymous": "Anónimo"
+  "donations_anonymous": "Anónimo",
+  "donations_donor_name": "Nombre del donante",
+  "donations_amount": "Monto (COP)",
+  "donations_message": "Mensaje (opcional)",
+  "donations_anonymous_checkbox": "Registrar como anónimo",
+  "donations_record_button": "Registrar aporte",
+  "donations_record_success": "Aporte registrado",
+  "donations_amount_required": "El monto debe ser mayor que cero",
+  "donations_donor_name_required": "El nombre del donante es obligatorio salvo que sea anónimo"
 }

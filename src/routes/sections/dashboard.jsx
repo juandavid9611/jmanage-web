@@ -62,6 +62,8 @@ const TournamentEditPage = lazy(() => import('src/pages/dashboard/tournament/edi
 const TournamentMatchDetailPage = lazy(() => import('src/pages/dashboard/tournament/match-detail'));
 // Team Owner
 const TeamOwnerPage = lazy(() => import('src/pages/team-owner'));
+// Donations
+const DonationRecordPage = lazy(() => import('src/pages/dashboard/donation'));
 // ----------------------------------------------------------------------
 
 const layoutContent = (
@@ -173,6 +175,7 @@ export const dashboardRoutes = [
         ],
       },
       { path: 'team-owner', element: <TeamOwnerPage /> },
+      { path: 'donations', element: <DonationRecordPage /> },
     ],
   },
 ];
