@@ -126,17 +126,75 @@ export function LandingNav({ basePath = '' }) {
             ))}
           </Stack>
 
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-            <LanguagePopover data={LANGS} onLanguageChange={handleLanguageChange} />
+          <Stack
+            direction="row"
+            spacing={{ xs: 0.25, sm: 1 }}
+            alignItems="center"
+            sx={{ minWidth: 0 }}
+          >
+            <LanguagePopover
+              data={LANGS}
+              onLanguageChange={handleLanguageChange}
+              sx={{ width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 } }}
+            />
 
             <Tooltip title={t('nav_donations')}>
               <IconButton
                 component="a"
                 href={donationPath}
                 aria-label={t('nav_donations')}
-                sx={{ display: { xs: 'inline-flex', md: 'none' }, color: 'warning.dark' }}
+                sx={{
+                  width: { xs: 34, sm: 40 },
+                  height: { xs: 34, sm: 40 },
+                  display: { xs: 'inline-flex', md: 'none' },
+                  color: 'warning.dark',
+                }}
               >
                 <Iconify icon="solar:hand-heart-bold-duotone" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title={t('nav_live_tournaments')}>
+              <IconButton
+                component="a"
+                href="/tournaments"
+                aria-label={t('nav_live_tournaments')}
+                size="small"
+                color="error"
+                sx={{
+                  width: 34,
+                  height: 34,
+                  display: { xs: 'inline-flex', sm: 'none' },
+                  position: 'relative',
+                  bgcolor: 'error.lighter',
+                  '&:hover': { bgcolor: 'error.light' },
+                  '@keyframes landingLivePulse': {
+                    '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                    '50%': { opacity: 0.45, transform: 'scale(0.72)' },
+                  },
+                  '@media (prefers-reduced-motion: reduce)': {
+                    '& .live-indicator': { animation: 'none' },
+                  },
+                }}
+              >
+                <Iconify icon="solar:cup-star-bold-duotone" width={21} />
+                <Box
+                  component="span"
+                  className="live-indicator"
+                  sx={{
+                    top: 3,
+                    right: 3,
+                    width: 7,
+                    height: 7,
+                    position: 'absolute',
+                    borderRadius: '50%',
+                    bgcolor: 'error.main',
+                    border: (theme) => `1.5px solid ${theme.vars.palette.background.paper}`,
+                    boxShadow: (theme) =>
+                      `0 0 0 2px ${varAlpha(theme.vars.palette.error.mainChannel, 0.16)}`,
+                    animation: 'landingLivePulse 1.4s ease-in-out infinite',
+                  }}
+                />
               </IconButton>
             </Tooltip>
 
@@ -183,7 +241,11 @@ export function LandingNav({ basePath = '' }) {
                 href="/dashboard"
                 color="primary"
                 aria-label={t('nav_go_to_portal')}
-                sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                sx={{
+                  width: 34,
+                  height: 34,
+                  display: { xs: 'inline-flex', sm: 'none' },
+                }}
               >
                 <Iconify icon="solar:login-3-bold-duotone" />
               </IconButton>
