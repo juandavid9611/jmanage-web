@@ -28,7 +28,6 @@ import {
   useGetMatch,
   useGetTeams,
   updateMatch,
-  deleteMatch,
   advanceWinner,
   useGetPlayers,
   useGetTournament,
@@ -162,16 +161,6 @@ export function MatchDetailView() {
       toast.error(error.message || t('label_error_generic'));
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await deleteMatch(tournamentId, matchId);
-      toast.success(t('label_match_deleted'));
-      navigate(paths.dashboard.tournament.details(tournamentId));
-    } catch (error) {
-      toast.error(t('label_error_deleting'));
     }
   };
 
@@ -559,18 +548,6 @@ export function MatchDetailView() {
               {t('label_generate_charges')}
             </LoadingButton>
           )}
-
-          <Box sx={{ flex: 1 }} />
-
-          <Button
-            variant="soft"
-            color="error"
-            size="small"
-            startIcon={<Iconify icon="solar:trash-bin-trash-bold" width={16} />}
-            onClick={handleDelete}
-          >
-            {t('delete')}
-          </Button>
         </Stack>
       </Box>
 
