@@ -322,12 +322,6 @@ export async function updateMatch(tournamentId, matchId, matchData) {
   return res.data;
 }
 
-export async function deleteMatch(tournamentId, matchId) {
-  const res = await axiosInstance.delete(`${URL}/${tournamentId}/matches/${matchId}`);
-  mutate((key) => typeof key === 'string' && key.includes(`${tournamentId}/matches`));
-  return res.data;
-}
-
 export async function advanceWinner(tournamentId, matchId, winnerTeamId) {
   const res = await axiosInstance.post(
     `${URL}/${tournamentId}/matches/${matchId}:advance`,
