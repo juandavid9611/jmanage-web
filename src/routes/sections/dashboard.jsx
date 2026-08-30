@@ -16,6 +16,7 @@ const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
 const OverviewAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
 const TopAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/top'));
 const LateArrivesAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/late-arrives'));
+const CompromisoAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/compromiso'));
 // Invoice
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoice/list'));
 const InvoiceCreatePage = lazy(() => import('src/pages/dashboard/invoice/new'));
@@ -86,6 +87,7 @@ export const dashboardRoutes = [
           { element: <OverviewAnalyticsPage />, index: true },
           { path: 'top', element: <TopAnalyticsPage /> },
           { path: 'late-arrives', element: <LateArrivesAnalyticsPage /> },
+          { path: 'compromiso', element: <CompromisoAnalyticsPage /> },
         ],
       },
       { path: 'calendar', element: <CalendarPage /> },

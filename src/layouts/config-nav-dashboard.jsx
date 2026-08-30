@@ -94,6 +94,7 @@ export function getNavData(t, language) {
               title: t('metric_late_arrivals'),
               path: paths.dashboard.analytics.lateArrives,
             },
+            { title: t('nav_commitment'), path: paths.dashboard.analytics.compromiso },
           ],
         },
         {

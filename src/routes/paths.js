@@ -42,6 +42,7 @@ export const paths = {
       overview: `${ROOTS.DASHBOARD}/analytics`,
       top: `${ROOTS.DASHBOARD}/analytics/top`,
       lateArrives: `${ROOTS.DASHBOARD}/analytics/late-arrives`,
+      compromiso: `${ROOTS.DASHBOARD}/analytics/compromiso`,
     },
     calendar: `${ROOTS.DASHBOARD}/calendar`,
     admin: {
