@@ -27,7 +27,6 @@ const TABLE_HEAD = [
   { id: 'name', label: 'name' },
   { id: 'size', label: 'label_size', width: 120 },
   { id: 'type', label: 'label_type', width: 120 },
-  { id: 'modifiedAt', label: 'label_modified', width: 140 },
   { id: '', width: 88 },
 ];
 

@@ -11,6 +11,8 @@ import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { Iconify } from 'src/components/iconify';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { FileManagerPanel } from './file-manager-panel';
 import { FileManagerFileItem } from './file-manager-file-item';
 import { FileManagerActionSelected } from './file-manager-action-selected';
@@ -24,6 +26,10 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
   const { workspaceRole } = useWorkspace();
   const isAdmin = workspaceRole === 'admin';
 
+  const { user } = useAuthContext();
+  const accountType = user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club';
+  const isTournamentAccount = accountType === 'tournament';
+
   const files = useBoolean();
 
   const containerRef = useRef(null);
@@ -31,7 +37,7 @@ export function FileManagerGridView({ table, dataFiltered, onDeleteItem, onOpenC
   return (
     <Box ref={containerRef}>
       <FileManagerPanel
-        title={t('label_club_documents')}
+        title={t(isTournamentAccount ? 'label_tournament_documents' : 'label_club_documents')}
         subtitle={`${dataFiltered.length} ${t('label_documents_lowercase')}`}
         collapse={files.value}
         onCollapse={files.onToggle}
