@@ -10,14 +10,12 @@ import Checkbox from '@mui/material/Checkbox';
 import { useTheme } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import ListItemText from '@mui/material/ListItemText';
 import TableRow, { tableRowClasses } from '@mui/material/TableRow';
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { fData } from 'src/utils/format-number';
-import { fDate, fTime } from 'src/utils/format-time';
 
 import { varAlpha } from 'src/theme/styles';
 import { useWorkspace } from 'src/workspace/workspace-provider';
@@ -152,15 +150,6 @@ export function FileManagerTableRow({ row, selected, onSelectRow, onDeleteRow })
 
         <TableCell onClick={handleClick} sx={{ whiteSpace: 'nowrap' }}>
           {row.type}
-        </TableCell>
-
-        <TableCell onClick={handleClick} sx={{ whiteSpace: 'nowrap' }}>
-          <ListItemText
-            primary={fDate(row.modifiedAt)}
-            secondary={fTime(row.modifiedAt)}
-            primaryTypographyProps={{ typography: 'body2' }}
-            secondaryTypographyProps={{ mt: 0.5, component: 'span', typography: 'caption' }}
-          />
         </TableCell>
 
         <TableCell align="right" sx={{ px: 1, whiteSpace: 'nowrap' }}>
