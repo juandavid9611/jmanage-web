@@ -600,7 +600,11 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
                 <Box
                   display="grid"
                   gap={1}
-                  gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
+                  gridTemplateColumns={{
+                    xs: 'minmax(0, 1fr)',
+                    sm: 'repeat(2, minmax(0, 1fr))',
+                    md: 'repeat(3, minmax(0, 1fr))',
+                  }}
                 >
                   {group.map((p) => (
                     <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
@@ -632,7 +636,11 @@ function MyTeamRoster({ tournamentId, teamId, teams }) {
                 <Box
                   display="grid"
                   gap={1}
-                  gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }}
+                  gridTemplateColumns={{
+                    xs: 'minmax(0, 1fr)',
+                    sm: 'repeat(2, minmax(0, 1fr))',
+                    md: 'repeat(3, minmax(0, 1fr))',
+                  }}
                 >
                   {other.map((p) => (
                     <PlayerRow key={p.id} player={p} onEdit={handleEdit} onDelete={handleDelete} />
