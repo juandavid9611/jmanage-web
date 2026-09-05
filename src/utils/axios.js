@@ -4,12 +4,29 @@ import { CONFIG } from 'src/config-global';
 
 // ----------------------------------------------------------------------
 
+// Backend errors arrive as { detail: string | Array<{ msg }> }. Older call sites read
+// `err.detail` or `err.response.data.detail` directly, so both stay populated on the
+// rejected value — but it's now a real Error, so `err.message` also works everywhere.
+function rejectWithError(error) {
+  const data = error.response && error.response.data;
+  const detail = data && data.detail;
+  const message =
+    (typeof detail === 'string' && detail) ||
+    (Array.isArray(detail) && detail.map((d) => d.msg).join(', ')) ||
+    (typeof data === 'string' && data) ||
+    error.message ||
+    'Something went wrong!';
+
+  const rejected = new Error(message);
+  rejected.status = error.response && error.response.status;
+  rejected.response = error.response;
+  rejected.detail = detail;
+  return Promise.reject(rejected);
+}
+
 const axiosInstance = axios.create({ baseURL: CONFIG.site.serverUrl });
 
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject((error.response && error.response.data) || 'Something went wrong!')
-);
+axiosInstance.interceptors.response.use((response) => response, rejectWithError);
 
 export default axiosInstance;
 
@@ -34,10 +51,7 @@ export const fetcher = async (args) => {
 
 export const publicAxiosInstance = axios.create({ baseURL: CONFIG.site.serverUrl });
 
-publicAxiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject((error.response && error.response.data) || 'Something went wrong!')
-);
+publicAxiosInstance.interceptors.response.use((response) => response, rejectWithError);
 
 export const publicFetcher = async (args) => {
   try {
