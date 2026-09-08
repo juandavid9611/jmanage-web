@@ -1407,6 +1407,7 @@
   "label_bracket_generate_from_seeds_prefix": "The bracket will be generated using the current seeds of the",
   "label_bracket_generate_from_groups": "The bracket will be generated using the qualifiers from each group based on current standings.",
   "label_bracket_will_replace_current": "This will replace the current bracket.",
+  "label_bracket_has_progress_hint": "This bracket already has matches in progress. Regenerating would overwrite them.",
   "label_position_abbr_goalkeeper": "GK",
   "label_position_abbr_defender": "DF",
   "label_position_abbr_midfielder": "MF",

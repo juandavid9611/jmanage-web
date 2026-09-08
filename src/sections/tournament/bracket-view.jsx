@@ -8,6 +8,7 @@ import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Tooltip from '@mui/material/Tooltip';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -75,9 +76,12 @@ export function BracketView({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const fetched = useGetBracket(readOnly ? null : tournamentId);
-  const bracket = readOnly ? bracketProp : fetched.bracket;
-  const bracketLoading = readOnly ? bracketLoadingProp : fetched.bracketLoading;
+  // Callers that already own bracket data (the public view) pass `bracketLoading`
+  // explicitly; anyone else — including read-only dashboard viewers — fetches it here.
+  const suppliesBracket = bracketLoadingProp !== undefined;
+  const fetched = useGetBracket(suppliesBracket ? null : tournamentId);
+  const bracket = suppliesBracket ? bracketProp : fetched.bracket;
+  const bracketLoading = suppliesBracket ? bracketLoadingProp : fetched.bracketLoading;
 
   const [generateDialog, setGenerateDialog] = useState({ open: false, source: null });
   const [isGenerating, setIsGenerating] = useState(false);
@@ -102,6 +106,9 @@ export function BracketView({
   }, [bracket, t]);
 
   const hasRounds = roundEntries.length > 0;
+  const hasBracketProgress = roundEntries.some((round) =>
+    round.matchups.some((matchup) => !!matchup.match_id)
+  );
 
   // Fast match lookup by id
   const matchMap = useMemo(
@@ -323,24 +330,34 @@ export function BracketView({
         {/* Toolbar */}
         {canGenerate && (
           <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mb: 2.5 }}>
-            <Button
-              size="small"
-              variant="outlined"
-              color="warning"
-              startIcon={<Iconify icon="mdi:refresh" />}
-              onClick={() => setGenerateDialog({ open: true, source: 'seeds' })}
-            >
-              {t('label_regenerate_from_seeds')}
-            </Button>
+            <Tooltip title={hasBracketProgress ? t('label_bracket_has_progress_hint') : ''}>
+              <span>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="warning"
+                  startIcon={<Iconify icon="mdi:refresh" />}
+                  disabled={hasBracketProgress}
+                  onClick={() => setGenerateDialog({ open: true, source: 'seeds' })}
+                >
+                  {t('label_regenerate_from_seeds')}
+                </Button>
+              </span>
+            </Tooltip>
             {isHybrid && hasGroups && (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:refresh" />}
-                onClick={() => setGenerateDialog({ open: true, source: 'groups' })}
-              >
-                {t('label_recalculate_from_standings')}
-              </Button>
+              <Tooltip title={hasBracketProgress ? t('label_bracket_has_progress_hint') : ''}>
+                <span>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Iconify icon="mdi:refresh" />}
+                    disabled={hasBracketProgress}
+                    onClick={() => setGenerateDialog({ open: true, source: 'groups' })}
+                  >
+                    {t('label_recalculate_from_standings')}
+                  </Button>
+                </span>
+              </Tooltip>
             )}
           </Stack>
         )}
@@ -657,8 +674,29 @@ function MatchCard({
   const venue = match?.venue || matchup.venue;
   const footer = [dateVenue, venue].filter(Boolean).join(' · ');
 
+  // Read-only viewers (non-admin workspace members, public visitors) have no per-card
+  // button, so the whole card is the click target for opening match details.
+  const isClickable = readOnly && hasMatch;
+
+  const team1Name = team1?.short_name || team1?.name || t('label_tbd');
+  const team2Name = team2?.short_name || team2?.name || t('label_tbd');
+
   return (
     <Box
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      aria-label={isClickable ? `${team1Name} vs ${team2Name}` : undefined}
+      onClick={isClickable ? onNavigate : undefined}
+      onKeyDown={
+        isClickable
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onNavigate();
+              }
+            }
+          : undefined
+      }
       sx={{
         position: 'absolute',
         left: 0,
@@ -679,6 +717,10 @@ function MatchCard({
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
+        cursor: isClickable ? 'pointer' : 'default',
+        ...(isClickable && {
+          '&:hover': { bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04) },
+        }),
       }}
     >
       {/* Card header */}
@@ -701,7 +743,7 @@ function MatchCard({
       <TeamRow
         seed={matchup.seed1}
         team={team1}
-        score={matchup.score?.team1}
+        score={isLive ? match?.score_home ?? matchup.score?.team1 : matchup.score?.team1}
         isWinner={isWinner1}
         isLoser={!!matchup.winner_team_id && !isWinner1}
       />
@@ -720,7 +762,7 @@ function MatchCard({
       <TeamRow
         seed={matchup.seed2}
         team={team2}
-        score={matchup.score?.team2}
+        score={isLive ? match?.score_away ?? matchup.score?.team2 : matchup.score?.team2}
         isWinner={isWinner2}
         isLoser={!!matchup.winner_team_id && !isWinner2}
       />
