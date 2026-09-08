@@ -1407,6 +1407,7 @@
   "label_bracket_generate_from_seeds_prefix": "Se generará el cuadro usando los seeds actuales de los",
   "label_bracket_generate_from_groups": "Se generará el cuadro tomando los clasificados de cada grupo según las posiciones actuales.",
   "label_bracket_will_replace_current": "Esto reemplazará el cuadro actual.",
+  "label_bracket_has_progress_hint": "Este cuadro ya tiene partidos en curso. Regenerarlo los sobrescribiría.",
   "label_position_abbr_goalkeeper": "POR",
   "label_position_abbr_defender": "DEF",
   "label_position_abbr_midfielder": "MED",
