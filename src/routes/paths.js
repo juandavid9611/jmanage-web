@@ -116,5 +116,12 @@ export const paths = {
     teamOwner: {
       root: `${ROOTS.DASHBOARD}/team-owner`,
     },
+    trainingSessions: {
+      root: `${ROOTS.DASHBOARD}/training-sessions`,
+      list: `${ROOTS.DASHBOARD}/training-sessions`,
+      new: `${ROOTS.DASHBOARD}/training-sessions/new`,
+      details: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}`,
+      edit: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}/edit`,
+    },
   },
 };

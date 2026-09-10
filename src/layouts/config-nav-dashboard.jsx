@@ -124,6 +124,13 @@ export function getNavData(t, language) {
           clubOnly: true,
         },
         {
+          title: t('label_training_sessions'),
+          path: paths.dashboard.trainingSessions.root,
+          icon: <Iconify icon="solar:football-bold-duotone" />,
+          roles: ['admin', 'user'],
+          clubOnly: true,
+        },
+        {
           title: t('nav_votes'),
           path: paths.dashboard.votaciones.root,
           icon: ICONS.votaciones,

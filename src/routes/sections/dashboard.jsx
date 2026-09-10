@@ -63,6 +63,11 @@ const TournamentEditPage = lazy(() => import('src/pages/dashboard/tournament/edi
 const TournamentMatchDetailPage = lazy(() => import('src/pages/dashboard/tournament/match-detail'));
 // Team Owner
 const TeamOwnerPage = lazy(() => import('src/pages/team-owner'));
+// Training Sessions
+const TrainingSessionListPage = lazy(() => import('src/pages/dashboard/training-sessions/list'));
+const TrainingSessionNewPage = lazy(() => import('src/pages/dashboard/training-sessions/new'));
+const TrainingSessionEditPage = lazy(() => import('src/pages/dashboard/training-sessions/edit'));
+const TrainingSessionDetailsPage = lazy(() => import('src/pages/dashboard/training-sessions/details'));
 // Donations
 const DonationRecordPage = lazy(() => import('src/pages/dashboard/donation'));
 // ----------------------------------------------------------------------
@@ -178,6 +183,15 @@ export const dashboardRoutes = [
       },
       { path: 'team-owner', element: <TeamOwnerPage /> },
       { path: 'donations', element: <DonationRecordPage /> },
+      {
+        path: 'training-sessions',
+        children: [
+          { element: <TrainingSessionListPage />, index: true },
+          { path: 'new', element: <TrainingSessionNewPage /> },
+          { path: ':id', element: <TrainingSessionDetailsPage /> },
+          { path: ':id/edit', element: <TrainingSessionEditPage /> },
+        ],
+      },
     ],
   },
 ];
