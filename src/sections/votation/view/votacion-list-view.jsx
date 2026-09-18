@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
-import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -18,6 +18,7 @@ import { paths } from 'src/routes/paths';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { useGetUsers } from 'src/actions/user';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetVotations, deleteVotation as apiDeleteVotation } from 'src/actions/votation';
@@ -38,6 +39,22 @@ export function VotacionesListView() {
   const { selectedWorkspace, workspaceRole } = useWorkspace();
   const isAdmin = workspaceRole === 'admin';
   const { votations, votationsLoading } = useGetVotations(selectedWorkspace?.id);
+  const { users } = useGetUsers(selectedWorkspace);
+
+  const voterMap = useMemo(() => {
+    const map = {};
+    (users || []).forEach((u) => {
+      map[u.id] = u;
+    });
+    return map;
+  }, [users]);
+
+  // candidate.avatar_url is a presigned S3 URL snapshotted at votation-creation time and
+  // expires after 1h, so prefer the live user's fresh avatarUrl when available.
+  const candidateAvatar = useCallback(
+    (candidate) => voterMap[candidate?.id]?.avatarUrl || candidate?.avatar_url,
+    [voterMap]
+  );
 
   const confirmDelete = useBoolean();
   const [votationToDelete, setVotationToDelete] = useState(null);
@@ -110,7 +127,13 @@ export function VotacionesListView() {
       />
 
       {/* Hero — last winner */}
-      {lastWinner && <LastWinnerCard votation={lastWinner} onViewDetails={handleCardClick} />}
+      {lastWinner && (
+        <LastWinnerCard
+          votation={lastWinner}
+          onViewDetails={handleCardClick}
+          candidateAvatar={candidateAvatar}
+        />
+      )}
 
       {/* Stats row */}
       {!votationsLoading && votations.length > 0 && (
@@ -143,6 +166,7 @@ export function VotacionesListView() {
                 isAdmin={isAdmin}
                 onClick={() => handleCardClick(v)}
                 onDelete={(e) => handleDeleteClick(e, v)}
+                candidateAvatar={candidateAvatar}
               />
             ))}
         </Stack>
@@ -175,7 +199,7 @@ export function VotacionesListView() {
 
 // ----------------------------------------------------------------------
 
-function LastWinnerCard({ votation, onViewDetails }) {
+function LastWinnerCard({ votation, onViewDetails, candidateAvatar }) {
   const { t } = useTranslation();
   const winner =
     votation.tiebreaker_winner ||
@@ -210,7 +234,7 @@ function LastWinnerCard({ votation, onViewDetails }) {
 
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, minWidth: 0 }}>
           <Avatar
-            src={winner.avatar_url}
+            src={candidateAvatar(winner) || winner.avatar_url}
             alt={winner.name}
             sx={{
               width: 56,
@@ -267,7 +291,7 @@ function StatChip({ label, value, color = 'primary' }) {
 
 // ----------------------------------------------------------------------
 
-function VotationRow({ votation, isAdmin, onClick, onDelete }) {
+function VotationRow({ votation, isAdmin, onClick, onDelete, candidateAvatar }) {
   const { t } = useTranslation();
   const isOpen = votation.status === 'open';
   const isTied = votation.status === 'tied';
@@ -340,12 +364,19 @@ function VotationRow({ votation, isAdmin, onClick, onDelete }) {
               </Typography>
             </Stack>
             {(winner || tiebreakerWinner) && !isOpen && (
-              <Stack direction="row" alignItems="center" spacing={0.5}>
-                <Iconify
-                  icon="solar:medal-ribbons-star-bold"
-                  width={14}
-                  sx={{ color: 'warning.main' }}
-                />
+              <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Avatar
+                  src={candidateAvatar(winner || tiebreakerWinner)}
+                  alt={(winner || tiebreakerWinner).name}
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    fontSize: '0.6rem',
+                    border: (theme) => `1px solid ${theme.palette.warning.main}`,
+                  }}
+                >
+                  {(winner || tiebreakerWinner).name?.charAt(0)}
+                </Avatar>
                 <Typography variant="caption" sx={{ color: 'warning.main', fontWeight: 600 }}>
                   {(winner || tiebreakerWinner).name}
                 </Typography>

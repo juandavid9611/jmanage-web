@@ -20,6 +20,7 @@ export function EcommerceWelcome({
   sx,
   isGoal,
   imgIndex,
+  photoURL,
   ...other
 }) {
   const theme = useTheme();
@@ -72,7 +73,7 @@ export function EcommerceWelcome({
         width={96}
         slotProps={{
           avatar: {
-            src: _mock.image.avatar(imgIndex),
+            src: photoURL || _mock.image.avatar(imgIndex),
           },
           overlay: {
             border: 2,
