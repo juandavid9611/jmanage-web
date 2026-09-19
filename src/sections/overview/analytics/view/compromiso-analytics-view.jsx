@@ -41,8 +41,9 @@ import { CompromisoCharts } from 'src/sections/engagement/compromiso-charts';
 
 export function CompromisoAnalyticsView() {
   const { selectedWorkspace } = useWorkspace();
+  const workspaceId = selectedWorkspace?.id;
   const { users } = useGetUsers(selectedWorkspace);
-  const { tournaments } = useGetEngagementTournaments();
+  const { tournaments } = useGetEngagementTournaments(workspaceId);
   const [tournamentId, setTournamentId] = useState('');
   const [newDialog, setNewDialog] = useState(false);
   const [tab, setTab] = useState('plantilla');
@@ -53,14 +54,14 @@ export function CompromisoAnalyticsView() {
 
   const tournament = tournaments.find((t) => t.id === tournamentId);
 
-  const { roster } = useGetEngagementRoster(tournamentId, users);
-  const { matches } = useGetEngagementMatches(tournamentId);
+  const { roster } = useGetEngagementRoster(tournamentId, users, workspaceId);
+  const { matches } = useGetEngagementMatches(tournamentId, workspaceId);
 
   const handleDeleteTournament = async () => {
     if (!tournament) return;
     if (!window.confirm(`¿Eliminar "${tournament.name}"? Se borra toda su plantilla, partidos y convocatorias.`)) return;
     try {
-      await deleteEngagementTournament(tournament.id);
+      await deleteEngagementTournament(tournament.id, workspaceId);
       setTournamentId('');
       toast.success('Torneo eliminado');
     } catch (error) {
@@ -148,15 +149,25 @@ export function CompromisoAnalyticsView() {
 
                 <Box sx={{ p: 2.5 }}>
                   {tab === 'plantilla' && (
-                    <RosterPanel tournamentId={tournamentId} users={users} roster={roster} />
+                    <RosterPanel
+                      tournamentId={tournamentId}
+                      users={users}
+                      roster={roster}
+                      workspaceId={workspaceId}
+                    />
                   )}
                   {tab === 'partidos' && (
-                    <MatchesPanel tournamentId={tournamentId} roster={roster} matches={matches} />
+                    <MatchesPanel
+                      tournamentId={tournamentId}
+                      roster={roster}
+                      matches={matches}
+                      workspaceId={workspaceId}
+                    />
                   )}
                   {tab === 'compromiso' && (
                     <Stack spacing={4}>
-                      <CompromisoCharts roster={roster} matches={matches} />
-                      <CompromisoTable roster={roster} matches={matches} />
+                      <CompromisoCharts roster={roster} matches={matches} workspaceId={workspaceId} />
+                      <CompromisoTable roster={roster} matches={matches} workspaceId={workspaceId} />
                     </Stack>
                   )}
                 </Box>
@@ -170,12 +181,13 @@ export function CompromisoAnalyticsView() {
         open={newDialog}
         onClose={() => setNewDialog(false)}
         onCreated={(id) => setTournamentId(id)}
+        workspaceId={workspaceId}
       />
     </DashboardContent>
   );
 }
 
-function NewTournamentDialog({ open, onClose, onCreated }) {
+function NewTournamentDialog({ open, onClose, onCreated, workspaceId }) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -193,7 +205,10 @@ function NewTournamentDialog({ open, onClose, onCreated }) {
     }
     try {
       setIsSubmitting(true);
-      const created = await createEngagementTournament({ name: name.trim(), category: category.trim() });
+      const created = await createEngagementTournament(
+        { name: name.trim(), category: category.trim() },
+        workspaceId
+      );
       toast.success('Torneo creado');
       onCreated?.(created.id);
       handleClose();

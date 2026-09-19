@@ -2,20 +2,20 @@ import { Helmet } from 'react-helmet-async';
 
 import { CONFIG } from 'src/config-global';
 
-import { CompromisoAnalyticsView } from 'src/sections/overview/analytics/view';
+import { ClubTournamentsView } from 'src/sections/engagement/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Compromiso | Dashboard - ${CONFIG.site.name}` };
+const metadata = { title: `Torneos del Club | Dashboard - ${CONFIG.site.name}` };
 
 export default function Page() {
   return (
     <>
       <Helmet>
-        <title> {metadata.title}</title>
+        <title>{metadata.title}</title>
       </Helmet>
 
-      <CompromisoAnalyticsView />
+      <ClubTournamentsView />
     </>
   );
 }

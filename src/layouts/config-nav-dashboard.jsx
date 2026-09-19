@@ -94,13 +94,19 @@ export function getNavData(t, language) {
               title: t('metric_late_arrivals'),
               path: paths.dashboard.analytics.lateArrives,
             },
-            { title: t('nav_commitment'), path: paths.dashboard.analytics.compromiso },
           ],
         },
         {
           title: t('shop'),
           path: paths.dashboard.shop.root,
           icon: ICONS.product,
+          roles: ['admin', 'user'],
+          clubOnly: true,
+        },
+        {
+          title: t('label_club_tournaments'),
+          path: paths.dashboard.clubTournaments,
+          icon: ICONS.tour,
           roles: ['admin', 'user'],
           clubOnly: true,
         },
@@ -161,6 +167,12 @@ export function getNavData(t, language) {
           title: t('nav_total_payments'),
           path: paths.dashboard.admin.invoice.root,
           icon: ICONS.invoice,
+          roles: ['admin'],
+        },
+        {
+          title: t('label_ai_assistant'),
+          path: paths.dashboard.aiAssistant,
+          icon: <Iconify icon="solar:magic-stick-3-bold-duotone" />,
           roles: ['admin'],
         },
         {

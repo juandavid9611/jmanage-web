@@ -16,7 +16,8 @@ const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
 const OverviewAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
 const TopAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/top'));
 const LateArrivesAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/late-arrives'));
-const CompromisoAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/compromiso'));
+// Club Tournaments (Torneos del Club)
+const ClubTournamentsPage = lazy(() => import('src/pages/dashboard/club-tournaments'));
 // Invoice
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoice/list'));
 const InvoiceCreatePage = lazy(() => import('src/pages/dashboard/invoice/new'));
@@ -68,6 +69,8 @@ const TrainingSessionListPage = lazy(() => import('src/pages/dashboard/training-
 const TrainingSessionNewPage = lazy(() => import('src/pages/dashboard/training-sessions/new'));
 const TrainingSessionEditPage = lazy(() => import('src/pages/dashboard/training-sessions/edit'));
 const TrainingSessionDetailsPage = lazy(() => import('src/pages/dashboard/training-sessions/details'));
+// AI Assistant
+const AIAssistantPage = lazy(() => import('src/pages/dashboard/ai-assistant'));
 // Donations
 const DonationRecordPage = lazy(() => import('src/pages/dashboard/donation'));
 // ----------------------------------------------------------------------
@@ -92,9 +95,9 @@ export const dashboardRoutes = [
           { element: <OverviewAnalyticsPage />, index: true },
           { path: 'top', element: <TopAnalyticsPage /> },
           { path: 'late-arrives', element: <LateArrivesAnalyticsPage /> },
-          { path: 'compromiso', element: <CompromisoAnalyticsPage /> },
         ],
       },
+      { path: 'club-tournaments', element: <ClubTournamentsPage /> },
       { path: 'calendar', element: <CalendarPage /> },
       {
         path: 'invoice',
@@ -192,6 +195,7 @@ export const dashboardRoutes = [
           { path: ':id/edit', element: <TrainingSessionEditPage /> },
         ],
       },
+      { path: 'ai-assistant', element: <AIAssistantPage /> },
     ],
   },
 ];

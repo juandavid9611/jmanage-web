@@ -42,8 +42,8 @@ export const paths = {
       overview: `${ROOTS.DASHBOARD}/analytics`,
       top: `${ROOTS.DASHBOARD}/analytics/top`,
       lateArrives: `${ROOTS.DASHBOARD}/analytics/late-arrives`,
-      compromiso: `${ROOTS.DASHBOARD}/analytics/compromiso`,
     },
+    clubTournaments: `${ROOTS.DASHBOARD}/club-tournaments`,
     calendar: `${ROOTS.DASHBOARD}/calendar`,
     admin: {
       user: {
@@ -123,5 +123,6 @@ export const paths = {
       details: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}`,
       edit: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}/edit`,
     },
+    aiAssistant: `${ROOTS.DASHBOARD}/ai-assistant`,
   },
 };
