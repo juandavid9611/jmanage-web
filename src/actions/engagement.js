@@ -2,24 +2,32 @@ import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
 
 // ── Mock data layer ──────────────────────────────────────────────────
-// Frontend-only placeholder for "Compromiso" (Analítica → Compromiso):
-// tracking the club's own team as it competes in external tournaments
-// (e.g. Lichi Cup, Ascenso Trinche 2) — separate from the "Torneos" module,
-// which is for organizing/hosting a bracket, not for logging participation
-// in someone else's competition. Persists to localStorage so it survives
-// reloads during design review; real version needs backend endpoints
-// mirroring this shape (tournament, roster, match, lineup).
+// Frontend-only placeholder for "Torneos" (club-scoped): tracking the
+// club's own team as it competes in external tournaments (e.g. Lichi
+// Cup, Ascenso Trinche 2, Liga Tradicional) — this is NOT the bracket
+// organizer (that lives in src/actions/tournament.js, which hosts
+// competitions between many teams and isn't workspace-scoped at all).
+// Here, a "tournament" is just something this club's team participates
+// in, with its own roster drawn from the club's real Usuarios. Persists
+// to localStorage, scoped per workspace, so it survives reloads during
+// design review; real version needs backend endpoints mirroring this
+// shape (tournament, roster, match, lineup), each filtered by
+// workspace_id.
 //
 // Player identity still comes from the real, workspace-scoped Usuarios
 // (src/actions/user.js) — pass `users` (from useGetUsers) into the hooks
 // below to join names/avatars. A roster row can also carry a plain
 // `guest_name` with no user_id for someone without an account yet.
 
-const TOURNAMENTS_KEY = 'jmanage_mock_engagement_tournaments';
-const ROSTER_KEY = 'jmanage_mock_engagement_roster';
-const MATCHES_KEY = 'jmanage_mock_engagement_matches';
-const LINEUPS_KEY = 'jmanage_mock_engagement_lineups';
-const CALENDAR_LINKS_KEY = 'jmanage_mock_engagement_calendar_links';
+const TOURNAMENTS_KEY_BASE = 'jmanage_mock_engagement_tournaments';
+const ROSTER_KEY_BASE = 'jmanage_mock_engagement_roster';
+const MATCHES_KEY_BASE = 'jmanage_mock_engagement_matches';
+const LINEUPS_KEY_BASE = 'jmanage_mock_engagement_lineups';
+const CALENDAR_LINKS_KEY_BASE = 'jmanage_mock_engagement_calendar_links';
+
+function scopedKey(base, workspaceId) {
+  return `${base}_${workspaceId}`;
+}
 
 function readList(key) {
   try {
@@ -51,30 +59,54 @@ function touchEngagement() {
 
 // ── Torneos (participación externa) ──────────────────────────────────
 
-export function useGetEngagementTournaments() {
-  const { data, isLoading } = useSWR('mock-engagement-tournaments', () => readList(TOURNAMENTS_KEY));
+export function useGetEngagementTournaments(workspaceId) {
+  const key = workspaceId ? `mock-engagement-tournaments-${workspaceId}` : null;
+  const { data, isLoading } = useSWR(key, () =>
+    readList(scopedKey(TOURNAMENTS_KEY_BASE, workspaceId))
+  );
   return useMemo(() => ({ tournaments: data || [], tournamentsLoading: isLoading }), [data, isLoading]);
 }
 
-export async function createEngagementTournament({ name, category }) {
-  const list = readList(TOURNAMENTS_KEY);
-  const row = { id: uid(), name, category: category || '', created_at: new Date().toISOString() };
+export async function createEngagementTournament({ name, category }, workspaceId) {
+  const key = scopedKey(TOURNAMENTS_KEY_BASE, workspaceId);
+  const list = readList(key);
+  const row = {
+    id: uid(),
+    workspaceId,
+    name,
+    category: category || '',
+    created_at: new Date().toISOString(),
+  };
   list.push(row);
-  writeList(TOURNAMENTS_KEY, list);
+  writeList(key, list);
   touchEngagement();
   return row;
 }
 
-export async function deleteEngagementTournament(id) {
-  writeList(TOURNAMENTS_KEY, readList(TOURNAMENTS_KEY).filter((t) => t.id !== id));
-  writeList(ROSTER_KEY, readList(ROSTER_KEY).filter((r) => r.tournament_id !== id));
-  const matches = readList(MATCHES_KEY);
+export async function deleteEngagementTournament(id, workspaceId) {
+  writeList(
+    scopedKey(TOURNAMENTS_KEY_BASE, workspaceId),
+    readList(scopedKey(TOURNAMENTS_KEY_BASE, workspaceId)).filter((t) => t.id !== id)
+  );
+  writeList(
+    scopedKey(ROSTER_KEY_BASE, workspaceId),
+    readList(scopedKey(ROSTER_KEY_BASE, workspaceId)).filter((r) => r.tournament_id !== id)
+  );
+  const matches = readList(scopedKey(MATCHES_KEY_BASE, workspaceId));
   const keptMatches = matches.filter((m) => m.tournament_id !== id);
   const removedIds = new Set(matches.filter((m) => m.tournament_id === id).map((m) => m.id));
-  writeList(MATCHES_KEY, keptMatches);
-  const lineups = readMap(LINEUPS_KEY);
+  writeList(scopedKey(MATCHES_KEY_BASE, workspaceId), keptMatches);
+
+  const lineups = readMap(scopedKey(LINEUPS_KEY_BASE, workspaceId));
   removedIds.forEach((matchId) => delete lineups[matchId]);
-  writeMap(LINEUPS_KEY, lineups);
+  writeMap(scopedKey(LINEUPS_KEY_BASE, workspaceId), lineups);
+
+  const links = readMap(scopedKey(CALENDAR_LINKS_KEY_BASE, workspaceId));
+  Object.entries(links).forEach(([calendarEventId, link]) => {
+    if (link.tournament_id === id) delete links[calendarEventId];
+  });
+  writeMap(scopedKey(CALENDAR_LINKS_KEY_BASE, workspaceId), links);
+
   touchEngagement();
 }
 
@@ -94,18 +126,35 @@ function joinRosterEntry(entry, users) {
   };
 }
 
-export function useGetEngagementRoster(tournamentId, users) {
-  const key = tournamentId ? `mock-engagement-roster-${tournamentId}` : null;
+export function useGetEngagementRoster(tournamentId, users, workspaceId) {
+  const key = tournamentId && workspaceId ? `mock-engagement-roster-${workspaceId}-${tournamentId}` : null;
   const { data, isLoading } = useSWR(key, () =>
-    readList(ROSTER_KEY).filter((r) => r.tournament_id === tournamentId)
+    readList(scopedKey(ROSTER_KEY_BASE, workspaceId)).filter((r) => r.tournament_id === tournamentId)
   );
   const roster = useMemo(() => (data || []).map((e) => joinRosterEntry(e, users || [])), [data, users]);
   return { roster, rosterLoading: isLoading };
 }
 
+// Every tournament a given user_id is rostered in, across this workspace.
+export function useGetEngagementTournamentsForUser(userId, workspaceId) {
+  const key = userId && workspaceId ? `mock-engagement-user-tournaments-${workspaceId}-${userId}` : null;
+  const { data, isLoading } = useSWR(key, () => {
+    const roster = readList(scopedKey(ROSTER_KEY_BASE, workspaceId)).filter((r) => r.user_id === userId);
+    const tournaments = readList(scopedKey(TOURNAMENTS_KEY_BASE, workspaceId));
+    return roster
+      .map((entry) => ({
+        rosterEntryId: entry.id,
+        tournament: tournaments.find((t) => t.id === entry.tournament_id) || null,
+      }))
+      .filter((row) => row.tournament);
+  });
+  return { entries: data || [], entriesLoading: isLoading };
+}
+
 // entry: { tournament_id, user_id?, guest_name?, number, position }
-export async function addToEngagementRoster(entry) {
-  const roster = readList(ROSTER_KEY);
+export async function addToEngagementRoster(entry, workspaceId) {
+  const key = scopedKey(ROSTER_KEY_BASE, workspaceId);
+  const roster = readList(key);
   if (entry.user_id) {
     const already = roster.find(
       (r) => r.tournament_id === entry.tournament_id && r.user_id === entry.user_id
@@ -114,32 +163,34 @@ export async function addToEngagementRoster(entry) {
   }
   const row = { id: uid(), ...entry };
   roster.push(row);
-  writeList(ROSTER_KEY, roster);
+  writeList(key, roster);
   touchEngagement();
   return row;
 }
 
-export async function updateEngagementRosterEntry(entryId, patch) {
-  const roster = readList(ROSTER_KEY);
+export async function updateEngagementRosterEntry(entryId, patch, workspaceId) {
+  const key = scopedKey(ROSTER_KEY_BASE, workspaceId);
+  const roster = readList(key);
   const idx = roster.findIndex((r) => r.id === entryId);
   if (idx === -1) throw new Error('No encontrado en la plantilla');
   roster[idx] = { ...roster[idx], ...patch };
-  writeList(ROSTER_KEY, roster);
+  writeList(key, roster);
   touchEngagement();
   return roster[idx];
 }
 
-export async function removeFromEngagementRoster(entryId) {
-  writeList(ROSTER_KEY, readList(ROSTER_KEY).filter((r) => r.id !== entryId));
+export async function removeFromEngagementRoster(entryId, workspaceId) {
+  const key = scopedKey(ROSTER_KEY_BASE, workspaceId);
+  writeList(key, readList(key).filter((r) => r.id !== entryId));
   touchEngagement();
 }
 
 // ── Partidos (simples: fecha + rival) ────────────────────────────────
 
-export function useGetEngagementMatches(tournamentId) {
-  const key = tournamentId ? `mock-engagement-matches-${tournamentId}` : null;
+export function useGetEngagementMatches(tournamentId, workspaceId) {
+  const key = tournamentId && workspaceId ? `mock-engagement-matches-${workspaceId}-${tournamentId}` : null;
   const { data, isLoading } = useSWR(key, () =>
-    readList(MATCHES_KEY)
+    readList(scopedKey(MATCHES_KEY_BASE, workspaceId))
       .filter((m) => m.tournament_id === tournamentId)
       .sort((a, b) => new Date(b.date) - new Date(a.date))
   );
@@ -147,45 +198,50 @@ export function useGetEngagementMatches(tournamentId) {
 }
 
 // entry: { tournament_id, date, rival }
-export async function createEngagementMatch(entry) {
-  const matches = readList(MATCHES_KEY);
+export async function createEngagementMatch(entry, workspaceId) {
+  const key = scopedKey(MATCHES_KEY_BASE, workspaceId);
+  const matches = readList(key);
   const row = { id: uid(), ...entry, created_at: new Date().toISOString() };
   matches.push(row);
-  writeList(MATCHES_KEY, matches);
+  writeList(key, matches);
   touchEngagement();
   return row;
 }
 
-export async function deleteEngagementMatch(matchId) {
-  writeList(MATCHES_KEY, readList(MATCHES_KEY).filter((m) => m.id !== matchId));
-  const lineups = readMap(LINEUPS_KEY);
+export async function deleteEngagementMatch(matchId, workspaceId) {
+  writeList(
+    scopedKey(MATCHES_KEY_BASE, workspaceId),
+    readList(scopedKey(MATCHES_KEY_BASE, workspaceId)).filter((m) => m.id !== matchId)
+  );
+  const lineups = readMap(scopedKey(LINEUPS_KEY_BASE, workspaceId));
   delete lineups[matchId];
-  writeMap(LINEUPS_KEY, lineups);
+  writeMap(scopedKey(LINEUPS_KEY_BASE, workspaceId), lineups);
   touchEngagement();
 }
 
 // ── Convocatoria (por partido) ───────────────────────────────────────
 
-export function useGetEngagementLineup(matchId) {
-  const key = matchId ? `mock-engagement-lineup-${matchId}` : null;
-  const { data, isLoading } = useSWR(key, () => readMap(LINEUPS_KEY)[matchId] || null);
+export function useGetEngagementLineup(matchId, workspaceId) {
+  const key = matchId && workspaceId ? `mock-engagement-lineup-${workspaceId}-${matchId}` : null;
+  const { data, isLoading } = useSWR(key, () => readMap(scopedKey(LINEUPS_KEY_BASE, workspaceId))[matchId] || null);
   return { lineup: data || null, lineupLoading: isLoading };
 }
 
 // entries: [{ roster_entry_id, called_up, status: 'titular'|'suplente'|'', minutes }]
-export async function saveEngagementLineup(matchId, entries) {
-  const lineups = readMap(LINEUPS_KEY);
+export async function saveEngagementLineup(matchId, entries, workspaceId) {
+  const key = scopedKey(LINEUPS_KEY_BASE, workspaceId);
+  const lineups = readMap(key);
   lineups[matchId] = { entries, saved_at: new Date().toISOString() };
-  writeMap(LINEUPS_KEY, lineups);
+  writeMap(key, lineups);
   touchEngagement();
   return lineups[matchId];
 }
 
-export function useGetEngagementLineupsForMatches(matchIds) {
+export function useGetEngagementLineupsForMatches(matchIds, workspaceId) {
   const ids = (matchIds || []).slice().sort();
-  const key = ids.length ? `mock-engagement-lineups-${ids.join(',')}` : null;
+  const key = ids.length && workspaceId ? `mock-engagement-lineups-${workspaceId}-${ids.join(',')}` : null;
   const { data, isLoading } = useSWR(key, () => {
-    const lineups = readMap(LINEUPS_KEY);
+    const lineups = readMap(scopedKey(LINEUPS_KEY_BASE, workspaceId));
     const map = {};
     ids.forEach((id) => {
       if (lineups[id]) map[id] = lineups[id];
@@ -232,52 +288,61 @@ export function computeCompromisoStats(roster, lineupsByMatch) {
 // "match" con un torneo elegido, se crea (o actualiza) automáticamente un
 // Partido de Compromiso para ese torneo, usando el título del evento como
 // rival y su fecha de inicio. Borrar el vínculo no borra el evento real.
-export function useGetCalendarEventLink(calendarEventId) {
-  const key = calendarEventId ? `mock-engagement-cal-link-${calendarEventId}` : null;
-  const { data, isLoading } = useSWR(key, () => readMap(CALENDAR_LINKS_KEY)[calendarEventId] || null);
+export function useGetCalendarEventLink(calendarEventId, workspaceId) {
+  const key = calendarEventId && workspaceId ? `mock-engagement-cal-link-${workspaceId}-${calendarEventId}` : null;
+  const { data, isLoading } = useSWR(
+    key,
+    () => readMap(scopedKey(CALENDAR_LINKS_KEY_BASE, workspaceId))[calendarEventId] || null
+  );
   return { link: data || null, linkLoading: isLoading };
 }
 
 // { tournament_id, date: 'YYYY-MM-DD', rival }
-export async function linkCalendarEventToTournament(calendarEventId, payload) {
-  const links = readMap(CALENDAR_LINKS_KEY);
+export async function linkCalendarEventToTournament(calendarEventId, payload, workspaceId) {
+  const linksKey = scopedKey(CALENDAR_LINKS_KEY_BASE, workspaceId);
+  const links = readMap(linksKey);
   const existing = links[calendarEventId];
 
   let matchId = existing?.match_id;
   if (existing && existing.tournament_id !== payload.tournament_id) {
     // Tournament changed — the old match no longer applies here.
-    await deleteEngagementMatch(existing.match_id);
+    await deleteEngagementMatch(existing.match_id, workspaceId);
     matchId = null;
   }
 
   if (matchId) {
-    const matches = readList(MATCHES_KEY);
+    const matchesKey = scopedKey(MATCHES_KEY_BASE, workspaceId);
+    const matches = readList(matchesKey);
     const idx = matches.findIndex((m) => m.id === matchId);
     if (idx !== -1) {
       matches[idx] = { ...matches[idx], date: payload.date, rival: payload.rival };
-      writeList(MATCHES_KEY, matches);
+      writeList(matchesKey, matches);
     }
   } else {
-    const created = await createEngagementMatch({
-      tournament_id: payload.tournament_id,
-      date: payload.date,
-      rival: payload.rival,
-    });
+    const created = await createEngagementMatch(
+      {
+        tournament_id: payload.tournament_id,
+        date: payload.date,
+        rival: payload.rival,
+      },
+      workspaceId
+    );
     matchId = created.id;
   }
 
   links[calendarEventId] = { tournament_id: payload.tournament_id, match_id: matchId };
-  writeMap(CALENDAR_LINKS_KEY, links);
+  writeMap(linksKey, links);
   touchEngagement();
   return links[calendarEventId];
 }
 
-export async function unlinkCalendarEvent(calendarEventId) {
-  const links = readMap(CALENDAR_LINKS_KEY);
+export async function unlinkCalendarEvent(calendarEventId, workspaceId) {
+  const linksKey = scopedKey(CALENDAR_LINKS_KEY_BASE, workspaceId);
+  const links = readMap(linksKey);
   const existing = links[calendarEventId];
   if (!existing) return;
-  await deleteEngagementMatch(existing.match_id);
+  await deleteEngagementMatch(existing.match_id, workspaceId);
   delete links[calendarEventId];
-  writeMap(CALENDAR_LINKS_KEY, links);
+  writeMap(linksKey, links);
   touchEngagement();
 }

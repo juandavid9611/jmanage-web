@@ -45,14 +45,14 @@ const POSITION_LABELS = Object.fromEntries(POSITION_OPTIONS.map((p) => [p.value,
 
 // users: real workspace Usuarios (from useGetUsers) — the reusable identity.
 // roster: this tournament's joined roster rows (from useGetEngagementRoster).
-export function RosterPanel({ tournamentId, users, roster }) {
+export function RosterPanel({ tournamentId, users, roster, workspaceId }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const availableUsers = users.filter((u) => !roster.some((r) => r.user_id === u.id));
 
   const handleDelete = async (entryId) => {
     try {
-      await removeFromEngagementRoster(entryId);
+      await removeFromEngagementRoster(entryId, workspaceId);
       toast.success('Jugador quitado de la plantilla');
     } catch (error) {
       toast.error(error.message || 'Error al quitar');
@@ -61,7 +61,7 @@ export function RosterPanel({ tournamentId, users, roster }) {
 
   const handleNumberBlur = async (entryId, value) => {
     try {
-      await updateEngagementRosterEntry(entryId, { number: value ? Number(value) : null });
+      await updateEngagementRosterEntry(entryId, { number: value ? Number(value) : null }, workspaceId);
     } catch (error) {
       toast.error(error.message || 'Error al actualizar');
     }
@@ -69,7 +69,7 @@ export function RosterPanel({ tournamentId, users, roster }) {
 
   const handlePositionChange = async (entryId, value) => {
     try {
-      await updateEngagementRosterEntry(entryId, { position: value || null });
+      await updateEngagementRosterEntry(entryId, { position: value || null }, workspaceId);
     } catch (error) {
       toast.error(error.message || 'Error al actualizar');
     }
@@ -160,12 +160,13 @@ export function RosterPanel({ tournamentId, users, roster }) {
         onClose={() => setDialogOpen(false)}
         tournamentId={tournamentId}
         availableUsers={availableUsers}
+        workspaceId={workspaceId}
       />
     </Box>
   );
 }
 
-function AddToRosterDialog({ open, onClose, tournamentId, availableUsers }) {
+function AddToRosterDialog({ open, onClose, tournamentId, availableUsers, workspaceId }) {
   const [mode, setMode] = useState('user'); // 'user' | 'guest'
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [guestName, setGuestName] = useState('');
@@ -198,28 +199,44 @@ function AddToRosterDialog({ open, onClose, tournamentId, availableUsers }) {
     try {
       setIsSubmitting(true);
       if (mode === 'user') {
-        await Promise.all(
+        const results = await Promise.allSettled(
           selectedUsers.map((u) =>
-            addToEngagementRoster({
-              tournament_id: tournamentId,
-              user_id: u.id,
-              guest_name: null,
-              number: null,
-              position: null,
-            })
+            addToEngagementRoster(
+              {
+                tournament_id: tournamentId,
+                user_id: u.id,
+                guest_name: null,
+                number: null,
+                position: null,
+              },
+              workspaceId
+            )
           )
         );
-        toast.success(
-          `${selectedUsers.length} jugador${selectedUsers.length === 1 ? '' : 'es'} agregado${selectedUsers.length === 1 ? '' : 's'} — asigná el número y la posición desde la tabla`
-        );
+        const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+        const failedNames = results
+          .map((r, i) => (r.status === 'rejected' ? selectedUsers[i].name : null))
+          .filter(Boolean);
+
+        if (succeeded) {
+          toast.success(
+            `${succeeded} jugador${succeeded === 1 ? '' : 'es'} agregado${succeeded === 1 ? '' : 's'} — asigná el número y la posición desde la tabla`
+          );
+        }
+        if (failedNames.length) {
+          toast.error(`No se pudo agregar: ${failedNames.join(', ')}`);
+        }
       } else {
-        await addToEngagementRoster({
-          tournament_id: tournamentId,
-          user_id: null,
-          guest_name: guestName.trim(),
-          number: number ? Number(number) : null,
-          position: position || null,
-        });
+        await addToEngagementRoster(
+          {
+            tournament_id: tournamentId,
+            user_id: null,
+            guest_name: guestName.trim(),
+            number: number ? Number(number) : null,
+            position: position || null,
+          },
+          workspaceId
+        );
         toast.success('Jugador agregado a la plantilla');
       }
       handleClose();

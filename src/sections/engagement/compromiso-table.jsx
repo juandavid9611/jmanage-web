@@ -17,9 +17,9 @@ import {
 
 // ----------------------------------------------------------------------
 
-export function CompromisoTable({ roster, matches }) {
+export function CompromisoTable({ roster, matches, workspaceId }) {
   const matchIds = useMemo(() => matches.map((m) => m.id), [matches]);
-  const { lineupsByMatch } = useGetEngagementLineupsForMatches(matchIds);
+  const { lineupsByMatch } = useGetEngagementLineupsForMatches(matchIds, workspaceId);
 
   const stats = useMemo(() => computeCompromisoStats(roster, lineupsByMatch), [roster, lineupsByMatch]);
   const partidosRegistrados = stats[0]?.partidosRegistrados || 0;
@@ -72,7 +72,7 @@ export function CompromisoTable({ roster, matches }) {
               .map((s) => (
                 <TableRow key={s.player.id}>
                   <TableCell>
-                    {s.player.number ? `#${s.player.number} ` : ''}
+                    {s.player.number != null ? `#${s.player.number} ` : ''}
                     {s.player.name}
                   </TableCell>
                   <TableCell align="center">{s.vecesConvocado}</TableCell>

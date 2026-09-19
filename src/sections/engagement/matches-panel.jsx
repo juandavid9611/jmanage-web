@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -45,13 +45,13 @@ function fmtFecha(dateStr) {
   return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-export function MatchesPanel({ tournamentId, roster, matches }) {
+export function MatchesPanel({ tournamentId, roster, matches, workspaceId }) {
   const [newMatchDialog, setNewMatchDialog] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
 
   const handleDelete = async (matchId) => {
     try {
-      await deleteEngagementMatch(matchId);
+      await deleteEngagementMatch(matchId, workspaceId);
       toast.success('Partido eliminado');
     } catch (error) {
       toast.error(error.message || 'Error al eliminar');
@@ -99,6 +99,7 @@ export function MatchesPanel({ tournamentId, roster, matches }) {
                 expanded={expandedId === m.id}
                 onToggle={() => setExpandedId((prev) => (prev === m.id ? null : m.id))}
                 onDelete={() => handleDelete(m.id)}
+                workspaceId={workspaceId}
               />
             ))}
           </TableBody>
@@ -110,13 +111,14 @@ export function MatchesPanel({ tournamentId, roster, matches }) {
         open={newMatchDialog}
         onClose={() => setNewMatchDialog(false)}
         tournamentId={tournamentId}
+        workspaceId={workspaceId}
       />
     </Box>
   );
 }
 
-function MatchRow({ match, roster, expanded, onToggle, onDelete }) {
-  const { lineup } = useGetEngagementLineup(match.id);
+function MatchRow({ match, roster, expanded, onToggle, onDelete, workspaceId }) {
+  const { lineup, lineupLoading } = useGetEngagementLineup(match.id, workspaceId);
   const registrado = !!lineup;
 
   return (
@@ -142,7 +144,13 @@ function MatchRow({ match, roster, expanded, onToggle, onDelete }) {
         <TableCell colSpan={4} sx={{ p: 0, border: expanded ? undefined : 'none' }}>
           <Collapse in={expanded}>
             <Box sx={{ p: 2, bgcolor: 'background.neutral' }}>
-              <LineupForm matchId={match.id} roster={roster} savedLineup={lineup} />
+              <LineupForm
+                matchId={match.id}
+                roster={roster}
+                savedLineup={lineup}
+                lineupLoading={lineupLoading}
+                workspaceId={workspaceId}
+              />
             </Box>
           </Collapse>
         </TableCell>
@@ -151,18 +159,29 @@ function MatchRow({ match, roster, expanded, onToggle, onDelete }) {
   );
 }
 
-function LineupForm({ matchId, roster, savedLineup }) {
+function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId }) {
   const [rows, setRows] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Only seed `rows` from the server once per match — never again while this
+  // form stays mounted, so a background SWR revalidation of `savedLineup`
+  // (e.g. touchEngagement() from another tab) can't silently overwrite
+  // unsaved edits in progress. Re-arms only when `matchId` actually changes.
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    initializedRef.current = false;
+  }, [matchId]);
+
+  useEffect(() => {
+    if (initializedRef.current || lineupLoading) return;
     const next = {};
     roster.forEach((p) => {
       const saved = savedLineup?.entries?.find((e) => e.roster_entry_id === p.id);
       next[p.id] = saved || { roster_entry_id: p.id, called_up: false, status: '', minutes: 0 };
     });
     setRows(next);
-  }, [roster, savedLineup]);
+    initializedRef.current = true;
+  }, [roster, savedLineup, lineupLoading]);
 
   const updateRow = (playerId, patch) => {
     setRows((prev) => ({ ...prev, [playerId]: { ...prev[playerId], ...patch } }));
@@ -176,7 +195,7 @@ function LineupForm({ matchId, roster, savedLineup }) {
     }
     try {
       setIsSubmitting(true);
-      await saveEngagementLineup(matchId, values);
+      await saveEngagementLineup(matchId, values, workspaceId);
       toast.success('Convocatoria guardada');
     } catch (error) {
       toast.error(error.message || 'Error al guardar');
@@ -203,7 +222,7 @@ function LineupForm({ matchId, roster, savedLineup }) {
             return (
               <TableRow key={p.id}>
                 <TableCell>
-                  {p.number ? `#${p.number} ` : ''}
+                  {p.number != null ? `#${p.number} ` : ''}
                   {p.name}
                 </TableCell>
                 <TableCell align="center">
@@ -266,7 +285,7 @@ function LineupForm({ matchId, roster, savedLineup }) {
   );
 }
 
-function NewMatchDialog({ open, onClose, tournamentId }) {
+function NewMatchDialog({ open, onClose, tournamentId, workspaceId }) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [rival, setRival] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -284,7 +303,7 @@ function NewMatchDialog({ open, onClose, tournamentId }) {
     }
     try {
       setIsSubmitting(true);
-      await createEngagementMatch({ tournament_id: tournamentId, date, rival: rival.trim() });
+      await createEngagementMatch({ tournament_id: tournamentId, date, rival: rival.trim() }, workspaceId);
       toast.success('Partido creado');
       handleClose();
     } catch (error) {

@@ -26,10 +26,10 @@ function compromisoColor(pct) {
   return 'error';
 }
 
-export function CompromisoCharts({ roster, matches }) {
+export function CompromisoCharts({ roster, matches, workspaceId }) {
   const theme = useTheme();
   const matchIds = useMemo(() => matches.map((m) => m.id), [matches]);
-  const { lineupsByMatch } = useGetEngagementLineupsForMatches(matchIds);
+  const { lineupsByMatch } = useGetEngagementLineupsForMatches(matchIds, workspaceId);
 
   const stats = useMemo(() => computeCompromisoStats(roster, lineupsByMatch), [roster, lineupsByMatch]);
   const partidosRegistrados = stats[0]?.partidosRegistrados || 0;

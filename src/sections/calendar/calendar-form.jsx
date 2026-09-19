@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { z as zod } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -71,8 +72,8 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   );
   const EventSchema = useMemo(() => getEventSchema(t), [t]);
 
-  const { tournaments } = useGetEngagementTournaments();
-  const { link: existingLink } = useGetCalendarEventLink(currentEvent?.id);
+  const { tournaments } = useGetEngagementTournaments(selectedWorkspace?.id);
+  const { link: existingLink } = useGetCalendarEventLink(currentEvent?.id, selectedWorkspace?.id);
   const [torneoId, setTorneoId] = useState('');
 
   useEffect(() => {
@@ -113,32 +114,45 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       group: data?.group,
     };
 
+    if (dateError) return;
+
+    let savedEventId = eventData.id;
+
     try {
-      if (!dateError) {
-        if (currentEvent?.id) {
-          await updateEvent(eventData, selectedWorkspace?.id);
-          toast.success(t('update_success'));
-        } else {
-          await createEvent(eventData, selectedWorkspace?.id);
-          toast.success(t('create_success'));
-        }
-
-        if (data?.category === 'match' && torneoId) {
-          await linkCalendarEventToTournament(eventData.id, {
-            tournament_id: torneoId,
-            date: new Date(data.start).toISOString().split('T')[0],
-            rival: eventData.title,
-          });
-        } else if (existingLink) {
-          await unlinkCalendarEvent(eventData.id);
-        }
-
-        onClose();
-        reset();
+      if (currentEvent?.id) {
+        await updateEvent(eventData, selectedWorkspace?.id);
+        toast.success(t('update_success'));
+      } else {
+        const created = await createEvent(eventData, selectedWorkspace?.id);
+        savedEventId = created?.data?.id || eventData.id;
+        toast.success(t('create_success'));
       }
     } catch (error) {
       console.error(error);
+      return;
     }
+
+    try {
+      if (data?.category === 'match' && torneoId) {
+        await linkCalendarEventToTournament(
+          savedEventId,
+          {
+            tournament_id: torneoId,
+            date: dayjs(data.start).format('YYYY-MM-DD'),
+            rival: eventData.title,
+          },
+          selectedWorkspace?.id
+        );
+      } else if (existingLink) {
+        await unlinkCalendarEvent(savedEventId, selectedWorkspace?.id);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(t('label_tournament_link_error'));
+    }
+
+    onClose();
+    reset();
   });
 
   const handleChangeIsParticipating = useCallback(
@@ -157,7 +171,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const onDelete = useCallback(async () => {
     try {
       await deleteEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
-      if (existingLink) await unlinkCalendarEvent(`${currentEvent?.id}`);
+      if (existingLink) await unlinkCalendarEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
       toast.success(t('delete_success'));
       onClose();
     } catch (error) {
