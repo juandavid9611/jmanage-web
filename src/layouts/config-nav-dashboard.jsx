@@ -104,6 +104,13 @@ export function getNavData(t, language) {
           clubOnly: true,
         },
         {
+          title: t('label_club_tournaments'),
+          path: paths.dashboard.clubTournaments,
+          icon: ICONS.tour,
+          roles: ['admin', 'user'],
+          clubOnly: true,
+        },
+        {
           title: t('tournaments'),
           path: paths.dashboard.tournament.root,
           icon: ICONS.tour,
@@ -119,6 +126,13 @@ export function getNavData(t, language) {
           title: t('nav_trainings'),
           path: paths.dashboard.attendance.root,
           icon: <Iconify icon="solar:running-round-bold" />,
+          roles: ['admin', 'user'],
+          clubOnly: true,
+        },
+        {
+          title: t('label_training_sessions'),
+          path: paths.dashboard.trainingSessions.root,
+          icon: <Iconify icon="solar:football-bold-duotone" />,
           roles: ['admin', 'user'],
           clubOnly: true,
         },
@@ -153,6 +167,12 @@ export function getNavData(t, language) {
           title: t('nav_total_payments'),
           path: paths.dashboard.admin.invoice.root,
           icon: ICONS.invoice,
+          roles: ['admin'],
+        },
+        {
+          title: t('label_ai_assistant'),
+          path: paths.dashboard.aiAssistant,
+          icon: <Iconify icon="solar:magic-stick-3-bold-duotone" />,
           roles: ['admin'],
         },
         {

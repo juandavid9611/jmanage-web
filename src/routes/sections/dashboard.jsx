@@ -16,6 +16,8 @@ const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
 const OverviewAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
 const TopAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/top'));
 const LateArrivesAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/late-arrives'));
+// Club Tournaments (Torneos del Club)
+const ClubTournamentsPage = lazy(() => import('src/pages/dashboard/club-tournaments'));
 // Invoice
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoice/list'));
 const InvoiceCreatePage = lazy(() => import('src/pages/dashboard/invoice/new'));
@@ -62,6 +64,13 @@ const TournamentEditPage = lazy(() => import('src/pages/dashboard/tournament/edi
 const TournamentMatchDetailPage = lazy(() => import('src/pages/dashboard/tournament/match-detail'));
 // Team Owner
 const TeamOwnerPage = lazy(() => import('src/pages/team-owner'));
+// Training Sessions
+const TrainingSessionListPage = lazy(() => import('src/pages/dashboard/training-sessions/list'));
+const TrainingSessionNewPage = lazy(() => import('src/pages/dashboard/training-sessions/new'));
+const TrainingSessionEditPage = lazy(() => import('src/pages/dashboard/training-sessions/edit'));
+const TrainingSessionDetailsPage = lazy(() => import('src/pages/dashboard/training-sessions/details'));
+// AI Assistant
+const AIAssistantPage = lazy(() => import('src/pages/dashboard/ai-assistant'));
 // Donations
 const DonationRecordPage = lazy(() => import('src/pages/dashboard/donation'));
 // ----------------------------------------------------------------------
@@ -88,6 +97,7 @@ export const dashboardRoutes = [
           { path: 'late-arrives', element: <LateArrivesAnalyticsPage /> },
         ],
       },
+      { path: 'club-tournaments', element: <ClubTournamentsPage /> },
       { path: 'calendar', element: <CalendarPage /> },
       {
         path: 'invoice',
@@ -176,6 +186,16 @@ export const dashboardRoutes = [
       },
       { path: 'team-owner', element: <TeamOwnerPage /> },
       { path: 'donations', element: <DonationRecordPage /> },
+      {
+        path: 'training-sessions',
+        children: [
+          { element: <TrainingSessionListPage />, index: true },
+          { path: 'new', element: <TrainingSessionNewPage /> },
+          { path: ':id', element: <TrainingSessionDetailsPage /> },
+          { path: ':id/edit', element: <TrainingSessionEditPage /> },
+        ],
+      },
+      { path: 'ai-assistant', element: <AIAssistantPage /> },
     ],
   },
 ];
