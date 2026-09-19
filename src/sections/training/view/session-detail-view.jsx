@@ -133,6 +133,16 @@ export function SessionDetailView() {
     );
   }
 
+  // Players can only open sessions once approved — drafts, pending reviews,
+  // and rejections stay internal even if someone guesses/shares the URL.
+  if (!isCoach && session.status !== 'approved') {
+    return (
+      <DashboardContent>
+        <Typography variant="h6">{t('label_no_sessions')}</Typography>
+      </DashboardContent>
+    );
+  }
+
   const canEdit = isCoach && (session.status === 'draft' || session.status === 'rejected');
   const canSend = canEdit;
   const canReview = isReviewer && session.status === 'sent';
@@ -255,7 +265,14 @@ export function SessionDetailView() {
         </Card>
 
         {session.exercises?.map((exercise, index) => (
-          <ExerciseCard key={exercise.id} exercise={exercise} index={index} readOnly onChange={() => {}} />
+          <ExerciseCard
+            key={exercise.id}
+            exercise={exercise}
+            index={index}
+            readOnly
+            defaultExpanded={isCoach}
+            onChange={() => {}}
+          />
         ))}
       </Stack>
 

@@ -35,6 +35,26 @@ const STATUS_OPTIONS = [
   { value: 'rejected', label: 'status_rejected' },
 ];
 
+// values below are i18n keys, resolved via t() at render time.
+const MONTH_NAMES = [
+  'month_jan_abbr',
+  'month_feb_abbr',
+  'month_mar_abbr',
+  'month_apr_abbr',
+  'month_may_abbr',
+  'month_jun_abbr',
+  'month_jul_abbr',
+  'month_aug_abbr',
+  'month_sep_abbr',
+  'month_oct_abbr',
+  'month_nov_abbr',
+  'month_dec_abbr',
+];
+
+function monthKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
 const STATUS_COLOR = {
   draft: 'default',
   sent: 'warning',
@@ -46,24 +66,73 @@ export function SessionListView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { selectedWorkspace, workspaceRole } = useWorkspace();
+  const isCoach = workspaceRole === 'coach' || workspaceRole === 'admin' || workspaceRole === 'team_owner';
   const isReviewer = workspaceRole === 'admin' || workspaceRole === 'team_owner';
 
   const [statusFilter, setStatusFilter] = useState(isReviewer ? 'sent' : '');
 
-  const { sessions, countsByStatus, sessionsLoading, sessionsEmpty } =
-    useGetTrainingSessions(selectedWorkspace);
+  const { sessions, countsByStatus, sessionsLoading } = useGetTrainingSessions(selectedWorkspace);
 
-  const filteredSessions = useMemo(
-    () => (statusFilter ? sessions.filter((session) => session.status === statusFilter) : sessions),
-    [sessions, statusFilter]
+  // Players only ever see sessions once the admin approved them — drafts,
+  // pending reviews, and rejections stay internal to coach/admin/team_owner.
+  const visibleSessions = useMemo(
+    () => (isCoach ? sessions : sessions.filter((session) => session.status === 'approved')),
+    [sessions, isCoach]
   );
 
-  const handleStatusChange = useCallback((_, newValue) => setStatusFilter(newValue), []);
+  const statusFilteredSessions = useMemo(
+    () =>
+      isCoach && statusFilter
+        ? visibleSessions.filter((session) => session.status === statusFilter)
+        : visibleSessions,
+    [visibleSessions, statusFilter, isCoach]
+  );
+
+  // Derive available months from the (status-filtered) sessions, newest first.
+  const months = useMemo(() => {
+    const seen = new Map();
+    statusFilteredSessions.forEach((session) => {
+      if (!session.date) return;
+      const d = new Date(session.date);
+      if (Number.isNaN(d.getTime())) return;
+      const key = monthKey(d);
+      if (!seen.has(key)) {
+        seen.set(key, { key, label: `${t(MONTH_NAMES[d.getMonth()])} ${d.getFullYear()}` });
+      }
+    });
+    return [...seen.values()].sort((a, b) => b.key.localeCompare(a.key));
+  }, [statusFilteredSessions, t]);
+
+  const defaultMonth = useMemo(() => {
+    const currentKey = monthKey(new Date());
+    return months.find((m) => m.key === currentKey)?.key || months[0]?.key || 'all';
+  }, [months]);
+
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const activeMonth = selectedMonth ?? defaultMonth;
+
+  const filteredSessions = useMemo(
+    () =>
+      activeMonth === 'all'
+        ? statusFilteredSessions
+        : statusFilteredSessions.filter((session) => session.date && monthKey(new Date(session.date)) === activeMonth),
+    [statusFilteredSessions, activeMonth]
+  );
+
+  const handleStatusChange = useCallback((_, newValue) => {
+    setStatusFilter(newValue);
+    setSelectedMonth(null);
+  }, []);
 
   const getCount = (status) => {
     if (!status) return Object.values(countsByStatus).reduce((a, b) => a + b, 0);
     return countsByStatus[status] || 0;
   };
+
+  const countForMonth = (key) =>
+    key === 'all'
+      ? statusFilteredSessions.length
+      : statusFilteredSessions.filter((session) => session.date && monthKey(new Date(session.date)) === key).length;
 
   return (
     <DashboardContent>
@@ -74,55 +143,91 @@ export function SessionListView() {
           { name: t('label_training_sessions') },
         ]}
         action={
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-            onClick={() => navigate(paths.dashboard.trainingSessions.new)}
-          >
-            {t('label_new_session')}
-          </Button>
+          isCoach && (
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={() => navigate(paths.dashboard.trainingSessions.new)}
+            >
+              {t('label_new_session')}
+            </Button>
+          )
         }
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Tabs
-        value={statusFilter}
-        onChange={handleStatusChange}
-        sx={{
-          mb: { xs: 3, md: 5 },
-          px: 2.5,
-          boxShadow: (theme) => `inset 0 -2px 0 0 ${alpha(theme.palette.grey[500], 0.08)}`,
-        }}
-      >
-        {STATUS_OPTIONS.map((opt) => (
+      {isCoach && (
+        <Tabs
+          value={statusFilter}
+          onChange={handleStatusChange}
+          sx={{
+            mb: { xs: 3, md: 5 },
+            px: 2.5,
+            boxShadow: (theme) => `inset 0 -2px 0 0 ${alpha(theme.palette.grey[500], 0.08)}`,
+          }}
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <Tab
+              key={opt.value}
+              value={opt.value}
+              label={t(opt.label)}
+              iconPosition="end"
+              icon={
+                <Label
+                  variant={statusFilter === opt.value ? 'filled' : 'soft'}
+                  color={STATUS_COLOR[opt.value] || 'default'}
+                >
+                  {getCount(opt.value)}
+                </Label>
+              }
+            />
+          ))}
+        </Tabs>
+      )}
+
+      {months.length > 0 && (
+        <Tabs
+          value={activeMonth}
+          onChange={(_, v) => setSelectedMonth(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ mb: 3, borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}
+        >
           <Tab
-            key={opt.value}
-            value={opt.value}
-            label={t(opt.label)}
-            iconPosition="end"
-            icon={
-              <Label
-                variant={statusFilter === opt.value ? 'filled' : 'soft'}
-                color={STATUS_COLOR[opt.value] || 'default'}
-              >
-                {getCount(opt.value)}
-              </Label>
+            value="all"
+            label={
+              <span>
+                {t('all')}{' '}
+                <Label color="default" sx={{ ml: 0.75 }}>
+                  {statusFilteredSessions.length}
+                </Label>
+              </span>
             }
           />
-        ))}
-      </Tabs>
+          {months.map((m) => (
+            <Tab
+              key={m.key}
+              value={m.key}
+              label={
+                <span>
+                  {m.label}{' '}
+                  <Label color="default" sx={{ ml: 0.75 }}>
+                    {countForMonth(m.key)}
+                  </Label>
+                </span>
+              }
+            />
+          ))}
+        </Tabs>
+      )}
 
-      {sessionsEmpty && !sessionsLoading && (
+      {!sessionsLoading && !filteredSessions.length && (
         <EmptyContent
           filled
           title={t('label_no_sessions')}
-          description={t('label_create_first_session_hint')}
+          description={isCoach ? t('label_create_first_session_hint') : t('label_no_approved_sessions_hint')}
           sx={{ py: 10 }}
         />
-      )}
-
-      {!sessionsEmpty && !filteredSessions.length && (
-        <EmptyContent filled title={t('label_no_sessions')} sx={{ py: 10 }} />
       )}
 
       <Box

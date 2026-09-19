@@ -2,7 +2,7 @@ import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -77,6 +77,9 @@ export function SessionNewEditForm({ currentSession }) {
     formState: { isSubmitting },
   } = methods;
 
+  const boardApisRef = useRef({});
+  const [exportingPdf, setExportingPdf] = useState(false);
+
   const handleAddExercise = useCallback(() => {
     setExercises((prev) => [...prev, emptyExercise()]);
   }, []);
@@ -88,6 +91,61 @@ export function SessionNewEditForm({ currentSession }) {
   const handleRemoveExercise = useCallback((id) => {
     setExercises((prev) => prev.filter((exercise) => exercise.id !== id));
   }, []);
+
+  const handleDuplicateExercise = useCallback((id) => {
+    setExercises((prev) => {
+      const index = prev.findIndex((exercise) => exercise.id === id);
+      if (index === -1) return prev;
+      const clone = { ...prev[index], id: uuidv4() };
+      return [...prev.slice(0, index + 1), clone, ...prev.slice(index + 1)];
+    });
+  }, []);
+
+  const handleBoardMount = useCallback((exerciseId, api) => {
+    if (api) boardApisRef.current[exerciseId] = api;
+    else delete boardApisRef.current[exerciseId];
+  }, []);
+
+  const handleExportPdf = useCallback(async () => {
+    if (!exercises.length) return;
+    setExportingPdf(true);
+    try {
+      const [{ pdf }, { SessionPdfDocument }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('./session-pdf-document'),
+      ]);
+      const items = await Promise.all(
+        exercises.map(async (exercise) => ({
+          exercise,
+          dataUrl: await boardApisRef.current[exercise.id]?.getPngDataUrl().catch(() => null),
+        }))
+      );
+      const values = methods.getValues();
+      const blob = await pdf(
+        <SessionPdfDocument
+          session={{
+            title: values.title,
+            date: values.date,
+            location: values.location,
+            teamGroup: values.teamGroup,
+            objective: values.objective,
+          }}
+          items={items}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${(values.title || 'sesion').trim().replace(/\s+/g, '_')}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      toast.error(t('label_pdf_export_error'));
+    } finally {
+      setExportingPdf(false);
+    }
+  }, [exercises, methods, t]);
 
   const persist = useCallback(
     async (data, status) => {
@@ -158,20 +216,34 @@ export function SessionNewEditForm({ currentSession }) {
             index={index}
             onChange={handleChangeExercise}
             onRemove={() => handleRemoveExercise(exercise.id)}
+            onDuplicate={() => handleDuplicateExercise(exercise.id)}
+            onBoardMount={handleBoardMount}
           />
         ))}
 
-        <Button
-          type="button"
-          variant="soft"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={handleAddExercise}
-          sx={{ alignSelf: 'flex-start' }}
-        >
-          {t('label_add_exercise')}
-        </Button>
+        <Stack direction="row" spacing={1.5} sx={{ alignSelf: 'flex-start' }}>
+          <Button
+            type="button"
+            variant="soft"
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={handleAddExercise}
+          >
+            {t('label_add_exercise')}
+          </Button>
+        </Stack>
 
         <Stack direction="row" spacing={2} justifyContent="flex-end">
+          <LoadingButton
+            type="button"
+            variant="outlined"
+            color="inherit"
+            loading={exportingPdf}
+            startIcon={<Iconify icon="mdi:file-pdf-box" />}
+            onClick={handleExportPdf}
+          >
+            {t('label_export_pdf')}
+          </LoadingButton>
+
           <Button
             type="button"
             variant="outlined"

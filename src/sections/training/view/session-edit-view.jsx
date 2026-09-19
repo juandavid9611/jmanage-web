@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import Typography from '@mui/material/Typography';
+
 import { paths } from 'src/routes/paths';
 
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -22,6 +24,14 @@ export function SessionEditView() {
   const { session, sessionLoading } = useGetTrainingSession(selectedWorkspace, id);
 
   if (sessionLoading) return <LoadingScreen />;
+
+  if (!session) {
+    return (
+      <DashboardContent>
+        <Typography variant="h6">{t('label_no_sessions')}</Typography>
+      </DashboardContent>
+    );
+  }
 
   return (
     <DashboardContent>

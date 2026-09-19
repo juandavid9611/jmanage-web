@@ -15,9 +15,18 @@ import { TacticalBoard } from './tactical-board';
 
 // ----------------------------------------------------------------------
 
-export function ExerciseCard({ exercise, index, readOnly = false, onChange, onRemove }) {
+export function ExerciseCard({
+  exercise,
+  index,
+  readOnly = false,
+  defaultExpanded = true,
+  onChange,
+  onRemove,
+  onDuplicate,
+  onBoardMount,
+}) {
   const { t } = useTranslation();
-  const expanded = useBoolean(true);
+  const expanded = useBoolean(defaultExpanded);
 
   const handleField = (field) => (evt) => onChange({ ...exercise, [field]: evt.target.value });
 
@@ -57,6 +66,12 @@ export function ExerciseCard({ exercise, index, readOnly = false, onChange, onRe
           <Iconify icon={expanded.value ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'} />
         </IconButton>
 
+        {!readOnly && onDuplicate && (
+          <IconButton onClick={onDuplicate}>
+            <Iconify icon="mdi:content-duplicate" />
+          </IconButton>
+        )}
+
         {!readOnly && (
           <IconButton color="error" onClick={onRemove}>
             <Iconify icon="solar:trash-bin-trash-bold" />
@@ -77,6 +92,7 @@ export function ExerciseCard({ exercise, index, readOnly = false, onChange, onRe
           />
 
           <TacticalBoard
+            ref={onBoardMount ? (api) => onBoardMount(exercise.id, api) : undefined}
             value={exercise.diagram}
             readOnly={readOnly}
             fileName={exercise.name || t('label_exercise')}
