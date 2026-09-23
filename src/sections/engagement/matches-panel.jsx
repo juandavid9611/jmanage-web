@@ -22,15 +22,27 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TableContainer from '@mui/material/TableContainer';
 
+import { useGetTour } from 'src/actions/tours';
+import { useGetEvents } from 'src/actions/calendar';
 import {
   saveEngagementLineup,
   createEngagementMatch,
   deleteEngagementMatch,
+  setEngagementCalledUp,
   useGetEngagementLineup,
+  useGetCalendarEventIdForMatch,
 } from 'src/actions/engagement';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+
+// A player's real sign-up/withdrawal on the linked calendar event lives on
+// a backend Tour (the same system that powers Entrenamientos attendance),
+// so it's already in sync across every device the instant it happens —
+// unlike the rest of this module, which is a per-browser localStorage mock.
+// Polling this (rather than only refetching on focus) is what makes the
+// "Convocado" column pick up a sign-up/withdrawal without anyone reloading.
+const TOUR_POLL_MS = 12_000;
 
 // ----------------------------------------------------------------------
 
@@ -48,6 +60,7 @@ function fmtFecha(dateStr) {
 export function MatchesPanel({ tournamentId, roster, matches, workspaceId }) {
   const [newMatchDialog, setNewMatchDialog] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
+  const { events } = useGetEvents({ id: workspaceId });
 
   const handleDelete = async (matchId) => {
     try {
@@ -100,6 +113,7 @@ export function MatchesPanel({ tournamentId, roster, matches, workspaceId }) {
                 onToggle={() => setExpandedId((prev) => (prev === m.id ? null : m.id))}
                 onDelete={() => handleDelete(m.id)}
                 workspaceId={workspaceId}
+                events={events}
               />
             ))}
           </TableBody>
@@ -117,9 +131,24 @@ export function MatchesPanel({ tournamentId, roster, matches, workspaceId }) {
   );
 }
 
-function MatchRow({ match, roster, expanded, onToggle, onDelete, workspaceId }) {
+function MatchRow({ match, roster, expanded, onToggle, onDelete, workspaceId, events }) {
   const { lineup, lineupLoading } = useGetEngagementLineup(match.id, workspaceId);
   const registrado = !!lineup;
+
+  // The calendar event this match is linked to (if any) carries a real,
+  // backend-backed Tour — that's where "who's actually signed up" lives.
+  // Matches created before calendar_event_id was stored directly fall back
+  // to a reverse lookup through the link map.
+  const { calendarEventId: fallbackCalendarEventId } = useGetCalendarEventIdForMatch(
+    match.calendar_event_id ? null : match.id,
+    workspaceId
+  );
+  const calendarEventId = match.calendar_event_id || fallbackCalendarEventId;
+  const linkedEvent = events?.find((e) => e.id === calendarEventId);
+  const { tour } = useGetTour(linkedEvent?.tourId, {
+    refreshInterval: TOUR_POLL_MS,
+    revalidateOnFocus: true,
+  });
 
   return (
     <>
@@ -150,6 +179,7 @@ function MatchRow({ match, roster, expanded, onToggle, onDelete, workspaceId }) 
                 savedLineup={lineup}
                 lineupLoading={lineupLoading}
                 workspaceId={workspaceId}
+                tour={tour}
               />
             </Box>
           </Collapse>
@@ -159,31 +189,63 @@ function MatchRow({ match, roster, expanded, onToggle, onDelete, workspaceId }) 
   );
 }
 
-function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId }) {
+function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId, tour }) {
   const [rows, setRows] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Only seed `rows` from the server once per match — never again while this
-  // form stays mounted, so a background SWR revalidation of `savedLineup`
-  // (e.g. touchEngagement() from another tab) can't silently overwrite
-  // unsaved edits in progress. Re-arms only when `matchId` actually changes.
-  const initializedRef = useRef(false);
+  // Re-seed `rows` from the server every time `savedLineup` changes (e.g. a
+  // player signs up for the linked calendar event from another tab) — but
+  // only for players the coach hasn't touched *in this unsaved session*, so
+  // a background revalidation can't clobber an edit that's still in
+  // progress. `dirtyRef` tracks who's been locally edited since the last
+  // load/save; it resets when the match changes or a save completes.
+  const dirtyRef = useRef(new Set());
+  const prevMatchIdRef = useRef(matchId);
+
+  // Keep the persisted lineup's "called up" in sync with who's *really*
+  // signed up on the linked calendar event's Tour (backend-backed, so this
+  // is true regardless of which device the player or the coach are on).
+  // Only touches players with a real account tied to a Tour booker — a
+  // guest roster entry, or a real player who never touched the calendar
+  // for this event, stays fully coach-managed via the toggle below.
+  useEffect(() => {
+    if (!tour?.bookers || lineupLoading) return;
+    roster.forEach((p) => {
+      if (!p.user_id) return;
+      const approved = tour.bookers[p.user_id]?.approved === true;
+      const saved = savedLineup?.entries?.find((e) => e.roster_entry_id === p.id);
+      const persistedCalledUp = saved?.called_up ?? false;
+      if (persistedCalledUp === approved) return;
+      setEngagementCalledUp(matchId, p.id, approved, workspaceId).catch((error) =>
+        console.error(error)
+      );
+    });
+  }, [tour, roster, savedLineup, lineupLoading, matchId, workspaceId]);
 
   useEffect(() => {
-    initializedRef.current = false;
+    if (prevMatchIdRef.current !== matchId) {
+      dirtyRef.current = new Set();
+      prevMatchIdRef.current = matchId;
+    }
   }, [matchId]);
 
   useEffect(() => {
-    if (initializedRef.current || lineupLoading) return;
-    const next = {};
-    roster.forEach((p) => {
-      const saved = savedLineup?.entries?.find((e) => e.roster_entry_id === p.id);
-      next[p.id] = saved || { roster_entry_id: p.id, called_up: false, status: '', minutes: 0 };
+    if (lineupLoading) return;
+    setRows((prev) => {
+      const next = {};
+      roster.forEach((p) => {
+        if (dirtyRef.current.has(p.id) && prev[p.id]) {
+          next[p.id] = prev[p.id];
+          return;
+        }
+        const saved = savedLineup?.entries?.find((e) => e.roster_entry_id === p.id);
+        next[p.id] = saved || { roster_entry_id: p.id, called_up: false, status: '', minutes: 0 };
+      });
+      return next;
     });
-    setRows(next);
-    initializedRef.current = true;
-  }, [roster, savedLineup, lineupLoading]);
+  }, [roster, savedLineup, lineupLoading, matchId]);
 
   const updateRow = (playerId, patch) => {
+    dirtyRef.current.add(playerId);
     setRows((prev) => ({ ...prev, [playerId]: { ...prev[playerId], ...patch } }));
   };
 
@@ -196,6 +258,7 @@ function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId }
     try {
       setIsSubmitting(true);
       await saveEngagementLineup(matchId, values, workspaceId);
+      dirtyRef.current = new Set();
       toast.success('Convocatoria guardada');
     } catch (error) {
       toast.error(error.message || 'Error al guardar');

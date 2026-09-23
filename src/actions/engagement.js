@@ -57,6 +57,20 @@ function touchEngagement() {
   mutate((key) => typeof key === 'string' && key.startsWith('mock-engagement'));
 }
 
+// Cross-tab live sync: localStorage writes only fire a "storage" event on
+// OTHER tabs/windows of the same browser (never the tab that wrote it, which
+// already re-renders via touchEngagement() above). Without this, a second
+// open tab — e.g. a coach reviewing Torneos del Club while a player signs up
+// from her own tab — would keep showing stale data until it's reloaded.
+// This can't reach a different device/browser; that needs a real backend.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key && event.key.startsWith('jmanage_mock_engagement')) {
+      touchEngagement();
+    }
+  });
+}
+
 // ── Torneos (participación externa) ──────────────────────────────────
 
 export function useGetEngagementTournaments(workspaceId) {
@@ -64,7 +78,10 @@ export function useGetEngagementTournaments(workspaceId) {
   const { data, isLoading } = useSWR(key, () =>
     readList(scopedKey(TOURNAMENTS_KEY_BASE, workspaceId))
   );
-  return useMemo(() => ({ tournaments: data || [], tournamentsLoading: isLoading }), [data, isLoading]);
+  return useMemo(
+    () => ({ tournaments: data || [], tournamentsLoading: isLoading }),
+    [data, isLoading]
+  );
 }
 
 export async function createEngagementTournament({ name, category }, workspaceId) {
@@ -127,19 +144,28 @@ function joinRosterEntry(entry, users) {
 }
 
 export function useGetEngagementRoster(tournamentId, users, workspaceId) {
-  const key = tournamentId && workspaceId ? `mock-engagement-roster-${workspaceId}-${tournamentId}` : null;
+  const key =
+    tournamentId && workspaceId ? `mock-engagement-roster-${workspaceId}-${tournamentId}` : null;
   const { data, isLoading } = useSWR(key, () =>
-    readList(scopedKey(ROSTER_KEY_BASE, workspaceId)).filter((r) => r.tournament_id === tournamentId)
+    readList(scopedKey(ROSTER_KEY_BASE, workspaceId)).filter(
+      (r) => r.tournament_id === tournamentId
+    )
   );
-  const roster = useMemo(() => (data || []).map((e) => joinRosterEntry(e, users || [])), [data, users]);
+  const roster = useMemo(
+    () => (data || []).map((e) => joinRosterEntry(e, users || [])),
+    [data, users]
+  );
   return { roster, rosterLoading: isLoading };
 }
 
 // Every tournament a given user_id is rostered in, across this workspace.
 export function useGetEngagementTournamentsForUser(userId, workspaceId) {
-  const key = userId && workspaceId ? `mock-engagement-user-tournaments-${workspaceId}-${userId}` : null;
+  const key =
+    userId && workspaceId ? `mock-engagement-user-tournaments-${workspaceId}-${userId}` : null;
   const { data, isLoading } = useSWR(key, () => {
-    const roster = readList(scopedKey(ROSTER_KEY_BASE, workspaceId)).filter((r) => r.user_id === userId);
+    const roster = readList(scopedKey(ROSTER_KEY_BASE, workspaceId)).filter(
+      (r) => r.user_id === userId
+    );
     const tournaments = readList(scopedKey(TOURNAMENTS_KEY_BASE, workspaceId));
     return roster
       .map((entry) => ({
@@ -181,14 +207,18 @@ export async function updateEngagementRosterEntry(entryId, patch, workspaceId) {
 
 export async function removeFromEngagementRoster(entryId, workspaceId) {
   const key = scopedKey(ROSTER_KEY_BASE, workspaceId);
-  writeList(key, readList(key).filter((r) => r.id !== entryId));
+  writeList(
+    key,
+    readList(key).filter((r) => r.id !== entryId)
+  );
   touchEngagement();
 }
 
 // ── Partidos (simples: fecha + rival) ────────────────────────────────
 
 export function useGetEngagementMatches(tournamentId, workspaceId) {
-  const key = tournamentId && workspaceId ? `mock-engagement-matches-${workspaceId}-${tournamentId}` : null;
+  const key =
+    tournamentId && workspaceId ? `mock-engagement-matches-${workspaceId}-${tournamentId}` : null;
   const { data, isLoading } = useSWR(key, () =>
     readList(scopedKey(MATCHES_KEY_BASE, workspaceId))
       .filter((m) => m.tournament_id === tournamentId)
@@ -223,7 +253,10 @@ export async function deleteEngagementMatch(matchId, workspaceId) {
 
 export function useGetEngagementLineup(matchId, workspaceId) {
   const key = matchId && workspaceId ? `mock-engagement-lineup-${workspaceId}-${matchId}` : null;
-  const { data, isLoading } = useSWR(key, () => readMap(scopedKey(LINEUPS_KEY_BASE, workspaceId))[matchId] || null);
+  const { data, isLoading } = useSWR(
+    key,
+    () => readMap(scopedKey(LINEUPS_KEY_BASE, workspaceId))[matchId] || null
+  );
   return { lineup: data || null, lineupLoading: isLoading };
 }
 
@@ -237,9 +270,38 @@ export async function saveEngagementLineup(matchId, entries, workspaceId) {
   return lineups[matchId];
 }
 
+// Plain (non-hook) roster lookup, for use outside render — matches a real
+// user_id (e.g. from a calendar event's participants, or a Tour's bookers)
+// against this tournament's roster.
+export function getEngagementRosterEntryId(tournamentId, userId, workspaceId) {
+  if (!tournamentId || !userId || !workspaceId) return null;
+  const roster = readList(scopedKey(ROSTER_KEY_BASE, workspaceId));
+  const entry = roster.find((r) => r.tournament_id === tournamentId && r.user_id === userId);
+  return entry?.id || null;
+}
+
+// Toggles a single roster entry's called-up flag for a match without
+// clobbering the rest of the lineup. "Convocado" is driven live from the
+// real Tour tied to the match's calendar event (see MatchesPanel), which is
+// backend-backed and thus in sync across devices; this write-through just
+// keeps the persisted lineup (used by Compromiso stats) matching that.
+export async function setEngagementCalledUp(matchId, rosterEntryId, calledUp, workspaceId) {
+  const key = scopedKey(LINEUPS_KEY_BASE, workspaceId);
+  const lineups = readMap(key);
+  const current = lineups[matchId]?.entries || [];
+  const entries = current.some((e) => e.roster_entry_id === rosterEntryId)
+    ? current.map((e) => (e.roster_entry_id === rosterEntryId ? { ...e, called_up: calledUp } : e))
+    : [...current, { roster_entry_id: rosterEntryId, called_up: calledUp, status: '', minutes: 0 }];
+  lineups[matchId] = { entries, saved_at: new Date().toISOString() };
+  writeMap(key, lineups);
+  touchEngagement();
+  return lineups[matchId];
+}
+
 export function useGetEngagementLineupsForMatches(matchIds, workspaceId) {
   const ids = (matchIds || []).slice().sort();
-  const key = ids.length && workspaceId ? `mock-engagement-lineups-${workspaceId}-${ids.join(',')}` : null;
+  const key =
+    ids.length && workspaceId ? `mock-engagement-lineups-${workspaceId}-${ids.join(',')}` : null;
   const { data, isLoading } = useSWR(key, () => {
     const lineups = readMap(scopedKey(LINEUPS_KEY_BASE, workspaceId));
     const map = {};
@@ -276,7 +338,16 @@ export function computeCompromisoStats(roster, lineupsByMatch) {
     const pj = titulares + suplentes;
     const compromiso = partidosRegistrados > 0 ? vecesConvocado / partidosRegistrados : 0;
 
-    return { player, vecesConvocado, partidosRegistrados, compromiso, pj, titulares, suplentes, minutos };
+    return {
+      player,
+      vecesConvocado,
+      partidosRegistrados,
+      compromiso,
+      pj,
+      titulares,
+      suplentes,
+      minutos,
+    };
   });
 }
 
@@ -289,12 +360,28 @@ export function computeCompromisoStats(roster, lineupsByMatch) {
 // Partido de Compromiso para ese torneo, usando el título del evento como
 // rival y su fecha de inicio. Borrar el vínculo no borra el evento real.
 export function useGetCalendarEventLink(calendarEventId, workspaceId) {
-  const key = calendarEventId && workspaceId ? `mock-engagement-cal-link-${workspaceId}-${calendarEventId}` : null;
+  const key =
+    calendarEventId && workspaceId
+      ? `mock-engagement-cal-link-${workspaceId}-${calendarEventId}`
+      : null;
   const { data, isLoading } = useSWR(
     key,
     () => readMap(scopedKey(CALENDAR_LINKS_KEY_BASE, workspaceId))[calendarEventId] || null
   );
   return { link: data || null, linkLoading: isLoading };
+}
+
+// Reverse lookup (matchId -> calendarEventId), for matches created before
+// they started carrying calendar_event_id directly on the record.
+export function useGetCalendarEventIdForMatch(matchId, workspaceId) {
+  const key =
+    matchId && workspaceId ? `mock-engagement-cal-link-reverse-${workspaceId}-${matchId}` : null;
+  const { data, isLoading } = useSWR(key, () => {
+    const links = readMap(scopedKey(CALENDAR_LINKS_KEY_BASE, workspaceId));
+    const entry = Object.entries(links).find(([, link]) => link.match_id === matchId);
+    return entry?.[0] || null;
+  });
+  return { calendarEventId: data || null, calendarEventIdLoading: isLoading };
 }
 
 // { tournament_id, date: 'YYYY-MM-DD', rival }
@@ -315,7 +402,12 @@ export async function linkCalendarEventToTournament(calendarEventId, payload, wo
     const matches = readList(matchesKey);
     const idx = matches.findIndex((m) => m.id === matchId);
     if (idx !== -1) {
-      matches[idx] = { ...matches[idx], date: payload.date, rival: payload.rival };
+      matches[idx] = {
+        ...matches[idx],
+        date: payload.date,
+        rival: payload.rival,
+        calendar_event_id: payload.calendar_event_id || calendarEventId,
+      };
       writeList(matchesKey, matches);
     }
   } else {
@@ -324,6 +416,7 @@ export async function linkCalendarEventToTournament(calendarEventId, payload, wo
         tournament_id: payload.tournament_id,
         date: payload.date,
         rival: payload.rival,
+        calendar_event_id: payload.calendar_event_id || calendarEventId,
       },
       workspaceId
     );

@@ -79,6 +79,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   useEffect(() => {
     setTorneoId(existingLink?.tournament_id || '');
   }, [existingLink]);
+
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(EventSchema),
@@ -140,6 +141,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
             tournament_id: torneoId,
             date: dayjs(data.start).format('YYYY-MM-DD'),
             rival: eventData.title,
+            calendar_event_id: savedEventId,
           },
           selectedWorkspace?.id
         );
@@ -157,10 +159,14 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const handleChangeIsParticipating = useCallback(
     async (event) => {
+      const { checked } = event.target;
       try {
-        setIsParticipating(event.target.checked);
-        await participateEvent(`${currentEvent?.id}`, event.target.checked, selectedWorkspace?.id);
+        setIsParticipating(checked);
+        await participateEvent(`${currentEvent?.id}`, checked, selectedWorkspace?.id);
         toast.success(t('label_participate_success'));
+        // Whether this shows up as "called up" on the linked match's
+        // lineup is derived live from this event's real participants list
+        // (see MatchesPanel / LineupForm) — no local copy to keep in sync.
       } catch (error) {
         console.error(error);
       }
