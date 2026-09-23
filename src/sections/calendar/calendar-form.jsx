@@ -1,13 +1,15 @@
+import dayjs from 'dayjs';
 import { z as zod } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
+import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
@@ -21,6 +23,12 @@ import { fIsAfter, fTimestamp } from 'src/utils/format-time';
 
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/actions/calendar';
+import {
+  unlinkCalendarEvent,
+  useGetCalendarEventLink,
+  useGetEngagementTournaments,
+  linkCalendarEventToTournament,
+} from 'src/actions/engagement';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -64,6 +72,14 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   );
   const EventSchema = useMemo(() => getEventSchema(t), [t]);
 
+  const { tournaments } = useGetEngagementTournaments(selectedWorkspace?.id);
+  const { link: existingLink } = useGetCalendarEventLink(currentEvent?.id, selectedWorkspace?.id);
+  const [torneoId, setTorneoId] = useState('');
+
+  useEffect(() => {
+    setTorneoId(existingLink?.tournament_id || '');
+  }, [existingLink]);
+
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(EventSchema),
@@ -99,29 +115,58 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       group: data?.group,
     };
 
+    if (dateError) return;
+
+    let savedEventId = eventData.id;
+
     try {
-      if (!dateError) {
-        if (currentEvent?.id) {
-          await updateEvent(eventData, selectedWorkspace?.id);
-          toast.success(t('update_success'));
-        } else {
-          await createEvent(eventData, selectedWorkspace?.id);
-          toast.success(t('create_success'));
-        }
-        onClose();
-        reset();
+      if (currentEvent?.id) {
+        await updateEvent(eventData, selectedWorkspace?.id);
+        toast.success(t('update_success'));
+      } else {
+        const created = await createEvent(eventData, selectedWorkspace?.id);
+        savedEventId = created?.data?.id || eventData.id;
+        toast.success(t('create_success'));
       }
     } catch (error) {
       console.error(error);
+      return;
     }
+
+    try {
+      if (data?.category === 'match' && torneoId) {
+        await linkCalendarEventToTournament(
+          savedEventId,
+          {
+            tournament_id: torneoId,
+            date: dayjs(data.start).format('YYYY-MM-DD'),
+            rival: eventData.title,
+            calendar_event_id: savedEventId,
+          },
+          selectedWorkspace?.id
+        );
+      } else if (existingLink) {
+        await unlinkCalendarEvent(savedEventId, selectedWorkspace?.id);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(t('label_tournament_link_error'));
+    }
+
+    onClose();
+    reset();
   });
 
   const handleChangeIsParticipating = useCallback(
     async (event) => {
+      const { checked } = event.target;
       try {
-        setIsParticipating(event.target.checked);
-        await participateEvent(`${currentEvent?.id}`, event.target.checked, selectedWorkspace?.id);
+        setIsParticipating(checked);
+        await participateEvent(`${currentEvent?.id}`, checked, selectedWorkspace?.id);
         toast.success(t('label_participate_success'));
+        // Whether this shows up as "called up" on the linked match's
+        // lineup is derived live from this event's real participants list
+        // (see MatchesPanel / LineupForm) — no local copy to keep in sync.
       } catch (error) {
         console.error(error);
       }
@@ -132,12 +177,13 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const onDelete = useCallback(async () => {
     try {
       await deleteEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
+      if (existingLink) await unlinkCalendarEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
       toast.success(t('delete_success'));
       onClose();
     } catch (error) {
       console.error(error);
     }
-  }, [currentEvent?.id, onClose, selectedWorkspace?.id, t]);
+  }, [currentEvent?.id, existingLink, onClose, selectedWorkspace?.id, t]);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
@@ -178,6 +224,24 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               />
             )}
           </Stack>
+
+          {values.category === 'match' && (
+            <TextField
+              select
+              label={t('label_tournament_optional')}
+              value={torneoId}
+              onChange={(e) => setTorneoId(e.target.value)}
+              disabled={!isAdminOrCoach}
+              helperText={t('label_tournament_help')}
+            >
+              <MenuItem value="">{t('label_tournament_none')}</MenuItem>
+              {tournaments.map((torneo) => (
+                <MenuItem key={torneo.id} value={torneo.id}>
+                  {torneo.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
             <Field.Select

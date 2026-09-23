@@ -43,6 +43,7 @@ export const paths = {
       top: `${ROOTS.DASHBOARD}/analytics/top`,
       lateArrives: `${ROOTS.DASHBOARD}/analytics/late-arrives`,
     },
+    clubTournaments: `${ROOTS.DASHBOARD}/club-tournaments`,
     calendar: `${ROOTS.DASHBOARD}/calendar`,
     admin: {
       user: {
@@ -115,5 +116,13 @@ export const paths = {
     teamOwner: {
       root: `${ROOTS.DASHBOARD}/team-owner`,
     },
+    trainingSessions: {
+      root: `${ROOTS.DASHBOARD}/training-sessions`,
+      list: `${ROOTS.DASHBOARD}/training-sessions`,
+      new: `${ROOTS.DASHBOARD}/training-sessions/new`,
+      details: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}`,
+      edit: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}/edit`,
+    },
+    aiAssistant: `${ROOTS.DASHBOARD}/ai-assistant`,
   },
 };
