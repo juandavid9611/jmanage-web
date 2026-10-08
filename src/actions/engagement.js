@@ -320,7 +320,9 @@ export function useGetCalendarEventLink(clubMatchId, tournaments, workspaceId) {
           .map((tid) => fetcher(url(`/${tid}/matches`, workspaceId)).then((ms) => ({ tid, ms })))
       );
       const hit = lists.find(({ ms }) => ms.some((m) => m.id === clubMatchId));
-      return hit ? { tournament_id: hit.tid, match_id: clubMatchId } : null;
+      if (!hit) return null;
+      const match = hit.ms.find((m) => m.id === clubMatchId);
+      return { tournament_id: hit.tid, match_id: clubMatchId, has_lineup: !!match.lineup };
     }
   );
   return { link: data || null, linkLoading: isLoading };

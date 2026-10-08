@@ -38,8 +38,8 @@ import { Iconify } from 'src/components/iconify';
 
 // A player's real sign-up/withdrawal on the linked calendar event lives on
 // a backend Tour (the same system that powers Entrenamientos attendance),
-// so it's already in sync across every device the instant it happens —
-// unlike the rest of this module, which is a per-browser localStorage mock.
+// so "Convocado" is driven live from the linked Tour. The rest of this module
+// is API-backed (club tournaments, roster, matches, lineups).
 // Polling this (rather than only refetching on focus) is what makes the
 // "Convocado" column pick up a sign-up/withdrawal without anyone reloading.
 const TOUR_POLL_MS = 12_000;

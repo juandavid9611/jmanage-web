@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -71,7 +71,13 @@ export function SessionListView() {
   const isCoach = workspaceRole === 'coach' || workspaceRole === 'admin' || workspaceRole === 'team_owner';
   const isReviewer = workspaceRole === 'admin' || workspaceRole === 'team_owner';
 
-  const [statusFilter, setStatusFilter] = useState(isReviewer ? 'sent' : '');
+  // Reviewers land on the pending ("sent") tab; workspaceRole arrives async, so
+  // seed it once it is known and only if the user hasn't picked a filter yet.
+  const [statusFilter, setStatusFilter] = useState('');
+  const filterTouchedRef = useRef(false);
+  useEffect(() => {
+    if (isReviewer && !filterTouchedRef.current) setStatusFilter('sent');
+  }, [isReviewer]);
 
   const { sessions, countsByStatus, sessionsLoading, sessionsError } =
     useGetTrainingSessions(selectedWorkspace);
@@ -128,6 +134,7 @@ export function SessionListView() {
   );
 
   const handleStatusChange = useCallback((_, newValue) => {
+    filterTouchedRef.current = true;
     setStatusFilter(newValue);
     setSelectedMonth(null);
   }, []);

@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { mutate } from 'swr';
 import { z as zod } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +20,7 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { uuidv4 } from 'src/utils/uuidv4';
+import { endpoints } from 'src/utils/axios';
 import { fIsAfter, fTimestamp } from 'src/utils/format-time';
 
 import { useWorkspace } from 'src/workspace/workspace-provider';
@@ -37,6 +39,11 @@ import { Form, Field } from 'src/components/hook-form';
 import { ColorPicker } from 'src/components/color-utils';
 
 import { useAuthContext } from 'src/auth/hooks';
+
+// The server sets calendarEventId and syncs date/rival on the linked match
+// after the match was cached, so club data must be refetched after event writes.
+const revalidateClub = () =>
+  mutate((key) => typeof key === 'string' && key.startsWith(endpoints.clubTournaments));
 
 // ----------------------------------------------------------------------
 
@@ -180,7 +187,13 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     }
 
     // The tournament changed: the match auto-created for this event under the old tournament is orphaned now.
-    if (newMatchId && existingLink && existingLink.tournament_id !== torneoId) {
+    // Keep it if it already has a saved lineup (that data would be lost).
+    if (
+      newMatchId &&
+      existingLink &&
+      existingLink.tournament_id !== torneoId &&
+      !existingLink.has_lineup
+    ) {
       deleteEngagementMatch(existingLink.tournament_id, existingLink.match_id, selectedWorkspace?.id).catch(
         (error) => {
           console.error(error);
@@ -189,6 +202,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       );
     }
 
+    revalidateClub();
     onClose();
     reset();
   });
@@ -214,6 +228,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     try {
       // The API clears the linked match's calendarEventId on delete.
       await deleteEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
+      revalidateClub();
       toast.success(t('delete_success'));
       onClose();
     } catch (error) {
