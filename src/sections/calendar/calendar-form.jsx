@@ -130,7 +130,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     let clubMatchId; // undefined => untouched
 
     if (wantsLink && existingLink?.tournament_id === torneoId) {
-      clubMatchId = currentEvent.clubMatchId;
+      ({ clubMatchId } = currentEvent);
     } else if (wantsLink) {
       // New link, or the tournament changed: a match must exist before the event can point at it.
       try {
