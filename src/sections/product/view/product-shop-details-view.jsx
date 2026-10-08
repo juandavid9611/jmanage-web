@@ -151,7 +151,7 @@ export function ProductShopDetailsView({ product, error, loading }) {
         >
           {[
             { value: 'description', label: t('label_description') },
-            { value: 'reviews', label: `${t('label_reviews')} (${product?.reviews.length})` },
+            { value: 'reviews', label: `${t('label_reviews')} (${product?.reviews?.length ?? 0})` },
           ].map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} />
           ))}

@@ -14,6 +14,12 @@ const swrOptions = {
 // ----------------------------------------------------------------------
 const URL = endpoints.orders;
 
+// SWR keys can be strings or [url, config] tuples.
+const isOrderKey = (key) => {
+  const url = Array.isArray(key) ? key[0] : key;
+  return typeof url === 'string' && url.startsWith(URL);
+};
+
 export function useGetOrders() {
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
 
@@ -53,19 +59,19 @@ export function useGetOrder(orderId) {
 
 export async function createOrder(orderData) {
   const res = await axiosInstance.post(URL, orderData);
-  mutate((key) => key.startsWith(URL), undefined, { revalidate: true });
+  mutate(isOrderKey, undefined, { revalidate: true });
   return res.data;
 }
 
 export async function updateOrder(id, orderData) {
   const res = await axiosInstance.put(`${URL}/${id}`, orderData);
-  mutate((key) => key.startsWith(URL), undefined, { revalidate: false });
+  mutate(isOrderKey, undefined, { revalidate: false });
   return res.data;
 }
 
 export async function deleteOrder(id) {
   const res = await axiosInstance.delete(`${URL}/${id}`);
-  mutate((key) => key.startsWith(URL), undefined, { revalidate: true });
+  mutate(isOrderKey, undefined, { revalidate: true });
   return res;
 }
 

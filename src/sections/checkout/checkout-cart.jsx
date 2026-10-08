@@ -72,7 +72,6 @@ export function CheckoutCart() {
           total={checkout.total}
           discount={checkout.discount}
           subtotal={checkout.subtotal}
-          onApplyDiscount={checkout.onApplyDiscount}
         />
 
         <Button

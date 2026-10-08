@@ -7,7 +7,9 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
 import Divider from '@mui/material/Divider';
 import CardHeader from '@mui/material/CardHeader';
@@ -19,7 +21,14 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { createProduct, updateProduct } from 'src/actions/product';
+import { hasSalePrice } from 'src/utils/product-price';
+
+import {
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  uploadProductImages,
+} from 'src/actions/product';
 import {
   _tags,
   PRODUCT_SIZE_OPTIONS,
@@ -34,40 +43,91 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 export function getNewProductSchema(t) {
-  return zod.object({
-    name: zod.string().min(1, { message: t('name_required') }),
-    description: schemaHelper.editor({
-      message: { required_error: t('description_required') },
-    }),
-    images: schemaHelper.files({ message: { required_error: t('label_images_required') } }),
-    code: zod.string().min(1, { message: t('label_product_code_required') }),
-    sku: zod.string().min(1, { message: t('label_product_sku_required') }),
-    quantity: zod.number().min(1, { message: t('label_quantity_required') }),
-    colors: zod
-      .string()
-      .array()
-      .nonempty({ message: t('label_choose_at_least_one_option') }),
-    sizes: zod
-      .string()
-      .array()
-      .nonempty({ message: t('label_choose_at_least_one_option') }),
-    tags: zod
-      .string()
-      .array()
-      .min(2, { message: t('label_must_have_at_least_2_items') }),
-    gender: zod
-      .string()
-      .array()
-      .nonempty({ message: t('label_choose_at_least_one_option') }),
-    price: zod.number().min(1, { message: t('label_price_not_zero') }),
-    // Not required
-    category: zod.string(),
-    priceSale: zod.number(),
-    subDescription: zod.string(),
-    taxes: zod.number(),
-    saleLabel: zod.object({ enabled: zod.boolean(), content: zod.string() }),
-    newLabel: zod.object({ enabled: zod.boolean(), content: zod.string() }),
-  });
+  return zod
+    .object({
+      name: zod.string().min(1, { message: t('name_required') }),
+      description: schemaHelper.editor({
+        message: { required_error: t('description_required') },
+      }),
+      images: schemaHelper.files({ message: { required_error: t('label_images_required') } }),
+      code: zod.string().min(1, { message: t('label_product_code_required') }),
+      sku: zod.string().min(1, { message: t('label_product_sku_required') }),
+      quantity: zod
+        .number({ invalid_type_error: t('label_quantity_required') })
+        .int()
+        .min(0, { message: t('label_quantity_not_negative') }),
+      available: zod
+        .number()
+        .int()
+        .min(0, { message: t('label_quantity_not_negative') }),
+      colors: zod
+        .string()
+        .array()
+        .nonempty({ message: t('label_choose_at_least_one_option') }),
+      sizes: zod
+        .string()
+        .array()
+        .nonempty({ message: t('label_choose_at_least_one_option') }),
+      tags: zod
+        .string()
+        .array()
+        .min(2, { message: t('label_must_have_at_least_2_items') }),
+      gender: zod
+        .string()
+        .array()
+        .nonempty({ message: t('label_choose_at_least_one_option') }),
+      price: zod.number().min(1, { message: t('label_price_not_zero') }),
+      // Not required. priceSale 0 / empty means "no discount" and is never sent to the API.
+      category: zod.string(),
+      priceSale: zod.number().min(0),
+      subDescription: zod.string(),
+      taxes: zod.number().min(0, { message: t('label_taxes_not_negative') }),
+      isPublished: zod.boolean(),
+      newLabel: zod.object({ enabled: zod.boolean(), content: zod.string() }),
+    })
+    .superRefine((data, ctx) => {
+      if (data.priceSale > 0 && data.priceSale >= data.price) {
+        ctx.addIssue({
+          code: zod.ZodIssueCode.custom,
+          path: ['priceSale'],
+          message: t('label_sale_price_lower'),
+        });
+      }
+    });
+}
+
+// Body for POST/PUT /products. Contract: `available` is the sellable stock (= quantity on
+// create); `priceSale` is sent only when it is a real discount, and cleared with an explicit
+// null on edit when the product had one and the field was emptied. The sale label is derived
+// by the API from priceSale, so it is not sent.
+function buildProductPayload(data, currentProduct) {
+  const payload = {
+    name: data.name.trim(),
+    category: data.category,
+    price: data.price,
+    quantity: data.quantity,
+    available: currentProduct ? data.available : data.quantity,
+    taxes: data.taxes,
+    publish: data.isPublished ? 'published' : 'draft',
+    code: data.code,
+    sku: data.sku,
+    description: data.description,
+    subDescription: data.subDescription,
+    gender: data.gender,
+    tags: data.tags,
+    colors: data.colors,
+    sizes: data.sizes,
+    newLabel: data.newLabel,
+    images: data.images,
+  };
+
+  if (data.priceSale > 0) {
+    payload.priceSale = data.priceSale;
+  } else if (currentProduct?.priceSale != null) {
+    payload.priceSale = null;
+  }
+
+  return payload;
 }
 
 // ----------------------------------------------------------------------
@@ -77,7 +137,9 @@ export function ProductNewEditForm({ currentProduct }) {
   const router = useRouter();
 
   const [includeTaxes, setIncludeTaxes] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
+  // Set when the product was created but its images failed to upload (create is not atomic).
+  const [orphan, setOrphan] = useState(null);
+  const [orphanBusy, setOrphanBusy] = useState(false);
 
   const defaultValues = useMemo(
     () => ({
@@ -90,7 +152,9 @@ export function ProductNewEditForm({ currentProduct }) {
       sku: currentProduct?.sku || '',
       price: currentProduct?.price || 0,
       quantity: currentProduct?.quantity || 0,
-      priceSale: currentProduct?.priceSale || 0,
+      available: currentProduct?.available ?? 0,
+      priceSale: currentProduct && hasSalePrice(currentProduct) ? currentProduct.priceSale : 0,
+      isPublished: currentProduct ? currentProduct.publish !== 'draft' : true,
       tags: currentProduct?.tags || [],
       taxes: currentProduct?.taxes || 0,
       gender: currentProduct?.gender || [],
@@ -98,7 +162,6 @@ export function ProductNewEditForm({ currentProduct }) {
       colors: currentProduct?.colors || [],
       sizes: currentProduct?.sizes || [],
       newLabel: currentProduct?.newLabel || { enabled: false, content: '' },
-      saleLabel: currentProduct?.saleLabel || { enabled: false, content: '' },
     }),
     [currentProduct]
   );
@@ -135,21 +198,54 @@ export function ProductNewEditForm({ currentProduct }) {
   }, [currentProduct?.taxes, includeTaxes, setValue]);
 
   const onSubmit = handleSubmit(async (data) => {
+    const payload = buildProductPayload(data, currentProduct);
+
     try {
       if (currentProduct) {
-        await updateProduct(currentProduct.id, data);
+        await updateProduct(currentProduct.id, payload, currentProduct.images || []);
         toast.success(t('update_success'));
       } else {
-        await createProduct(data);
+        await createProduct(payload);
         toast.success(t('create_success'));
       }
     } catch (error) {
-      toast.error(error.message);
+      if (error.imageUploadFailed) {
+        setOrphan({ product: error.product, files: data.images });
+        toast.error(t('label_product_images_upload_failed'));
+      } else {
+        toast.error(error.message || t('label_product_save_failed'));
+      }
+      return;
     }
-    reset();
+
     router.push(paths.dashboard.product.root);
-    console.info('DATA', data);
   });
+
+  const handleRetryImages = useCallback(async () => {
+    setOrphanBusy(true);
+    try {
+      await uploadProductImages(orphan.product.id, orphan.files);
+      toast.success(t('create_success'));
+      router.push(paths.dashboard.product.root);
+    } catch (error) {
+      toast.error(error.message || t('label_product_images_upload_failed'));
+    } finally {
+      setOrphanBusy(false);
+    }
+  }, [orphan, router, t]);
+
+  const handleDeleteOrphan = useCallback(async () => {
+    setOrphanBusy(true);
+    try {
+      await deleteProduct(orphan.product.id);
+      setOrphan(null);
+      toast.success(t('delete_success'));
+    } catch (error) {
+      toast.error(error.message || t('label_failed_to_delete_product'));
+    } finally {
+      setOrphanBusy(false);
+    }
+  }, [orphan, t]);
 
   const handleRemoveFile = useCallback(
     (inputFile) => {
@@ -166,13 +262,6 @@ export function ProductNewEditForm({ currentProduct }) {
   const handleChangeIncludeTaxes = useCallback((event) => {
     setIncludeTaxes(event.target.checked);
   }, []);
-
-  const handleUpload = useCallback(() => {
-    setUploadingImages(true);
-    toast.info(t('label_images_uploaded_on_save'));
-    // Images are uploaded during form submission in onSubmit
-    setUploadingImages(false);
-  }, [t]);
 
   const renderDetails = (
     <Card>
@@ -203,7 +292,7 @@ export function ProductNewEditForm({ currentProduct }) {
             maxSize={3145728}
             onRemove={handleRemoveFile}
             onRemoveAll={handleRemoveAllFiles}
-            onUpload={handleUpload}
+            accept={{ 'image/jpeg': [], 'image/png': [], 'image/webp': [], 'image/gif': [] }}
           />
         </Stack>
       </Stack>
@@ -238,6 +327,16 @@ export function ProductNewEditForm({ currentProduct }) {
             type="number"
             InputLabelProps={{ shrink: true }}
           />
+
+          {currentProduct && (
+            <Field.Text
+              name="available"
+              label={t('label_available')}
+              placeholder="0"
+              type="number"
+              InputLabelProps={{ shrink: true }}
+            />
+          )}
 
           <Field.Select
             native
@@ -307,16 +406,6 @@ export function ProductNewEditForm({ currentProduct }) {
         <Divider sx={{ borderStyle: 'dashed' }} />
 
         <Stack direction="row" alignItems="center" spacing={3}>
-          <Field.Switch name="saleLabel.enabled" label={null} sx={{ m: 0 }} />
-          <Field.Text
-            name="saleLabel.content"
-            label={t('label_sale_label')}
-            fullWidth
-            disabled={!values.saleLabel.enabled}
-          />
-        </Stack>
-
-        <Stack direction="row" alignItems="center" spacing={3}>
           <Field.Switch name="newLabel.enabled" label={null} sx={{ m: 0 }} />
           <Field.Text
             name="newLabel.content"
@@ -360,6 +449,7 @@ export function ProductNewEditForm({ currentProduct }) {
         <Field.Text
           name="priceSale"
           label={t('label_sale_price')}
+          helperText={t('label_sale_price_helper')}
           placeholder="0.00"
           type="number"
           InputLabelProps={{ shrink: true }}
@@ -403,15 +493,50 @@ export function ProductNewEditForm({ currentProduct }) {
     </Card>
   );
 
+  const renderOrphan = !!orphan && (
+    <Alert severity="error">
+      <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+        {t('label_product_images_upload_failed')}
+      </Typography>
+
+      <Typography variant="body2" sx={{ mb: 2 }}>
+        {t('label_product_images_upload_failed_desc')}
+      </Typography>
+
+      <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={orphanBusy}
+          onClick={handleRetryImages}
+        >
+          {t('label_retry_image_upload')}
+        </LoadingButton>
+
+        <Button
+          size="small"
+          color="error"
+          variant="soft"
+          disabled={orphanBusy}
+          onClick={handleDeleteOrphan}
+        >
+          {t('label_delete_product')}
+        </Button>
+      </Stack>
+    </Alert>
+  );
+
   const renderActions = (
     <Stack spacing={3} direction="row" alignItems="center" flexWrap="wrap">
-      <FormControlLabel
-        control={<Switch defaultChecked inputProps={{ id: 'publish-switch' }} />}
-        label={t('label_publish')}
-        sx={{ pl: 3, flexGrow: 1 }}
-      />
+      <Field.Switch name="isPublished" label={t('label_publish')} sx={{ pl: 3, flexGrow: 1 }} />
 
-      <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting}>
+      <LoadingButton
+        type="submit"
+        variant="contained"
+        size="large"
+        loading={isSubmitting}
+        disabled={!!orphan}
+      >
         {!currentProduct ? t('label_create_product') : t('save_changes')}
       </LoadingButton>
     </Stack>
@@ -425,6 +550,8 @@ export function ProductNewEditForm({ currentProduct }) {
         {renderProperties}
 
         {renderPricing}
+
+        {renderOrphan}
 
         {renderActions}
       </Stack>

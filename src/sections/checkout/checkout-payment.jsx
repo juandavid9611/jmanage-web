@@ -11,6 +11,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { createOrder } from 'src/actions/order';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 
+import { toast } from 'src/components/snackbar';
 import { Form } from 'src/components/hook-form';
 import { Iconify } from 'src/components/iconify';
 
@@ -69,6 +70,21 @@ const PAYMENT_OPTIONS = [
 
 const CARD_OPTIONS = [];
 
+// Maps API failures on POST /orders to a clear Spanish message (i18n keys). The API replies
+// with { detail } text; status codes are the primary signal, detail text is a fallback.
+function getOrderErrorKey(error) {
+  const detail = typeof error?.detail === 'string' ? error.detail : error?.message || '';
+
+  if (error?.status === 409 || /stock|available|insufficient/i.test(detail)) {
+    return 'label_order_error_stock';
+  }
+  if (error?.status === 502) return 'label_order_error_payment_request';
+  if (error?.status === 404) return 'label_order_error_product_unavailable';
+  if (error?.status === 403) return 'label_order_error_forbidden';
+  if (error?.status === 400 || error?.status === 422) return 'label_order_error_invalid';
+  return 'label_order_error_generic';
+}
+
 export function getPaymentSchema(t) {
   return zod.object({
     payment: zod.string().min(1, { message: t('label_select_payment_method') }),
@@ -101,19 +117,21 @@ export function CheckoutPayment() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       const deliveryOption = DELIVERY_OPTIONS.find((option) => option.value === data.delivery);
+
+      // Items carry only what the user chose; the server loads the products and recomputes
+      // subtotal/total itself. `shipping` is one of the fixed DELIVERY_OPTIONS values and
+      // `discount` is always 0.
       const orderData = {
         workspaceId: selectedWorkspace?.id,
         items: checkout.items.map((item) => ({
-          ...item,
-          sku: item.sku || item.id,
+          productId: item.id,
+          quantity: item.quantity,
+          ...(item.colors?.[0] && { color: item.colors[0] }),
+          ...(item.size && { size: item.size }),
         })),
-        subtotal: checkout.subtotal,
-        shipping: data.delivery,
-        discount: checkout.discount,
-        totalAmount: checkout.subtotal - checkout.discount + data.delivery,
-        totalQuantity: checkout.totalItems,
+        shipping: deliveryOption?.value ?? 0,
+        discount: 0, // no client-controlled discounts: price reductions come from product.priceSale
         customer: {
-          id: user?.id,
           name: user?.displayName || user?.name,
           email: user?.email,
           phoneNumber: user?.phone_number || user?.phoneNumber || '',
@@ -137,6 +155,7 @@ export function CheckoutPayment() {
       checkout.onReset();
     } catch (error) {
       console.error(error);
+      toast.error(t(getOrderErrorKey(error)));
     }
   });
 

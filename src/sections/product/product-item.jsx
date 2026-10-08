@@ -11,6 +11,7 @@ import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
 import { fCurrency } from 'src/utils/format-number';
+import { getLivePrice, hasSalePrice } from 'src/utils/product-price';
 
 import { Label } from 'src/components/label';
 import { Image } from 'src/components/image';
@@ -25,8 +26,13 @@ export function ProductItem({ product }) {
   const { t } = useTranslation();
   const checkout = useCheckoutContext();
 
-  const { id, name, coverUrl, price, colors, available, sizes, priceSale, newLabel, saleLabel } =
-    product;
+  const { id, name, coverUrl, price, available, newLabel, saleLabel } = product;
+
+  const colors = product.colors ?? [];
+  const sizes = product.sizes ?? [];
+
+  const onSale = hasSalePrice(product);
+  const livePrice = getLivePrice(product);
 
   const linkTo = paths.dashboard.shop.details(id);
 
@@ -36,9 +42,9 @@ export function ProductItem({ product }) {
       name,
       coverUrl,
       available,
-      price,
-      colors: [colors[0]],
-      size: sizes[0],
+      price: livePrice, // live (discounted) price, display only: the server recomputes totals
+      colors: colors.length ? [colors[0]] : [],
+      size: sizes[0] ?? '',
       quantity: 1,
     };
     try {
@@ -48,7 +54,7 @@ export function ProductItem({ product }) {
     }
   };
 
-  const renderLabels = (newLabel.enabled || saleLabel.enabled) && (
+  const renderLabels = (newLabel?.enabled || saleLabel?.enabled) && (
     <Stack
       direction="row"
       alignItems="center"
@@ -60,12 +66,12 @@ export function ProductItem({ product }) {
         right: 16,
       }}
     >
-      {newLabel.enabled && (
+      {newLabel?.enabled && (
         <Label variant="filled" color="info">
           {newLabel.content}
         </Label>
       )}
-      {saleLabel.enabled && (
+      {saleLabel?.enabled && (
         <Label variant="filled" color="error">
           {saleLabel.content}
         </Label>
@@ -119,13 +125,13 @@ export function ProductItem({ product }) {
         <ColorPreview colors={colors} />
 
         <Stack direction="row" spacing={0.5} sx={{ typography: 'subtitle1' }}>
-          {priceSale && (
+          {onSale && (
             <Box component="span" sx={{ color: 'text.disabled', textDecoration: 'line-through' }}>
-              {fCurrency(priceSale)}
+              {fCurrency(price)}
             </Box>
           )}
 
-          <Box component="span">{fCurrency(price)}</Box>
+          <Box component="span">{fCurrency(livePrice)}</Box>
         </Stack>
       </Stack>
     </Stack>

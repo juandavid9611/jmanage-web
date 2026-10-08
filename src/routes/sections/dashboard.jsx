@@ -8,6 +8,7 @@ import { LoadingScreen } from 'src/components/loading-screen';
 
 import { AuthGuard } from 'src/auth/guard';
 import { ClubOnlyGuard } from 'src/auth/guard/club-only-guard';
+import { AdminOnlyGuard } from 'src/auth/guard/admin-only-guard';
 
 // ----------------------------------------------------------------------
 
@@ -136,6 +137,11 @@ export const dashboardRoutes = [
       },
       {
         path: 'product',
+        element: (
+          <AdminOnlyGuard>
+            <Outlet />
+          </AdminOnlyGuard>
+        ),
         children: [
           { element: <ProductListPage />, index: true },
           { path: 'list', element: <ProductListPage /> },
@@ -155,6 +161,11 @@ export const dashboardRoutes = [
       },
       {
         path: 'order',
+        element: (
+          <AdminOnlyGuard>
+            <Outlet />
+          </AdminOnlyGuard>
+        ),
         children: [
           { element: <OrderListPage />, index: true },
           { path: 'list', element: <OrderListPage /> },
