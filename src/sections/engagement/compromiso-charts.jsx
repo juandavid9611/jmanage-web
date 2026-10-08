@@ -60,13 +60,8 @@ export function CompromisoCharts({ roster, matches }) {
     dataLabels: { enabled: true, dropShadow: { enabled: false } },
   });
 
-  if (partidosRegistrados === 0) {
-    return (
-      <Typography variant="body2" sx={{ color: 'text.disabled', textAlign: 'center', py: 3 }}>
-        Todavía no hay convocatorias guardadas — cargalas desde la pestaña &quot;Partidos&quot;.
-      </Typography>
-    );
-  }
+  // CompromisoTable (rendered alongside) already shows the empty-state message.
+  if (partidosRegistrados === 0) return null;
 
   return (
     <Grid container spacing={3}>
