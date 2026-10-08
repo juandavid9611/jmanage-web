@@ -47,3 +47,17 @@ export async function createWorkspace({ name, logo }) {
   await mutate((key) => typeof key === 'string' && key.startsWith(URL));
   return res.data;
 }
+
+// Deletes a category of the active club account (admin only). Rejects with the axios error;
+// 409 carries detail {code: default_workspace | has_members | has_events, message}.
+export async function deleteWorkspace(workspaceId) {
+  await axiosInstance.delete(`${URL}/${workspaceId}`);
+  // Drop a dead persisted selection; the provider falls back once the lists revalidate.
+  if (localStorage.getItem('selectedWorkspaceId') === workspaceId) {
+    localStorage.removeItem('selectedWorkspaceId');
+  }
+  await Promise.all([
+    mutate((key) => typeof key === 'string' && key.startsWith(URL)),
+    mutate((key) => typeof key === 'string' && key.startsWith(endpoints.users)),
+  ]);
+}

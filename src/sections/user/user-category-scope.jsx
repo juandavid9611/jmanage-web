@@ -2,6 +2,10 @@ import { useTranslation } from 'react-i18next';
 
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
+
+import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
@@ -13,7 +17,7 @@ export const SCOPE_UNASSIGNED = 'unassigned';
  * "Todas las categorías | <each category> | Sin asignar".
  * `counts` maps scope value -> number of users.
  */
-export function UserCategoryScope({ value, onChange, workspaces, counts }) {
+export function UserCategoryScope({ value, onChange, workspaces, counts, onDeleteCategory }) {
   const { t } = useTranslation();
 
   const options = [
@@ -40,6 +44,13 @@ export function UserCategoryScope({ value, onChange, workspaces, counts }) {
           onClick={() => onChange(opt.value)}
         />
       ))}
+      {onDeleteCategory && (
+        <Tooltip title={t('label_delete_category')}>
+          <IconButton size="small" color="error" onClick={onDeleteCategory}>
+            <Iconify icon="solar:trash-bin-trash-bold" width={18} />
+          </IconButton>
+        </Tooltip>
+      )}
     </Stack>
   );
 }
