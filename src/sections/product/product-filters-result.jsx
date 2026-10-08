@@ -28,7 +28,7 @@ export function ProductFiltersResult({ filters, totalResults, sx }) {
   };
 
   const handleRemovePrice = () => {
-    filters.setState({ priceRange: [0, 200] });
+    filters.setState({ priceRange: null });
   };
 
   const handleRemoveRating = () => {
@@ -70,13 +70,10 @@ export function ProductFiltersResult({ filters, totalResults, sx }) {
         ))}
       </FiltersBlock>
 
-      <FiltersBlock
-        label={t('label_price_colon')}
-        isShow={filters.state.priceRange[0] !== 0 || filters.state.priceRange[1] !== 200}
-      >
+      <FiltersBlock label={t('label_price_colon')} isShow={!!filters.state.priceRange}>
         <Chip
           {...chipProps}
-          label={`$${filters.state.priceRange[0]} - ${filters.state.priceRange[1]}`}
+          label={`$${filters.state.priceRange?.[0]} - ${filters.state.priceRange?.[1]}`}
           onDelete={handleRemovePrice}
         />
       </FiltersBlock>

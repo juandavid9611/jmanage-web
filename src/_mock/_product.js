@@ -6,7 +6,7 @@ export const PRODUCT_GENDER_OPTIONS = [
 ];
 
 // Filter values matched directly against product.category in mock data — not translated.
-export const PRODUCT_CATEGORY_OPTIONS = ['Shose', 'Apparel', 'Accessories'];
+export const PRODUCT_CATEGORY_OPTIONS = ['Shoes', 'Apparel', 'Accessories'];
 
 export const PRODUCT_RATING_OPTIONS = ['up4Star', 'up3Star', 'up2Star', 'up1Star'];
 
@@ -107,7 +107,7 @@ export const _products = [
     available: 20,
     sizes: SIZES_SHOES,
     gender: ['Men'],
-    category: 'Shose',
+    category: 'Shoes',
     totalSold: 85,
     totalRatings: 4.7,
     newLabel: { enabled: false, content: '' },

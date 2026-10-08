@@ -42,9 +42,15 @@ export function CheckoutCartProduct({ row, onDelete, onDecrease, onIncrease }) {
               alignItems="center"
               sx={{ typography: 'body2', color: 'text.secondary' }}
             >
-              {t('label_size_lowercase')}: <Label sx={{ ml: 0.5 }}> {row.size} </Label>
-              <Divider orientation="vertical" sx={{ mx: 1, height: 16 }} />
-              <ColorPreview colors={row.colors} />
+              {!!row.size && (
+                <>
+                  {t('label_size_lowercase')}: <Label sx={{ ml: 0.5 }}> {row.size} </Label>
+                </>
+              )}
+              {!!row.size && !!row.colors?.length && (
+                <Divider orientation="vertical" sx={{ mx: 1, height: 16 }} />
+              )}
+              {!!row.colors?.length && <ColorPreview colors={row.colors} />}
             </Stack>
           </Stack>
         </Stack>

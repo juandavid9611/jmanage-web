@@ -17,6 +17,8 @@ import Typography from '@mui/material/Typography';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import InputBase, { inputBaseClasses } from '@mui/material/InputBase';
 
+import { fShortenNumber } from 'src/utils/format-number';
+
 import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
@@ -27,12 +29,16 @@ import { ColorPicker } from 'src/components/color-utils';
 
 export function ProductFilters({ open, onOpen, onClose, canReset, filters, options }) {
   const { t } = useTranslation();
-  const marksLabel = [...Array(21)].map((_, index) => {
-    const value = index * 10;
+  // Price bounds come from the loaded products (see ProductShopView); a null priceRange
+  // means "no price filter" and the slider shows the full range.
+  const [boundMin, boundMax] = options.priceBounds;
+  const priceStep = options.priceStep || 1;
+  const priceRange = filters.state.priceRange ?? [boundMin, boundMax];
 
-    const firstValue = index === 0 ? `$${value}` : `${value}`;
+  const marksLabel = [0, 0.25, 0.5, 0.75, 1].map((fraction, index) => {
+    const value = Math.round((boundMin + (boundMax - boundMin) * fraction) / priceStep) * priceStep;
 
-    return { value, label: index % 4 ? '' : firstValue };
+    return { value, label: `${index === 0 ? '$' : ''}${fShortenNumber(value)}` };
   });
 
   const handleFilterGender = useCallback(
@@ -62,9 +68,10 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
 
   const handleFilterPriceRange = useCallback(
     (event, newValue) => {
-      filters.setState({ priceRange: newValue });
+      const isFullRange = newValue[0] <= boundMin && newValue[1] >= boundMax;
+      filters.setState({ priceRange: isFullRange ? null : newValue });
     },
-    [filters]
+    [boundMax, boundMin, filters]
   );
 
   const handleFilterRating = useCallback(
@@ -132,8 +139,7 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
               onClick={() => handleFilterCategory(option)}
             />
           }
-          label={option}
-          sx={{ ...(option === 'all' && { textTransform: 'capitalize' }) }}
+          label={option === 'all' ? t('label_all') : option}
         />
       ))}
     </Box>
@@ -158,16 +164,28 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
       <Typography variant="subtitle2">{t('price')}</Typography>
 
       <Box gap={5} display="flex" sx={{ my: 2 }}>
-        <InputRange type="min" value={filters.state.priceRange} onFilters={filters.setState} />
-        <InputRange type="max" value={filters.state.priceRange} onFilters={filters.setState} />
+        <InputRange
+          type="min"
+          value={priceRange}
+          bounds={options.priceBounds}
+          step={priceStep}
+          onFilters={filters.setState}
+        />
+        <InputRange
+          type="max"
+          value={priceRange}
+          bounds={options.priceBounds}
+          step={priceStep}
+          onFilters={filters.setState}
+        />
       </Box>
 
       <Slider
-        value={filters.state.priceRange}
+        value={priceRange}
         onChange={handleFilterPriceRange}
-        step={10}
-        min={0}
-        max={200}
+        step={priceStep}
+        min={boundMin}
+        max={boundMax}
         marks={marksLabel}
         getAriaValueText={(value) => `$${value}`}
         valueLabelFormat={(value) => `$${value}`}
@@ -248,26 +266,24 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
 
 // ----------------------------------------------------------------------
 
-function InputRange({ type, value, onFilters }) {
+function InputRange({ type, value, bounds, step, onFilters }) {
   const { t } = useTranslation();
   const min = value[0];
 
   const max = value[1];
 
+  const [boundMin, boundMax] = bounds;
+
+  // Keep both handles inside the bounds and in order (min <= max).
   const handleBlurInputRange = useCallback(() => {
-    if (min < 0) {
-      onFilters({ priceRange: [0, max] });
+    const nextMin = Math.min(Math.max(min, boundMin), boundMax);
+    const nextMax = Math.min(Math.max(max, boundMin), boundMax);
+    const range = nextMin <= nextMax ? [nextMin, nextMax] : [nextMax, nextMin];
+
+    if (range[0] !== min || range[1] !== max) {
+      onFilters({ priceRange: range });
     }
-    if (min > 200) {
-      onFilters({ priceRange: [200, max] });
-    }
-    if (max < 0) {
-      onFilters({ priceRange: [min, 0] });
-    }
-    if (max > 200) {
-      onFilters({ priceRange: [min, 200] });
-    }
-  }, [max, min, onFilters]);
+  }, [boundMax, boundMin, max, min, onFilters]);
 
   return (
     <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: 1 }}>
@@ -293,9 +309,9 @@ function InputRange({ type, value, onFilters }) {
         }
         onBlur={handleBlurInputRange}
         inputProps={{
-          step: 10,
-          min: 0,
-          max: 200,
+          step,
+          min: boundMin,
+          max: boundMax,
           type: 'number',
           'aria-labelledby': 'input-slider',
         }}

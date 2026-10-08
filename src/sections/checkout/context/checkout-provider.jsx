@@ -99,11 +99,17 @@ function Container({ children }) {
     (newItem) => {
       const updatedItems = state.items.map((item) => {
         if (item.id === newItem.id) {
-          const colorsAdded = [...item.colors, ...newItem.colors];
+          const colorsAdded = [...(item.colors ?? []), ...(newItem.colors ?? [])];
 
           const colors = colorsAdded.filter((color, index) => colorsAdded.indexOf(color) === index);
 
-          return { ...item, colors, quantity: item.quantity + 1 };
+          // Never go past the stock known to the client (the server enforces it again).
+          const quantity = Math.min(
+            item.quantity + (newItem.quantity || 1),
+            item.available ?? Infinity
+          );
+
+          return { ...item, colors, quantity };
         }
         return item;
       });

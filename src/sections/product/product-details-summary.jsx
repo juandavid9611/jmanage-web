@@ -16,6 +16,7 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { fCurrency, fShortenNumber } from 'src/utils/format-number';
+import { getLivePrice, hasSalePrice } from 'src/utils/product-price';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -47,19 +48,22 @@ export function ProductDetailsSummary({
     id,
     sku,
     name,
-    sizes,
     price,
     coverUrl,
-    colors,
     newLabel,
     available,
-    priceSale,
     saleLabel,
     totalRatings,
     totalReviews,
     inventoryType,
     subDescription,
   } = product;
+
+  const colors = product.colors ?? [];
+  const sizes = product.sizes ?? [];
+
+  const onSale = hasSalePrice(product);
+  const livePrice = getLivePrice(product);
 
   const existProduct = !!items?.length && items.map((item) => item.id).includes(id);
 
@@ -73,9 +77,9 @@ export function ProductDetailsSummary({
     name,
     coverUrl,
     available,
-    price,
-    colors: colors[0],
-    size: sizes[4],
+    price: livePrice, // live (discounted) price, display only: the server recomputes totals
+    colors: colors[0] ?? '',
+    size: sizes[0] ?? '',
     quantity: available < 1 ? 0 : 1,
   };
 
@@ -95,7 +99,11 @@ export function ProductDetailsSummary({
   const onSubmit = handleSubmit(async (data) => {
     try {
       if (!existProduct) {
-        onAddCart?.({ ...data, colors: [values.colors], subtotal: data.price * data.quantity });
+        onAddCart?.({
+          ...data,
+          colors: data.colors ? [data.colors] : [],
+          subtotal: data.price * data.quantity,
+        });
       }
       onGotoStep?.(0);
       router.push(paths.dashboard.shop.checkout);
@@ -106,7 +114,11 @@ export function ProductDetailsSummary({
 
   const handleAddCart = useCallback(() => {
     try {
-      onAddCart?.({ ...values, colors: [values.colors], subtotal: values.price * values.quantity });
+      onAddCart?.({
+        ...values,
+        colors: values.colors ? [values.colors] : [],
+        subtotal: values.price * values.quantity,
+      });
     } catch (error) {
       console.error(error);
     }
@@ -114,16 +126,16 @@ export function ProductDetailsSummary({
 
   const renderPrice = (
     <Box sx={{ typography: 'h5' }}>
-      {priceSale && (
+      {onSale && (
         <Box
           component="span"
           sx={{ color: 'text.disabled', textDecoration: 'line-through', mr: 0.5 }}
         >
-          {fCurrency(priceSale)}
+          {fCurrency(price)}
         </Box>
       )}
 
-      {fCurrency(price)}
+      {fCurrency(livePrice)}
     </Box>
   );
 
@@ -155,7 +167,7 @@ export function ProductDetailsSummary({
     </Stack>
   );
 
-  const renderColorOptions = (
+  const renderColorOptions = !!colors.length && (
     <Stack direction="row">
       <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
         {t('word_color')}
@@ -176,7 +188,7 @@ export function ProductDetailsSummary({
     </Stack>
   );
 
-  const renderSizeOptions = (
+  const renderSizeOptions = !!sizes.length && (
     <Stack direction="row">
       <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
         {t('word_size')}
@@ -256,15 +268,15 @@ export function ProductDetailsSummary({
 
   const renderRating = (
     <Stack direction="row" alignItems="center" sx={{ color: 'text.disabled', typography: 'body2' }}>
-      <Rating size="small" value={totalRatings} precision={0.1} readOnly sx={{ mr: 1 }} />
-      {`(${fShortenNumber(totalReviews)} ${t('label_reviews_lowercase')})`}
+      <Rating size="small" value={totalRatings ?? 0} precision={0.1} readOnly sx={{ mr: 1 }} />
+      {`(${fShortenNumber(totalReviews ?? 0)} ${t('label_reviews_lowercase')})`}
     </Stack>
   );
 
-  const renderLabels = (newLabel.enabled || saleLabel.enabled) && (
+  const renderLabels = (newLabel?.enabled || saleLabel?.enabled) && (
     <Stack direction="row" alignItems="center" spacing={1}>
-      {newLabel.enabled && <Label color="info">{newLabel.content}</Label>}
-      {saleLabel.enabled && <Label color="error">{saleLabel.content}</Label>}
+      {newLabel?.enabled && <Label color="info">{newLabel.content}</Label>}
+      {saleLabel?.enabled && <Label color="error">{saleLabel.content}</Label>}
     </Stack>
   );
 

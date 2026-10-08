@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useMemo, useState, useCallback } from 'react';
 
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 
@@ -9,7 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDebounce } from 'src/hooks/use-debounce';
 import { useSetState } from 'src/hooks/use-set-state';
 
-import { orderBy } from 'src/utils/helper';
+import { getLivePrice } from 'src/utils/product-price';
 
 import { useSearchProducts } from 'src/actions/product';
 import {
@@ -17,9 +18,9 @@ import {
   PRODUCT_COLOR_OPTIONS,
   PRODUCT_GENDER_OPTIONS,
   PRODUCT_RATING_OPTIONS,
-  PRODUCT_CATEGORY_OPTIONS,
 } from 'src/_mock';
 
+import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 
 import { ProductList } from '../product-list';
@@ -32,7 +33,20 @@ import { ProductFiltersResult } from '../product-filters-result';
 
 // ----------------------------------------------------------------------
 
-export function ProductShopView({ products, loading }) {
+// Slider bounds derived from the loaded products' live prices (max rounded up to a nice step).
+function getPriceBounds(products) {
+  const maxPrice = products.reduce((max, product) => Math.max(max, getLivePrice(product)), 0);
+
+  if (!maxPrice) return { bounds: [0, 100], step: 1 };
+
+  const step = 10 ** Math.max(0, Math.floor(Math.log10(maxPrice)) - 2);
+
+  return { bounds: [0, Math.ceil(maxPrice / step) * step], step };
+}
+
+// ----------------------------------------------------------------------
+
+export function ProductShopView({ products, loading, error, onRetry }) {
   const { t } = useTranslation();
   const checkout = useCheckoutContext();
 
@@ -49,10 +63,23 @@ export function ProductShopView({ products, loading }) {
     colors: [],
     rating: '',
     category: 'all',
-    priceRange: [0, 200],
+    priceRange: null, // null = no price filter (full range derived from products)
   });
 
   const { searchResults, searchLoading } = useSearchProducts(debouncedQuery);
+
+  const { bounds: priceBounds, step: priceStep } = useMemo(
+    () => getPriceBounds(products),
+    [products]
+  );
+
+  const categories = useMemo(
+    () => [
+      'all',
+      ...[...new Set(products.map((product) => product.category).filter(Boolean))].sort(),
+    ],
+    [products]
+  );
 
   const dataFiltered = applyFilter({ inputData: products, filters: filters.state, sortBy });
 
@@ -61,10 +88,11 @@ export function ProductShopView({ products, loading }) {
     filters.state.colors.length > 0 ||
     filters.state.rating !== '' ||
     filters.state.category !== 'all' ||
-    filters.state.priceRange[0] !== 0 ||
-    filters.state.priceRange[1] !== 200;
+    filters.state.priceRange !== null;
 
-  const notFound = !dataFiltered.length && canReset;
+  const hasData = !loading && !error;
+  const productsEmpty = hasData && !products.length;
+  const notFound = hasData && !!products.length && !dataFiltered.length;
 
   const handleSortBy = useCallback((newValue) => {
     setSortBy(newValue);
@@ -73,8 +101,6 @@ export function ProductShopView({ products, loading }) {
   const handleSearch = useCallback((inputValue) => {
     setSearchQuery(inputValue);
   }, []);
-
-  const productsEmpty = !loading && !products.length;
 
   const renderFilters = (
     <Stack
@@ -101,7 +127,9 @@ export function ProductShopView({ products, loading }) {
             colors: PRODUCT_COLOR_OPTIONS,
             ratings: PRODUCT_RATING_OPTIONS,
             genders: PRODUCT_GENDER_OPTIONS,
-            categories: ['all', ...PRODUCT_CATEGORY_OPTIONS],
+            categories,
+            priceBounds,
+            priceStep,
           }}
         />
 
@@ -114,7 +142,35 @@ export function ProductShopView({ products, loading }) {
     <ProductFiltersResult filters={filters} totalResults={dataFiltered.length} />
   );
 
-  const renderNotFound = <EmptyContent filled sx={{ py: 10 }} />;
+  const renderError = (
+    <EmptyContent
+      filled
+      title={t('label_shop_load_error')}
+      description={t('label_try_again_later')}
+      action={
+        onRetry && (
+          <Button
+            variant="soft"
+            onClick={onRetry}
+            startIcon={<Iconify icon="solar:restart-bold" />}
+            sx={{ mt: 3 }}
+          >
+            {t('label_retry')}
+          </Button>
+        )
+      }
+      sx={{ py: 10 }}
+    />
+  );
+
+  const renderEmpty = (
+    <EmptyContent
+      filled
+      title={productsEmpty ? t('label_shop_empty') : t('label_no_results_found')}
+      description={productsEmpty ? t('label_shop_empty_desc') : undefined}
+      sx={{ py: 10 }}
+    />
+  );
 
   return (
     <Container sx={{ mb: 15 }}>
@@ -130,9 +186,13 @@ export function ProductShopView({ products, loading }) {
         {canReset && renderResults}
       </Stack>
 
-      {(notFound || productsEmpty) && renderNotFound}
+      {error && renderError}
 
-      <ProductList products={dataFiltered} loading={loading} />
+      {(notFound || productsEmpty) && renderEmpty}
+
+      {!error && !notFound && !productsEmpty && (
+        <ProductList products={dataFiltered} loading={loading} />
+      )}
     </Container>
   );
 }
@@ -140,30 +200,19 @@ export function ProductShopView({ products, loading }) {
 function applyFilter({ inputData, filters, sortBy }) {
   const { gender, category, colors, priceRange, rating } = filters;
 
-  const min = priceRange[0];
+  // Sort by (copy: never mutate SWR's cached array). Price sorting uses the live price.
+  const sorters = {
+    featured: (a, b) => (b.totalSold ?? 0) - (a.totalSold ?? 0),
+    newest: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+    priceDesc: (a, b) => getLivePrice(b) - getLivePrice(a),
+    priceAsc: (a, b) => getLivePrice(a) - getLivePrice(b),
+  };
 
-  const max = priceRange[1];
-
-  // Sort by
-  if (sortBy === 'featured') {
-    inputData = orderBy(inputData, ['totalSold'], ['desc']);
-  }
-
-  if (sortBy === 'newest') {
-    inputData = orderBy(inputData, ['createdAt'], ['desc']);
-  }
-
-  if (sortBy === 'priceDesc') {
-    inputData = orderBy(inputData, ['price'], ['desc']);
-  }
-
-  if (sortBy === 'priceAsc') {
-    inputData = orderBy(inputData, ['price'], ['asc']);
-  }
+  inputData = [...inputData].sort(sorters[sortBy] || sorters.featured);
 
   // filters
   if (gender.length) {
-    inputData = inputData.filter((product) => product.gender.some((i) => gender.includes(i)));
+    inputData = inputData.filter((product) => product.gender?.some((i) => gender.includes(i)));
   }
 
   if (category !== 'all') {
@@ -172,24 +221,26 @@ function applyFilter({ inputData, filters, sortBy }) {
 
   if (colors.length) {
     inputData = inputData.filter((product) =>
-      product.colors.some((color) => colors.includes(color))
+      product.colors?.some((color) => colors.includes(color))
     );
   }
 
-  if (min !== 0 || max !== 200) {
-    inputData = inputData.filter((product) => product.price >= min && product.price <= max);
+  if (priceRange) {
+    inputData = inputData.filter((product) => {
+      const live = getLivePrice(product);
+      return live >= priceRange[0] && live <= priceRange[1];
+    });
   }
 
   if (rating) {
-    inputData = inputData.filter((product) => {
-      const convertRating = (value) => {
-        if (value === 'up4Star') return 4;
-        if (value === 'up3Star') return 3;
-        if (value === 'up2Star') return 2;
-        return 1;
-      };
-      return product.totalRatings > convertRating(rating);
-    });
+    const convertRating = (value) => {
+      if (value === 'up4Star') return 4;
+      if (value === 'up3Star') return 3;
+      if (value === 'up2Star') return 2;
+      return 1;
+    };
+
+    inputData = inputData.filter((product) => product.totalRatings > convertRating(rating));
   }
 
   return inputData;
