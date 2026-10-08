@@ -56,7 +56,7 @@ export function CompromisoCharts({ roster, matches }) {
   const donutOptions = useChart({
     labels: ['Titular', 'Suplente', 'No convocado'],
     colors: [theme.palette.success.main, theme.palette.warning.main, theme.palette.grey[400]],
-    legend: { position: 'bottom' },
+    legend: { position: 'bottom', horizontalAlign: 'center' },
     dataLabels: { enabled: true, dropShadow: { enabled: false } },
   });
 
@@ -67,7 +67,7 @@ export function CompromisoCharts({ roster, matches }) {
     <Grid container spacing={3}>
       <Grid xs={6} sm={6} md={3}>
         <AnalyticsWidgetSummary
-          title="Partidos registrados"
+          title={partidosRegistrados === 1 ? 'Partido registrado' : 'Partidos registrados'}
           total={partidosRegistrados}
           color="info"
           sx={{ boxShadow: (t) => t.customShadows?.card, borderRadius: 2 }}
@@ -170,7 +170,10 @@ export function CompromisoCharts({ roster, matches }) {
 
       <Grid xs={12} md={5}>
         <Card sx={{ boxShadow: (t) => t.customShadows?.card, borderRadius: 2 }}>
-          <CardHeader title="Participación del equipo" subheader="Titular / Suplente / No convocado" />
+          <CardHeader
+            title="Participación del equipo"
+            subheader="Cupos de convocatoria: titulares, suplentes y no convocados"
+          />
           <Chart
             dir="ltr"
             type="donut"

@@ -2,16 +2,13 @@ import { useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Dialog from '@mui/material/Dialog';
+import Divider from '@mui/material/Divider';
+import { alpha } from '@mui/material/styles';
 import MenuItem from '@mui/material/MenuItem';
-import TableRow from '@mui/material/TableRow';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -21,7 +18,6 @@ import Autocomplete from '@mui/material/Autocomplete';
 import ToggleButton from '@mui/material/ToggleButton';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import TableContainer from '@mui/material/TableContainer';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import {
@@ -84,82 +80,118 @@ export function RosterPanel({ tournamentId, users, roster, workspaceId }) {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-        <Button
-          size="small"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => setDialogOpen(true)}
-        >
-          Agregar Jugadores
-        </Button>
-      </Box>
+      {roster.length > 0 && (
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+            {roster.length} jugador{roster.length === 1 ? '' : 'es'} en la plantilla
+          </Typography>
+          <Button
+            size="small"
+            variant="soft"
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={() => setDialogOpen(true)}
+          >
+            Agregar Jugadores
+          </Button>
+        </Stack>
+      )}
 
       {roster.length === 0 ? (
-        <Typography variant="body2" sx={{ color: 'text.disabled', textAlign: 'center', py: 3 }}>
-          Sin jugadores — hacé clic en &quot;Agregar Jugadores&quot;
-        </Typography>
+        <Stack
+          alignItems="center"
+          spacing={1}
+          sx={{
+            py: 5,
+            px: 2,
+            textAlign: 'center',
+            borderRadius: 1.5,
+            border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.32)}`,
+          }}
+        >
+          <Iconify icon="solar:users-group-rounded-bold" width={40} sx={{ color: 'text.disabled' }} />
+          <Typography variant="subtitle1">Todavía no hay jugadores</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 360 }}>
+            Sumá a los jugadores de este torneo para después cargar partidos y convocatorias.
+          </Typography>
+          <Button
+            variant="contained"
+            sx={{ mt: 1 }}
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={() => setDialogOpen(true)}
+          >
+            Agregar Jugadores
+          </Button>
+        </Stack>
       ) : (
-        <TableContainer sx={{ overflowX: 'auto' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell width={72}>#</TableCell>
-              <TableCell>Jugador</TableCell>
-              <TableCell width={160}>Posición</TableCell>
-              <TableCell width={48} />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {roster.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell>
-                  <TextField
-                    type="number"
-                    size="small"
-                    variant="standard"
-                    defaultValue={r.number ?? ''}
-                    onBlur={(e) => handleNumberBlur(r.id, e.target.value)}
-                    sx={{ width: 48 }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Avatar src={r.avatarUrl} sx={{ width: 28, height: 28, fontSize: 13 }}>
-                      {r.name?.[0]}
-                    </Avatar>
-                    <Typography variant="body2">{r.name}</Typography>
-                    {r.isGuest && (
-                      <Chip label="Sin cuenta" size="small" variant="soft" color="warning" sx={{ height: 18, fontSize: 10 }} />
-                    )}
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    select
-                    size="small"
-                    variant="standard"
-                    value={r.position || ''}
-                    onChange={(e) => handlePositionChange(r.id, e.target.value)}
-                    sx={{ width: 140 }}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {POSITION_OPTIONS.map((opt) => (
-                      <MenuItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </TableCell>
-                <TableCell>
-                  <IconButton size="small" color="error" onClick={() => handleDelete(r.id)}>
-                    <Iconify icon="solar:trash-bin-trash-bold" width={16} />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        </TableContainer>
+        <Stack divider={<Divider flexItem sx={{ borderStyle: 'dashed' }} />}>
+          {roster.map((r) => (
+            <Stack
+              key={r.id}
+              direction={{ xs: 'column', sm: 'row' }}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              spacing={{ xs: 1.5, sm: 2 }}
+              sx={{ py: 1.5 }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
+                <Avatar src={r.avatarUrl} sx={{ width: 32, height: 32, fontSize: 14 }}>
+                  {r.name?.[0]}
+                </Avatar>
+                <Typography variant="body2" noWrap sx={{ minWidth: 0, flexShrink: 1 }}>
+                  {r.name}
+                </Typography>
+                {r.isGuest && (
+                  <Chip label="Sin cuenta" size="small" variant="soft" color="warning" sx={{ flexShrink: 0 }} />
+                )}
+                <Box sx={{ flexGrow: 1, display: { xs: 'block', sm: 'none' } }} />
+                <IconButton
+                  size="small"
+                  aria-label="Quitar de la plantilla"
+                  onClick={() => handleDelete(r.id)}
+                  sx={{ display: { xs: 'inline-flex', sm: 'none' }, color: 'text.disabled', '&:hover': { color: 'error.main' } }}
+                >
+                  <Iconify icon="solar:trash-bin-trash-bold" width={18} />
+                </IconButton>
+              </Stack>
+
+              <Stack direction="row" alignItems="center" spacing={1.5}>
+                <TextField
+                  type="number"
+                  size="small"
+                  label="Número"
+                  // re-mount when the server value changes so defaultValue stays fresh
+                  key={`${r.id}-${r.number ?? ''}`}
+                  defaultValue={r.number ?? ''}
+                  onBlur={(e) => handleNumberBlur(r.id, e.target.value)}
+                  inputProps={{ min: 0, max: 999 }}
+                  sx={{ width: 84, flexShrink: 0 }}
+                />
+                <TextField
+                  select
+                  size="small"
+                  label="Posición"
+                  value={r.position || ''}
+                  onChange={(e) => handlePositionChange(r.id, e.target.value)}
+                  sx={{ flex: { xs: 1, sm: 'none' }, width: { sm: 170 } }}
+                >
+                  <MenuItem value="">Sin posición</MenuItem>
+                  {POSITION_OPTIONS.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <IconButton
+                  size="small"
+                  aria-label="Quitar de la plantilla"
+                  onClick={() => handleDelete(r.id)}
+                  sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: 'text.disabled', '&:hover': { color: 'error.main' } }}
+                >
+                  <Iconify icon="solar:trash-bin-trash-bold" width={18} />
+                </IconButton>
+              </Stack>
+            </Stack>
+          ))}
+        </Stack>
       )}
 
       <AddToRosterDialog
