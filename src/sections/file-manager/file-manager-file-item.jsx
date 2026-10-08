@@ -15,7 +15,6 @@ import Typography from '@mui/material/Typography';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { fData } from 'src/utils/format-number';
-import { fDateTime } from 'src/utils/format-time';
 
 import { maxLine } from 'src/theme/styles';
 import { useWorkspace } from 'src/workspace/workspace-provider';
@@ -150,21 +149,6 @@ export function FileManagerFileItem({ file, selected, onSelect, onDelete, sx, ..
         }}
       >
         {fData(file.size)}
-
-        <Box
-          component="span"
-          sx={{
-            mx: 0.75,
-            width: 2,
-            height: 2,
-            flexShrink: 0,
-            borderRadius: '50%',
-            bgcolor: 'currentColor',
-          }}
-        />
-        <Typography noWrap component="span" variant="caption">
-          {fDateTime(file.modifiedAt)}
-        </Typography>
       </Stack>
     </>
   );

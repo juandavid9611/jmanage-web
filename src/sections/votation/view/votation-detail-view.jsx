@@ -100,7 +100,7 @@ export function VotationDetailView() {
 
   // candidate.id === user.id (Cognito sub), so voterMap gives a fresh presigned URL
   const candidateAvatar = useCallback(
-    (candidate) => voterMap[candidate.id]?.avatarUrl || candidate.avatar_url,
+    (candidate) => voterMap[candidate?.id]?.avatarUrl || candidate?.avatar_url,
     [voterMap]
   );
 
@@ -181,6 +181,7 @@ export function VotationDetailView() {
   const showResults = isClosed || isTied;
   const podiumCandidates = showResults ? sortedCandidates.slice(0, 3) : [];
   const remainingCandidates = showResults ? sortedCandidates.slice(3) : [];
+  const winnerCandidate = votation.candidates.find((c) => c.id === votation.winner_id);
 
   return (
     <DashboardContent>
@@ -288,7 +289,8 @@ export function VotationDetailView() {
       {/* Winner banner */}
       {isClosed && votation.winner_id && (
         <WinnerBanner
-          winner={votation.candidates.find((c) => c.id === votation.winner_id)}
+          winner={winnerCandidate}
+          avatarSrc={candidateAvatar(winnerCandidate)}
           votes={getVotesForCandidate(votation.winner_id)}
           totalVotes={totalVotes}
           playerOfPeriodLabelText={playerOfPeriodLabel(votation, t)}
@@ -953,7 +955,7 @@ function VoterChips({ voters }) {
 
 // ----------------------------------------------------------------------
 
-function WinnerBanner({ winner, votes, totalVotes, playerOfPeriodLabelText }) {
+function WinnerBanner({ winner, avatarSrc, votes, totalVotes, playerOfPeriodLabelText }) {
   const { t } = useTranslation();
   if (!winner) return null;
 
@@ -976,7 +978,7 @@ function WinnerBanner({ winner, votes, totalVotes, playerOfPeriodLabelText }) {
 
         <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
           <Avatar
-            src={winner.avatar_url}
+            src={avatarSrc || winner.avatar_url}
             alt={winner.name}
             sx={{
               width: 56,

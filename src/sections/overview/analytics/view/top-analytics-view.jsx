@@ -30,6 +30,7 @@ export function TopAnalyticsView() {
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
             <EcommerceWelcome
               title={`Goleador 🥇\n ${orderBy(topGoalsAndAssists, ['goals'], ['desc'])[0]?.name || '...'}`}
+              photoURL={orderBy(topGoalsAndAssists, ['goals'], ['desc'])[0]?.avatarUrl}
               imgIndex={9}
             />
             <AppTopAnalytics
@@ -43,6 +44,7 @@ export function TopAnalyticsView() {
           <Box sx={{ gap: 1, display: 'flex', flexDirection: 'column' }}>
             <EcommerceWelcome
               title={`Asistidor 🏅\n ${orderBy(topGoalsAndAssists, ['assists'], ['desc'])[0]?.name || '...'}`}
+              photoURL={orderBy(topGoalsAndAssists, ['assists'], ['desc'])[0]?.avatarUrl}
               imgIndex={7}
             />
             <AppTopAnalytics

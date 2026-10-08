@@ -16,7 +16,6 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { fData } from 'src/utils/format-number';
-import { fDateTime } from 'src/utils/format-time';
 
 import { useWorkspace } from 'src/workspace/workspace-provider';
 
@@ -35,7 +34,7 @@ export function FileManagerFileDetails({
   onFavorite,
   ...other
 }) {
-  const { name, size, url, type, modifiedAt } = item;
+  const { name, size, url, type } = item;
 
   const { t } = useTranslation();
   const { workspaceRole } = useWorkspace();
@@ -155,13 +154,6 @@ export function FileManagerFileDetails({
               {t('label_size')}
             </Box>
             {fData(size)}
-          </Stack>
-
-          <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
-            <Box component="span" sx={{ width: 80, color: 'text.secondary', mr: 2 }}>
-              {t('label_modified')}
-            </Box>
-            {fDateTime(modifiedAt)}
           </Stack>
 
           <Stack direction="row" sx={{ typography: 'caption', textTransform: 'capitalize' }}>
