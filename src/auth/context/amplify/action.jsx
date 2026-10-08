@@ -14,7 +14,17 @@ import {
  *************************************** */
 export const signInWithPassword = async ({ username, password }) => {
   username = username.toLowerCase();
-  return _signIn({ username, password });
+  try {
+    return await _signIn({ username, password });
+  } catch (error) {
+    // Amplify refuses a new sign-in while it still holds tokens. That happens when the app
+    // failed to load the profile (checkUserSession then treats the user as signed out but
+    // never clears the tokens), which left people stuck on the sign-in page. Drop the stale
+    // session and retry once.
+    if (error?.name !== 'UserAlreadyAuthenticatedException') throw error;
+    await signOut();
+    return _signIn({ username, password });
+  }
 };
 
 /** **************************************

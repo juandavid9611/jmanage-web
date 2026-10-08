@@ -13,10 +13,16 @@ const swrOptions = {
   revalidateOnReconnect: enableServer,
 };
 
-export function useGetUsers(selectedWorkspace, includeDisabled = false) {
+/**
+ * `allCategories` omits workspace_id so the API returns every user of the
+ * account once, each carrying all of its `memberships: [{workspace_id, role}]`.
+ */
+export function useGetUsers(selectedWorkspace, includeDisabled = false, allCategories = false) {
   const workspaceId = selectedWorkspace?.id;
   const { data, isLoading, error, isValidating } = useSWR(
-    `${URL}?workspace_id=${workspaceId}&include_disabled=${includeDisabled}`,
+    allCategories
+      ? `${URL}?include_disabled=${includeDisabled}`
+      : `${URL}?workspace_id=${workspaceId}&include_disabled=${includeDisabled}`,
     fetcher
   );
 
