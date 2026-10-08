@@ -111,7 +111,7 @@ export function UserListView() {
   // filtered/assigned client-side without switching the active workspace.
   const showCategories = !isTournamentAccount;
   const {
-    users: fetchedUsers,
+    users: rawUsers,
     usersLoading,
     usersEmpty,
   } = useGetUsers(selectedWorkspace, true, showCategories);
@@ -120,6 +120,18 @@ export function UserListView() {
     () => new Map(allWorkspaces.map((ws) => [ws.id, ws])),
     [allWorkspaces]
   );
+
+  // A membership that points at a workspace that no longer exists (e.g. a stale
+  // default id) is not a category: those users count as unassigned.
+  const fetchedUsers = useMemo(() => {
+    if (!showCategories || !workspacesById.size) return rawUsers;
+    return rawUsers.map((u) => ({
+      ...u,
+      memberships: (u.memberships || []).filter((m) =>
+        workspacesById.has(m.workspace_id ?? m.workspaceId)
+      ),
+    }));
+  }, [rawUsers, showCategories, workspacesById]);
 
   // Scope defaults to the active workspace (same list as before); null = follow it.
   const [scopeChoice, setScopeChoice] = useState(null);
