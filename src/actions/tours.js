@@ -24,8 +24,12 @@ export function useGetTours(workspaceId, tourType) {
   return memoizedValue;
 }
 
-export function useGetTour(tourId) {
-  const { data, isLoading, error, isValidating } = useSWR(`${URL}/${tourId}`, fetcher);
+export function useGetTour(tourId, swrOptions) {
+  const { data, isLoading, error, isValidating } = useSWR(
+    tourId ? `${URL}/${tourId}` : null,
+    fetcher,
+    swrOptions
+  );
 
   const memoizedValue = useMemo(
     () => ({

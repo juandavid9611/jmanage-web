@@ -104,6 +104,13 @@ export function getNavData(t, language) {
           clubOnly: true,
         },
         {
+          title: t('label_club_tournaments'),
+          path: paths.dashboard.clubTournaments,
+          icon: ICONS.tour,
+          roles: ['admin', 'coach', 'user'],
+          clubOnly: true,
+        },
+        {
           title: t('tournaments'),
           path: paths.dashboard.tournament.root,
           icon: ICONS.tour,
@@ -120,6 +127,13 @@ export function getNavData(t, language) {
           path: paths.dashboard.attendance.root,
           icon: <Iconify icon="solar:running-round-bold" />,
           roles: ['admin', 'user'],
+          clubOnly: true,
+        },
+        {
+          title: t('label_training_sessions'),
+          path: paths.dashboard.trainingSessions.root,
+          icon: <Iconify icon="solar:football-bold-duotone" />,
+          roles: ['admin', 'coach', 'user'],
           clubOnly: true,
         },
         {
