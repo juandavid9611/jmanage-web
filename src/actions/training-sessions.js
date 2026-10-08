@@ -62,7 +62,7 @@ export function useGetTrainingSession(selectedWorkspace, id) {
       // the API answers 404 for unknown ids and for ids of another account
       sessionNotFound: !!workspaceId && !isLoading && (error?.status === 404 || (!error && !data)),
     }),
-    [data, error, isLoading]
+    [data, error, isLoading, workspaceId]
   );
 }
 
