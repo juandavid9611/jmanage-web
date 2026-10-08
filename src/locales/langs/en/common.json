@@ -1993,5 +1993,6 @@
   "label_no_approved_sessions_hint": "There are no approved training sessions to show yet.",
   "label_session_not_found": "Training session not found",
   "label_session_load_error": "Could not load the training sessions. Try again.",
-  "label_session_action_error": "Something went wrong. Try again."
+  "label_session_action_error": "Something went wrong. Try again.",
+  "label_event_save_error": "The event could not be saved. Try again."
 }

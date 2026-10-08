@@ -10,8 +10,8 @@ import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import {
+  getLineupsByMatch,
   computeCompromisoStats,
-  useGetEngagementLineupsForMatches,
 } from 'src/actions/engagement';
 
 import { Chart, useChart } from 'src/components/chart';
@@ -26,10 +26,9 @@ function compromisoColor(pct) {
   return 'error';
 }
 
-export function CompromisoCharts({ roster, matches, workspaceId }) {
+export function CompromisoCharts({ roster, matches }) {
   const theme = useTheme();
-  const matchIds = useMemo(() => matches.map((m) => m.id), [matches]);
-  const { lineupsByMatch } = useGetEngagementLineupsForMatches(matchIds, workspaceId);
+  const lineupsByMatch = useMemo(() => getLineupsByMatch(matches), [matches]);
 
   const stats = useMemo(() => computeCompromisoStats(roster, lineupsByMatch), [roster, lineupsByMatch]);
   const partidosRegistrados = stats[0]?.partidosRegistrados || 0;

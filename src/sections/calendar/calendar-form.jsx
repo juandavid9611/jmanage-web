@@ -24,10 +24,10 @@ import { fIsAfter, fTimestamp } from 'src/utils/format-time';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/actions/calendar';
 import {
-  unlinkCalendarEvent,
+  createEngagementMatch,
+  deleteEngagementMatch,
   useGetCalendarEventLink,
   useGetEngagementTournaments,
-  linkCalendarEventToTournament,
 } from 'src/actions/engagement';
 
 import { toast } from 'src/components/snackbar';
@@ -73,7 +73,11 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const EventSchema = useMemo(() => getEventSchema(t), [t]);
 
   const { tournaments } = useGetEngagementTournaments(selectedWorkspace?.id);
-  const { link: existingLink } = useGetCalendarEventLink(currentEvent?.id, selectedWorkspace?.id);
+  const { link: existingLink } = useGetCalendarEventLink(
+    currentEvent?.clubMatchId,
+    tournaments,
+    selectedWorkspace?.id
+  );
   const [torneoId, setTorneoId] = useState('');
 
   useEffect(() => {
@@ -117,40 +121,72 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
     if (dateError) return;
 
-    let savedEventId = eventData.id;
+    // The event <-> match link is owned by the event (`clubMatchId`): the API
+    // keeps the match's date/rival in sync and clears the link when either
+    // side is deleted. "" unlinks; omitted leaves it as is.
+    const wantsLink = isAdminOrCoach && data?.category === 'match' && !!torneoId;
+    const hadLink = !!currentEvent?.clubMatchId;
+    let newMatchId = null;
+    let clubMatchId; // undefined => untouched
 
-    try {
-      if (currentEvent?.id) {
-        await updateEvent(eventData, selectedWorkspace?.id);
-        toast.success(t('update_success'));
-      } else {
-        const created = await createEvent(eventData, selectedWorkspace?.id);
-        savedEventId = created?.data?.id || eventData.id;
-        toast.success(t('create_success'));
-      }
-    } catch (error) {
-      console.error(error);
-      return;
-    }
-
-    try {
-      if (data?.category === 'match' && torneoId) {
-        await linkCalendarEventToTournament(
-          savedEventId,
+    if (wantsLink && existingLink?.tournament_id === torneoId) {
+      clubMatchId = currentEvent.clubMatchId;
+    } else if (wantsLink) {
+      // New link, or the tournament changed: a match must exist before the event can point at it.
+      try {
+        const match = await createEngagementMatch(
           {
             tournament_id: torneoId,
             date: dayjs(data.start).format('YYYY-MM-DD'),
             rival: eventData.title,
-            calendar_event_id: savedEventId,
           },
           selectedWorkspace?.id
         );
-      } else if (existingLink) {
-        await unlinkCalendarEvent(savedEventId, selectedWorkspace?.id);
+        const { id: createdMatchId } = match;
+        newMatchId = createdMatchId;
+        clubMatchId = createdMatchId;
+      } catch (error) {
+        // The event itself still saves; only the tournament link is skipped.
+        console.error(error);
+        toast.error(t('label_tournament_link_error'));
+      }
+    } else if (hadLink && existingLink) {
+      clubMatchId = '';
+    }
+
+    try {
+      if (currentEvent?.id) {
+        await updateEvent(
+          clubMatchId === undefined ? eventData : { ...eventData, clubMatchId },
+          selectedWorkspace?.id
+        );
+        toast.success(t('update_success'));
+      } else {
+        // Event ids are server-assigned: nothing may rely on eventData.id after this.
+        await createEvent(
+          clubMatchId === undefined ? eventData : { ...eventData, clubMatchId },
+          selectedWorkspace?.id
+        );
+        toast.success(t('create_success'));
       }
     } catch (error) {
       console.error(error);
-      toast.error(t('label_tournament_link_error'));
+      toast.error(error.message || t('label_event_save_error'));
+      // don't leave a match nobody points at
+      if (newMatchId) {
+        deleteEngagementMatch(torneoId, newMatchId, selectedWorkspace?.id).catch(console.error);
+      }
+      return;
+    }
+
+    // The tournament changed: the match auto-created for this event under the old tournament is orphaned now.
+    if (newMatchId && existingLink && existingLink.tournament_id !== torneoId) {
+      deleteEngagementMatch(existingLink.tournament_id, existingLink.match_id, selectedWorkspace?.id).catch(
+        (error) => {
+          console.error(error);
+          toast.error(t('label_tournament_link_error'));
+        }
+      );
     }
 
     onClose();
@@ -176,14 +212,14 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const onDelete = useCallback(async () => {
     try {
+      // The API clears the linked match's calendarEventId on delete.
       await deleteEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
-      if (existingLink) await unlinkCalendarEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
       toast.success(t('delete_success'));
       onClose();
     } catch (error) {
       console.error(error);
     }
-  }, [currentEvent?.id, existingLink, onClose, selectedWorkspace?.id, t]);
+  }, [currentEvent?.id, onClose, selectedWorkspace?.id, t]);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>

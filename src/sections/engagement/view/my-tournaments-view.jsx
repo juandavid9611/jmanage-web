@@ -19,8 +19,8 @@ import { fDate } from 'src/utils/format-time';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
+  getLineupsByMatch,
   useGetEngagementMatches,
-  useGetEngagementLineupsForMatches,
   useGetEngagementTournamentsForUser,
 } from 'src/actions/engagement';
 
@@ -55,8 +55,7 @@ function matchStatusLabel(lineup, rosterEntryId) {
 
 function MyTournamentDetail({ rosterEntryId, tournament, workspaceId }) {
   const { matches } = useGetEngagementMatches(tournament.id, workspaceId);
-  const matchIds = useMemo(() => matches.map((m) => m.id), [matches]);
-  const { lineupsByMatch } = useGetEngagementLineupsForMatches(matchIds, workspaceId);
+  const lineupsByMatch = useMemo(() => getLineupsByMatch(matches), [matches]);
 
   const stats = useMemo(() => {
     const registeredMatchIds = Object.keys(lineupsByMatch);

@@ -16,8 +16,8 @@ import { paths } from 'src/routes/paths';
 
 import { fDate } from 'src/utils/format-time';
 
-import { DashboardContent } from 'src/layouts/dashboard';
 import { useGetUsers } from 'src/actions/user';
+import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetTrainingSessions } from 'src/actions/training-sessions';
 

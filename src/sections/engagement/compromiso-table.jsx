@@ -11,15 +11,14 @@ import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 
 import {
+  getLineupsByMatch,
   computeCompromisoStats,
-  useGetEngagementLineupsForMatches,
 } from 'src/actions/engagement';
 
 // ----------------------------------------------------------------------
 
-export function CompromisoTable({ roster, matches, workspaceId }) {
-  const matchIds = useMemo(() => matches.map((m) => m.id), [matches]);
-  const { lineupsByMatch } = useGetEngagementLineupsForMatches(matchIds, workspaceId);
+export function CompromisoTable({ roster, matches }) {
+  const lineupsByMatch = useMemo(() => getLineupsByMatch(matches), [matches]);
 
   const stats = useMemo(() => computeCompromisoStats(roster, lineupsByMatch), [roster, lineupsByMatch]);
   const partidosRegistrados = stats[0]?.partidosRegistrados || 0;

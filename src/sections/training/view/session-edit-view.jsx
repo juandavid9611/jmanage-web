@@ -1,5 +1,5 @@
-import { Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Navigate, useParams } from 'react-router-dom';
 
 import Typography from '@mui/material/Typography';
 

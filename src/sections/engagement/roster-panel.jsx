@@ -26,6 +26,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import {
   addToEngagementRoster,
+  bulkAddToEngagementRoster,
   removeFromEngagementRoster,
   updateEngagementRosterEntry,
 } from 'src/actions/engagement';
@@ -52,7 +53,7 @@ export function RosterPanel({ tournamentId, users, roster, workspaceId }) {
 
   const handleDelete = async (entryId) => {
     try {
-      await removeFromEngagementRoster(entryId, workspaceId);
+      await removeFromEngagementRoster(tournamentId, entryId, workspaceId);
       toast.success('Jugador quitado de la plantilla');
     } catch (error) {
       toast.error(error.message || 'Error al quitar');
@@ -61,7 +62,13 @@ export function RosterPanel({ tournamentId, users, roster, workspaceId }) {
 
   const handleNumberBlur = async (entryId, value) => {
     try {
-      await updateEngagementRosterEntry(entryId, { number: value ? Number(value) : null }, workspaceId);
+      // `!== ''` (not truthiness) so jersey number 0 is kept
+      await updateEngagementRosterEntry(
+        tournamentId,
+        entryId,
+        { number: value !== '' ? Number(value) : null },
+        workspaceId
+      );
     } catch (error) {
       toast.error(error.message || 'Error al actualizar');
     }
@@ -69,7 +76,7 @@ export function RosterPanel({ tournamentId, users, roster, workspaceId }) {
 
   const handlePositionChange = async (entryId, value) => {
     try {
-      await updateEngagementRosterEntry(entryId, { position: value || null }, workspaceId);
+      await updateEngagementRosterEntry(tournamentId, entryId, { position: value || '' }, workspaceId);
     } catch (error) {
       toast.error(error.message || 'Error al actualizar');
     }
@@ -199,40 +206,37 @@ function AddToRosterDialog({ open, onClose, tournamentId, availableUsers, worksp
     try {
       setIsSubmitting(true);
       if (mode === 'user') {
-        const results = await Promise.allSettled(
-          selectedUsers.map((u) =>
-            addToEngagementRoster(
-              {
-                tournament_id: tournamentId,
-                user_id: u.id,
-                guest_name: null,
-                number: null,
-                position: null,
-              },
-              workspaceId
-            )
-          )
+        const { results } = await bulkAddToEngagementRoster(
+          tournamentId,
+          selectedUsers.map((u) => ({ user_id: u.id })),
+          workspaceId
         );
-        const succeeded = results.filter((r) => r.status === 'fulfilled').length;
-        const failedNames = results
-          .map((r, i) => (r.status === 'rejected' ? selectedUsers[i].name : null))
-          .filter(Boolean);
+        // The API answers per row; surface exactly which ones failed and why.
+        const failed = results.filter((r) => !r.ok);
+        const succeeded = results.length - failed.length;
 
         if (succeeded) {
           toast.success(
             `${succeeded} jugador${succeeded === 1 ? '' : 'es'} agregado${succeeded === 1 ? '' : 's'} — asigná el número y la posición desde la tabla`
           );
         }
-        if (failedNames.length) {
-          toast.error(`No se pudo agregar: ${failedNames.join(', ')}`);
+        if (failed.length) {
+          toast.error(
+            `No se pudo agregar: ${failed
+              .map((r) => `${selectedUsers[r.index]?.name || 'Usuario'}${r.error ? ` (${r.error})` : ''}`)
+              .join(', ')}`
+          );
+          // keep the dialog open with only the failed users still selected
+          setSelectedUsers(failed.map((r) => selectedUsers[r.index]).filter(Boolean));
+          return;
         }
       } else {
         await addToEngagementRoster(
+          tournamentId,
           {
-            tournament_id: tournamentId,
             user_id: null,
             guest_name: guestName.trim(),
-            number: number ? Number(number) : null,
+            number: number !== '' ? Number(number) : null,
             position: position || null,
           },
           workspaceId
@@ -304,20 +308,18 @@ function AddToRosterDialog({ open, onClose, tournamentId, availableUsers, worksp
                 onChange={(e) => setGuestName(e.target.value)}
                 helperText="Se podrá vincular a su cuenta más adelante cuando se registre"
               />
-              <Stack direction="row" spacing={2}>
+              <Stack spacing={2}>
                 <TextField
                   type="number"
                   label="Número"
                   value={number}
                   onChange={(e) => setNumber(e.target.value)}
-                  sx={{ flex: 1 }}
                 />
                 <TextField
                   select
                   label="Posición"
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
-                  sx={{ flex: 1 }}
                 >
                   <MenuItem value="">Sin posición</MenuItem>
                   {POSITION_OPTIONS.map((opt) => (
@@ -332,7 +334,9 @@ function AddToRosterDialog({ open, onClose, tournamentId, availableUsers, worksp
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancelar</Button>
+        <Button variant="soft" onClick={handleClose}>
+          Cancelar
+        </Button>
         <LoadingButton variant="contained" loading={isSubmitting} onClick={handleSave}>
           Agregar
         </LoadingButton>

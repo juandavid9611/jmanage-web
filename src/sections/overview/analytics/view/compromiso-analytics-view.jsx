@@ -31,6 +31,8 @@ import {
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
 
 import { RosterPanel } from 'src/sections/engagement/roster-panel';
 import { MatchesPanel } from 'src/sections/engagement/matches-panel';
@@ -43,7 +45,8 @@ export function CompromisoAnalyticsView() {
   const { selectedWorkspace } = useWorkspace();
   const workspaceId = selectedWorkspace?.id;
   const { users } = useGetUsers(selectedWorkspace);
-  const { tournaments } = useGetEngagementTournaments(workspaceId);
+  const { tournaments, tournamentsLoading, tournamentsError } =
+    useGetEngagementTournaments(workspaceId);
   const [tournamentId, setTournamentId] = useState('');
   const [newDialog, setNewDialog] = useState(false);
   const [tab, setTab] = useState('plantilla');
@@ -82,7 +85,11 @@ export function CompromisoAnalyticsView() {
         </Button>
       </Stack>
 
-      {tournaments.length === 0 ? (
+      {tournamentsError ? (
+        <EmptyContent filled title="No se pudieron cargar los torneos" sx={{ py: 10 }} />
+      ) : tournamentsLoading ? (
+        <LoadingScreen />
+      ) : tournaments.length === 0 ? (
         <Card sx={{ p: 6, textAlign: 'center', boxShadow: 'none', border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.24)}` }}>
           <Iconify icon="solar:medal-star-bold" width={48} sx={{ color: 'text.disabled', mb: 1 }} />
           <Typography variant="body1" sx={{ mb: 0.5 }}>
@@ -166,8 +173,8 @@ export function CompromisoAnalyticsView() {
                   )}
                   {tab === 'compromiso' && (
                     <Stack spacing={4}>
-                      <CompromisoCharts roster={roster} matches={matches} workspaceId={workspaceId} />
-                      <CompromisoTable roster={roster} matches={matches} workspaceId={workspaceId} />
+                      <CompromisoCharts roster={roster} matches={matches} />
+                      <CompromisoTable roster={roster} matches={matches} />
                     </Stack>
                   )}
                 </Box>
@@ -239,7 +246,9 @@ function NewTournamentDialog({ open, onClose, onCreated, workspaceId }) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancelar</Button>
+        <Button variant="soft" onClick={handleClose}>
+          Cancelar
+        </Button>
         <LoadingButton variant="contained" loading={isSubmitting} onClick={handleSave}>
           Crear
         </LoadingButton>

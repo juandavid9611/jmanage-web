@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { useRef, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
@@ -21,6 +22,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TableContainer from '@mui/material/TableContainer';
+import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker';
 
 import { useGetTour } from 'src/actions/tours';
 import { useGetEvents } from 'src/actions/calendar';
@@ -29,8 +31,6 @@ import {
   createEngagementMatch,
   deleteEngagementMatch,
   setEngagementCalledUp,
-  useGetEngagementLineup,
-  useGetCalendarEventIdForMatch,
 } from 'src/actions/engagement';
 
 import { toast } from 'src/components/snackbar';
@@ -64,7 +64,7 @@ export function MatchesPanel({ tournamentId, roster, matches, workspaceId }) {
 
   const handleDelete = async (matchId) => {
     try {
-      await deleteEngagementMatch(matchId, workspaceId);
+      await deleteEngagementMatch(tournamentId, matchId, workspaceId);
       toast.success('Partido eliminado');
     } catch (error) {
       toast.error(error.message || 'Error al eliminar');
@@ -132,19 +132,14 @@ export function MatchesPanel({ tournamentId, roster, matches, workspaceId }) {
 }
 
 function MatchRow({ match, roster, expanded, onToggle, onDelete, workspaceId, events }) {
-  const { lineup, lineupLoading } = useGetEngagementLineup(match.id, workspaceId);
+  const { lineup } = match;
   const registrado = !!lineup;
 
   // The calendar event this match is linked to (if any) carries a real,
   // backend-backed Tour — that's where "who's actually signed up" lives.
-  // Matches created before calendar_event_id was stored directly fall back
-  // to a reverse lookup through the link map.
-  const { calendarEventId: fallbackCalendarEventId } = useGetCalendarEventIdForMatch(
-    match.calendar_event_id ? null : match.id,
-    workspaceId
-  );
-  const calendarEventId = match.calendar_event_id || fallbackCalendarEventId;
-  const linkedEvent = events?.find((e) => e.id === calendarEventId);
+  // The link itself is server-side (match.calendar_event_id). A match whose
+  // event has no Tour just keeps a fully coach-managed "Convocado".
+  const linkedEvent = events?.find((e) => e.id === match.calendar_event_id);
   const { tour } = useGetTour(linkedEvent?.tourId, {
     refreshInterval: TOUR_POLL_MS,
     revalidateOnFocus: true,
@@ -174,10 +169,8 @@ function MatchRow({ match, roster, expanded, onToggle, onDelete, workspaceId, ev
           <Collapse in={expanded}>
             <Box sx={{ p: 2, bgcolor: 'background.neutral' }}>
               <LineupForm
-                matchId={match.id}
+                match={match}
                 roster={roster}
-                savedLineup={lineup}
-                lineupLoading={lineupLoading}
                 workspaceId={workspaceId}
                 tour={tour}
               />
@@ -189,7 +182,8 @@ function MatchRow({ match, roster, expanded, onToggle, onDelete, workspaceId, ev
   );
 }
 
-function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId, tour }) {
+function LineupForm({ match, roster, workspaceId, tour }) {
+  const { id: matchId, tournament_id: tournamentId, lineup: savedLineup } = match;
   const [rows, setRows] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Re-seed `rows` from the server every time `savedLineup` changes (e.g. a
@@ -207,19 +201,28 @@ function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId, 
   // Only touches players with a real account tied to a Tour booker — a
   // guest roster entry, or a real player who never touched the calendar
   // for this event, stays fully coach-managed via the toggle below.
+  const syncingRef = useRef(false);
   useEffect(() => {
-    if (!tour?.bookers || lineupLoading) return;
+    if (!tour?.bookers || syncingRef.current) return;
+    // One write for every player that changed: separate concurrent writes
+    // would each replace the whole lineup and overwrite one another.
+    const changes = [];
     roster.forEach((p) => {
       if (!p.user_id) return;
       const approved = tour.bookers[p.user_id]?.approved === true;
       const saved = savedLineup?.entries?.find((e) => e.roster_entry_id === p.id);
-      const persistedCalledUp = saved?.called_up ?? false;
-      if (persistedCalledUp === approved) return;
-      setEngagementCalledUp(matchId, p.id, approved, workspaceId).catch((error) =>
-        console.error(error)
-      );
+      if ((saved?.called_up ?? false) !== approved) {
+        changes.push({ rosterEntryId: p.id, calledUp: approved });
+      }
     });
-  }, [tour, roster, savedLineup, lineupLoading, matchId, workspaceId]);
+    if (!changes.length) return;
+    syncingRef.current = true;
+    setEngagementCalledUp(match, changes, workspaceId)
+      .catch((error) => console.error(error))
+      .finally(() => {
+        syncingRef.current = false;
+      });
+  }, [tour, roster, savedLineup, match, workspaceId]);
 
   useEffect(() => {
     if (prevMatchIdRef.current !== matchId) {
@@ -229,7 +232,6 @@ function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId, 
   }, [matchId]);
 
   useEffect(() => {
-    if (lineupLoading) return;
     setRows((prev) => {
       const next = {};
       roster.forEach((p) => {
@@ -242,7 +244,7 @@ function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId, 
       });
       return next;
     });
-  }, [roster, savedLineup, lineupLoading, matchId]);
+  }, [roster, savedLineup, matchId]);
 
   const updateRow = (playerId, patch) => {
     dirtyRef.current.add(playerId);
@@ -257,7 +259,7 @@ function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId, 
     }
     try {
       setIsSubmitting(true);
-      await saveEngagementLineup(matchId, values, workspaceId);
+      await saveEngagementLineup(tournamentId, matchId, values, workspaceId);
       dirtyRef.current = new Set();
       toast.success('Convocatoria guardada');
     } catch (error) {
@@ -330,7 +332,7 @@ function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId, 
                       if (e.target.value === '') updateRow(p.id, { minutes: 0 });
                     }}
                     sx={{ width: 80 }}
-                    inputProps={{ min: 0, max: 120 }}
+                    inputProps={{ min: 0, max: 300 }}
                   />
                 </TableCell>
               </TableRow>
@@ -349,12 +351,12 @@ function LineupForm({ matchId, roster, savedLineup, lineupLoading, workspaceId, 
 }
 
 function NewMatchDialog({ open, onClose, tournamentId, workspaceId }) {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [rival, setRival] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleClose = () => {
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(dayjs().format('YYYY-MM-DD'));
     setRival('');
     onClose();
   };
@@ -381,12 +383,10 @@ function NewMatchDialog({ open, onClose, tournamentId, workspaceId }) {
       <DialogTitle>Nuevo Partido</DialogTitle>
       <DialogContent>
         <Stack spacing={2.5} sx={{ mt: 1 }}>
-          <TextField
-            type="date"
+          <MobileDatePicker
             label="Fecha"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
+            value={dayjs(date)}
+            onChange={(value) => value && value.isValid() && setDate(value.format('YYYY-MM-DD'))}
           />
           <TextField
             label="Rival"
@@ -397,7 +397,9 @@ function NewMatchDialog({ open, onClose, tournamentId, workspaceId }) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancelar</Button>
+        <Button variant="soft" onClick={handleClose}>
+          Cancelar
+        </Button>
         <LoadingButton variant="contained" loading={isSubmitting} onClick={handleSave}>
           Crear
         </LoadingButton>
