@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
@@ -41,10 +41,49 @@ export function UserMembershipsDialog({ user, open, onClose }) {
   const { allWorkspaces } = useGetAllWorkspaces(true);
   const { memberships, membershipsLoading } = useGetUserMemberships(open ? user?.id : null);
 
+  // Optimistic overlay: workspaceId -> membership | null (removed). Kept until
+  // the dialog closes so a stale refetch can never flicker a toggle back.
+  const [overrides, setOverrides] = useState({});
+  const [pending, setPending] = useState(0);
+  const [dirty, setDirty] = useState(false);
+
+  const setOverride = useCallback((workspaceId, value) => {
+    setOverrides((prev) => {
+      const next = { ...prev };
+      if (value === undefined) delete next[workspaceId];
+      else next[workspaceId] = value;
+      return next;
+    });
+  }, []);
+
+  const trackSave = useCallback(async (fn) => {
+    setPending((n) => n + 1);
+    try {
+      await fn();
+      setDirty(true);
+      return true;
+    } catch (err) {
+      toast.error(err?.detail || t('something_went_wrong'));
+      return false;
+    } finally {
+      setPending((n) => n - 1);
+    }
+  }, [t]);
+
+  const handleClose = () => {
+    setOverrides({});
+    setDirty(false);
+    onClose();
+  };
+
   const byWorkspace = new Map(memberships.map((m) => [m.workspace_id, m]));
+  Object.entries(overrides).forEach(([id, m]) => {
+    if (m) byWorkspace.set(id, m);
+    else byWorkspace.delete(id);
+  });
 
   return (
-    <Dialog fullWidth open={open} onClose={onClose} PaperProps={{ sx: { maxWidth: 520 } }}>
+    <Dialog fullWidth open={open} onClose={handleClose} PaperProps={{ sx: { maxWidth: 520 } }}>
       <DialogTitle>{t('manage_memberships')}</DialogTitle>
 
       <DialogContent dividers sx={{ pb: 1 }}>
@@ -76,6 +115,8 @@ export function UserMembershipsDialog({ user, open, onClose }) {
                 workspace={ws}
                 membership={byWorkspace.get(ws.id)}
                 userId={user.id}
+                setOverride={setOverride}
+                trackSave={trackSave}
               />
             ))}
           </Stack>
@@ -83,7 +124,28 @@ export function UserMembershipsDialog({ user, open, onClose }) {
       </DialogContent>
 
       <DialogActions>
-        <Button variant="outlined" onClick={onClose}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={0.75}
+          sx={{ flexGrow: 1, pl: 1, color: 'text.secondary', typography: 'caption' }}
+        >
+          {pending > 0 ? (
+            <>
+              <CircularProgress size={12} />
+              <span>{t('memberships_saving')}</span>
+            </>
+          ) : (
+            dirty && (
+              <>
+                <Iconify icon="eva:checkmark-fill" width={14} sx={{ color: 'success.main' }} />
+                <span>{t('memberships_saved')}</span>
+              </>
+            )
+          )}
+        </Stack>
+
+        <Button variant="soft" onClick={handleClose}>
           {t('close')}
         </Button>
       </DialogActions>
@@ -91,48 +153,41 @@ export function UserMembershipsDialog({ user, open, onClose }) {
   );
 }
 
-function MembershipRow({ workspace, membership, userId }) {
+function MembershipRow({ workspace, membership, userId, setOverride, trackSave }) {
   const { t } = useTranslation();
   const rolePopover = usePopover();
+  // Brief lock per row so rapid double-clicks can't race two requests.
   const [busy, setBusy] = useState(false);
 
   const isMember = !!membership;
   const role = membership?.role || 'user';
   const roleEditable = isMember && !busy;
 
-  const run = async (fn) => {
+  const run = async (optimistic, fn) => {
     setBusy(true);
-    try {
-      await fn();
-    } catch (err) {
-      toast.error(err?.detail || t('something_went_wrong'));
-    } finally {
-      setBusy(false);
-    }
+    setOverride(workspace.id, optimistic);
+    const ok = await trackSave(fn);
+    if (!ok) setOverride(workspace.id, undefined); // revert to server state
+    setBusy(false);
   };
 
   const handleToggle = () => {
     if (busy) return;
     if (isMember) {
-      run(async () => {
-        await deleteMembership(userId, workspace.id);
-        toast.success(t('membership_removed'));
-      });
+      run(null, () => deleteMembership(userId, workspace.id));
     } else {
-      run(async () => {
-        await createMembership(userId, workspace.id, 'user');
-        toast.success(t('membership_added'));
-      });
+      run({ workspace_id: workspace.id, role: 'user' }, () =>
+        createMembership(userId, workspace.id, 'user')
+      );
     }
   };
 
   const handleRolePick = (newRole) => {
     rolePopover.onClose();
-    if (newRole === role) return;
-    run(async () => {
-      await updateMembershipRole(userId, workspace.id, newRole);
-      toast.success(t('role_updated'));
-    });
+    if (newRole === role || busy) return;
+    run({ ...membership, role: newRole }, () =>
+      updateMembershipRole(userId, workspace.id, newRole)
+    );
   };
 
   return (
@@ -141,11 +196,7 @@ function MembershipRow({ workspace, membership, userId }) {
         direction="row"
         alignItems="center"
         spacing={2}
-        sx={{
-          py: 1.5,
-          opacity: busy ? 0.6 : 1,
-          transition: (theme) => theme.transitions.create('opacity'),
-        }}
+        sx={{ py: 1.5 }}
       >
         <Avatar src={workspace.logo} alt={workspace.name} sx={{ width: 32, height: 32 }} />
 
@@ -167,7 +218,7 @@ function MembershipRow({ workspace, membership, userId }) {
           </Label>
         )}
 
-        <Switch checked={isMember} onChange={handleToggle} disabled={busy} />
+        <Switch checked={isMember} onChange={handleToggle} />
       </Stack>
 
       <CustomPopover
