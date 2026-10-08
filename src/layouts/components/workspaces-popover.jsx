@@ -88,21 +88,34 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
         onClose={popover.onClose}
         slotProps={{ arrow: { placement: 'top-left' } }}
       >
-        <MenuList sx={{ width: 240 }}>
+        <MenuList sx={{ minWidth: 240, maxWidth: 360 }}>
           {data.map((option) => (
             <MenuItem
               key={option.id}
               selected={option.id === selectedWorkspace?.id}
               onClick={() => handleChangeWorkspace(option)}
-              sx={{ height: 48 }}
+              sx={{ minHeight: 48, gap: 1.5 }}
             >
-              <Avatar alt={option.name} src={option.logo} sx={{ width: 24, height: 24 }} />
+              <Avatar
+                alt={option.name}
+                src={option.logo}
+                sx={{ width: 24, height: 24, flexShrink: 0 }}
+              />
 
-              <Box component="span" sx={{ flexGrow: 1 }}>
+              <Box
+                component="span"
+                sx={{
+                  flexGrow: 1,
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {option.name}
               </Box>
 
-              <Label color={ROLE_COLORS[option.role] || 'default'}>
+              <Label color={ROLE_COLORS[option.role] || 'default'} sx={{ flexShrink: 0 }}>
                 {option.role ? t(option.role) : ''}
               </Label>
             </MenuItem>
