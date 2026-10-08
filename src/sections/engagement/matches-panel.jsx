@@ -209,7 +209,9 @@ function LineupForm({ match, roster, workspaceId, tour }) {
     const changes = [];
     roster.forEach((p) => {
       if (!p.user_id) return;
-      const approved = tour.bookers[p.user_id]?.approved === true;
+      const booker = tour.bookers[p.user_id];
+      if (!booker) return; // never touched the calendar event: the coach's toggle is the source of truth
+      const approved = booker.approved === true;
       const saved = savedLineup?.entries?.find((e) => e.roster_entry_id === p.id);
       if ((saved?.called_up ?? false) !== approved) {
         changes.push({ rosterEntryId: p.id, calledUp: approved });
