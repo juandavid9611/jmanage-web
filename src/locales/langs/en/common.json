@@ -2015,5 +2015,13 @@
   "label_product_images_upload_failed_desc": "You can retry the image upload or delete the incomplete product.",
   "label_retry_image_upload": "Retry upload",
   "label_delete_product": "Delete product",
-  "label_product_save_failed": "The product could not be saved"
+  "label_product_save_failed": "The product could not be saved",
+  "label_new_category": "New category",
+  "label_new_category_body": "Create a category inside this club. You can assign players to it afterwards.",
+  "label_category_name": "Category name",
+  "label_category_created": "Category created",
+  "label_category_exists": "A category with that name already exists",
+  "label_category_name_required": "Name is required",
+  "label_category_name_too_long": "Maximum 80 characters",
+  "label_category_create_error": "Could not create the category"
 }

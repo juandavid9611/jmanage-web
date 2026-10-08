@@ -5,6 +5,7 @@ import Tab from '@mui/material/Tab';
 import { Box } from '@mui/material';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
+import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
@@ -47,6 +48,7 @@ import { useAuthContext } from 'src/auth/hooks';
 import { UserTableRow } from '../user-table-row';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { AdminInviteDialog } from '../admin-invite-dialog';
+import { WorkspaceCreateDialog } from '../workspace-create-dialog';
 import { UserTableFiltersResult } from '../user-table-filters-result';
 
 // ----------------------------------------------------------------------
@@ -86,14 +88,18 @@ export function UserListView() {
 
   const confirm = useBoolean();
   const adminInviteDialog = useBoolean();
+  const categoryDialog = useBoolean();
 
   const [tableData, setTableData] = useState([]);
 
   const { user } = useAuthContext();
-  const { selectedWorkspace } = useWorkspace();
+  const { selectedWorkspace, selectWorkspace } = useWorkspace();
 
   const isTournamentAccount =
     (user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club') === 'tournament';
+
+  const canCreateCategory =
+    !isTournamentAccount && user?.accountsRoles?.[user?.activeAccountId] === 'admin';
 
   const { users, usersLoading, usersEmpty } = useGetUsers(selectedWorkspace, true);
   const { teamOwnerTeams } = useGetTeamOwnerTeams(isTournamentAccount);
@@ -180,13 +186,24 @@ export function UserListView() {
             { name: t('list') },
           ]}
           action={
-            <Button
-              variant="contained"
-              startIcon={<Iconify icon="mingcute:add-line" />}
-              onClick={adminInviteDialog.onTrue}
-            >
-              {t('label_create_admin')}
-            </Button>
+            <Stack direction="row" spacing={1}>
+              {canCreateCategory && (
+                <Button
+                  variant="soft"
+                  startIcon={<Iconify icon="mingcute:add-line" />}
+                  onClick={categoryDialog.onTrue}
+                >
+                  {t('label_new_category')}
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                startIcon={<Iconify icon="mingcute:add-line" />}
+                onClick={adminInviteDialog.onTrue}
+              >
+                {t('label_create_admin')}
+              </Button>
+            </Stack>
           }
           sx={{
             mb: { xs: 3, md: 5 },
@@ -361,6 +378,14 @@ export function UserListView() {
       />
 
       <AdminInviteDialog open={adminInviteDialog.value} onClose={adminInviteDialog.onFalse} />
+
+      {canCreateCategory && (
+        <WorkspaceCreateDialog
+          open={categoryDialog.value}
+          onClose={categoryDialog.onFalse}
+          onCreated={selectWorkspace}
+        />
+      )}
     </>
   );
 }

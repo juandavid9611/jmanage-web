@@ -1,7 +1,7 @@
-import useSWR from 'swr';
 import { useMemo } from 'react';
+import useSWR, { mutate } from 'swr';
 
-import { fetcher, endpoints } from 'src/utils/axios';
+import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 const URL = endpoints.workspaces;
 const ALL_URL = `${URL}/all`;
@@ -38,3 +38,12 @@ export function useGetAllWorkspaces(authenticated) {
   return memoizedValue;
 }
 
+
+// Creates a category in the active club account. The API returns the new workspace in the
+// same shape as GET /workspaces (role: 'admin'); both list keys are revalidated so it shows
+// up in the selector and the memberships dialog without a reload.
+export async function createWorkspace({ name, logo }) {
+  const res = await axiosInstance.post(URL, { name, ...(logo ? { logo } : {}) });
+  await mutate((key) => typeof key === 'string' && key.startsWith(URL));
+  return res.data;
+}

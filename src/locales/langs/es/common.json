@@ -2015,5 +2015,13 @@
   "label_product_images_upload_failed_desc": "Puedes reintentar la subida de imágenes o eliminar el producto incompleto.",
   "label_retry_image_upload": "Reintentar subida",
   "label_delete_product": "Eliminar producto",
-  "label_product_save_failed": "No se pudo guardar el producto"
+  "label_product_save_failed": "No se pudo guardar el producto",
+  "label_new_category": "Nueva categoría",
+  "label_new_category_body": "Crea una categoría dentro de este club. Después podrás asignarle jugadores.",
+  "label_category_name": "Nombre de la categoría",
+  "label_category_created": "Categoría creada",
+  "label_category_exists": "Ya existe una categoría con ese nombre",
+  "label_category_name_required": "El nombre es obligatorio",
+  "label_category_name_too_long": "Máximo 80 caracteres",
+  "label_category_create_error": "No se pudo crear la categoría"
 }
