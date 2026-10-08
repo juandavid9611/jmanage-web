@@ -107,7 +107,7 @@ export function getNavData(t, language) {
           title: t('label_club_tournaments'),
           path: paths.dashboard.clubTournaments,
           icon: ICONS.tour,
-          roles: ['admin', 'user'],
+          roles: ['admin', 'coach', 'user'],
           clubOnly: true,
         },
         {
@@ -133,7 +133,7 @@ export function getNavData(t, language) {
           title: t('label_training_sessions'),
           path: paths.dashboard.trainingSessions.root,
           icon: <Iconify icon="solar:football-bold-duotone" />,
-          roles: ['admin', 'user'],
+          roles: ['admin', 'coach', 'user'],
           clubOnly: true,
         },
         {

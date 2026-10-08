@@ -7,6 +7,7 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 import { LoadingScreen } from 'src/components/loading-screen';
 
 import { AuthGuard } from 'src/auth/guard';
+import { ClubOnlyGuard } from 'src/auth/guard/club-only-guard';
 
 // ----------------------------------------------------------------------
 
@@ -95,7 +96,14 @@ export const dashboardRoutes = [
           { path: 'late-arrives', element: <LateArrivesAnalyticsPage /> },
         ],
       },
-      { path: 'club-tournaments', element: <ClubTournamentsPage /> },
+      {
+        path: 'club-tournaments',
+        element: (
+          <ClubOnlyGuard>
+            <ClubTournamentsPage />
+          </ClubOnlyGuard>
+        ),
+      },
       { path: 'calendar', element: <CalendarPage /> },
       {
         path: 'invoice',
@@ -186,6 +194,11 @@ export const dashboardRoutes = [
       { path: 'donations', element: <DonationRecordPage /> },
       {
         path: 'training-sessions',
+        element: (
+          <ClubOnlyGuard>
+            <Outlet />
+          </ClubOnlyGuard>
+        ),
         children: [
           { element: <TrainingSessionListPage />, index: true },
           { path: 'new', element: <TrainingSessionNewPage /> },
