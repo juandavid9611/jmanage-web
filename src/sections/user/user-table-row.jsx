@@ -20,6 +20,7 @@ import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
+import { UserCategoryChips } from './user-category-chips';
 import { UserQuickEditForm } from './user-quick-edit-form';
 import { UserMembershipsDialog } from './user-memberships-dialog';
 
@@ -40,6 +41,7 @@ export function UserTableRow({
   onDeleteRow,
   teamName,
   isTournamentAccount,
+  workspacesById,
 }) {
   const confirm = useBoolean();
   const popover = usePopover();
@@ -71,6 +73,12 @@ export function UserTableRow({
             </Stack>
           </Stack>
         </TableCell>
+
+        {workspacesById && (
+          <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+            <UserCategoryChips memberships={row.memberships} workspacesById={workspacesById} />
+          </TableCell>
+        )}
 
         {!isTournamentAccount && (
           <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>

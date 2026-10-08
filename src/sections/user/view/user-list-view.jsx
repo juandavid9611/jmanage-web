@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
 import { Box } from '@mui/material';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
+import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
@@ -19,6 +20,7 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAllWorkspaces } from 'src/actions/workspaces';
 import { GROUP_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { deleteUser, useGetUsers, useGetTeamOwnerTeams } from 'src/actions/user';
@@ -47,7 +49,9 @@ import { useAuthContext } from 'src/auth/hooks';
 import { UserTableRow } from '../user-table-row';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { AdminInviteDialog } from '../admin-invite-dialog';
+import { UserBulkCategoryDialog } from '../user-bulk-category-dialog';
 import { UserTableFiltersResult } from '../user-table-filters-result';
+import { SCOPE_ALL, SCOPE_UNASSIGNED, UserCategoryScope } from '../user-category-scope';
 
 // ----------------------------------------------------------------------
 
@@ -57,6 +61,7 @@ const STATUS_OPTIONS = [{ value: 'all', label: 'all' }, ...USER_STATUS_OPTIONS];
 const CLUB_TABLE_HEAD = [
   { id: '', width: 88 },
   { id: 'name', label: 'name' },
+  { id: 'categories', label: 'categories', width: 220, hideOnXs: true },
   { id: 'phoneNumber', label: 'phone_number', width: 180 },
   { id: 'identityCardNumber', label: 'identity_card', width: 220 },
   { id: 'shirtNumber', label: 'shirt_number', width: 180 },
@@ -86,6 +91,7 @@ export function UserListView() {
 
   const confirm = useBoolean();
   const adminInviteDialog = useBoolean();
+  const bulkDialog = useBoolean();
 
   const [tableData, setTableData] = useState([]);
 
@@ -95,7 +101,54 @@ export function UserListView() {
   const isTournamentAccount =
     (user?.accounts?.[user?.activeAccountId]?.settings?.account_type ?? 'club') === 'tournament';
 
-  const { users, usersLoading, usersEmpty } = useGetUsers(selectedWorkspace, true);
+  // Club accounts load the whole account (no workspace_id) so categories can be
+  // filtered/assigned client-side without switching the active workspace.
+  const showCategories = !isTournamentAccount;
+  const {
+    users: fetchedUsers,
+    usersLoading,
+    usersEmpty,
+  } = useGetUsers(selectedWorkspace, true, showCategories);
+  const { allWorkspaces } = useGetAllWorkspaces(showCategories);
+  const workspacesById = useMemo(
+    () => new Map(allWorkspaces.map((ws) => [ws.id, ws])),
+    [allWorkspaces]
+  );
+
+  // Scope defaults to the active workspace (same list as before); null = follow it.
+  const [scopeChoice, setScopeChoice] = useState(null);
+  const scope = showCategories ? (scopeChoice ?? selectedWorkspace?.id ?? SCOPE_ALL) : SCOPE_ALL;
+  const sourceWorkspaceId = workspacesById.has(scope) ? scope : undefined;
+
+  const hasMembership = (u, wsId) =>
+    (u.memberships || []).some((m) => (m.workspace_id ?? m.workspaceId) === wsId);
+
+  const scopeCounts = useMemo(() => {
+    const counts = { [SCOPE_ALL]: fetchedUsers.length, [SCOPE_UNASSIGNED]: 0 };
+    fetchedUsers.forEach((u) => {
+      const ms = u.memberships || [];
+      if (!ms.length) counts[SCOPE_UNASSIGNED] += 1;
+      ms.forEach((m) => {
+        const id = m.workspace_id ?? m.workspaceId;
+        counts[id] = (counts[id] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [fetchedUsers]);
+
+  const users = useMemo(() => {
+    if (!showCategories || scope === SCOPE_ALL) return fetchedUsers;
+    if (scope === SCOPE_UNASSIGNED) return fetchedUsers.filter((u) => !u.memberships?.length);
+    return fetchedUsers
+      .filter((u) => hasMembership(u, scope))
+      .map((u) => ({
+        ...u,
+        // Show the role the user has in the scoped category.
+        role: u.memberships.find((m) => (m.workspace_id ?? m.workspaceId) === scope)?.role ?? u.role,
+      }));
+  }, [fetchedUsers, scope, showCategories]);
+
+  const usersById = useMemo(() => new Map(fetchedUsers.map((u) => [u.id, u])), [fetchedUsers]);
   const { teamOwnerTeams } = useGetTeamOwnerTeams(isTournamentAccount);
 
   const teamNamesByUserId = teamOwnerTeams.reduce((acc, item) => {
@@ -163,6 +216,15 @@ export function UserListView() {
       filters.setState({ status: newValue });
     },
     [filters, table]
+  );
+
+  const handleScopeChange = useCallback(
+    (value) => {
+      table.onResetPage();
+      table.setSelected([]);
+      setScopeChoice(value);
+    },
+    [table]
   );
 
   useEffect(() => {
@@ -234,6 +296,15 @@ export function UserListView() {
             ))}
           </Tabs>
 
+          {showCategories && (
+            <UserCategoryScope
+              value={scope}
+              onChange={handleScopeChange}
+              workspaces={allWorkspaces}
+              counts={scopeCounts}
+            />
+          )}
+
           <UserTableToolbar
             filters={filters}
             onResetPage={table.onResetPage}
@@ -261,11 +332,24 @@ export function UserListView() {
                 )
               }
               action={
-                <Tooltip title={t('delete')}>
-                  <IconButton color="primary" onClick={confirm.onTrue}>
-                    <Iconify icon="solar:trash-bin-trash-bold" />
-                  </IconButton>
-                </Tooltip>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  {showCategories && (
+                    <Button
+                      size="small"
+                      color="primary"
+                      variant="soft"
+                      startIcon={<Iconify icon="solar:users-group-rounded-bold" />}
+                      onClick={bulkDialog.onTrue}
+                    >
+                      {t('assign_to_category')}
+                    </Button>
+                  )}
+                  <Tooltip title={t('delete')}>
+                    <IconButton color="primary" onClick={confirm.onTrue}>
+                      <Iconify icon="solar:trash-bin-trash-bold" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
               }
             />
 
@@ -308,6 +392,7 @@ export function UserListView() {
                             onEditRow={() => handleEditRow(row.id)}
                             teamName={isTournamentAccount ? teamNamesByUserId[row.id] : undefined}
                             isTournamentAccount={isTournamentAccount}
+                            workspacesById={showCategories ? workspacesById : undefined}
                           />
                         ))}
                     </>
@@ -359,6 +444,18 @@ export function UserListView() {
           </Button>
         }
       />
+
+      {showCategories && (
+        <UserBulkCategoryDialog
+          open={bulkDialog.value}
+          onClose={bulkDialog.onFalse}
+          onDone={() => table.setSelected([])}
+          userIds={table.selected}
+          usersById={usersById}
+          workspaces={allWorkspaces}
+          sourceWorkspaceId={sourceWorkspaceId}
+        />
+      )}
 
       <AdminInviteDialog open={adminInviteDialog.value} onClose={adminInviteDialog.onFalse} />
     </>
