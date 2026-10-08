@@ -1,13 +1,16 @@
+import dayjs from 'dayjs';
+import { mutate } from 'swr';
 import { z as zod } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
+import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
@@ -17,10 +20,17 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { uuidv4 } from 'src/utils/uuidv4';
+import { endpoints } from 'src/utils/axios';
 import { fIsAfter, fTimestamp } from 'src/utils/format-time';
 
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { createEvent, updateEvent, deleteEvent, participateEvent } from 'src/actions/calendar';
+import {
+  createEngagementMatch,
+  deleteEngagementMatch,
+  useGetCalendarEventLink,
+  useGetEngagementTournaments,
+} from 'src/actions/engagement';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -29,6 +39,11 @@ import { Form, Field } from 'src/components/hook-form';
 import { ColorPicker } from 'src/components/color-utils';
 
 import { useAuthContext } from 'src/auth/hooks';
+
+// The server sets calendarEventId and syncs date/rival on the linked match
+// after the match was cached, so club data must be refetched after event writes.
+const revalidateClub = () =>
+  mutate((key) => typeof key === 'string' && key.startsWith(endpoints.clubTournaments));
 
 // ----------------------------------------------------------------------
 
@@ -63,6 +78,18 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     (currentEvent?.participants && user?.id in currentEvent.participants) || false
   );
   const EventSchema = useMemo(() => getEventSchema(t), [t]);
+
+  const { tournaments } = useGetEngagementTournaments(selectedWorkspace?.id);
+  const { link: existingLink } = useGetCalendarEventLink(
+    currentEvent?.clubMatchId,
+    tournaments,
+    selectedWorkspace?.id
+  );
+  const [torneoId, setTorneoId] = useState('');
+
+  useEffect(() => {
+    setTorneoId(existingLink?.tournament_id || '');
+  }, [existingLink]);
 
   const methods = useForm({
     mode: 'all',
@@ -99,29 +126,97 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       group: data?.group,
     };
 
+    if (dateError) return;
+
+    // The event <-> match link is owned by the event (`clubMatchId`): the API
+    // keeps the match's date/rival in sync and clears the link when either
+    // side is deleted. "" unlinks; omitted leaves it as is.
+    const wantsLink = isAdminOrCoach && data?.category === 'match' && !!torneoId;
+    const hadLink = !!currentEvent?.clubMatchId;
+    let newMatchId = null;
+    let clubMatchId; // undefined => untouched
+
+    if (wantsLink && existingLink?.tournament_id === torneoId) {
+      ({ clubMatchId } = currentEvent);
+    } else if (wantsLink) {
+      // New link, or the tournament changed: a match must exist before the event can point at it.
+      try {
+        const match = await createEngagementMatch(
+          {
+            tournament_id: torneoId,
+            date: dayjs(data.start).format('YYYY-MM-DD'),
+            rival: eventData.title,
+          },
+          selectedWorkspace?.id
+        );
+        const { id: createdMatchId } = match;
+        newMatchId = createdMatchId;
+        clubMatchId = createdMatchId;
+      } catch (error) {
+        // The event itself still saves; only the tournament link is skipped.
+        console.error(error);
+        toast.error(t('label_tournament_link_error'));
+      }
+    } else if (hadLink && existingLink) {
+      clubMatchId = '';
+    }
+
     try {
-      if (!dateError) {
-        if (currentEvent?.id) {
-          await updateEvent(eventData, selectedWorkspace?.id);
-          toast.success(t('update_success'));
-        } else {
-          await createEvent(eventData, selectedWorkspace?.id);
-          toast.success(t('create_success'));
-        }
-        onClose();
-        reset();
+      if (currentEvent?.id) {
+        await updateEvent(
+          clubMatchId === undefined ? eventData : { ...eventData, clubMatchId },
+          selectedWorkspace?.id
+        );
+        toast.success(t('update_success'));
+      } else {
+        // Event ids are server-assigned: nothing may rely on eventData.id after this.
+        await createEvent(
+          clubMatchId === undefined ? eventData : { ...eventData, clubMatchId },
+          selectedWorkspace?.id
+        );
+        toast.success(t('create_success'));
       }
     } catch (error) {
       console.error(error);
+      toast.error(error.message || t('label_event_save_error'));
+      // don't leave a match nobody points at
+      if (newMatchId) {
+        deleteEngagementMatch(torneoId, newMatchId, selectedWorkspace?.id).catch(console.error);
+      }
+      return;
     }
+
+    // The tournament changed: the match auto-created for this event under the old tournament is orphaned now.
+    // Keep it if it already has a saved lineup (that data would be lost).
+    if (
+      newMatchId &&
+      existingLink &&
+      existingLink.tournament_id !== torneoId &&
+      !existingLink.has_lineup
+    ) {
+      deleteEngagementMatch(existingLink.tournament_id, existingLink.match_id, selectedWorkspace?.id).catch(
+        (error) => {
+          console.error(error);
+          toast.error(t('label_tournament_link_error'));
+        }
+      );
+    }
+
+    revalidateClub();
+    onClose();
+    reset();
   });
 
   const handleChangeIsParticipating = useCallback(
     async (event) => {
+      const { checked } = event.target;
       try {
-        setIsParticipating(event.target.checked);
-        await participateEvent(`${currentEvent?.id}`, event.target.checked, selectedWorkspace?.id);
+        setIsParticipating(checked);
+        await participateEvent(`${currentEvent?.id}`, checked, selectedWorkspace?.id);
         toast.success(t('label_participate_success'));
+        // Whether this shows up as "called up" on the linked match's
+        // lineup is derived live from this event's real participants list
+        // (see MatchesPanel / LineupForm) — no local copy to keep in sync.
       } catch (error) {
         console.error(error);
       }
@@ -131,7 +226,9 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const onDelete = useCallback(async () => {
     try {
+      // The API clears the linked match's calendarEventId on delete.
       await deleteEvent(`${currentEvent?.id}`, selectedWorkspace?.id);
+      revalidateClub();
       toast.success(t('delete_success'));
       onClose();
     } catch (error) {
@@ -178,6 +275,24 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               />
             )}
           </Stack>
+
+          {values.category === 'match' && (
+            <TextField
+              select
+              label={t('label_tournament_optional')}
+              value={torneoId}
+              onChange={(e) => setTorneoId(e.target.value)}
+              disabled={!isAdminOrCoach}
+              helperText={t('label_tournament_help')}
+            >
+              <MenuItem value="">{t('label_tournament_none')}</MenuItem>
+              {tournaments.map((torneo) => (
+                <MenuItem key={torneo.id} value={torneo.id}>
+                  {torneo.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
             <Field.Select

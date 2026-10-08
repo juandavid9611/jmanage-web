@@ -7,6 +7,7 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 import { LoadingScreen } from 'src/components/loading-screen';
 
 import { AuthGuard } from 'src/auth/guard';
+import { ClubOnlyGuard } from 'src/auth/guard/club-only-guard';
 
 // ----------------------------------------------------------------------
 
@@ -16,6 +17,8 @@ const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
 const OverviewAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics'));
 const TopAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/top'));
 const LateArrivesAnalyticsPage = lazy(() => import('src/pages/dashboard/analytics/late-arrives'));
+// Club Tournaments (Torneos del Club)
+const ClubTournamentsPage = lazy(() => import('src/pages/dashboard/club-tournaments'));
 // Invoice
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoice/list'));
 const InvoiceCreatePage = lazy(() => import('src/pages/dashboard/invoice/new'));
@@ -62,6 +65,11 @@ const TournamentEditPage = lazy(() => import('src/pages/dashboard/tournament/edi
 const TournamentMatchDetailPage = lazy(() => import('src/pages/dashboard/tournament/match-detail'));
 // Team Owner
 const TeamOwnerPage = lazy(() => import('src/pages/team-owner'));
+// Training Sessions
+const TrainingSessionListPage = lazy(() => import('src/pages/dashboard/training-sessions/list'));
+const TrainingSessionNewPage = lazy(() => import('src/pages/dashboard/training-sessions/new'));
+const TrainingSessionEditPage = lazy(() => import('src/pages/dashboard/training-sessions/edit'));
+const TrainingSessionDetailsPage = lazy(() => import('src/pages/dashboard/training-sessions/details'));
 // Donations
 const DonationRecordPage = lazy(() => import('src/pages/dashboard/donation'));
 // ----------------------------------------------------------------------
@@ -87,6 +95,14 @@ export const dashboardRoutes = [
           { path: 'top', element: <TopAnalyticsPage /> },
           { path: 'late-arrives', element: <LateArrivesAnalyticsPage /> },
         ],
+      },
+      {
+        path: 'club-tournaments',
+        element: (
+          <ClubOnlyGuard>
+            <ClubTournamentsPage />
+          </ClubOnlyGuard>
+        ),
       },
       { path: 'calendar', element: <CalendarPage /> },
       {
@@ -176,6 +192,20 @@ export const dashboardRoutes = [
       },
       { path: 'team-owner', element: <TeamOwnerPage /> },
       { path: 'donations', element: <DonationRecordPage /> },
+      {
+        path: 'training-sessions',
+        element: (
+          <ClubOnlyGuard>
+            <Outlet />
+          </ClubOnlyGuard>
+        ),
+        children: [
+          { element: <TrainingSessionListPage />, index: true },
+          { path: 'new', element: <TrainingSessionNewPage /> },
+          { path: ':id', element: <TrainingSessionDetailsPage /> },
+          { path: ':id/edit', element: <TrainingSessionEditPage /> },
+        ],
+      },
     ],
   },
 ];
