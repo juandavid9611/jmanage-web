@@ -38,6 +38,7 @@ import { RosterPanel } from 'src/sections/engagement/roster-panel';
 import { MatchesPanel } from 'src/sections/engagement/matches-panel';
 import { CompromisoTable } from 'src/sections/engagement/compromiso-table';
 import { CompromisoCharts } from 'src/sections/engagement/compromiso-charts';
+import { TournamentSelector } from 'src/sections/engagement/tournament-selector';
 
 // ----------------------------------------------------------------------
 
@@ -74,9 +75,21 @@ export function CompromisoAnalyticsView() {
 
   return (
     <DashboardContent maxWidth="xl">
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Typography variant="h4">Compromiso</Typography>
+      <Stack
+        direction="row"
+        alignItems="flex-start"
+        justifyContent="space-between"
+        spacing={2}
+        sx={{ mb: 3 }}
+      >
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h4">Compromiso</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+            Plantilla, partidos y convocatorias de los torneos externos de tu equipo.
+          </Typography>
+        </Box>
         <Button
+          sx={{ flexShrink: 0 }}
           variant="contained"
           startIcon={<Iconify icon="mingcute:add-line" />}
           onClick={() => setNewDialog(true)}
@@ -90,7 +103,7 @@ export function CompromisoAnalyticsView() {
       ) : tournamentsLoading ? (
         <LoadingScreen />
       ) : tournaments.length === 0 ? (
-        <Card sx={{ p: 6, textAlign: 'center', boxShadow: 'none', border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.24)}` }}>
+        <Card sx={{ p: { xs: 3, sm: 6 }, textAlign: 'center', boxShadow: 'none', border: (t) => `1px dashed ${alpha(t.palette.grey[500], 0.32)}` }}>
           <Iconify icon="solar:medal-star-bold" width={48} sx={{ color: 'text.disabled', mb: 1 }} />
           <Typography variant="body1" sx={{ mb: 0.5 }}>
             Todavía no registraste ningún torneo
@@ -98,45 +111,43 @@ export function CompromisoAnalyticsView() {
           <Typography variant="body2" sx={{ color: 'text.disabled' }}>
             Ej. Lichi Cup, Ascenso Trinche 2, Master, Femenino — cualquier competencia externa donde juega tu equipo.
           </Typography>
+          <Button
+            variant="contained"
+            sx={{ mt: 3 }}
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={() => setNewDialog(true)}
+          >
+            Crear el primer torneo
+          </Button>
         </Card>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, md: 3 }}>
           <Grid xs={12} md={3}>
-            <Stack spacing={1}>
-              {tournaments.map((t) => (
-                <Card
-                  key={t.id}
-                  onClick={() => setTournamentId(t.id)}
-                  sx={{
-                    p: 2,
-                    cursor: 'pointer',
-                    boxShadow: 'none',
-                    border: (th) => `1.5px solid ${t.id === tournamentId ? th.palette.primary.main : alpha(th.palette.grey[500], 0.12)}`,
-                    bgcolor: t.id === tournamentId ? (th) => alpha(th.palette.primary.main, 0.04) : 'transparent',
-                  }}
-                >
-                  <Typography variant="subtitle2" noWrap>
-                    {t.name}
-                  </Typography>
-                  {t.category && (
-                    <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                      {t.category}
-                    </Typography>
-                  )}
-                </Card>
-              ))}
-            </Stack>
+            <TournamentSelector items={tournaments} value={tournamentId} onChange={setTournamentId} />
           </Grid>
 
           <Grid xs={12} md={9}>
             {tournament && (
-              <Card sx={{ boxShadow: 'none', border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, pt: 2 }}>
-                  <Stack direction="row" alignItems="center" spacing={1.5}>
-                    <Typography variant="h6">{tournament.name}</Typography>
+              <Card sx={{ boxShadow: 'none', border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}` }}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  spacing={1}
+                  sx={{ px: { xs: 2, sm: 2.5 }, pt: 2 }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
+                    <Typography variant="h6" noWrap>
+                      {tournament.name}
+                    </Typography>
                     {tournament.category && <Chip size="small" label={tournament.category} />}
                   </Stack>
-                  <IconButton color="error" size="small" onClick={handleDeleteTournament}>
+                  <IconButton
+                    size="small"
+                    aria-label="Eliminar torneo"
+                    onClick={handleDeleteTournament}
+                    sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
+                  >
                     <Iconify icon="solar:trash-bin-trash-bold" width={18} />
                   </IconButton>
                 </Stack>
@@ -147,14 +158,14 @@ export function CompromisoAnalyticsView() {
                   variant="scrollable"
                   scrollButtons="auto"
                   allowScrollButtonsMobile
-                  sx={{ px: 2.5, mt: 1 }}
+                  sx={{ px: { xs: 1, sm: 2.5 }, mt: 1 }}
                 >
                   <Tab value="plantilla" label={`Plantilla (${roster.length})`} />
                   <Tab value="partidos" label={`Partidos (${matches.length})`} />
                   <Tab value="compromiso" label="Compromiso" />
                 </Tabs>
 
-                <Box sx={{ p: 2.5 }}>
+                <Box sx={{ p: { xs: 2, sm: 2.5 } }}>
                   {tab === 'plantilla' && (
                     <RosterPanel
                       tournamentId={tournamentId}
@@ -172,7 +183,7 @@ export function CompromisoAnalyticsView() {
                     />
                   )}
                   {tab === 'compromiso' && (
-                    <Stack spacing={4}>
+                    <Stack spacing={3}>
                       <CompromisoCharts roster={roster} matches={matches} />
                       <CompromisoTable roster={roster} matches={matches} />
                     </Stack>

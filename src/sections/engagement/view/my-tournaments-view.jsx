@@ -24,10 +24,11 @@ import {
   useGetEngagementTournamentsForUser,
 } from 'src/actions/engagement';
 
-import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 
 import { useAuthContext } from 'src/auth/hooks';
+
+import { TournamentSelector } from '../tournament-selector';
 
 // ----------------------------------------------------------------------
 
@@ -80,9 +81,11 @@ function MyTournamentDetail({ rosterEntryId, tournament, workspaceId }) {
   }, [lineupsByMatch, rosterEntryId]);
 
   return (
-    <Card sx={{ p: 3, boxShadow: 'none', border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.12)}` }}>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-        <Typography variant="h6">{tournament.name}</Typography>
+    <Card sx={{ p: { xs: 2, sm: 3 }, boxShadow: 'none', border: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}` }}>
+      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3, minWidth: 0 }}>
+        <Typography variant="h6" noWrap>
+          {tournament.name}
+        </Typography>
         {tournament.category && <Chip size="small" label={tournament.category} />}
       </Stack>
 
@@ -150,9 +153,12 @@ export function MyTournamentsView() {
 
   return (
     <DashboardContent maxWidth="xl">
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        Mis Torneos
-      </Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4">Mis Torneos</Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+          Tus convocatorias, minutos y % de compromiso en cada torneo.
+        </Typography>
+      </Box>
 
       {!entries.length && !entriesLoading && (
         <EmptyContent
@@ -164,39 +170,13 @@ export function MyTournamentsView() {
       )}
 
       {!!entries.length && (
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, md: 3 }}>
           <Grid xs={12} md={3}>
-            <Stack spacing={1}>
-              {entries.map(({ tournament }) => (
-                <Card
-                  key={tournament.id}
-                  onClick={() => setSelectedId(tournament.id)}
-                  sx={{
-                    p: 2,
-                    cursor: 'pointer',
-                    boxShadow: 'none',
-                    border: (th) =>
-                      `1.5px solid ${tournament.id === selectedId ? th.palette.primary.main : alpha(th.palette.grey[500], 0.12)}`,
-                    bgcolor:
-                      tournament.id === selectedId ? (th) => alpha(th.palette.primary.main, 0.04) : 'transparent',
-                  }}
-                >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Iconify icon="solar:medal-star-bold" width={18} sx={{ color: 'text.disabled' }} />
-                    <Box>
-                      <Typography variant="subtitle2" noWrap>
-                        {tournament.name}
-                      </Typography>
-                      {tournament.category && (
-                        <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                          {tournament.category}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Stack>
-                </Card>
-              ))}
-            </Stack>
+            <TournamentSelector
+              items={entries.map(({ tournament }) => tournament)}
+              value={selectedId}
+              onChange={setSelectedId}
+            />
           </Grid>
 
           <Grid xs={12} md={9}>
