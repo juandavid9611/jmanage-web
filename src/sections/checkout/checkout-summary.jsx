@@ -5,10 +5,8 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
-import TextField from '@mui/material/TextField';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
-import InputAdornment from '@mui/material/InputAdornment';
 
 import { fCurrency } from 'src/utils/format-number';
 
@@ -16,7 +14,7 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, onApplyDiscount }) {
+export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping }) {
   const { t } = useTranslation();
   const displayShipping = shipping !== null ? t('word_free') : '-';
 
@@ -93,23 +91,6 @@ export function CheckoutSummary({ total, onEdit, discount, subtotal, shipping, o
             </Typography>
           </Box>
         </Box>
-
-        {onApplyDiscount && (
-          <TextField
-            fullWidth
-            placeholder={t('label_discount_codes_gifts')}
-            value="DISCOUNT5"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Button color="primary" onClick={() => onApplyDiscount(5)} sx={{ mr: -0.5 }}>
-                    {t('label_apply')}
-                  </Button>
-                </InputAdornment>
-              ),
-            }}
-          />
-        )}
       </Stack>
     </Card>
   );

@@ -106,8 +106,12 @@ export async function uploadProductImages(productId, files) {
 
   const presignedResponse = await generatePresignedUrls(productId, fileObjects);
 
+  // fetch does not reject on HTTP errors, so check each PUT explicitly.
   await Promise.all(
-    fileObjects.map((file) => uploadFileToS3(file, presignedResponse.urls[file.name]))
+    fileObjects.map(async (file) => {
+      const res = await uploadFileToS3(file, presignedResponse.urls[file.name]);
+      if (!res.ok) throw new Error(`Image upload failed (${res.status})`);
+    })
   );
 
   await addImages(

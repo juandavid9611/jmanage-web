@@ -169,13 +169,6 @@ function Container({ children }) {
     [onNextStep, setField]
   );
 
-  const onApplyDiscount = useCallback(
-    (discount) => {
-      setField('discount', discount);
-    },
-    [setField]
-  );
-
   const onApplyShipping = useCallback(
     (shipping) => {
       setField('shipping', shipping);
@@ -208,7 +201,6 @@ function Container({ children }) {
       onDecreaseQuantity,
       //
       onCreateBilling,
-      onApplyDiscount,
       onApplyShipping,
       //
       activeStep,
@@ -231,7 +223,6 @@ function Container({ children }) {
       initialStep,
       onAddToCart,
       onDeleteCart,
-      onApplyDiscount,
       onApplyShipping,
       onCreateBilling,
       onDecreaseQuantity,

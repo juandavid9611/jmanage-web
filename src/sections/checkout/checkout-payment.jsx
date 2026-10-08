@@ -119,8 +119,8 @@ export function CheckoutPayment() {
       const deliveryOption = DELIVERY_OPTIONS.find((option) => option.value === data.delivery);
 
       // Items carry only what the user chose; the server loads the products and recomputes
-      // subtotal/total itself. `shipping` and `discount` are non-negative client inputs (there
-      // is no server-side source for them yet) and are validated by the API.
+      // subtotal/total itself. `shipping` is one of the fixed DELIVERY_OPTIONS values and
+      // `discount` is always 0.
       const orderData = {
         workspaceId: selectedWorkspace?.id,
         items: checkout.items.map((item) => ({
@@ -129,8 +129,8 @@ export function CheckoutPayment() {
           ...(item.colors?.[0] && { color: item.colors[0] }),
           ...(item.size && { size: item.size }),
         })),
-        shipping: Math.max(0, Number(data.delivery) || 0),
-        discount: Math.max(0, Number(checkout.discount) || 0),
+        shipping: deliveryOption?.value ?? 0,
+        discount: 0, // no client-controlled discounts: price reductions come from product.priceSale
         customer: {
           name: user?.displayName || user?.name,
           email: user?.email,
