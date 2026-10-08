@@ -42,7 +42,11 @@ export function TableHeadCustom({
             key={headCell.id}
             align={headCell.align || 'left'}
             sortDirection={orderBy === headCell.id ? order : false}
-            sx={{ width: headCell.width, minWidth: headCell.minWidth }}
+            sx={{
+              width: headCell.width,
+              minWidth: headCell.minWidth,
+              ...(headCell.hideOnXs && { display: { xs: 'none', sm: 'table-cell' } }),
+            }}
           >
             {onSort ? (
               <TableSortLabel
