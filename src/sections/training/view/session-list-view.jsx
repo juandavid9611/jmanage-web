@@ -17,12 +17,14 @@ import { paths } from 'src/routes/paths';
 import { fDate } from 'src/utils/format-time';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetUsers } from 'src/actions/user';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetTrainingSessions } from 'src/actions/training-sessions';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // ----------------------------------------------------------------------
@@ -71,7 +73,13 @@ export function SessionListView() {
 
   const [statusFilter, setStatusFilter] = useState(isReviewer ? 'sent' : '');
 
-  const { sessions, countsByStatus, sessionsLoading } = useGetTrainingSessions(selectedWorkspace);
+  const { sessions, countsByStatus, sessionsLoading, sessionsError } =
+    useGetTrainingSessions(selectedWorkspace);
+  const { users } = useGetUsers(selectedWorkspace);
+  const authorNames = useMemo(
+    () => Object.fromEntries(users.map((item) => [item.id, item.name])),
+    [users]
+  );
 
   // Players only ever see sessions once the admin approved them — drafts,
   // pending reviews, and rejections stay internal to coach/admin/team_owner.
@@ -221,7 +229,13 @@ export function SessionListView() {
         </Tabs>
       )}
 
-      {!sessionsLoading && !filteredSessions.length && (
+      {sessionsLoading && <LoadingScreen />}
+
+      {sessionsError && (
+        <EmptyContent filled title={t('label_session_load_error')} sx={{ py: 10 }} />
+      )}
+
+      {!sessionsLoading && !sessionsError && !filteredSessions.length && (
         <EmptyContent
           filled
           title={t('label_no_sessions')}
@@ -266,10 +280,10 @@ export function SessionListView() {
                   <Iconify icon="mdi:notebook-outline" width={16} />
                   <span>{`${session.exercises?.length || 0} ${t('label_exercises')}`}</span>
                 </Stack>
-                {session.createdBy?.name && (
+                {authorNames[session.createdBy] && (
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Iconify icon="mdi:account" width={16} />
-                    <span>{session.createdBy.name}</span>
+                    <span>{authorNames[session.createdBy]}</span>
                   </Stack>
                 )}
               </Stack>

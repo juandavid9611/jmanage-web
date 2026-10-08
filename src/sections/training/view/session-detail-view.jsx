@@ -14,6 +14,7 @@ import { paths } from 'src/routes/paths';
 import { fDate } from 'src/utils/format-time';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetUsers } from 'src/actions/user';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import {
   sendTrainingSession,
@@ -28,8 +29,6 @@ import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-import { useAuthContext } from 'src/auth/hooks';
 
 import { ExerciseCard } from '../exercise-card';
 
@@ -46,10 +45,14 @@ export function SessionDetailView() {
   const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthContext();
   const { selectedWorkspace, workspaceRole } = useWorkspace();
 
-  const { session, sessionLoading } = useGetTrainingSession(selectedWorkspace, id);
+  const { session, sessionLoading, sessionError, sessionNotFound } = useGetTrainingSession(
+    selectedWorkspace,
+    id
+  );
+  const { users } = useGetUsers(selectedWorkspace);
+  const authorName = users.find((item) => item.id === session?.createdBy)?.name;
 
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [rejectDialog, setRejectDialog] = useState(false);
@@ -67,6 +70,7 @@ export function SessionDetailView() {
       navigate(paths.dashboard.trainingSessions.list);
     } catch (error) {
       console.error(error);
+      toast.error(error.message || t('label_session_action_error'));
     } finally {
       setSubmitting(false);
       setDeleteDialog(false);
@@ -80,6 +84,7 @@ export function SessionDetailView() {
       toast.success(t('label_session_sent'));
     } catch (error) {
       console.error(error);
+      toast.error(error.message || t('label_session_action_error'));
     } finally {
       setSubmitting(false);
     }
@@ -90,45 +95,51 @@ export function SessionDetailView() {
     try {
       await reviewTrainingSession(
         id,
-        { approved: true, reviewer: { id: user?.id, name: user?.displayName } },
+        { approved: true },
         selectedWorkspace?.id
       );
       toast.success(t('label_session_approved'));
     } catch (error) {
       console.error(error);
+      toast.error(error.message || t('label_session_action_error'));
     } finally {
       setSubmitting(false);
     }
-  }, [id, selectedWorkspace?.id, t, user]);
+  }, [id, selectedWorkspace?.id, t]);
 
   const handleReject = useCallback(async () => {
     setSubmitting(true);
     try {
       await reviewTrainingSession(
         id,
-        {
-          approved: false,
-          comment: rejectComment,
-          reviewer: { id: user?.id, name: user?.displayName },
-        },
+        { approved: false, comment: rejectComment },
         selectedWorkspace?.id
       );
       toast.success(t('label_session_rejected'));
     } catch (error) {
       console.error(error);
+      toast.error(error.message || t('label_session_action_error'));
     } finally {
       setSubmitting(false);
       setRejectDialog(false);
       setRejectComment('');
     }
-  }, [id, rejectComment, selectedWorkspace?.id, t, user]);
+  }, [id, rejectComment, selectedWorkspace?.id, t]);
 
   if (sessionLoading) return <LoadingScreen />;
 
-  if (!session) {
+  if (sessionError && !sessionNotFound) {
     return (
       <DashboardContent>
-        <Typography variant="h6">{t('label_no_sessions')}</Typography>
+        <Typography variant="h6">{t('label_session_load_error')}</Typography>
+      </DashboardContent>
+    );
+  }
+
+  if (sessionNotFound) {
+    return (
+      <DashboardContent>
+        <Typography variant="h6">{t('label_session_not_found')}</Typography>
       </DashboardContent>
     );
   }
@@ -220,9 +231,9 @@ export function SessionDetailView() {
             <Label variant="soft" color={STATUS_COLOR[session.status]}>
               {t(`status_${session.status}`)}
             </Label>
-            {session.createdBy?.name && (
+            {authorName && (
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {`${t('label_created_by')}: ${session.createdBy.name}`}
+                {`${t('label_created_by')}: ${authorName}`}
               </Typography>
             )}
           </Stack>

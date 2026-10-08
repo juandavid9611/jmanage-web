@@ -1990,5 +1990,8 @@
   "label_remove_bib": "Remove bib",
   "label_tournament_link_error": "The event was saved, but couldn't be linked/unlinked from the tournament. Try again from the event.",
   "label_club_tournaments": "Club Tournaments",
-  "label_no_approved_sessions_hint": "There are no approved training sessions to show yet."
+  "label_no_approved_sessions_hint": "There are no approved training sessions to show yet.",
+  "label_session_not_found": "Training session not found",
+  "label_session_load_error": "Could not load the training sessions. Try again.",
+  "label_session_action_error": "Something went wrong. Try again."
 }

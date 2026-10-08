@@ -1,45 +1,34 @@
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
 
-import { uuidv4 } from 'src/utils/uuidv4';
+import axios, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
-// No backend endpoint exists yet for this feature (the API lives in a
-// separate Lambda not available in this repo). Sessions are persisted to
-// localStorage, scoped per workspace, using the same SWR + mutate shape
-// the real integration would use in src/actions/*.js — swapping this file
-// for an axios-backed one later shouldn't require touching any caller.
 
-const STORAGE_PREFIX = 'jmanage_training_sessions_';
+const TRAINING_ENDPOINT = endpoints.trainingSessions;
 
-function storageKey(workspaceId) {
-  return `${STORAGE_PREFIX}${workspaceId}`;
+function withWorkspace(path, workspaceId) {
+  return `${path}?workspace_id=${workspaceId}`;
 }
 
-function readSessions(workspaceId) {
-  if (!workspaceId) return [];
-  try {
-    const raw = localStorage.getItem(storageKey(workspaceId));
-    return raw ? JSON.parse(raw) : [];
-  } catch (error) {
-    return [];
-  }
-}
-
-function writeSessions(workspaceId, sessions) {
-  localStorage.setItem(storageKey(workspaceId), JSON.stringify(sessions));
+function revalidateSessions() {
+  return mutate((key) => typeof key === 'string' && key.startsWith(TRAINING_ENDPOINT));
 }
 
 // ----------------------------------------------------------------------
 
 export function useGetTrainingSessions(selectedWorkspace) {
   const workspaceId = selectedWorkspace?.id;
-  const key = workspaceId ? storageKey(workspaceId) : null;
 
-  const { data, isLoading, error } = useSWR(key, () => readSessions(workspaceId));
+  const { data, isLoading, error } = useSWR(
+    workspaceId ? withWorkspace(TRAINING_ENDPOINT, workspaceId) : null,
+    fetcher
+  );
 
   return useMemo(() => {
-    const sessions = data || [];
+    const sessions = [...(data || [])].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
     const countsByStatus = sessions.reduce((acc, session) => {
       acc[session.status] = (acc[session.status] || 0) + 1;
       return acc;
@@ -50,7 +39,7 @@ export function useGetTrainingSessions(selectedWorkspace) {
       countsByStatus,
       sessionsLoading: isLoading,
       sessionsError: error,
-      sessionsEmpty: !isLoading && !sessions.length,
+      sessionsEmpty: !isLoading && !error && !sessions.length,
     };
   }, [data, error, isLoading]);
 }
@@ -59,88 +48,66 @@ export function useGetTrainingSessions(selectedWorkspace) {
 
 export function useGetTrainingSession(selectedWorkspace, id) {
   const workspaceId = selectedWorkspace?.id;
-  const key = workspaceId ? storageKey(workspaceId) : null;
 
-  const { data, isLoading } = useSWR(key, () => readSessions(workspaceId));
+  const { data, isLoading, error } = useSWR(
+    workspaceId && id ? withWorkspace(`${TRAINING_ENDPOINT}/${id}`, workspaceId) : null,
+    fetcher
+  );
 
-  return useMemo(() => {
-    const session = (data || []).find((item) => item.id === id);
-    return { session, sessionLoading: isLoading };
-  }, [data, id, isLoading]);
+  return useMemo(
+    () => ({
+      session: data || null,
+      sessionLoading: isLoading,
+      sessionError: error,
+      // the API answers 404 for unknown ids and for ids of another account
+      sessionNotFound: !isLoading && (error?.status === 404 || (!error && !data)),
+    }),
+    [data, error, isLoading]
+  );
 }
 
 // ----------------------------------------------------------------------
 
+// `sessionData`: { title, date, exercises }. Always created as a draft; call
+// sendTrainingSession afterwards to submit it for review.
 export async function createTrainingSession(sessionData, workspaceId) {
-  const sessions = readSessions(workspaceId);
-  const now = new Date().toISOString();
-  const newSession = {
-    status: 'draft',
-    exercises: [],
-    ...sessionData,
-    id: uuidv4(),
-    workspaceId,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  writeSessions(workspaceId, [newSession, ...sessions]);
-  mutate(storageKey(workspaceId));
-  return newSession;
+  const res = await axios.post(withWorkspace(TRAINING_ENDPOINT, workspaceId), sessionData);
+  await revalidateSessions();
+  return res.data;
 }
 
 // ----------------------------------------------------------------------
 
 export async function updateTrainingSession(sessionData, workspaceId) {
-  const sessions = readSessions(workspaceId);
-  const now = new Date().toISOString();
-  const updated = sessions.map((session) =>
-    session.id === sessionData.id ? { ...session, ...sessionData, updatedAt: now } : session
-  );
-
-  writeSessions(workspaceId, updated);
-  mutate(storageKey(workspaceId));
+  const { id, ...body } = sessionData;
+  const res = await axios.put(withWorkspace(`${TRAINING_ENDPOINT}/${id}`, workspaceId), body);
+  await revalidateSessions();
+  return res.data;
 }
 
 // ----------------------------------------------------------------------
 
 export async function deleteTrainingSession(id, workspaceId) {
-  const sessions = readSessions(workspaceId).filter((session) => session.id !== id);
-  writeSessions(workspaceId, sessions);
-  mutate(storageKey(workspaceId));
+  await axios.delete(withWorkspace(`${TRAINING_ENDPOINT}/${id}`, workspaceId));
+  await revalidateSessions();
 }
 
 // ----------------------------------------------------------------------
 
 export async function sendTrainingSession(id, workspaceId) {
-  const sessions = readSessions(workspaceId);
-  const now = new Date().toISOString();
-  const updated = sessions.map((session) =>
-    session.id === id ? { ...session, status: 'sent', updatedAt: now } : session
-  );
-
-  writeSessions(workspaceId, updated);
-  mutate(storageKey(workspaceId));
+  const res = await axios.post(withWorkspace(`${TRAINING_ENDPOINT}/${id}/send`, workspaceId));
+  await revalidateSessions();
+  return res.data;
 }
 
 // ----------------------------------------------------------------------
 
-export async function reviewTrainingSession(id, { approved, comment, reviewer }, workspaceId) {
-  const sessions = readSessions(workspaceId);
-  const now = new Date().toISOString();
-  const updated = sessions.map((session) =>
-    session.id === id
-      ? {
-          ...session,
-          status: approved ? 'approved' : 'rejected',
-          reviewComment: comment || '',
-          reviewedBy: reviewer,
-          reviewedAt: now,
-          updatedAt: now,
-        }
-      : session
-  );
-
-  writeSessions(workspaceId, updated);
-  mutate(storageKey(workspaceId));
+// reviewedBy is taken from the token server-side.
+export async function reviewTrainingSession(id, { approved, comment }, workspaceId) {
+  const res = await axios.post(withWorkspace(`${TRAINING_ENDPOINT}/${id}/review`, workspaceId), {
+    approved,
+    comment: comment || '',
+  });
+  await revalidateSessions();
+  return res.data;
 }

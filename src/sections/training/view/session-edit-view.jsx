@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import Typography from '@mui/material/Typography';
@@ -21,16 +21,28 @@ export function SessionEditView() {
   const { id } = useParams();
   const { selectedWorkspace } = useWorkspace();
 
-  const { session, sessionLoading } = useGetTrainingSession(selectedWorkspace, id);
+  const { session, sessionLoading, sessionError, sessionNotFound } = useGetTrainingSession(
+    selectedWorkspace,
+    id
+  );
 
   if (sessionLoading) return <LoadingScreen />;
 
-  if (!session) {
+  if (sessionNotFound || sessionError || !session) {
     return (
       <DashboardContent>
-        <Typography variant="h6">{t('label_no_sessions')}</Typography>
+        <Typography variant="h6">
+          {sessionError && !sessionNotFound
+            ? t('label_session_load_error')
+            : t('label_session_not_found')}
+        </Typography>
       </DashboardContent>
     );
+  }
+
+  // Only drafts and rejected sessions can be edited (the API enforces it too).
+  if (session.status !== 'draft' && session.status !== 'rejected') {
+    return <Navigate to={paths.dashboard.trainingSessions.details(session.id)} replace />;
   }
 
   return (

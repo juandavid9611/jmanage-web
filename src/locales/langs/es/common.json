@@ -1990,5 +1990,8 @@
   "label_remove_bib": "Quitar peto",
   "label_tournament_link_error": "El evento se guardó, pero no se pudo vincular/desvincular del torneo. Intentá de nuevo desde el evento.",
   "label_club_tournaments": "Torneos del Club",
-  "label_no_approved_sessions_hint": "Todavía no hay sesiones de entrenamiento aprobadas para mostrar."
+  "label_no_approved_sessions_hint": "Todavía no hay sesiones de entrenamiento aprobadas para mostrar.",
+  "label_session_not_found": "Sesión de entrenamiento no encontrada",
+  "label_session_load_error": "No se pudieron cargar las sesiones de entrenamiento. Intenta de nuevo.",
+  "label_session_action_error": "Algo salió mal. Intenta de nuevo."
 }

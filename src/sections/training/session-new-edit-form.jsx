@@ -16,13 +16,15 @@ import { uuidv4 } from 'src/utils/uuidv4';
 import { fTimestamp } from 'src/utils/format-time';
 
 import { useWorkspace } from 'src/workspace/workspace-provider';
-import { createTrainingSession, updateTrainingSession } from 'src/actions/training-sessions';
+import {
+  sendTrainingSession,
+  createTrainingSession,
+  updateTrainingSession,
+} from 'src/actions/training-sessions';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
-
-import { useAuthContext } from 'src/auth/hooks';
 
 import { ExerciseCard } from './exercise-card';
 
@@ -53,7 +55,6 @@ function emptyExercise() {
 export function SessionNewEditForm({ currentSession }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { user } = useAuthContext();
   const { selectedWorkspace } = useWorkspace();
 
   const [exercises, setExercises] = useState(currentSession?.exercises?.length ? currentSession.exercises : [emptyExercise()]);
@@ -65,7 +66,7 @@ export function SessionNewEditForm({ currentSession }) {
     resolver: zodResolver(SessionSchema),
     defaultValues: {
       title: currentSession?.title || '',
-      date: currentSession?.date || Date.now(),
+      date: currentSession?.date ? new Date(currentSession.date).getTime() : Date.now(),
       location: currentSession?.location || '',
       teamGroup: currentSession?.teamGroup || '',
       objective: currentSession?.objective || '',
@@ -156,31 +157,42 @@ export function SessionNewEditForm({ currentSession }) {
 
       const payload = {
         title: data.title,
-        date: fTimestamp(data.date),
+        date: new Date(fTimestamp(data.date)).toISOString(),
         location: data.location || '',
         teamGroup: data.teamGroup || '',
         objective: data.objective || '',
-        exercises,
-        status,
+        exercises: exercises.map((exercise) => ({
+          ...exercise,
+          durationMinutes: Number(exercise.durationMinutes) || 0,
+        })),
       };
 
       try {
-        if (currentSession?.id) {
-          await updateTrainingSession({ ...payload, id: currentSession.id }, selectedWorkspace?.id);
-          toast.success(t('update_success'));
-        } else {
-          await createTrainingSession(
-            { ...payload, createdBy: { id: user?.id, name: user?.displayName } },
-            selectedWorkspace?.id
-          );
-          toast.success(t('create_success'));
+        const saved = currentSession?.id
+          ? await updateTrainingSession({ ...payload, id: currentSession.id }, selectedWorkspace?.id)
+          : await createTrainingSession(payload, selectedWorkspace?.id);
+
+        if (status === 'sent') {
+          try {
+            await sendTrainingSession(saved.id, selectedWorkspace?.id);
+          } catch (sendError) {
+            // The draft is saved; only the submission failed. Stay on the form.
+            console.error(sendError);
+            toast.error(sendError.message || t('label_session_action_error'));
+            // avoid a second "create" on retry: continue on the saved draft
+            if (!currentSession?.id) router.replace(paths.dashboard.trainingSessions.edit(saved.id));
+            return;
+          }
         }
+
+        toast.success(currentSession?.id ? t('update_success') : t('create_success'));
         router.push(paths.dashboard.trainingSessions.list);
       } catch (error) {
         console.error(error);
+        toast.error(error.message || t('label_session_action_error'));
       }
     },
-    [currentSession?.id, exercises, router, selectedWorkspace?.id, t, user]
+    [currentSession?.id, exercises, router, selectedWorkspace?.id, t]
   );
 
   const onSaveDraft = handleSubmit((data) => persist(data, 'draft'));

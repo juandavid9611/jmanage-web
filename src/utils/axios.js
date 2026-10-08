@@ -80,4 +80,6 @@ export const endpoints = {
   notifications: '/notifications',
   votations: '/votations',
   donations: '/donations',
+  trainingSessions: '/training-sessions',
+  clubTournaments: '/club-tournaments',
 };
