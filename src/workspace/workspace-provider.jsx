@@ -22,7 +22,9 @@ export const WorkspaceProvider = ({ children }) => {
       if (storedWorkspace) {
         setSelectedWorkspace(storedWorkspace);
       } else {
+        // Selected workspace no longer exists (e.g. deleted): fall back and persist.
         setSelectedWorkspace(workspaces[0]);
+        localStorage.setItem('selectedWorkspaceId', workspaces[0].id);
       }
     }
   }, [workspaces, isLoading]);
