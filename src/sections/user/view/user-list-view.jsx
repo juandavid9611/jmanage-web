@@ -20,9 +20,9 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { useGetAllWorkspaces } from 'src/actions/workspaces';
 import { GROUP_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 import { useWorkspace } from 'src/workspace/workspace-provider';
+import { deleteWorkspace, useGetAllWorkspaces } from 'src/actions/workspaces';
 import { deleteUser, useGetUsers, useGetTeamOwnerTeams } from 'src/actions/user';
 
 import { Label } from 'src/components/label';
@@ -106,6 +106,9 @@ export function UserListView() {
   const canCreateCategory =
     !isTournamentAccount && user?.accountsRoles?.[user?.activeAccountId] === 'admin';
 
+  const deleteCategoryDialog = useBoolean();
+  const [deletingCategory, setDeletingCategory] = useState(false);
+
 
   // Club accounts load the whole account (no workspace_id) so categories can be
   // filtered/assigned client-side without switching the active workspace.
@@ -165,6 +168,38 @@ export function UserListView() {
         role: u.memberships.find((m) => (m.workspace_id ?? m.workspaceId) === scope)?.role ?? u.role,
       }));
   }, [fetchedUsers, scope, showCategories]);
+
+  const scopedCategory = canCreateCategory ? workspacesById.get(scope) : undefined;
+
+  const handleDeleteCategory = useCallback(async () => {
+    if (!scopedCategory) return;
+    setDeletingCategory(true);
+    try {
+      await deleteWorkspace(scopedCategory.id);
+      toast.success(t('label_category_deleted'));
+      table.onResetPage();
+      table.setSelected([]);
+      setScopeChoice(SCOPE_ALL);
+      deleteCategoryDialog.onFalse();
+    } catch (error) {
+      const detail = error?.response?.status === 409 ? error.response.data?.detail : null;
+      const code = detail?.code;
+      if (code === 'default_workspace') {
+        toast.error(t('label_category_delete_default'));
+      } else if (code === 'has_members') {
+        toast.error(
+          t('label_category_delete_members', { count: scopeCounts[scopedCategory.id] ?? 0 })
+        );
+      } else if (code === 'has_events') {
+        toast.error(t('label_category_delete_events'));
+      } else {
+        toast.error(t('label_category_delete_error'));
+      }
+      deleteCategoryDialog.onFalse();
+    } finally {
+      setDeletingCategory(false);
+    }
+  }, [scopedCategory, scopeCounts, table, t, deleteCategoryDialog]);
 
   const usersById = useMemo(() => new Map(fetchedUsers.map((u) => [u.id, u])), [fetchedUsers]);
   const { teamOwnerTeams } = useGetTeamOwnerTeams(isTournamentAccount);
@@ -331,6 +366,7 @@ export function UserListView() {
               onChange={handleScopeChange}
               workspaces={allWorkspaces}
               counts={scopeCounts}
+              onDeleteCategory={scopedCategory ? deleteCategoryDialog.onTrue : undefined}
             />
           )}
 
@@ -483,6 +519,25 @@ export function UserListView() {
           usersById={usersById}
           workspaces={allWorkspaces}
           sourceWorkspaceId={sourceWorkspaceId}
+        />
+      )}
+
+      {scopedCategory && (
+        <ConfirmDialog
+          open={deleteCategoryDialog.value}
+          onClose={deleteCategoryDialog.onFalse}
+          title={t('label_delete_category')}
+          content={t('label_delete_category_confirm', { name: scopedCategory.name })}
+          action={
+            <Button
+              variant="contained"
+              color="error"
+              disabled={deletingCategory}
+              onClick={handleDeleteCategory}
+            >
+              {t('label_delete_category')}
+            </Button>
+          }
         />
       )}
 
