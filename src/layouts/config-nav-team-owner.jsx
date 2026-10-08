@@ -2,7 +2,6 @@ import { paths } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
 
-import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -42,11 +41,6 @@ export function getTeamOwnerNavData(t) {
           title: t('nav_documents'),
           path: paths.dashboard.fileManager,
           icon: ICONS.folder,
-        },
-        {
-          title: t('label_ai_assistant'),
-          path: paths.dashboard.aiAssistant,
-          icon: <Iconify icon="solar:magic-stick-3-bold-duotone" />,
         },
       ],
     },

@@ -123,6 +123,5 @@ export const paths = {
       details: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}`,
       edit: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}/edit`,
     },
-    aiAssistant: `${ROOTS.DASHBOARD}/ai-assistant`,
   },
 };

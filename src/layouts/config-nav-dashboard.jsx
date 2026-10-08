@@ -170,12 +170,6 @@ export function getNavData(t, language) {
           roles: ['admin'],
         },
         {
-          title: t('label_ai_assistant'),
-          path: paths.dashboard.aiAssistant,
-          icon: <Iconify icon="solar:magic-stick-3-bold-duotone" />,
-          roles: ['admin'],
-        },
-        {
           title: t('nav_products'),
           path: paths.dashboard.product.root,
           icon: ICONS.product,

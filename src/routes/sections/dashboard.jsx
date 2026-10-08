@@ -69,8 +69,6 @@ const TrainingSessionListPage = lazy(() => import('src/pages/dashboard/training-
 const TrainingSessionNewPage = lazy(() => import('src/pages/dashboard/training-sessions/new'));
 const TrainingSessionEditPage = lazy(() => import('src/pages/dashboard/training-sessions/edit'));
 const TrainingSessionDetailsPage = lazy(() => import('src/pages/dashboard/training-sessions/details'));
-// AI Assistant
-const AIAssistantPage = lazy(() => import('src/pages/dashboard/ai-assistant'));
 // Donations
 const DonationRecordPage = lazy(() => import('src/pages/dashboard/donation'));
 // ----------------------------------------------------------------------
@@ -195,7 +193,6 @@ export const dashboardRoutes = [
           { path: ':id/edit', element: <TrainingSessionEditPage /> },
         ],
       },
-      { path: 'ai-assistant', element: <AIAssistantPage /> },
     ],
   },
 ];
