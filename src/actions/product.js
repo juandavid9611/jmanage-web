@@ -3,7 +3,6 @@ import useSWR, { mutate } from 'swr';
 
 import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
-import { _products } from 'src/_mock';
 import { uploadFileToS3 } from 'src/actions/filesS3';
 
 // ----------------------------------------------------------------------
@@ -17,16 +16,24 @@ const swrOptions = {
 // ----------------------------------------------------------------------
 const URL = endpoints.products;
 
+// SWR keys can be strings or [url, config] tuples; only touch the product ones.
+const isProductKey = (key) => {
+  const url = Array.isArray(key) ? key[0] : key;
+  return typeof url === 'string' && url.startsWith(URL);
+};
+
+const revalidateProducts = () => mutate(isProductKey, undefined, { revalidate: true });
+
 export function useGetProducts() {
   const { data, isLoading, error, isValidating } = useSWR(URL, fetcher);
 
   const memoizedValue = useMemo(
     () => ({
-      products: data?.length ? data : _products,
+      products: Array.isArray(data) ? data : [],
       productsLoading: isLoading,
       productsError: error,
       productsValidating: isValidating,
-      productsEmpty: false,
+      productsEmpty: !isLoading && !error && !data?.length,
     }),
     [data, error, isLoading, isValidating]
   );
@@ -58,8 +65,19 @@ export function useGetProduct(productId) {
 
 // ----------------------------------------------------------------------
 
+// `query` is either a plain string (name/tag search) or { q, category, minPrice, maxPrice, sortBy }.
 export function useSearchProducts(query) {
-  const queryUrl = query ? [`${URL}_search`, { params: { query } }] : '';
+  const filters = typeof query === 'string' ? { q: query } : query || {};
+  const { q, category, minPrice, maxPrice, sortBy } = filters;
+
+  const params = {};
+  if (q) params.q = q;
+  if (category && category !== 'all') params.category = category;
+  if (minPrice != null && minPrice !== '') params.minPrice = minPrice;
+  if (maxPrice != null && maxPrice !== '') params.maxPrice = maxPrice;
+  if (sortBy) params.sortBy = sortBy;
+
+  const queryUrl = Object.keys(params).length ? [`${URL}_search`, { params }] : null;
 
   const { data, isLoading, error, isValidating } = useSWR(queryUrl, fetcher, {
     ...swrOptions,
@@ -72,77 +90,83 @@ export function useSearchProducts(query) {
       searchLoading: isLoading,
       searchError: error,
       searchValidating: isValidating,
-      searchEmpty: !isLoading && !data?.results.length,
+      searchEmpty: !!queryUrl && !isLoading && !error && !data?.results?.length,
     }),
-    [data?.results, error, isLoading, isValidating]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data?.results, error, isLoading, isValidating, !!queryUrl]
   );
 
   return memoizedValue;
 }
 
+// Uploads new image files to S3 and registers them on the product.
+export async function uploadProductImages(productId, files) {
+  const fileObjects = (files || []).filter((img) => img instanceof File);
+  if (!fileObjects.length) return;
+
+  const presignedResponse = await generatePresignedUrls(productId, fileObjects);
+
+  await Promise.all(
+    fileObjects.map((file) => uploadFileToS3(file, presignedResponse.urls[file.name]))
+  );
+
+  await addImages(
+    productId,
+    fileObjects.map((file) => file.name)
+  );
+}
+
+// Creation is not atomic: the product is created first and images are uploaded after.
+// If the upload fails the product already exists, so the error carries it
+// (`error.product`, `error.imageUploadFailed`) and the caller can retry the upload with
+// `uploadProductImages` or remove the orphan with `deleteProduct`.
 export async function createProduct(productData) {
-  // Step 1: Create product without images first
-  const productDataWithoutImages = { ...productData, images: [] };
-  const res = await axiosInstance.post(URL, productDataWithoutImages);
+  const { images, ...rest } = productData;
+
+  const res = await axiosInstance.post(URL, rest);
   const newProduct = res.data;
 
-  // Step 2: If there are images to upload, handle them separately
-  if (productData.images && productData.images.length > 0) {
-    const fileObjects = productData.images.filter((img) => img instanceof File);
-
-    if (fileObjects.length > 0) {
-      // Step 3: Generate presigned URLs
-      const presignedResponse = await generatePresignedUrls(newProduct.id, fileObjects);
-
-      // Step 4: Upload files to S3
-      const uploadPromises = fileObjects.map((file) => {
-        const presignedUrl = presignedResponse.urls[file.name];
-        return uploadFileToS3(file, presignedUrl);
-      });
-      await Promise.all(uploadPromises);
-
-      // Step 5: Call add_images endpoint to update product
-      const file_names = fileObjects.map((file) => file.name);
-      await addImages(newProduct.id, file_names);
-    }
+  try {
+    await uploadProductImages(newProduct.id, images);
+  } catch (error) {
+    error.product = newProduct;
+    error.imageUploadFailed = true;
+    revalidateProducts();
+    throw error;
   }
 
-  mutate((key) => key.startsWith(URL), undefined, { revalidate: true });
+  revalidateProducts();
   return newProduct;
 }
 
-export async function updateProduct(id, productData) {
-  // Separate new files from existing image paths
-  const newFiles = productData.images?.filter((img) => img instanceof File) || [];
+// `images` handling: new File entries are uploaded after the PUT. When the caller passes
+// `originalImages` and fewer existing (string) images remain, the remaining list is sent so
+// removals persist; otherwise `images` is left out so existing ones are not overwritten.
+export async function updateProduct(id, productData, originalImages = []) {
+  const { images, ...rest } = productData;
+  const list = images || [];
 
-  // Step 1: Update product WITHOUT images field (to avoid overwriting existing images)
-  const { images, ...productDataWithoutImages } = productData;
-  const res = await axiosInstance.put(`${URL}/${id}`, productDataWithoutImages);
+  const newFiles = list.filter((img) => img instanceof File);
+  const remaining = list.filter((img) => typeof img === 'string');
 
-  // Step 2: If there are new files to upload, handle them separately
-  if (newFiles.length > 0) {
-    // Step 3: Generate presigned URLs
-    const presignedResponse = await generatePresignedUrls(id, newFiles);
-
-    // Step 4: Upload files to S3
-    const uploadPromises = newFiles.map((file) => {
-      const presignedUrl = presignedResponse.urls[file.name];
-      return uploadFileToS3(file, presignedUrl);
-    });
-    await Promise.all(uploadPromises);
-
-    // Step 5: Call add_images endpoint to add new images to product
-    const file_names = newFiles.map((file) => file.name);
-    await addImages(id, file_names);
+  const payload = { ...rest };
+  if (remaining.length < originalImages.length) {
+    payload.images = remaining;
   }
 
-  mutate((key) => key.startsWith(URL), undefined, { revalidate: true });
+  const res = await axiosInstance.put(`${URL}/${id}`, payload);
+
+  if (newFiles.length > 0) {
+    await uploadProductImages(id, newFiles);
+  }
+
+  revalidateProducts();
   return res.data;
 }
 
 export async function deleteProduct(id) {
   const res = await axiosInstance.delete(`${URL}/${id}`);
-  mutate((key) => key.startsWith(URL));
+  mutate(isProductKey);
   return res;
 }
 
@@ -165,6 +189,6 @@ export async function generatePresignedUrls(productId, files) {
 
 export async function addImages(productId, file_names) {
   const res = await axiosInstance.post(`${URL}/${productId}/add_images`, file_names);
-  mutate((key) => key.startsWith(URL), undefined, { revalidate: true });
+  revalidateProducts();
   return res.data;
 }
