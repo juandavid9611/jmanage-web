@@ -2054,5 +2054,12 @@
   "memberships_saving": "Guardando…",
   "memberships_saved": "Cambios guardados",
   "role_preview_own": "Tu vista",
-  "role_preview_athlete": "Atleta"
+  "role_preview_athlete": "Atleta",
+  "label_bulk_enable": "Habilitar",
+  "label_bulk_disable": "Deshabilitar",
+  "label_bulk_disable_confirm": "¿Deshabilitar {{count}} usuarios?",
+  "label_bulk_enabled_toast": "{{count}} usuarios habilitados",
+  "label_bulk_disabled_toast": "{{count}} usuarios deshabilitados",
+  "label_bulk_enabled_toast_partial": "{{succeeded}} habilitados, {{failed}} fallaron",
+  "label_bulk_disabled_toast_partial": "{{succeeded}} deshabilitados, {{failed}} fallaron"
 }

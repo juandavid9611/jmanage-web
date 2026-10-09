@@ -197,6 +197,15 @@ export async function enableUser(id) {
   return res.data;
 }
 
+// No bulk status endpoint exists, so this fires the per-user calls in parallel
+// and reports how many succeeded/failed rather than letting one failure stop the rest.
+export async function bulkSetUserStatus(userIds, disabled) {
+  const action = disabled ? disableUser : enableUser;
+  const results = await Promise.allSettled(userIds.map((id) => action(id)));
+  const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+  return { succeeded, failed: results.length - succeeded };
+}
+
 export function useGetTopGoalsAndAssists(selectedWorkspace) {
   const workspaceId = selectedWorkspace?.id;
   const { data, isLoading, error, isValidating } = useSWR(

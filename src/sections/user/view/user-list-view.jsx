@@ -23,7 +23,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { GROUP_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { deleteWorkspace, useGetAllWorkspaces } from 'src/actions/workspaces';
-import { deleteUser, useGetUsers, useGetTeamOwnerTeams } from 'src/actions/user';
+import { deleteUser, useGetUsers, bulkSetUserStatus, useGetTeamOwnerTeams } from 'src/actions/user';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -93,9 +93,11 @@ export function UserListView() {
   const { t } = useTranslation();
 
   const confirm = useBoolean();
+  const bulkDisableConfirm = useBoolean();
   const adminInviteDialog = useBoolean();
   const categoryDialog = useBoolean();
   const bulkDialog = useBoolean();
+  const [bulkStatusBusy, setBulkStatusBusy] = useState(false);
 
   const [tableData, setTableData] = useState([]);
 
@@ -256,6 +258,28 @@ export function UserListView() {
     });
   }, [dataFiltered.length, dataInPage.length, table, tableData]);
 
+  const handleBulkSetStatus = useCallback(
+    async (disabled) => {
+      setBulkStatusBusy(true);
+      try {
+        const { succeeded, failed } = await bulkSetUserStatus(table.selected, disabled);
+        const key = disabled ? 'label_bulk_disabled_toast' : 'label_bulk_enabled_toast';
+        if (failed) {
+          toast.warning(t(`${key}_partial`, { succeeded, failed }));
+        } else {
+          toast.success(t(key, { count: succeeded }));
+        }
+        table.setSelected([]);
+      } catch (error) {
+        toast.error(t('something_went_wrong'));
+      } finally {
+        setBulkStatusBusy(false);
+        bulkDisableConfirm.onFalse();
+      }
+    },
+    [table, t, bulkDisableConfirm]
+  );
+
   const handleEditRow = useCallback(
     (id) => {
       router.push(paths.dashboard.admin.user.edit(id));
@@ -409,6 +433,26 @@ export function UserListView() {
                       {t('assign_to_category')}
                     </Button>
                   )}
+                  <Button
+                    size="small"
+                    color="success"
+                    variant="soft"
+                    disabled={bulkStatusBusy}
+                    startIcon={<Iconify icon="solar:eye-bold" />}
+                    onClick={() => handleBulkSetStatus(false)}
+                  >
+                    {t('label_bulk_enable')}
+                  </Button>
+                  <Button
+                    size="small"
+                    color="warning"
+                    variant="soft"
+                    disabled={bulkStatusBusy}
+                    startIcon={<Iconify icon="solar:eye-closed-bold" />}
+                    onClick={bulkDisableConfirm.onTrue}
+                  >
+                    {t('label_bulk_disable')}
+                  </Button>
                   <Tooltip title={t('delete')}>
                     <IconButton color="primary" onClick={confirm.onTrue}>
                       <Iconify icon="solar:trash-bin-trash-bold" />
@@ -506,6 +550,30 @@ export function UserListView() {
             }}
           >
             {t('delete')}
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={bulkDisableConfirm.value}
+        onClose={bulkDisableConfirm.onFalse}
+        title={t('label_bulk_disable')}
+        content={
+          <>
+            <Box sx={{ mb: 1 }}>
+              {t('label_bulk_disable_confirm', { count: table.selected.length })}
+            </Box>
+            {t('label_disabled_user_body')}
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="warning"
+            disabled={bulkStatusBusy}
+            onClick={() => handleBulkSetStatus(true)}
+          >
+            {t('label_bulk_disable')}
           </Button>
         }
       />
