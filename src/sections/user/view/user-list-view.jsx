@@ -23,7 +23,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { GROUP_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { deleteWorkspace, useGetAllWorkspaces } from 'src/actions/workspaces';
-import { deleteUser, useGetUsers, bulkSetUserStatus, useGetTeamOwnerTeams } from 'src/actions/user';
+import { deleteUser, useGetUsers, useGetTeamOwnerTeams } from 'src/actions/user';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -49,6 +49,7 @@ import { useAuthContext } from 'src/auth/hooks';
 import { UserTableRow } from '../user-table-row';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { AdminInviteDialog } from '../admin-invite-dialog';
+import { UserBulkStatusDialog } from '../user-bulk-status-dialog';
 import { WorkspaceCreateDialog } from '../workspace-create-dialog';
 import { UserBulkCategoryDialog } from '../user-bulk-category-dialog';
 import { UserTableFiltersResult } from '../user-table-filters-result';
@@ -93,11 +94,11 @@ export function UserListView() {
   const { t } = useTranslation();
 
   const confirm = useBoolean();
-  const bulkDisableConfirm = useBoolean();
+  const bulkDisableDialog = useBoolean();
+  const bulkEnableDialog = useBoolean();
   const adminInviteDialog = useBoolean();
   const categoryDialog = useBoolean();
   const bulkDialog = useBoolean();
-  const [bulkStatusBusy, setBulkStatusBusy] = useState(false);
 
   const [tableData, setTableData] = useState([]);
 
@@ -258,27 +259,16 @@ export function UserListView() {
     });
   }, [dataFiltered.length, dataInPage.length, table, tableData]);
 
-  const handleBulkSetStatus = useCallback(
-    async (disabled) => {
-      setBulkStatusBusy(true);
-      try {
-        const { succeeded, failed } = await bulkSetUserStatus(table.selected, disabled);
-        const key = disabled ? 'label_bulk_disabled_toast' : 'label_bulk_enabled_toast';
-        if (failed) {
-          toast.warning(t(`${key}_partial`, { succeeded, failed }));
-        } else {
-          toast.success(t(key, { count: succeeded }));
-        }
-        table.setSelected([]);
-      } catch (error) {
-        toast.error(t('something_went_wrong'));
-      } finally {
-        setBulkStatusBusy(false);
-        bulkDisableConfirm.onFalse();
-      }
-    },
-    [table, t, bulkDisableConfirm]
+  // The API rejects disabling your own account anyway (error: "self"), but dropping it here
+  // avoids a confusing failure entry when an admin selects everyone including themselves.
+  const disableTargetIds = useMemo(
+    () => table.selected.filter((id) => id !== user?.id),
+    [table.selected, user?.id]
   );
+
+  const handleBulkStatusDone = useCallback(() => {
+    table.setSelected([]);
+  }, [table]);
 
   const handleEditRow = useCallback(
     (id) => {
@@ -437,9 +427,8 @@ export function UserListView() {
                     size="small"
                     color="success"
                     variant="soft"
-                    disabled={bulkStatusBusy}
                     startIcon={<Iconify icon="solar:eye-bold" />}
-                    onClick={() => handleBulkSetStatus(false)}
+                    onClick={bulkEnableDialog.onTrue}
                   >
                     {t('label_bulk_enable')}
                   </Button>
@@ -447,9 +436,8 @@ export function UserListView() {
                     size="small"
                     color="warning"
                     variant="soft"
-                    disabled={bulkStatusBusy}
                     startIcon={<Iconify icon="solar:eye-closed-bold" />}
-                    onClick={bulkDisableConfirm.onTrue}
+                    onClick={bulkDisableDialog.onTrue}
                   >
                     {t('label_bulk_disable')}
                   </Button>
@@ -554,28 +542,22 @@ export function UserListView() {
         }
       />
 
-      <ConfirmDialog
-        open={bulkDisableConfirm.value}
-        onClose={bulkDisableConfirm.onFalse}
-        title={t('label_bulk_disable')}
-        content={
-          <>
-            <Box sx={{ mb: 1 }}>
-              {t('label_bulk_disable_confirm', { count: table.selected.length })}
-            </Box>
-            {t('label_disabled_user_body')}
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            color="warning"
-            disabled={bulkStatusBusy}
-            onClick={() => handleBulkSetStatus(true)}
-          >
-            {t('label_bulk_disable')}
-          </Button>
-        }
+      <UserBulkStatusDialog
+        disabled
+        open={bulkDisableDialog.value}
+        onClose={bulkDisableDialog.onFalse}
+        onDone={handleBulkStatusDone}
+        userIds={disableTargetIds}
+        usersById={usersById}
+      />
+
+      <UserBulkStatusDialog
+        disabled={false}
+        open={bulkEnableDialog.value}
+        onClose={bulkEnableDialog.onFalse}
+        onDone={handleBulkStatusDone}
+        userIds={table.selected}
+        usersById={usersById}
       />
 
       {showCategories && (
