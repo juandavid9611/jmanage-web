@@ -16,6 +16,7 @@ import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { WorkspacesPopover } from '../components/workspaces-popover';
+import { RolePreviewPopover } from '../components/role-preview-popover';
 import { NotificationsDrawer } from '../components/notifications-drawer';
 
 // ----------------------------------------------------------------------
@@ -105,6 +106,9 @@ export function HeaderBase({
 
             {/* -- Workspace popover -- */}
             {workspaces && <WorkspacesPopover data-slot="workspaces" data={data?.workspaces} />}
+
+            {/* -- Role preview (admins only) -- */}
+            <RolePreviewPopover data-slot="role-preview" sx={{ ml: 1 }} />
 
             {slots?.leftAreaEnd}
           </>

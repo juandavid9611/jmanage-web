@@ -193,7 +193,7 @@
   "something_went_wrong": "Algo salió mal",
   "close": "Cerrar",
   "team_owner": "Dueño de equipo",
-  "coach": "Entrenador",
+  "coach": "Coach",
   "password_required": "¡La contraseña es requerida!",
   "password_min": "¡La contraseña debe tener al menos 6 caracteres!",
   "sign_in_heading": "Ingresa a tu cuenta",
@@ -2052,5 +2052,7 @@
   "bulk_err_internal_error": "Error interno",
   "bulk_err_unknown": "Error",
   "memberships_saving": "Guardando…",
-  "memberships_saved": "Cambios guardados"
+  "memberships_saved": "Cambios guardados",
+  "role_preview_own": "Tu vista",
+  "role_preview_athlete": "Atleta"
 }

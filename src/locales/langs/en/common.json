@@ -2052,5 +2052,7 @@
   "bulk_err_internal_error": "Internal error",
   "bulk_err_unknown": "Error",
   "memberships_saving": "Saving…",
-  "memberships_saved": "Changes saved"
+  "memberships_saved": "Changes saved",
+  "role_preview_own": "Your view",
+  "role_preview_athlete": "Athlete"
 }
