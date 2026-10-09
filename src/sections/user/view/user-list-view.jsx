@@ -90,6 +90,8 @@ export function UserListView() {
 
   const router = useRouter();
 
+  const { t } = useTranslation();
+
   const confirm = useBoolean();
   const adminInviteDialog = useBoolean();
   const categoryDialog = useBoolean();
@@ -213,8 +215,6 @@ export function UserListView() {
   const tableHead = isTournamentAccount ? TOURNAMENT_TABLE_HEAD : CLUB_TABLE_HEAD;
 
   const filters = useSetState({ name: '', group: [], status: 'all' });
-
-  const { t } = useTranslation();
 
   const dataFiltered = applyFilter({
     inputData: tableData,
