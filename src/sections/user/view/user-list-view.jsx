@@ -49,6 +49,7 @@ import { useAuthContext } from 'src/auth/hooks';
 import { UserTableRow } from '../user-table-row';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { AdminInviteDialog } from '../admin-invite-dialog';
+import { UserBulkStatusDialog } from '../user-bulk-status-dialog';
 import { WorkspaceCreateDialog } from '../workspace-create-dialog';
 import { UserBulkCategoryDialog } from '../user-bulk-category-dialog';
 import { UserTableFiltersResult } from '../user-table-filters-result';
@@ -93,6 +94,8 @@ export function UserListView() {
   const { t } = useTranslation();
 
   const confirm = useBoolean();
+  const bulkDisableDialog = useBoolean();
+  const bulkEnableDialog = useBoolean();
   const adminInviteDialog = useBoolean();
   const categoryDialog = useBoolean();
   const bulkDialog = useBoolean();
@@ -256,6 +259,17 @@ export function UserListView() {
     });
   }, [dataFiltered.length, dataInPage.length, table, tableData]);
 
+  // The API rejects disabling your own account anyway (error: "self"), but dropping it here
+  // avoids a confusing failure entry when an admin selects everyone including themselves.
+  const disableTargetIds = useMemo(
+    () => table.selected.filter((id) => id !== user?.id),
+    [table.selected, user?.id]
+  );
+
+  const handleBulkStatusDone = useCallback(() => {
+    table.setSelected([]);
+  }, [table]);
+
   const handleEditRow = useCallback(
     (id) => {
       router.push(paths.dashboard.admin.user.edit(id));
@@ -409,6 +423,24 @@ export function UserListView() {
                       {t('assign_to_category')}
                     </Button>
                   )}
+                  <Button
+                    size="small"
+                    color="success"
+                    variant="soft"
+                    startIcon={<Iconify icon="solar:eye-bold" />}
+                    onClick={bulkEnableDialog.onTrue}
+                  >
+                    {t('label_bulk_enable')}
+                  </Button>
+                  <Button
+                    size="small"
+                    color="warning"
+                    variant="soft"
+                    startIcon={<Iconify icon="solar:eye-closed-bold" />}
+                    onClick={bulkDisableDialog.onTrue}
+                  >
+                    {t('label_bulk_disable')}
+                  </Button>
                   <Tooltip title={t('delete')}>
                     <IconButton color="primary" onClick={confirm.onTrue}>
                       <Iconify icon="solar:trash-bin-trash-bold" />
@@ -508,6 +540,24 @@ export function UserListView() {
             {t('delete')}
           </Button>
         }
+      />
+
+      <UserBulkStatusDialog
+        disabled
+        open={bulkDisableDialog.value}
+        onClose={bulkDisableDialog.onFalse}
+        onDone={handleBulkStatusDone}
+        userIds={disableTargetIds}
+        usersById={usersById}
+      />
+
+      <UserBulkStatusDialog
+        disabled={false}
+        open={bulkEnableDialog.value}
+        onClose={bulkEnableDialog.onFalse}
+        onDone={handleBulkStatusDone}
+        userIds={table.selected}
+        usersById={usersById}
       />
 
       {showCategories && (

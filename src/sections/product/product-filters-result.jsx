@@ -1,9 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-
-import { varAlpha } from 'src/theme/styles';
 
 import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-result';
 
@@ -47,26 +44,9 @@ export function ProductFiltersResult({ filters, totalResults, sx }) {
         <Chip {...chipProps} label={filters.state.category} onDelete={handleRemoveCategory} />
       </FiltersBlock>
 
-      <FiltersBlock label={t('label_colors_colon')} isShow={!!filters.state.colors.length}>
+      <FiltersBlock label={t('label_jersey_location_colon')} isShow={!!filters.state.colors.length}>
         {filters.state.colors.map((item) => (
-          <Chip
-            {...chipProps}
-            key={item}
-            label={
-              <Box
-                sx={{
-                  ml: -0.5,
-                  width: 18,
-                  height: 18,
-                  bgcolor: item,
-                  borderRadius: '50%',
-                  border: (theme) =>
-                    `solid 1px ${varAlpha(theme.vars.palette.common.whiteChannel, 0.24)}`,
-                }}
-              />
-            }
-            onDelete={() => handleRemoveColor(item)}
-          />
+          <Chip {...chipProps} key={item} label={item} onDelete={() => handleRemoveColor(item)} />
         ))}
       </FiltersBlock>
 

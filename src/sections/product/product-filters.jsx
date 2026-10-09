@@ -23,7 +23,6 @@ import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { ColorPicker } from 'src/components/color-utils';
 
 // ----------------------------------------------------------------------
 
@@ -148,14 +147,26 @@ export function ProductFilters({ open, onOpen, onClose, canReset, filters, optio
   const renderColor = (
     <Box display="flex" flexDirection="column">
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        {t('word_color')}
+        {t('label_jersey_location')}
       </Typography>
-      <ColorPicker
-        selected={filters.state.colors}
-        onSelectColor={(colors) => handleFilterColors(colors)}
-        colors={options.colors}
-        limit={6}
-      />
+      {options.colors.map((option) => (
+        <FormControlLabel
+          key={option}
+          control={
+            <Checkbox
+              checked={filters.state.colors.includes(option)}
+              onClick={() =>
+                handleFilterColors(
+                  filters.state.colors.includes(option)
+                    ? filters.state.colors.filter((value) => value !== option)
+                    : [...filters.state.colors, option]
+                )
+              }
+            />
+          }
+          label={option}
+        />
+      ))}
     </Box>
   );
 

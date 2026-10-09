@@ -197,6 +197,35 @@ export async function enableUser(id) {
   return res.data;
 }
 
+const BULK_STATUS_BATCH_SIZE = 200;
+
+// POST /users/bulk-status does the self/last-admin protection, Cognito handling (shared
+// across accounts) and throttling retries server-side — see the API contract in PR #168.
+// Capped at 200 userIds per call, so a larger selection is split into sequential batches.
+export async function bulkSetUserStatus(userIds, disabled) {
+  const batches = [];
+  for (let i = 0; i < userIds.length; i += BULK_STATUS_BATCH_SIZE) {
+    batches.push(userIds.slice(i, i + BULK_STATUS_BATCH_SIZE));
+  }
+
+  // Sequential, not Promise.all: batches exist to respect the API's own cap, not to be fired
+  // concurrently — the whole point is to avoid hammering Cognito in parallel.
+  const merged = await batches.reduce(async (accPromise, batch) => {
+    const acc = await accPromise;
+    const { data } = await axiosInstance.post(`${URL}/bulk-status`, { userIds: batch, disabled });
+    return {
+      disabled: acc.disabled + (data.disabled || 0),
+      enabled: acc.enabled + (data.enabled || 0),
+      skipped: acc.skipped + (data.skipped || 0),
+      failed: acc.failed + (data.failed || 0),
+      results: [...acc.results, ...(data.results || [])],
+    };
+  }, Promise.resolve({ disabled: 0, enabled: 0, skipped: 0, failed: 0, results: [] }));
+
+  mutate((key) => key.startsWith(URL));
+  return merged;
+}
+
 export function useGetTopGoalsAndAssists(selectedWorkspace) {
   const workspaceId = selectedWorkspace?.id;
   const { data, isLoading, error, isValidating } = useSWR(
