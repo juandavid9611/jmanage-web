@@ -2061,5 +2061,7 @@
   "label_bulk_enabled_toast": "{{count}} users enabled",
   "label_bulk_disabled_toast": "{{count}} users disabled",
   "label_bulk_enabled_toast_partial": "{{succeeded}} enabled, {{failed}} failed",
-  "label_bulk_disabled_toast_partial": "{{succeeded}} disabled, {{failed}} failed"
+  "label_bulk_disabled_toast_partial": "{{succeeded}} disabled, {{failed}} failed",
+  "label_jersey_location": "Home or away",
+  "label_jersey_location_colon": "Home or away:"
 }

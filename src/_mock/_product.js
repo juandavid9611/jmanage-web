@@ -10,40 +10,17 @@ export const PRODUCT_CATEGORY_OPTIONS = ['Shoes', 'Apparel', 'Accessories'];
 
 export const PRODUCT_RATING_OPTIONS = ['up4Star', 'up3Star', 'up2Star', 'up1Star'];
 
-export const PRODUCT_COLOR_OPTIONS = [
-  '#FF4842',
-  '#1890FF',
-  '#FFC0CB',
-  '#00AB55',
-  '#FFC107',
-  '#7F00FF',
-  '#000000',
-  '#FFFFFF',
-];
-
-export const PRODUCT_COLOR_NAME_OPTIONS = [
-  { value: '#FF4842', label: 'word_red' },
-  { value: '#1890FF', label: 'word_blue' },
-  { value: '#FFC0CB', label: 'word_pink' },
-  { value: '#00AB55', label: 'word_green' },
-  { value: '#FFC107', label: 'word_yellow' },
-  { value: '#7F00FF', label: 'word_violet' },
-  { value: '#000000', label: 'word_black' },
-  { value: '#FFFFFF', label: 'word_white' },
-];
+// "colors" is the field/payload key kept for API compatibility, but for this club store it
+// means jersey version (Local/Visitante), not an actual color — see JERSEY_LOCATION_OPTIONS
+// in product-new-edit-form.jsx for the admin-form pair of this list.
+export const PRODUCT_COLOR_OPTIONS = ['Local', 'Visitante'];
 
 export const PRODUCT_SIZE_OPTIONS = [
-  { value: '7', label: '7' },
-  { value: '8', label: '8' },
-  { value: '8.5', label: '8.5' },
-  { value: '9', label: '9' },
-  { value: '9.5', label: '9.5' },
-  { value: '10', label: '10' },
-  { value: '10.5', label: '10.5' },
-  { value: '11', label: '11' },
-  { value: '11.5', label: '11.5' },
-  { value: '12', label: '12' },
-  { value: '13', label: '13' },
+  { value: 'S', label: 'S' },
+  { value: 'M', label: 'M' },
+  { value: 'L', label: 'L' },
+  { value: 'XL', label: 'XL' },
+  { value: 'XXXL', label: 'XXXL' },
 ];
 
 export const PRODUCT_STOCK_OPTIONS = [
@@ -65,11 +42,8 @@ export const PRODUCT_SORT_OPTIONS = [
 ];
 
 // group/classify values below are matched against product data — not translated.
-export const PRODUCT_CATEGORY_GROUP_OPTIONS = [
-  { group: 'Clothing', classify: ['Shirts', 'T-shirts', 'Jeans', 'Leather', 'Accessories'] },
-  { group: 'Tailored', classify: ['Suits', 'Blazers', 'Trousers', 'Waistcoats', 'Apparel'] },
-  { group: 'Accessories', classify: ['Shoes', 'Backpacks and bags', 'Bracelets', 'Face masks'] },
-];
+// Flat list, values already in Spanish (sent as-is to the API, not translated via t()).
+export const PRODUCT_CATEGORY_OPTIONS_ES = ['Camisetas', 'Balones', 'Accesorios', 'Otros'];
 
 // values below are i18n keys, resolved via t() at render time (see checkout-steps.jsx).
 export const PRODUCT_CHECKOUT_STEPS = ['label_cart', 'label_billing_and_address', 'payment'];

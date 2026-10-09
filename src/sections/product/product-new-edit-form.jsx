@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
@@ -24,23 +23,30 @@ import { useRouter } from 'src/routes/hooks';
 import { hasSalePrice } from 'src/utils/product-price';
 
 import {
+  PRODUCT_SIZE_OPTIONS,
+  PRODUCT_GENDER_OPTIONS,
+  PRODUCT_CATEGORY_OPTIONS_ES,
+} from 'src/_mock';
+import {
   createProduct,
   updateProduct,
   deleteProduct,
   uploadProductImages,
 } from 'src/actions/product';
-import {
-  _tags,
-  PRODUCT_SIZE_OPTIONS,
-  PRODUCT_GENDER_OPTIONS,
-  PRODUCT_COLOR_NAME_OPTIONS,
-  PRODUCT_CATEGORY_GROUP_OPTIONS,
-} from 'src/_mock';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
+
+// "colors" is kept as the field/payload key for API compatibility, but for this club store
+// it means jersey version (Local/Visitante), not an actual color — see PR notes for the
+// follow-up needed on the shop-facing swatch displays (product card, filters, detail page)
+// that still render this field as a color dot and would need a text-based variant instead.
+const JERSEY_LOCATION_OPTIONS = [
+  { value: 'Local', label: 'Local' },
+  { value: 'Visitante', label: 'Visitante' },
+];
 
 export function getNewProductSchema(t) {
   return zod
@@ -51,7 +57,6 @@ export function getNewProductSchema(t) {
       }),
       images: schemaHelper.files({ message: { required_error: t('label_images_required') } }),
       code: zod.string().min(1, { message: t('label_product_code_required') }),
-      sku: zod.string().min(1, { message: t('label_product_sku_required') }),
       quantity: zod
         .number({ invalid_type_error: t('label_quantity_required') })
         .int()
@@ -68,10 +73,6 @@ export function getNewProductSchema(t) {
         .string()
         .array()
         .nonempty({ message: t('label_choose_at_least_one_option') }),
-      tags: zod
-        .string()
-        .array()
-        .min(2, { message: t('label_must_have_at_least_2_items') }),
       gender: zod
         .string()
         .array()
@@ -83,7 +84,6 @@ export function getNewProductSchema(t) {
       subDescription: zod.string(),
       taxes: zod.number().min(0, { message: t('label_taxes_not_negative') }),
       isPublished: zod.boolean(),
-      newLabel: zod.object({ enabled: zod.boolean(), content: zod.string() }),
     })
     .superRefine((data, ctx) => {
       if (data.priceSale > 0 && data.priceSale >= data.price) {
@@ -110,14 +110,16 @@ function buildProductPayload(data, currentProduct) {
     taxes: data.taxes,
     publish: data.isPublished ? 'published' : 'draft',
     code: data.code,
-    sku: data.sku,
+    // sku/tags/newLabel dropped from the form (not relevant for this club store); kept in the
+    // payload with safe defaults in case the API still expects the keys.
+    sku: currentProduct?.sku || data.code,
     description: data.description,
     subDescription: data.subDescription,
     gender: data.gender,
-    tags: data.tags,
+    tags: currentProduct?.tags || [],
     colors: data.colors,
     sizes: data.sizes,
-    newLabel: data.newLabel,
+    newLabel: currentProduct?.newLabel || { enabled: false, content: '' },
     images: data.images,
   };
 
@@ -149,19 +151,16 @@ export function ProductNewEditForm({ currentProduct }) {
       images: currentProduct?.images || [],
       //
       code: currentProduct?.code || '',
-      sku: currentProduct?.sku || '',
       price: currentProduct?.price || 0,
       quantity: currentProduct?.quantity || 0,
       available: currentProduct?.available ?? 0,
       priceSale: currentProduct && hasSalePrice(currentProduct) ? currentProduct.priceSale : 0,
       isPublished: currentProduct ? currentProduct.publish !== 'draft' : true,
-      tags: currentProduct?.tags || [],
       taxes: currentProduct?.taxes || 0,
       gender: currentProduct?.gender || [],
-      category: currentProduct?.category || PRODUCT_CATEGORY_GROUP_OPTIONS[0].classify[1],
+      category: currentProduct?.category || PRODUCT_CATEGORY_OPTIONS_ES[0],
       colors: currentProduct?.colors || [],
       sizes: currentProduct?.sizes || [],
-      newLabel: currentProduct?.newLabel || { enabled: false, content: '' },
     }),
     [currentProduct]
   );
@@ -318,8 +317,6 @@ export function ProductNewEditForm({ currentProduct }) {
         >
           <Field.Text name="code" label={t('label_product_code')} />
 
-          <Field.Text name="sku" label={t('label_product_sku')} />
-
           <Field.Text
             name="quantity"
             label={t('word_quantity')}
@@ -344,22 +341,18 @@ export function ProductNewEditForm({ currentProduct }) {
             label={t('category')}
             InputLabelProps={{ shrink: true }}
           >
-            {PRODUCT_CATEGORY_GROUP_OPTIONS.map((category) => (
-              <optgroup key={category.group} label={category.group}>
-                {category.classify.map((classify) => (
-                  <option key={classify} value={classify}>
-                    {classify}
-                  </option>
-                ))}
-              </optgroup>
+            {PRODUCT_CATEGORY_OPTIONS_ES.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
             ))}
           </Field.Select>
 
           <Field.MultiSelect
             checkbox
             name="colors"
-            label={t('label_colors')}
-            options={PRODUCT_COLOR_NAME_OPTIONS}
+            label={t('label_jersey_location')}
+            options={JERSEY_LOCATION_OPTIONS}
           />
 
           <Field.MultiSelect
@@ -370,49 +363,9 @@ export function ProductNewEditForm({ currentProduct }) {
           />
         </Box>
 
-        <Field.Autocomplete
-          name="tags"
-          label={t('label_tags')}
-          placeholder={t('label_plus_tags')}
-          multiple
-          freeSolo
-          disableCloseOnSelect
-          options={_tags.map((option) => option)}
-          getOptionLabel={(option) => option}
-          renderOption={(props, option) => (
-            <li {...props} key={option}>
-              {option}
-            </li>
-          )}
-          renderTags={(selected, getTagProps) =>
-            selected.map((option, index) => (
-              <Chip
-                {...getTagProps({ index })}
-                key={option}
-                label={option}
-                size="small"
-                color="info"
-                variant="soft"
-              />
-            ))
-          }
-        />
-
         <Stack spacing={1}>
           <Typography variant="subtitle2">{t('label_gender')}</Typography>
           <Field.MultiCheckbox row name="gender" options={PRODUCT_GENDER_OPTIONS} sx={{ gap: 2 }} />
-        </Stack>
-
-        <Divider sx={{ borderStyle: 'dashed' }} />
-
-        <Stack direction="row" alignItems="center" spacing={3}>
-          <Field.Switch name="newLabel.enabled" label={null} sx={{ m: 0 }} />
-          <Field.Text
-            name="newLabel.content"
-            label={t('label_new_label')}
-            fullWidth
-            disabled={!values.newLabel.enabled}
-          />
         </Stack>
       </Stack>
     </Card>

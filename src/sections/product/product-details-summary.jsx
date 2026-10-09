@@ -1,6 +1,6 @@
+import { useForm } from 'react-hook-form';
 import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm, Controller } from 'react-hook-form';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -21,7 +21,6 @@ import { getLivePrice, hasSalePrice } from 'src/utils/product-price';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
-import { ColorPicker } from 'src/components/color-utils';
 
 import { IncrementerButton } from './components/incrementer-button';
 
@@ -85,7 +84,7 @@ export function ProductDetailsSummary({
 
   const methods = useForm({ defaultValues });
 
-  const { reset, watch, control, setValue, handleSubmit } = methods;
+  const { reset, watch, setValue, handleSubmit } = methods;
 
   const values = watch();
 
@@ -170,21 +169,16 @@ export function ProductDetailsSummary({
   const renderColorOptions = !!colors.length && (
     <Stack direction="row">
       <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
-        {t('word_color')}
+        {t('label_jersey_location')}
       </Typography>
 
-      <Controller
-        name="colors"
-        control={control}
-        render={({ field }) => (
-          <ColorPicker
-            colors={colors}
-            selected={field.value}
-            onSelectColor={(color) => field.onChange(color)}
-            limit={4}
-          />
-        )}
-      />
+      <Field.Select name="colors" size="small" sx={{ maxWidth: 140 }}>
+        {colors.map((color) => (
+          <MenuItem key={color} value={color}>
+            {color}
+          </MenuItem>
+        ))}
+      </Field.Select>
     </Stack>
   );
 

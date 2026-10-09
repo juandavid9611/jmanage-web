@@ -2061,5 +2061,7 @@
   "label_bulk_enabled_toast": "{{count}} usuarios habilitados",
   "label_bulk_disabled_toast": "{{count}} usuarios deshabilitados",
   "label_bulk_enabled_toast_partial": "{{succeeded}} habilitados, {{failed}} fallaron",
-  "label_bulk_disabled_toast_partial": "{{succeeded}} deshabilitados, {{failed}} fallaron"
+  "label_bulk_disabled_toast_partial": "{{succeeded}} deshabilitados, {{failed}} fallaron",
+  "label_jersey_location": "Local o visitante",
+  "label_jersey_location_colon": "Local o visitante:"
 }
