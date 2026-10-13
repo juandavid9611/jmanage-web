@@ -13,10 +13,16 @@ const PREVIEWABLE_ROLES = ['coach', 'user'];
 
 // Create a provider component
 export const WorkspaceProvider = ({ children }) => {
-  const { authenticated } = useAuthContext();
+  const { authenticated, user } = useAuthContext();
   const { workspaces, isLoading, error } = useGetWorkspaces(authenticated);
   const { allWorkspaces } = useGetAllWorkspaces(authenticated);
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
+
+  // Scoped per Cognito user: plain `selectedWorkspaceId` lived in one shared localStorage key
+  // for the whole origin, so switching accounts in the same browser (e.g. an admin testing a
+  // player's login) could leak the previous user's selected category into the next session —
+  // the symptom was a user picking their real category and it silently reverting later.
+  const storageKey = user?.id ? `selectedWorkspaceId:${user.id}` : null;
   const [previewRole, setPreviewRoleState] = useState(() => {
     try {
       const stored = sessionStorage.getItem(PREVIEW_ROLE_KEY);
@@ -27,28 +33,33 @@ export const WorkspaceProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    if (!isLoading && workspaces.length > 0) {
-      const storedWorkspaceId = localStorage.getItem('selectedWorkspaceId');
+    if (!isLoading && workspaces.length > 0 && storageKey) {
+      const storedWorkspaceId = localStorage.getItem(storageKey);
       const storedWorkspace = workspaces.find((w) => w.id === storedWorkspaceId);
 
       if (storedWorkspace) {
         setSelectedWorkspace(storedWorkspace);
       } else {
-        // Selected workspace no longer exists (e.g. deleted): fall back and persist.
+        // No (valid) stored choice for this user yet, or it no longer exists (e.g. deleted):
+        // fall back and persist.
         setSelectedWorkspace(workspaces[0]);
-        localStorage.setItem('selectedWorkspaceId', workspaces[0].id);
+        localStorage.setItem(storageKey, workspaces[0].id);
       }
     }
-  }, [workspaces, isLoading]);
+  }, [workspaces, isLoading, storageKey]);
 
-  const selectWorkspace = useCallback((workspace) => {
-    setSelectedWorkspace(workspace);
-    if (workspace?.id) {
-      localStorage.setItem('selectedWorkspaceId', workspace.id);
-    } else {
-      localStorage.removeItem('selectedWorkspaceId');
-    }
-  }, []);
+  const selectWorkspace = useCallback(
+    (workspace) => {
+      setSelectedWorkspace(workspace);
+      if (!storageKey) return;
+      if (workspace?.id) {
+        localStorage.setItem(storageKey, workspace.id);
+      } else {
+        localStorage.removeItem(storageKey);
+      }
+    },
+    [storageKey]
+  );
 
   const realWorkspaceRole = selectedWorkspace?.role;
   const canPreviewRole = realWorkspaceRole === 'admin';

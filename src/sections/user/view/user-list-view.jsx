@@ -180,7 +180,7 @@ export function UserListView() {
     if (!scopedCategory) return;
     setDeletingCategory(true);
     try {
-      await deleteWorkspace(scopedCategory.id);
+      await deleteWorkspace(scopedCategory.id, user?.id);
       toast.success(t('label_category_deleted'));
       table.onResetPage();
       table.setSelected([]);
@@ -204,7 +204,7 @@ export function UserListView() {
     } finally {
       setDeletingCategory(false);
     }
-  }, [scopedCategory, scopeCounts, table, t, deleteCategoryDialog]);
+  }, [scopedCategory, scopeCounts, table, t, deleteCategoryDialog, user?.id]);
 
   const usersById = useMemo(() => new Map(fetchedUsers.map((u) => [u.id, u])), [fetchedUsers]);
   const { teamOwnerTeams } = useGetTeamOwnerTeams(isTournamentAccount);
