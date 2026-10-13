@@ -30,7 +30,14 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
 
   // workspaceRole already reflects an active role preview (see RolePreviewPopover); the badge
   // showing exactly what that role would see is the point, not a separate "previewing" color.
-  const { selectedWorkspace, setSelectedWorkspace, workspaceRole } = useWorkspace();
+  const { selectedWorkspace, setSelectedWorkspace, workspaceRole, realWorkspaceRole } =
+    useWorkspace();
+
+  // Switching categories from the header is an admin tool: a non-admin with more than one real
+  // membership (e.g. added to a second category by an admin) should not be able to self-switch
+  // which one is active — that stays the admin's call via "Gestionar categorías". Gated on the
+  // user's real role, not the previewed one, so an admin keeps the switcher while previewing.
+  const canSwitchWorkspace = realWorkspaceRole === 'admin';
 
   const handleChangeWorkspace = useCallback(
     (newValue) => {
@@ -46,10 +53,12 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
     <>
       <ButtonBase
         disableRipple
-        onClick={popover.onOpen}
+        component="div"
+        onClick={canSwitchWorkspace ? popover.onOpen : undefined}
         sx={{
           py: 0.5,
           gap: { xs: 0.5, [mediaQuery]: 1 },
+          ...(canSwitchWorkspace ? { cursor: 'pointer' } : { cursor: 'default' }),
           ...sx,
         }}
         {...other}
@@ -81,49 +90,53 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
           {workspaceRole ? t(workspaceRole) : ''}
         </Label>
 
-        <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
+        {canSwitchWorkspace && (
+          <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
+        )}
       </ButtonBase>
 
-      <CustomPopover
-        open={popover.open}
-        anchorEl={popover.anchorEl}
-        onClose={popover.onClose}
-        slotProps={{ arrow: { placement: 'top-left' } }}
-      >
-        <MenuList sx={{ minWidth: 240, maxWidth: 360 }}>
-          {data.map((option) => (
-            <MenuItem
-              key={option.id}
-              selected={option.id === selectedWorkspace?.id}
-              onClick={() => handleChangeWorkspace(option)}
-              sx={{ minHeight: 48, gap: 1.5 }}
-            >
-              <Avatar
-                alt={option.name}
-                src={option.logo}
-                sx={{ width: 24, height: 24, flexShrink: 0 }}
-              />
-
-              <Box
-                component="span"
-                sx={{
-                  flexGrow: 1,
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
+      {canSwitchWorkspace && (
+        <CustomPopover
+          open={popover.open}
+          anchorEl={popover.anchorEl}
+          onClose={popover.onClose}
+          slotProps={{ arrow: { placement: 'top-left' } }}
+        >
+          <MenuList sx={{ minWidth: 240, maxWidth: 360 }}>
+            {data.map((option) => (
+              <MenuItem
+                key={option.id}
+                selected={option.id === selectedWorkspace?.id}
+                onClick={() => handleChangeWorkspace(option)}
+                sx={{ minHeight: 48, gap: 1.5 }}
               >
-                {option.name}
-              </Box>
+                <Avatar
+                  alt={option.name}
+                  src={option.logo}
+                  sx={{ width: 24, height: 24, flexShrink: 0 }}
+                />
 
-              <Label color={ROLE_COLORS[option.role] || 'default'} sx={{ flexShrink: 0 }}>
-                {option.role ? t(option.role) : ''}
-              </Label>
-            </MenuItem>
-          ))}
-        </MenuList>
-      </CustomPopover>
+                <Box
+                  component="span"
+                  sx={{
+                    flexGrow: 1,
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {option.name}
+                </Box>
+
+                <Label color={ROLE_COLORS[option.role] || 'default'} sx={{ flexShrink: 0 }}>
+                  {option.role ? t(option.role) : ''}
+                </Label>
+              </MenuItem>
+            ))}
+          </MenuList>
+        </CustomPopover>
+      )}
     </>
   );
 }
