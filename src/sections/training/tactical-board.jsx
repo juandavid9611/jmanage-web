@@ -1839,8 +1839,19 @@ export const TacticalBoard = forwardRef(
           {zones.map((zone) => {
             const handlePoint = zoneHandlePoint(zone, dims);
             const showHandle = !readOnly && zone.id === selectedId && tool === 'select';
+            // A filled zone sits in front of the background rect in the SVG's
+            // paint order, so it normally swallows clicks meant for it (adding
+            // a token, starting an arrow/zone/freehand draw) anywhere inside
+            // its area. Only let the zone itself catch pointer events while
+            // "select" is the active tool — any other tool should click
+            // straight through it to the board underneath.
+            const zoneInteractive = !readOnly && tool === 'select';
             return (
-              <g key={zone.id} onPointerDown={(evt) => handleZonePointerDown(zone, evt)}>
+              <g
+                key={zone.id}
+                onPointerDown={(evt) => handleZonePointerDown(zone, evt)}
+                style={{ pointerEvents: zoneInteractive ? 'auto' : 'none' }}
+              >
                 <ZoneShape zone={zone} dims={dims} selected={zone.id === selectedId} />
                 {showHandle && (
                   <rect
