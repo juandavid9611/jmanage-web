@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 
 import { varAlpha } from 'src/theme/styles';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { NavSectionHorizontal } from 'src/components/nav-section';
 
@@ -11,6 +12,8 @@ import { useAuthContext } from 'src/auth/hooks';
 
 export function NavHorizontal({ data, layoutQuery, sx, ...other }) {
   const { user } = useAuthContext();
+  const { previewRole } = useWorkspace();
+  const currentRole = previewRole ? 'user' : user?.role;
   return (
     <Box
       sx={{
@@ -39,7 +42,7 @@ export function NavHorizontal({ data, layoutQuery, sx, ...other }) {
         <NavSectionHorizontal
           data={data}
           slotProps={{
-            currentRole: user?.role,
+            currentRole,
           }}
           {...other}
         />

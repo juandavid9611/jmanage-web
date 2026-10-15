@@ -28,8 +28,14 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
 
   const mediaQuery = 'sm';
 
-  const { selectedWorkspace, setSelectedWorkspace } = useWorkspace();
+  // workspaceRole already reflects an active role preview (see RolePreviewPopover); the badge
+  // showing exactly what that role would see is the point, not a separate "previewing" color.
+  const { selectedWorkspace, setSelectedWorkspace, workspaceRole } = useWorkspace();
 
+  // Any user can switch between the categories they actually belong to — `data` only ever lists
+  // their own real memberships, never other categories. Previously restricted to admins, but the
+  // bug that made switching look broken was selectedWorkspaceId leaking across different logged-in
+  // users sharing a browser (now fixed by scoping that key per user), not this control itself.
   const handleChangeWorkspace = useCallback(
     (newValue) => {
       setSelectedWorkspace(newValue);
@@ -70,13 +76,13 @@ export function WorkspacesPopover({ data = [], sx, ...other }) {
         </Box>
 
         <Label
-          color={ROLE_COLORS[selectedWorkspace?.role] || 'default'}
+          color={ROLE_COLORS[workspaceRole] || 'default'}
           sx={{
             height: 22,
             display: { xs: 'none', [mediaQuery]: 'inline-flex' },
           }}
         >
-          {selectedWorkspace?.role ? t(selectedWorkspace.role) : ''}
+          {workspaceRole ? t(workspaceRole) : ''}
         </Label>
 
         <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
