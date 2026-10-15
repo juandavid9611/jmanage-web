@@ -79,7 +79,17 @@ const ZONE_TYPES = [
     icon: 'mdi:circle-outline',
     labelKey: 'label_zone_circle',
   },
+  {
+    type: 'zone_polygon',
+    color: DEFAULT_ZONE_COLOR,
+    icon: 'mdi:vector-polygon',
+    labelKey: 'label_zone_polygon',
+  },
 ];
+
+// How close (in percent-of-pitch units) a click has to land to the first
+// point of a free-drawn zone to close it, instead of adding another vertex.
+const POLYGON_CLOSE_THRESHOLD = 4;
 
 const ARROW_TYPES = [
   { type: 'run', color: '#212121', icon: 'solar:route-bold-duotone', labelKey: 'label_arrow_run' },
@@ -778,6 +788,23 @@ function ZoneShape({ zone, dims, selected }) {
     );
   }
 
+  if (zone.type === 'zone_polygon') {
+    const points = zone.points.map((point) => {
+      const p = toViewBox(point, dims);
+      return `${p.x},${p.y}`;
+    });
+    return (
+      <polygon
+        points={points.join(' ')}
+        stroke={zone.color}
+        strokeWidth={strokeWidth}
+        strokeDasharray={strokeDasharray}
+        strokeLinejoin="round"
+        {...fillProps}
+      />
+    );
+  }
+
   const c = toViewBox({ x: zone.x, y: zone.y }, dims);
   const r = (zone.r / 100) * dims.width;
   return (
@@ -877,6 +904,7 @@ export const TacticalBoard = forwardRef(
   const [resizing, setResizing] = useState(null);
   const [arrowStart, setArrowStart] = useState(null);
   const [zoneDraft, setZoneDraft] = useState(null);
+  const [polygonDraft, setPolygonDraft] = useState(null);
   const [preview, setPreview] = useState(null);
   const [freehandPoints, setFreehandPoints] = useState(null);
   const [freehandColor, setFreehandColor] = useState('#212121');
@@ -934,6 +962,34 @@ export const TacticalBoard = forwardRef(
     [zones, emitChange]
   );
 
+  // Each click while the "zona libre" tool is active adds a vertex; once at
+  // least a triangle exists, clicking back near the first vertex closes the
+  // shape into a polygon zone instead of adding another point.
+  const registerPolygonPoint = useCallback(
+    (point) => {
+      if (!polygonDraft || !polygonDraft.length) {
+        setPolygonDraft([point]);
+        return;
+      }
+      const first = polygonDraft[0];
+      const dist = Math.hypot(point.x - first.x, point.y - first.y);
+      if (polygonDraft.length >= 3 && dist <= POLYGON_CLOSE_THRESHOLD) {
+        addZone({
+          type: 'zone_polygon',
+          points: polygonDraft,
+          x: polygonDraft[0].x,
+          y: polygonDraft[0].y,
+          color: DEFAULT_ZONE_COLOR,
+          style: 'solid',
+        });
+        setPolygonDraft(null);
+        return;
+      }
+      setPolygonDraft([...polygonDraft, point]);
+    },
+    [polygonDraft, addZone]
+  );
+
   const addArrow = useCallback(
     (type, start, end) => {
       const newArrow = { id: uuidv4(), type, x1: start.x, y1: start.y, x2: end.x, y2: end.y };
@@ -957,7 +1013,20 @@ export const TacticalBoard = forwardRef(
         });
       } else if (zones.some((zone) => zone.id === id)) {
         emitChange({
-          zones: zones.map((zone) => (zone.id === id ? { ...zone, x: point.x, y: point.y } : zone)),
+          zones: zones.map((zone) => {
+            if (zone.id !== id) return zone;
+            if (zone.type === 'zone_polygon') {
+              const dx = point.x - zone.x;
+              const dy = point.y - zone.y;
+              return {
+                ...zone,
+                x: point.x,
+                y: point.y,
+                points: zone.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+              };
+            }
+            return { ...zone, x: point.x, y: point.y };
+          }),
         });
       }
     },
@@ -967,7 +1036,7 @@ export const TacticalBoard = forwardRef(
   const resizeZone = useCallback(
     (id, point) => {
       const zone = zones.find((item) => item.id === id);
-      if (!zone) return;
+      if (!zone || zone.type === 'zone_polygon') return;
       if (zone.type === 'zone_rect') {
         const w = clamp(point.x - zone.x, 3, 100);
         const h = clamp(point.y - zone.y, 3, 100);
@@ -1210,7 +1279,9 @@ export const TacticalBoard = forwardRef(
   const handleBackgroundPointerDown = useCallback(
     (evt) => {
       if (readOnly) return;
-      if (tool.startsWith('zone_')) {
+      // "zona libre" places its vertices on click (handleBackgroundClick),
+      // not by dragging like the rect/circle zones below.
+      if (tool.startsWith('zone_') && tool !== 'zone_polygon') {
         const point = pointFromEvent(svgRef.current, evt);
         setZoneDraft({ subtype: tool.replace('zone_', ''), x0: point.x, y0: point.y, x1: point.x, y1: point.y });
       } else if (tool === 'freehand') {
@@ -1226,8 +1297,13 @@ export const TacticalBoard = forwardRef(
 
   const handleBackgroundClick = useCallback(
     (evt) => {
-      if (readOnly || tool.startsWith('zone_') || tool === 'freehand') return;
+      if (readOnly) return;
       const point = pointFromEvent(svgRef.current, evt);
+      if (tool === 'zone_polygon') {
+        registerPolygonPoint(point);
+        return;
+      }
+      if (tool.startsWith('zone_') || tool === 'freehand') return;
       if (tool === 'select') {
         setSelectedId(null);
         setMultiSelectedIds(EMPTY_ARRAY);
@@ -1239,7 +1315,7 @@ export const TacticalBoard = forwardRef(
         setMultiSelectedIds(EMPTY_ARRAY);
       }
     },
-    [readOnly, tool, registerPoint, addToken]
+    [readOnly, tool, registerPoint, addToken, registerPolygonPoint]
   );
 
   const handleTokenPointerDown = useCallback(
@@ -1384,7 +1460,7 @@ export const TacticalBoard = forwardRef(
         setZoneDraft((prev) => (prev ? { ...prev, x1: point.x, y1: point.y } : prev));
       } else if (freehandPoints) {
         setFreehandPoints((prev) => (prev ? [...prev, point] : prev));
-      } else if (arrowStart) {
+      } else if (arrowStart || polygonDraft) {
         setPreview(point);
       }
     },
@@ -1397,6 +1473,7 @@ export const TacticalBoard = forwardRef(
       zoneDraft,
       freehandPoints,
       arrowStart,
+      polygonDraft,
       resizeZone,
       resizeToken,
       rotateToken,
@@ -1520,13 +1597,20 @@ export const TacticalBoard = forwardRef(
       if (evt.key !== 'Delete' && evt.key !== 'Backspace') return;
       const tag = evt.target?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || evt.target?.isContentEditable) return;
+      // Mid-draw on a "zona libre", Backspace undoes the last vertex instead
+      // of deleting a selected piece (there isn't one while drawing).
+      if (polygonDraft && polygonDraft.length) {
+        evt.preventDefault();
+        setPolygonDraft((prev) => (prev && prev.length > 1 ? prev.slice(0, -1) : null));
+        return;
+      }
       if (!selectedId && !multiSelectedIds.length) return;
       evt.preventDefault();
       deleteSelected();
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [readOnly, selectedId, multiSelectedIds, deleteSelected]);
+  }, [readOnly, selectedId, multiSelectedIds, deleteSelected, polygonDraft]);
 
   const previewLine =
     arrowStart && preview
@@ -1538,6 +1622,7 @@ export const TacticalBoard = forwardRef(
     setTool(next);
     setArrowStart(null);
     setZoneDraft(null);
+    setPolygonDraft(null);
     setFreehandPoints(null);
     setPreview(null);
     setMultiSelectedIds(EMPTY_ARRAY);
@@ -1844,7 +1929,8 @@ export const TacticalBoard = forwardRef(
 
           {zones.map((zone) => {
             const handlePoint = zoneHandlePoint(zone, dims);
-            const showHandle = !readOnly && zone.id === selectedId && tool === 'select';
+            const showHandle =
+              !readOnly && zone.id === selectedId && tool === 'select' && zone.type !== 'zone_polygon';
             // A filled zone sits in front of the background rect in the SVG's
             // paint order, so it normally swallows clicks meant for it (adding
             // a token, starting an arrow/zone/freehand draw) anywhere inside
@@ -1890,6 +1976,46 @@ export const TacticalBoard = forwardRef(
               const c = toViewBox({ x: x0, y: y0 }, dims);
               const r = (Math.hypot(x1 - x0, y1 - y0) / 100) * dims.width;
               return <circle cx={c.x} cy={c.y} r={r} fill="none" stroke="#fff" strokeDasharray="4 3" strokeWidth={2} />;
+            })()}
+
+          {polygonDraft &&
+            polygonDraft.length > 0 &&
+            (() => {
+              const points = polygonDraft.map((point) => toViewBox(point, dims));
+              const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+              const canClose = polygonDraft.length >= 3;
+              const last = points[points.length - 1];
+              const previewPoint = preview ? toViewBox(preview, dims) : null;
+              return (
+                // Purely a visual guide — pointerEvents: none keeps the filled
+                // "click here to close" dot from swallowing the very click
+                // meant to land on the background rect beneath it.
+                <g style={{ pointerEvents: 'none' }}>
+                  <path d={pathD} fill="none" stroke="#fff" strokeDasharray="4 3" strokeWidth={2} />
+                  {previewPoint && (
+                    <line
+                      x1={last.x}
+                      y1={last.y}
+                      x2={previewPoint.x}
+                      y2={previewPoint.y}
+                      stroke="#fff"
+                      strokeDasharray="4 3"
+                      strokeWidth={2}
+                    />
+                  )}
+                  {points.map((p, i) => (
+                    <circle
+                      key={i}
+                      cx={p.x}
+                      cy={p.y}
+                      r={i === 0 && canClose ? 7 : 3.5}
+                      fill={i === 0 && canClose ? '#ab47bc' : '#fff'}
+                      stroke="#ab47bc"
+                      strokeWidth={1.5}
+                    />
+                  ))}
+                </g>
+              );
             })()}
 
           {arrows.map((arrow) => (

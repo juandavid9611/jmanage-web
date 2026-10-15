@@ -1996,6 +1996,7 @@
   "label_marker": "Marker disc",
   "label_zone_rect": "Rectangular zone",
   "label_zone_circle": "Circular zone",
+  "label_zone_polygon": "Freeform zone",
   "label_color": "Color",
   "label_bib_color": "Bib",
   "label_remove_bib": "Remove bib",

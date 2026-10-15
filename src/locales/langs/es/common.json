@@ -1996,6 +1996,7 @@
   "label_marker": "Disco marcador",
   "label_zone_rect": "Zona rectangular",
   "label_zone_circle": "Zona circular",
+  "label_zone_polygon": "Zona libre",
   "label_color": "Color",
   "label_bib_color": "Peto",
   "label_remove_bib": "Quitar peto",
