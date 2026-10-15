@@ -1236,6 +1236,8 @@ export const TacticalBoard = forwardRef(
         registerPoint(point);
       } else {
         addToken(tool, point);
+        setSelectedId(null);
+        setMultiSelectedIds(EMPTY_ARRAY);
       }
     },
     [readOnly, tool, registerPoint, addToken]
@@ -1245,7 +1247,11 @@ export const TacticalBoard = forwardRef(
     (token, evt) => {
       if (readOnly) return;
       evt.stopPropagation();
-      if (tool !== 'select') return;
+      // Clicking an existing piece always grabs it, whatever tool is active
+      // (placing more players, drawing a zone...) — arrow tools are the one
+      // exception, since clicking a token there snaps an arrow endpoint to
+      // it (handleTokenClick) instead of moving the piece.
+      if (tool.startsWith('arrow_')) return;
       if (multiSelectedIds.length > 1 && multiSelectedIds.includes(token.id)) {
         const point = pointFromEvent(svgRef.current, evt);
         const positions = {};
@@ -1502,7 +1508,7 @@ export const TacticalBoard = forwardRef(
   const activeCategoryDef = CATEGORIES.find((cat) => cat.key === activeCategory) || CATEGORIES[0];
 
   const deleteBadge =
-    !readOnly && tool === 'select' && selectedId && !multiSelectedIds.length
+    !readOnly && !tool.startsWith('arrow_') && selectedId && !multiSelectedIds.length
       ? deleteBadgePoint(selectedId, tokens, zones, arrows, drawings, dims)
       : null;
 
