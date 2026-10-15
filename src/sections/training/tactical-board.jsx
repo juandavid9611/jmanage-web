@@ -97,7 +97,13 @@ const ARROW_TYPES = [
     icon: 'mdi:soccer',
     labelKey: 'label_arrow_dribble',
   },
+  { type: 'measure', color: '#455a64', dash: '5 4', icon: 'mdi:ruler', labelKey: 'label_arrow_measure' },
 ];
+
+// Pitch px dimensions (PITCH, above) are drawn proportional to a real pitch
+// of 105 x 68 m, with "half" just a 340px-wide crop of the same scale — so
+// one meters-per-px factor converts a measured distance in either mode.
+const METERS_PER_PX = 105 / PITCH.full.width;
 
 const FREEHAND_CONFIG = { type: 'freehand', color: '#212121', icon: 'solar:pen-bold', labelKey: 'label_freehand' };
 
@@ -781,6 +787,37 @@ function ArrowShape({ arrow, dims, selected }) {
   const d = config.zigzag
     ? zigzagPath(p1.x, p1.y, p2.x, p2.y)
     : `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
+
+  if (arrow.type === 'measure') {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = (-dy / len) * 5;
+    const ny = (dx / len) * 5;
+    const mx = (p1.x + p2.x) / 2;
+    const my = (p1.y + p2.y) / 2;
+    const label = `${(len * METERS_PER_PX).toFixed(1)} m`;
+    const color = selected ? '#fff' : config.color;
+    return (
+      <g>
+        <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
+        <path d={d} fill="none" stroke={color} strokeWidth={selected ? 3 : 2} strokeDasharray={config.dash} />
+        <line x1={p1.x - nx} y1={p1.y - ny} x2={p1.x + nx} y2={p1.y + ny} stroke={color} strokeWidth={2} />
+        <line x1={p2.x - nx} y1={p2.y - ny} x2={p2.x + nx} y2={p2.y + ny} stroke={color} strokeWidth={2} />
+        <rect
+          x={mx - label.length * 3.4 - 4}
+          y={my - 9}
+          width={label.length * 6.8 + 8}
+          height={15}
+          rx={3}
+          fill="rgba(255,255,255,0.92)"
+        />
+        <text x={mx} y={my + 1} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fill="#212121">
+          {label}
+        </text>
+      </g>
+    );
+  }
 
   return (
     <g>

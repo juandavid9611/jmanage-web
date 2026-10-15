@@ -11,7 +11,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
 
-import { TacticalBoard } from './tactical-board';
+import { SequenceBoard } from './sequence-board';
 
 // ----------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ export function ExerciseCard({
             onChange={handleField('instructions')}
           />
 
-          <TacticalBoard
+          <SequenceBoard
             ref={onBoardMount ? (api) => onBoardMount(exercise.id, api) : undefined}
             value={exercise.diagram}
             readOnly={readOnly}
