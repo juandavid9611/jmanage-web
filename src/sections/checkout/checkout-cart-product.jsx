@@ -13,7 +13,6 @@ import { fCurrency } from 'src/utils/format-number';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { ColorPreview } from 'src/components/color-utils';
 
 import { IncrementerButton } from '../product/components/incrementer-button';
 
@@ -50,7 +49,12 @@ export function CheckoutCartProduct({ row, onDelete, onDecrease, onIncrease }) {
               {!!row.size && !!row.colors?.length && (
                 <Divider orientation="vertical" sx={{ mx: 1, height: 16 }} />
               )}
-              {!!row.colors?.length && <ColorPreview colors={row.colors} />}
+              {!!row.colors?.length && (
+                <>
+                  {t('label_jersey_location_lowercase')}:{' '}
+                  <Label sx={{ ml: 0.5 }}>{row.colors[0]}</Label>
+                </>
+              )}
             </Stack>
           </Stack>
         </Stack>

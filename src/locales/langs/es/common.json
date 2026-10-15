@@ -2071,5 +2071,6 @@
   "bulk_status_err_throttled": "Límite de Cognito, reintenta",
   "bulk_status_err_internal_error": "Error interno",
   "label_jersey_location": "Local o visitante",
-  "label_jersey_location_colon": "Local o visitante:"
+  "label_jersey_location_colon": "Local o visitante:",
+  "label_jersey_location_lowercase": "local o visitante"
 }

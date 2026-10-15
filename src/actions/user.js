@@ -80,7 +80,7 @@ export async function getUser(userId) {
 export async function createUser(userData) {
   try {
     const res = await axiosInstance.post(URL, userData);
-    mutate((key) => key.startsWith(URL));
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
     return res.data;
   } catch (error) {
     return { error: error.message };
@@ -90,8 +90,8 @@ export async function createUser(userData) {
 export async function updateUser(id, userData) {
   userData.id = id;
   const res = await axiosInstance.put(`${URL}/${id}`, userData);
-  mutate((key) => key.startsWith(URL));
-  mutate((key) => key.startsWith('/workspaces'));
+  mutate((key) => typeof key === 'string' && key.startsWith(URL));
+  mutate((key) => typeof key === 'string' && key.startsWith('/workspaces'));
   return res.data;
 }
 
@@ -107,13 +107,13 @@ export async function markTourSeen(userId, tourKey) {
 
 export async function updateUserMetrics(id, metricsData) {
   const res = await axiosInstance.put(`${URL}/${id}/metrics`, metricsData);
-  mutate((key) => key.startsWith(URL));
+  mutate((key) => typeof key === 'string' && key.startsWith(URL));
   return res.data;
 }
 
 export async function deleteUser(id) {
   const res = await axiosInstance.delete(`${URL}/${id}`);
-  mutate((key) => key.startsWith(URL));
+  mutate((key) => typeof key === 'string' && key.startsWith(URL));
   return res.data;
 }
 
@@ -181,19 +181,19 @@ export async function generatePresignedUrl(userId, file) {
 export async function updateAvatarUrl(id, avatarUrl) {
   const data = { avatar_url: avatarUrl };
   const res = await axiosInstance.put(`${URL}/${id}/avatar`, data);
-  mutate((key) => key.startsWith(URL));
+  mutate((key) => typeof key === 'string' && key.startsWith(URL));
   return res.data;
 }
 
 export async function disableUser(id) {
   const res = await axiosInstance.put(`${URL}/${id}/disable`);
-  mutate((key) => key.startsWith(URL));
+  mutate((key) => typeof key === 'string' && key.startsWith(URL));
   return res.data;
 }
 
 export async function enableUser(id) {
   const res = await axiosInstance.put(`${URL}/${id}/enable`);
-  mutate((key) => key.startsWith(URL));
+  mutate((key) => typeof key === 'string' && key.startsWith(URL));
   return res.data;
 }
 
@@ -222,7 +222,7 @@ export async function bulkSetUserStatus(userIds, disabled) {
     };
   }, Promise.resolve({ disabled: 0, enabled: 0, skipped: 0, failed: 0, results: [] }));
 
-  mutate((key) => key.startsWith(URL));
+  mutate((key) => typeof key === 'string' && key.startsWith(URL));
   return merged;
 }
 

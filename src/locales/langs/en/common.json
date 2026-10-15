@@ -2071,5 +2071,6 @@
   "bulk_status_err_throttled": "Cognito rate limit, retry",
   "bulk_status_err_internal_error": "Internal error",
   "label_jersey_location": "Home or away",
-  "label_jersey_location_colon": "Home or away:"
+  "label_jersey_location_colon": "Home or away:",
+  "label_jersey_location_lowercase": "home or away"
 }
