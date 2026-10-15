@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useRef, useState, forwardRef, useCallback, useImperativeHandle } from 'react';
+import { useRef, useState, useEffect, forwardRef, useCallback, useImperativeHandle } from 'react';
 
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -281,6 +281,36 @@ const TOKEN_FOOTPRINT = {
 
 function tokenFootprint(type) {
   return TOKEN_FOOTPRINT[type] || TOKEN_RADIUS + 5;
+}
+
+// Where the quick-delete badge sits for whichever single element is
+// selected, so removing a piece never requires reaching for the toolbar's
+// trash icon — a fixed spot near the piece itself (top-left of a token,
+// opposite the resize handle on a zone, the midpoint of an arrow, the first
+// point of a freehand line), not following token rotation on purpose: it's
+// a UI control, not part of the diagram.
+function deleteBadgePoint(selectedId, tokens, zones, arrows, drawings, dims) {
+  const token = tokens.find((item) => item.id === selectedId);
+  if (token) {
+    const center = toViewBox(token, dims);
+    const offset = tokenFootprint(token.type) * (token.scale || 1);
+    return { x: center.x - offset * 0.75, y: center.y - offset * 0.75 };
+  }
+  const zone = zones.find((item) => item.id === selectedId);
+  if (zone) {
+    return toViewBox({ x: zone.x, y: zone.y }, dims);
+  }
+  const arrow = arrows.find((item) => item.id === selectedId);
+  if (arrow) {
+    const p1 = toViewBox({ x: arrow.x1, y: arrow.y1 }, dims);
+    const p2 = toViewBox({ x: arrow.x2, y: arrow.y2 }, dims);
+    return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 - 16 };
+  }
+  const drawing = drawings.find((item) => item.id === selectedId);
+  if (drawing?.points?.length) {
+    return toViewBox(drawing.points[0], dims);
+  }
+  return null;
 }
 
 function tokenHandlePoint(center, type, scale) {
@@ -1471,6 +1501,28 @@ export const TacticalBoard = forwardRef(
   const selectedZone = zones.find((zone) => zone.id === selectedId);
   const activeCategoryDef = CATEGORIES.find((cat) => cat.key === activeCategory) || CATEGORIES[0];
 
+  const deleteBadge =
+    !readOnly && tool === 'select' && selectedId && !multiSelectedIds.length
+      ? deleteBadgePoint(selectedId, tokens, zones, arrows, drawings, dims)
+      : null;
+
+  // Delete/Backspace removes whatever is selected, so clearing a piece never
+  // requires reaching for the toolbar's trash icon — skipped while the user
+  // is typing anywhere else on the page (jersey number, exercise name...).
+  useEffect(() => {
+    if (readOnly) return undefined;
+    function handleKeyDown(evt) {
+      if (evt.key !== 'Delete' && evt.key !== 'Backspace') return;
+      const tag = evt.target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || evt.target?.isContentEditable) return;
+      if (!selectedId && !multiSelectedIds.length) return;
+      evt.preventDefault();
+      deleteSelected();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [readOnly, selectedId, multiSelectedIds, deleteSelected]);
+
   const previewLine =
     arrowStart && preview
       ? `M ${toViewBox(arrowStart, dims).x} ${toViewBox(arrowStart, dims).y} L ${toViewBox(preview, dims).x} ${toViewBox(preview, dims).y}`
@@ -2003,6 +2055,41 @@ export const TacticalBoard = forwardRef(
                 />
               );
             })()}
+
+          {deleteBadge && (
+            <g
+              role="button"
+              aria-label={t('label_delete_selected')}
+              tabIndex={-1}
+              style={{ cursor: 'pointer' }}
+              onPointerDown={(evt) => evt.stopPropagation()}
+              onClick={(evt) => {
+                evt.stopPropagation();
+                deleteSelected();
+              }}
+            >
+              <title>{t('label_delete_selected')}</title>
+              <circle cx={deleteBadge.x} cy={deleteBadge.y} r={9} fill="#d32f2f" stroke="#fff" strokeWidth={1.5} />
+              <line
+                x1={deleteBadge.x - 3.5}
+                y1={deleteBadge.y - 3.5}
+                x2={deleteBadge.x + 3.5}
+                y2={deleteBadge.y + 3.5}
+                stroke="#fff"
+                strokeWidth={1.6}
+                strokeLinecap="round"
+              />
+              <line
+                x1={deleteBadge.x + 3.5}
+                y1={deleteBadge.y - 3.5}
+                x2={deleteBadge.x - 3.5}
+                y2={deleteBadge.y + 3.5}
+                stroke="#fff"
+                strokeWidth={1.6}
+                strokeLinecap="round"
+              />
+            </g>
+          )}
         </svg>
       </Box>
     </Stack>
