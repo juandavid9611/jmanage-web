@@ -880,7 +880,6 @@ export const TacticalBoard = forwardRef(
   const [preview, setPreview] = useState(null);
   const [freehandPoints, setFreehandPoints] = useState(null);
   const [freehandColor, setFreehandColor] = useState('#212121');
-  const [equipmentAnchor, setEquipmentAnchor] = useState(null);
   const [formationAnchor, setFormationAnchor] = useState(null);
   const [history, setHistory] = useState(EMPTY_ARRAY);
   const [future, setFuture] = useState(EMPTY_ARRAY);
@@ -1661,71 +1660,20 @@ export const TacticalBoard = forwardRef(
           </Stack>
 
           <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
-            {activeCategory === 'equipment' ? (
-              <>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={(evt) => setEquipmentAnchor(evt.currentTarget)}
-                  startIcon={
-                    <Iconify icon={TOOL_CONFIG[tool]?.icon || 'mdi:dots-grid'} sx={{ color: TOOL_CONFIG[tool]?.color }} />
-                  }
-                >
-                  {t(TOOL_CONFIG[tool]?.labelKey || 'label_category_equipment')}
-                </Button>
-                <Popover
-                  open={!!equipmentAnchor}
-                  anchorEl={equipmentAnchor}
-                  onClose={() => setEquipmentAnchor(null)}
-                >
-                  <Box
-                    sx={{
-                      p: 1.5,
-                      width: 176,
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: 1,
-                    }}
-                  >
-                    {activeCategoryDef.tools.map((toolKey) => {
-                      const cfg = TOOL_CONFIG[toolKey];
-                      return (
-                        <Tooltip key={toolKey} title={t(cfg.labelKey)}>
-                          <IconButton
-                            onClick={() => {
-                              setTool(toolKey);
-                              setEquipmentAnchor(null);
-                            }}
-                            sx={{
-                              color: cfg.color,
-                              border: (theme) =>
-                                `1.5px solid ${tool === toolKey ? theme.palette.primary.main : theme.palette.divider}`,
-                            }}
-                          >
-                            <Iconify icon={cfg.icon} />
-                          </IconButton>
-                        </Tooltip>
-                      );
-                    })}
-                  </Box>
-                </Popover>
-              </>
-            ) : (
-              <ToggleButtonGroup exclusive size="small" value={tool} onChange={handleToolChange}>
-                {activeCategoryDef.tools.map((toolKey) => {
-                  const cfg = TOOL_CONFIG[toolKey];
-                  return (
-                    <ToggleButton key={toolKey} value={toolKey}>
-                      <Tooltip title={t(cfg.labelKey)}>
-                        <Box component="span" display="flex" sx={{ color: cfg.color }}>
-                          <Iconify icon={cfg.icon} />
-                        </Box>
-                      </Tooltip>
-                    </ToggleButton>
-                  );
-                })}
-              </ToggleButtonGroup>
-            )}
+            <ToggleButtonGroup exclusive size="small" value={tool} onChange={handleToolChange}>
+              {activeCategoryDef.tools.map((toolKey) => {
+                const cfg = TOOL_CONFIG[toolKey];
+                return (
+                  <ToggleButton key={toolKey} value={toolKey}>
+                    <Tooltip title={t(cfg.labelKey)}>
+                      <Box component="span" display="flex" sx={{ color: cfg.color }}>
+                        <Iconify icon={cfg.icon} />
+                      </Box>
+                    </Tooltip>
+                  </ToggleButton>
+                );
+              })}
+            </ToggleButtonGroup>
 
             {activeCategory === 'players' && (
               <>
