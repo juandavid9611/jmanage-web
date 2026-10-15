@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
 import { varAlpha, hideScrollY } from 'src/theme/styles';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import { Logo, LogoSimple } from 'src/components/logo';
@@ -18,6 +19,10 @@ export function NavVertical({ sx, data, slots, isNavMini, layoutQuery, onToggleN
   const theme = useTheme();
 
   const { user } = useAuthContext();
+  const { previewRole } = useWorkspace();
+  // Nav visibility is gated by the account's global role, not the per-workspace one being
+  // previewed (coach vs. athlete) — real coach accounts see the same nav a plain user does.
+  const currentRole = previewRole ? 'user' : user?.role;
 
   const renderNavVertical = (
     <>
@@ -32,7 +37,7 @@ export function NavVertical({ sx, data, slots, isNavMini, layoutQuery, onToggleN
           data={data}
           sx={{ px: 2, flex: '1 1 auto' }}
           slotProps={{
-            currentRole: user?.role,
+            currentRole,
           }}
           {...other}
         />

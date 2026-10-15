@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import Fab from '@mui/material/Fab';
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -16,7 +17,6 @@ import { getLivePrice, hasSalePrice } from 'src/utils/product-price';
 import { Label } from 'src/components/label';
 import { Image } from 'src/components/image';
 import { Iconify } from 'src/components/iconify';
-import { ColorPreview } from 'src/components/color-utils';
 
 import { useCheckoutContext } from '../checkout/context';
 
@@ -122,7 +122,11 @@ export function ProductItem({ product }) {
       </Link>
 
       <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <ColorPreview colors={colors} />
+        <Stack direction="row" spacing={0.5}>
+          {colors.map((color) => (
+            <Chip key={color} label={color} size="small" variant="soft" />
+          ))}
+        </Stack>
 
         <Stack direction="row" spacing={0.5} sx={{ typography: 'subtitle1' }}>
           {onSale && (

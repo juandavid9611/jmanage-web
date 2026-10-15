@@ -50,11 +50,14 @@ export async function createWorkspace({ name, logo }) {
 
 // Deletes a category of the active club account (admin only). Rejects with the axios error;
 // 409 carries detail {code: default_workspace | has_members | has_events, message}.
-export async function deleteWorkspace(workspaceId) {
+// `userId` clears that user's own scoped selection key if it pointed at the deleted workspace
+// (see workspace-provider.jsx — the key is per-user, not global); the provider falls back on
+// its own once the lists revalidate either way, so this is just immediate cleanup.
+export async function deleteWorkspace(workspaceId, userId) {
   await axiosInstance.delete(`${URL}/${workspaceId}`);
-  // Drop a dead persisted selection; the provider falls back once the lists revalidate.
-  if (localStorage.getItem('selectedWorkspaceId') === workspaceId) {
-    localStorage.removeItem('selectedWorkspaceId');
+  const storageKey = userId ? `selectedWorkspaceId:${userId}` : null;
+  if (storageKey && localStorage.getItem(storageKey) === workspaceId) {
+    localStorage.removeItem(storageKey);
   }
   await Promise.all([
     mutate((key) => typeof key === 'string' && key.startsWith(URL)),
