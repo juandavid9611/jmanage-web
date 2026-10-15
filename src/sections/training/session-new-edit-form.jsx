@@ -4,10 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRef, useMemo, useState, useCallback } from 'react';
 
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
+import InputAdornment from '@mui/material/InputAdornment';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
@@ -201,23 +204,78 @@ export function SessionNewEditForm({ currentSession }) {
   return (
     <Form methods={methods} onSubmit={onSaveDraft}>
       <Stack spacing={3}>
-        <Card sx={{ p: 3 }}>
+        <Card sx={{ p: 3, borderRadius: 2.5 }}>
           <Stack spacing={3}>
-            <Field.Text name="title" label={t('label_session_title')} />
-
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-              <Field.MobileDateTimePicker name="date" label={t('start_date')} />
-              <Field.Text name="location" label={t('label_location')} />
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 1.5,
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'primary.lighter',
+                }}
+              >
+                <Iconify icon="solar:clipboard-text-bold" width={20} sx={{ color: 'primary.dark' }} />
+              </Box>
+              <Typography variant="subtitle1">{t('label_session_general_info')}</Typography>
             </Stack>
 
-            <Field.Text name="teamGroup" label={t('label_team_group')} />
-
             <Field.Text
-              name="objective"
-              label={t('label_objective')}
-              multiline
-              rows={2}
+              name="title"
+              label={t('label_session_title')}
+              variant="standard"
+              sx={{ '& .MuiInputBase-input': { fontSize: 22, fontWeight: 800 } }}
             />
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 3 }}>
+              <Field.MobileDateTimePicker name="date" label={t('start_date')} />
+
+              <Field.Text
+                name="location"
+                label={t('label_location')}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Iconify icon="solar:map-point-bold" sx={{ color: 'text.disabled' }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Box sx={{ gridColumn: '1 / -1' }}>
+                <Field.Text
+                  name="teamGroup"
+                  label={t('label_team_group')}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Iconify icon="solar:users-group-rounded-bold" sx={{ color: 'text.disabled' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+
+              <Box sx={{ gridColumn: '1 / -1' }}>
+                <Field.Text
+                  name="objective"
+                  label={t('label_objective')}
+                  multiline
+                  rows={2}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1.75 }}>
+                        <Iconify icon="solar:target-bold" sx={{ color: 'text.disabled' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+            </Box>
           </Stack>
         </Card>
 
@@ -233,16 +291,26 @@ export function SessionNewEditForm({ currentSession }) {
           />
         ))}
 
-        <Stack direction="row" spacing={1.5} sx={{ alignSelf: 'flex-start' }}>
-          <Button
-            type="button"
-            variant="soft"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-            onClick={handleAddExercise}
-          >
-            {t('label_add_exercise')}
-          </Button>
-        </Stack>
+        <Button
+          type="button"
+          fullWidth
+          size="large"
+          color="inherit"
+          startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={handleAddExercise}
+          sx={{
+            py: 1.75,
+            borderRadius: 2.5,
+            borderStyle: 'dashed',
+            borderWidth: 2,
+            borderColor: 'divider',
+            color: 'text.secondary',
+            '&:hover': { borderColor: 'primary.main', bgcolor: 'primary.lighter' },
+          }}
+          variant="outlined"
+        >
+          {t('label_add_exercise')}
+        </Button>
 
         <Stack direction="row" spacing={2} justifyContent="flex-end">
           <LoadingButton
