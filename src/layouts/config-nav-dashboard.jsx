@@ -115,6 +115,7 @@ export function getNavData(t, language) {
           path: paths.dashboard.tournament.root,
           icon: ICONS.tour,
           roles: ['admin', 'user'],
+          tournamentOnly: true,
         },
         {
           title: t('nav_getting_started_guide'),
