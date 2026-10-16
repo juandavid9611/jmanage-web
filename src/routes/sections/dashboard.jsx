@@ -9,6 +9,7 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import { AuthGuard } from 'src/auth/guard';
 import { ClubOnlyGuard } from 'src/auth/guard/club-only-guard';
 import { AdminOnlyGuard } from 'src/auth/guard/admin-only-guard';
+import { TournamentOnlyGuard } from 'src/auth/guard/tournament-only-guard';
 
 // ----------------------------------------------------------------------
 
@@ -192,6 +193,11 @@ export const dashboardRoutes = [
       { path: 'guide', element: <GuidePage /> },
       {
         path: 'tournament',
+        element: (
+          <TournamentOnlyGuard>
+            <Outlet />
+          </TournamentOnlyGuard>
+        ),
         children: [
           { element: <TournamentListPage />, index: true },
           { path: 'list', element: <TournamentListPage /> },

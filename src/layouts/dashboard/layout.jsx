@@ -51,7 +51,7 @@ export function DashboardLayout({ sx, children, data }) {
   const defaultNavData =
     activeRole === 'team_owner'
       ? getTeamOwnerNavData(t)
-      : filterClubOnlyNav(getDashboardNavData(t, i18n.resolvedLanguage), activeAccountType);
+      : filterNavByAccountType(getDashboardNavData(t, i18n.resolvedLanguage), activeAccountType);
   const navData = data?.nav ?? defaultNavData;
 
   const isNavMini = settings.navLayout === 'mini';
@@ -209,11 +209,14 @@ export function DashboardLayout({ sx, children, data }) {
 
 // ----------------------------------------------------------------------
 
-function filterClubOnlyNav(navGroups, accountType) {
-  if (accountType !== 'tournament') return navGroups;
+function filterNavByAccountType(navGroups, accountType) {
   return navGroups.map((group) => ({
     ...group,
-    items: group.items.filter((item) => !item.clubOnly),
+    items: group.items.filter((item) => {
+      if (accountType === 'tournament' && item.clubOnly) return false;
+      if (accountType !== 'tournament' && item.tournamentOnly) return false;
+      return true;
+    }),
   }));
 }
 
