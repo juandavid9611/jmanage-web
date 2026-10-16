@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useRef, useState, forwardRef, useCallback, useImperativeHandle } from 'react';
+import { useRef, useState, useEffect, forwardRef, useCallback, useImperativeHandle } from 'react';
 
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -79,7 +79,17 @@ const ZONE_TYPES = [
     icon: 'mdi:circle-outline',
     labelKey: 'label_zone_circle',
   },
+  {
+    type: 'zone_polygon',
+    color: DEFAULT_ZONE_COLOR,
+    icon: 'mdi:vector-polygon',
+    labelKey: 'label_zone_polygon',
+  },
 ];
+
+// How close (in percent-of-pitch units) a click has to land to the first
+// point of a free-drawn zone to close it, instead of adding another vertex.
+const POLYGON_CLOSE_THRESHOLD = 4;
 
 const ARROW_TYPES = [
   { type: 'run', color: '#212121', icon: 'solar:route-bold-duotone', labelKey: 'label_arrow_run' },
@@ -97,7 +107,13 @@ const ARROW_TYPES = [
     icon: 'mdi:soccer',
     labelKey: 'label_arrow_dribble',
   },
+  { type: 'measure', color: '#455a64', dash: '5 4', icon: 'mdi:ruler', labelKey: 'label_arrow_measure' },
 ];
+
+// Pitch px dimensions (PITCH, above) are drawn proportional to a real pitch
+// of 105 x 68 m, with "half" just a 340px-wide crop of the same scale — so
+// one meters-per-px factor converts a measured distance in either mode.
+const METERS_PER_PX = 105 / PITCH.full.width;
 
 const FREEHAND_CONFIG = { type: 'freehand', color: '#212121', icon: 'solar:pen-bold', labelKey: 'label_freehand' };
 
@@ -200,11 +216,20 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+// Every stored coordinate on the board goes through this — raw pointer math
+// (division, atan2, hypot...) produces ~16-digit floats, and a freehand
+// stroke or a multi-step sequence can accumulate thousands of them. Two
+// decimal places is already finer than a pitch diagram needs, and keeps the
+// saved diagram well clear of the API's payload-size limit.
+function round2(value) {
+  return Math.round(value * 100) / 100;
+}
+
 function pointFromEvent(svgEl, evt) {
   const rect = svgEl.getBoundingClientRect();
   return {
-    x: clamp(((evt.clientX - rect.left) / rect.width) * 100, 0, 100),
-    y: clamp(((evt.clientY - rect.top) / rect.height) * 100, 0, 100),
+    x: round2(clamp(((evt.clientX - rect.left) / rect.width) * 100, 0, 100)),
+    y: round2(clamp(((evt.clientY - rect.top) / rect.height) * 100, 0, 100)),
   };
 }
 
@@ -275,6 +300,36 @@ const TOKEN_FOOTPRINT = {
 
 function tokenFootprint(type) {
   return TOKEN_FOOTPRINT[type] || TOKEN_RADIUS + 5;
+}
+
+// Where the quick-delete badge sits for whichever single element is
+// selected, so removing a piece never requires reaching for the toolbar's
+// trash icon — a fixed spot near the piece itself (top-left of a token,
+// opposite the resize handle on a zone, the midpoint of an arrow, the first
+// point of a freehand line), not following token rotation on purpose: it's
+// a UI control, not part of the diagram.
+function deleteBadgePoint(selectedId, tokens, zones, arrows, drawings, dims) {
+  const token = tokens.find((item) => item.id === selectedId);
+  if (token) {
+    const center = toViewBox(token, dims);
+    const offset = tokenFootprint(token.type) * (token.scale || 1);
+    return { x: center.x - offset * 0.75, y: center.y - offset * 0.75 };
+  }
+  const zone = zones.find((item) => item.id === selectedId);
+  if (zone) {
+    return toViewBox({ x: zone.x, y: zone.y }, dims);
+  }
+  const arrow = arrows.find((item) => item.id === selectedId);
+  if (arrow) {
+    const p1 = toViewBox({ x: arrow.x1, y: arrow.y1 }, dims);
+    const p2 = toViewBox({ x: arrow.x2, y: arrow.y2 }, dims);
+    return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 - 16 };
+  }
+  const drawing = drawings.find((item) => item.id === selectedId);
+  if (drawing?.points?.length) {
+    return toViewBox(drawing.points[0], dims);
+  }
+  return null;
 }
 
 function tokenHandlePoint(center, type, scale) {
@@ -742,6 +797,23 @@ function ZoneShape({ zone, dims, selected }) {
     );
   }
 
+  if (zone.type === 'zone_polygon') {
+    const points = zone.points.map((point) => {
+      const p = toViewBox(point, dims);
+      return `${p.x},${p.y}`;
+    });
+    return (
+      <polygon
+        points={points.join(' ')}
+        stroke={zone.color}
+        strokeWidth={strokeWidth}
+        strokeDasharray={strokeDasharray}
+        strokeLinejoin="round"
+        {...fillProps}
+      />
+    );
+  }
+
   const c = toViewBox({ x: zone.x, y: zone.y }, dims);
   const r = (zone.r / 100) * dims.width;
   return (
@@ -782,6 +854,37 @@ function ArrowShape({ arrow, dims, selected }) {
     ? zigzagPath(p1.x, p1.y, p2.x, p2.y)
     : `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
 
+  if (arrow.type === 'measure') {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = (-dy / len) * 5;
+    const ny = (dx / len) * 5;
+    const mx = (p1.x + p2.x) / 2;
+    const my = (p1.y + p2.y) / 2;
+    const label = `${(len * METERS_PER_PX).toFixed(1)} m`;
+    const color = selected ? '#fff' : config.color;
+    return (
+      <g>
+        <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
+        <path d={d} fill="none" stroke={color} strokeWidth={selected ? 3 : 2} strokeDasharray={config.dash} />
+        <line x1={p1.x - nx} y1={p1.y - ny} x2={p1.x + nx} y2={p1.y + ny} stroke={color} strokeWidth={2} />
+        <line x1={p2.x - nx} y1={p2.y - ny} x2={p2.x + nx} y2={p2.y + ny} stroke={color} strokeWidth={2} />
+        <rect
+          x={mx - label.length * 3.4 - 4}
+          y={my - 9}
+          width={label.length * 6.8 + 8}
+          height={15}
+          rx={3}
+          fill="rgba(255,255,255,0.92)"
+        />
+        <text x={mx} y={my + 1} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fill="#212121">
+          {label}
+        </text>
+      </g>
+    );
+  }
+
   return (
     <g>
       <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
@@ -810,10 +913,10 @@ export const TacticalBoard = forwardRef(
   const [resizing, setResizing] = useState(null);
   const [arrowStart, setArrowStart] = useState(null);
   const [zoneDraft, setZoneDraft] = useState(null);
+  const [polygonDraft, setPolygonDraft] = useState(null);
   const [preview, setPreview] = useState(null);
   const [freehandPoints, setFreehandPoints] = useState(null);
   const [freehandColor, setFreehandColor] = useState('#212121');
-  const [equipmentAnchor, setEquipmentAnchor] = useState(null);
   const [formationAnchor, setFormationAnchor] = useState(null);
   const [history, setHistory] = useState(EMPTY_ARRAY);
   const [future, setFuture] = useState(EMPTY_ARRAY);
@@ -868,6 +971,34 @@ export const TacticalBoard = forwardRef(
     [zones, emitChange]
   );
 
+  // Each click while the "zona libre" tool is active adds a vertex; once at
+  // least a triangle exists, clicking back near the first vertex closes the
+  // shape into a polygon zone instead of adding another point.
+  const registerPolygonPoint = useCallback(
+    (point) => {
+      if (!polygonDraft || !polygonDraft.length) {
+        setPolygonDraft([point]);
+        return;
+      }
+      const first = polygonDraft[0];
+      const dist = Math.hypot(point.x - first.x, point.y - first.y);
+      if (polygonDraft.length >= 3 && dist <= POLYGON_CLOSE_THRESHOLD) {
+        addZone({
+          type: 'zone_polygon',
+          points: polygonDraft,
+          x: polygonDraft[0].x,
+          y: polygonDraft[0].y,
+          color: DEFAULT_ZONE_COLOR,
+          style: 'solid',
+        });
+        setPolygonDraft(null);
+        return;
+      }
+      setPolygonDraft([...polygonDraft, point]);
+    },
+    [polygonDraft, addZone]
+  );
+
   const addArrow = useCallback(
     (type, start, end) => {
       const newArrow = { id: uuidv4(), type, x1: start.x, y1: start.y, x2: end.x, y2: end.y };
@@ -891,7 +1022,23 @@ export const TacticalBoard = forwardRef(
         });
       } else if (zones.some((zone) => zone.id === id)) {
         emitChange({
-          zones: zones.map((zone) => (zone.id === id ? { ...zone, x: point.x, y: point.y } : zone)),
+          zones: zones.map((zone) => {
+            if (zone.id !== id) return zone;
+            if (zone.type === 'zone_polygon') {
+              const dx = point.x - zone.x;
+              const dy = point.y - zone.y;
+              return {
+                ...zone,
+                x: point.x,
+                y: point.y,
+                points: zone.points.map((p) => ({
+                  x: round2(clamp(p.x + dx, 0, 100)),
+                  y: round2(clamp(p.y + dy, 0, 100)),
+                })),
+              };
+            }
+            return { ...zone, x: point.x, y: point.y };
+          }),
         });
       }
     },
@@ -901,13 +1048,13 @@ export const TacticalBoard = forwardRef(
   const resizeZone = useCallback(
     (id, point) => {
       const zone = zones.find((item) => item.id === id);
-      if (!zone) return;
+      if (!zone || zone.type === 'zone_polygon') return;
       if (zone.type === 'zone_rect') {
-        const w = clamp(point.x - zone.x, 3, 100);
-        const h = clamp(point.y - zone.y, 3, 100);
+        const w = round2(clamp(point.x - zone.x, 3, 100));
+        const h = round2(clamp(point.y - zone.y, 3, 100));
         emitChange({ zones: zones.map((item) => (item.id === id ? { ...item, w, h } : item)) });
       } else {
-        const r = clamp(Math.hypot(point.x - zone.x, point.y - zone.y), 3, 60);
+        const r = round2(clamp(Math.hypot(point.x - zone.x, point.y - zone.y), 3, 60));
         emitChange({ zones: zones.map((item) => (item.id === id ? { ...item, r } : item)) });
       }
     },
@@ -921,7 +1068,7 @@ export const TacticalBoard = forwardRef(
       const centerPx = toViewBox(token, dims);
       const pointPx = toViewBox(point, dims);
       const dist = Math.hypot(pointPx.x - centerPx.x, pointPx.y - centerPx.y);
-      const scale = clamp(dist / (tokenFootprint(token.type) * Math.SQRT1_2), MIN_TOKEN_SCALE, MAX_TOKEN_SCALE);
+      const scale = round2(clamp(dist / (tokenFootprint(token.type) * Math.SQRT1_2), MIN_TOKEN_SCALE, MAX_TOKEN_SCALE));
       emitChange({ tokens: tokens.map((item) => (item.id === id ? { ...item, scale } : item)) });
     },
     [tokens, dims, emitChange]
@@ -934,7 +1081,7 @@ export const TacticalBoard = forwardRef(
       const centerPx = toViewBox(token, dims);
       const pointPx = toViewBox(point, dims);
       const angleDeg = (Math.atan2(pointPx.y - centerPx.y, pointPx.x - centerPx.x) * 180) / Math.PI;
-      const rotation = ((angleDeg + 90) % 360 + 360) % 360;
+      const rotation = round2(((angleDeg + 90) % 360 + 360) % 360);
       emitChange({ tokens: tokens.map((item) => (item.id === id ? { ...item, rotation } : item)) });
     },
     [tokens, dims, emitChange]
@@ -1036,6 +1183,15 @@ export const TacticalBoard = forwardRef(
         id: uuidv4(),
         x: clamp(zone.x + DUPLICATE_OFFSET, 0, 100),
         y: clamp(zone.y + DUPLICATE_OFFSET, 0, 100),
+        // A polygon's shape lives in `points`, not x/y (just its anchor) —
+        // without offsetting them too, the copy lands exactly on top of the
+        // original, invisible until the first drag moves it off.
+        ...(zone.type === 'zone_polygon' && {
+          points: zone.points.map((p) => ({
+            x: clamp(p.x + DUPLICATE_OFFSET, 0, 100),
+            y: clamp(p.y + DUPLICATE_OFFSET, 0, 100),
+          })),
+        }),
       };
       emitChange({ zones: [...zones, newZone] });
       setSelectedId(newZone.id);
@@ -1144,7 +1300,9 @@ export const TacticalBoard = forwardRef(
   const handleBackgroundPointerDown = useCallback(
     (evt) => {
       if (readOnly) return;
-      if (tool.startsWith('zone_')) {
+      // "zona libre" places its vertices on click (handleBackgroundClick),
+      // not by dragging like the rect/circle zones below.
+      if (tool.startsWith('zone_') && tool !== 'zone_polygon') {
         const point = pointFromEvent(svgRef.current, evt);
         setZoneDraft({ subtype: tool.replace('zone_', ''), x0: point.x, y0: point.y, x1: point.x, y1: point.y });
       } else if (tool === 'freehand') {
@@ -1160,8 +1318,13 @@ export const TacticalBoard = forwardRef(
 
   const handleBackgroundClick = useCallback(
     (evt) => {
-      if (readOnly || tool.startsWith('zone_') || tool === 'freehand') return;
+      if (readOnly) return;
       const point = pointFromEvent(svgRef.current, evt);
+      if (tool === 'zone_polygon') {
+        registerPolygonPoint(point);
+        return;
+      }
+      if (tool.startsWith('zone_') || tool === 'freehand') return;
       if (tool === 'select') {
         setSelectedId(null);
         setMultiSelectedIds(EMPTY_ARRAY);
@@ -1169,16 +1332,24 @@ export const TacticalBoard = forwardRef(
         registerPoint(point);
       } else {
         addToken(tool, point);
+        setSelectedId(null);
+        setMultiSelectedIds(EMPTY_ARRAY);
       }
     },
-    [readOnly, tool, registerPoint, addToken]
+    [readOnly, tool, registerPoint, addToken, registerPolygonPoint]
   );
 
   const handleTokenPointerDown = useCallback(
     (token, evt) => {
       if (readOnly) return;
       evt.stopPropagation();
-      if (tool !== 'select') return;
+      // Clicking an existing piece grabs it for placement tools (more
+      // players, more equipment...) and for "select". Every drawing tool —
+      // arrows, freehand, and the three zone tools — needs that same click
+      // for its own thing instead (snapping an arrow endpoint, starting a
+      // stroke, placing/closing a polygon vertex on the token's spot via
+      // handleTokenClick below), so none of them should start a drag here.
+      if (tool.startsWith('arrow_') || tool.startsWith('zone_') || tool === 'freehand') return;
       if (multiSelectedIds.length > 1 && multiSelectedIds.includes(token.id)) {
         const point = pointFromEvent(svgRef.current, evt);
         const positions = {};
@@ -1205,9 +1376,11 @@ export const TacticalBoard = forwardRef(
       evt.stopPropagation();
       if (tool.startsWith('arrow_')) {
         registerPoint({ x: token.x, y: token.y });
+      } else if (tool === 'zone_polygon') {
+        registerPolygonPoint({ x: token.x, y: token.y });
       }
     },
-    [readOnly, tool, registerPoint]
+    [readOnly, tool, registerPoint, registerPolygonPoint]
   );
 
   const handleZonePointerDown = useCallback(
@@ -1312,7 +1485,7 @@ export const TacticalBoard = forwardRef(
         setZoneDraft((prev) => (prev ? { ...prev, x1: point.x, y1: point.y } : prev));
       } else if (freehandPoints) {
         setFreehandPoints((prev) => (prev ? [...prev, point] : prev));
-      } else if (arrowStart) {
+      } else if (arrowStart || polygonDraft) {
         setPreview(point);
       }
     },
@@ -1325,6 +1498,7 @@ export const TacticalBoard = forwardRef(
       zoneDraft,
       freehandPoints,
       arrowStart,
+      polygonDraft,
       resizeZone,
       resizeToken,
       rotateToken,
@@ -1434,6 +1608,36 @@ export const TacticalBoard = forwardRef(
   const selectedZone = zones.find((zone) => zone.id === selectedId);
   const activeCategoryDef = CATEGORIES.find((cat) => cat.key === activeCategory) || CATEGORIES[0];
 
+  const deleteBadge =
+    !readOnly && !tool.startsWith('arrow_') && selectedId && !multiSelectedIds.length
+      ? deleteBadgePoint(selectedId, tokens, zones, arrows, drawings, dims)
+      : null;
+
+  // Delete/Backspace removes whatever is selected, so clearing a piece never
+  // requires reaching for the toolbar's trash icon — skipped while the user
+  // is typing anywhere else on the page (jersey number, exercise name...).
+  useEffect(() => {
+    if (readOnly) return undefined;
+    function handleKeyDown(evt) {
+      if (evt.key !== 'Delete' && evt.key !== 'Backspace') return;
+      const tag = evt.target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || evt.target?.isContentEditable) return;
+      if (evt.target?.closest?.('[role="combobox"]')) return;
+      // Mid-draw on a "zona libre", Backspace undoes the last vertex instead
+      // of deleting a selected piece (there isn't one while drawing).
+      if (polygonDraft && polygonDraft.length) {
+        evt.preventDefault();
+        setPolygonDraft((prev) => (prev && prev.length > 1 ? prev.slice(0, -1) : null));
+        return;
+      }
+      if (!selectedId && !multiSelectedIds.length) return;
+      evt.preventDefault();
+      deleteSelected();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [readOnly, selectedId, multiSelectedIds, deleteSelected, polygonDraft]);
+
   const previewLine =
     arrowStart && preview
       ? `M ${toViewBox(arrowStart, dims).x} ${toViewBox(arrowStart, dims).y} L ${toViewBox(preview, dims).x} ${toViewBox(preview, dims).y}`
@@ -1444,6 +1648,7 @@ export const TacticalBoard = forwardRef(
     setTool(next);
     setArrowStart(null);
     setZoneDraft(null);
+    setPolygonDraft(null);
     setFreehandPoints(null);
     setPreview(null);
     setMultiSelectedIds(EMPTY_ARRAY);
@@ -1566,71 +1771,20 @@ export const TacticalBoard = forwardRef(
           </Stack>
 
           <Stack direction="row" flexWrap="wrap" gap={1} alignItems="center">
-            {activeCategory === 'equipment' ? (
-              <>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={(evt) => setEquipmentAnchor(evt.currentTarget)}
-                  startIcon={
-                    <Iconify icon={TOOL_CONFIG[tool]?.icon || 'mdi:dots-grid'} sx={{ color: TOOL_CONFIG[tool]?.color }} />
-                  }
-                >
-                  {t(TOOL_CONFIG[tool]?.labelKey || 'label_category_equipment')}
-                </Button>
-                <Popover
-                  open={!!equipmentAnchor}
-                  anchorEl={equipmentAnchor}
-                  onClose={() => setEquipmentAnchor(null)}
-                >
-                  <Box
-                    sx={{
-                      p: 1.5,
-                      width: 176,
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: 1,
-                    }}
-                  >
-                    {activeCategoryDef.tools.map((toolKey) => {
-                      const cfg = TOOL_CONFIG[toolKey];
-                      return (
-                        <Tooltip key={toolKey} title={t(cfg.labelKey)}>
-                          <IconButton
-                            onClick={() => {
-                              setTool(toolKey);
-                              setEquipmentAnchor(null);
-                            }}
-                            sx={{
-                              color: cfg.color,
-                              border: (theme) =>
-                                `1.5px solid ${tool === toolKey ? theme.palette.primary.main : theme.palette.divider}`,
-                            }}
-                          >
-                            <Iconify icon={cfg.icon} />
-                          </IconButton>
-                        </Tooltip>
-                      );
-                    })}
-                  </Box>
-                </Popover>
-              </>
-            ) : (
-              <ToggleButtonGroup exclusive size="small" value={tool} onChange={handleToolChange}>
-                {activeCategoryDef.tools.map((toolKey) => {
-                  const cfg = TOOL_CONFIG[toolKey];
-                  return (
-                    <ToggleButton key={toolKey} value={toolKey}>
-                      <Tooltip title={t(cfg.labelKey)}>
-                        <Box component="span" display="flex" sx={{ color: cfg.color }}>
-                          <Iconify icon={cfg.icon} />
-                        </Box>
-                      </Tooltip>
-                    </ToggleButton>
-                  );
-                })}
-              </ToggleButtonGroup>
-            )}
+            <ToggleButtonGroup exclusive size="small" value={tool} onChange={handleToolChange}>
+              {activeCategoryDef.tools.map((toolKey) => {
+                const cfg = TOOL_CONFIG[toolKey];
+                return (
+                  <ToggleButton key={toolKey} value={toolKey}>
+                    <Tooltip title={t(cfg.labelKey)}>
+                      <Box component="span" display="flex" sx={{ color: cfg.color }}>
+                        <Iconify icon={cfg.icon} />
+                      </Box>
+                    </Tooltip>
+                  </ToggleButton>
+                );
+              })}
+            </ToggleButtonGroup>
 
             {activeCategory === 'players' && (
               <>
@@ -1801,9 +1955,21 @@ export const TacticalBoard = forwardRef(
 
           {zones.map((zone) => {
             const handlePoint = zoneHandlePoint(zone, dims);
-            const showHandle = !readOnly && zone.id === selectedId && tool === 'select';
+            const showHandle =
+              !readOnly && zone.id === selectedId && tool === 'select' && zone.type !== 'zone_polygon';
+            // A filled zone sits in front of the background rect in the SVG's
+            // paint order, so it normally swallows clicks meant for it (adding
+            // a token, starting an arrow/zone/freehand draw) anywhere inside
+            // its area. Only let the zone itself catch pointer events while
+            // "select" is the active tool — any other tool should click
+            // straight through it to the board underneath.
+            const zoneInteractive = !readOnly && tool === 'select';
             return (
-              <g key={zone.id} onPointerDown={(evt) => handleZonePointerDown(zone, evt)}>
+              <g
+                key={zone.id}
+                onPointerDown={(evt) => handleZonePointerDown(zone, evt)}
+                style={{ pointerEvents: zoneInteractive ? 'auto' : 'none' }}
+              >
                 <ZoneShape zone={zone} dims={dims} selected={zone.id === selectedId} />
                 {showHandle && (
                   <rect
@@ -1836,6 +2002,46 @@ export const TacticalBoard = forwardRef(
               const c = toViewBox({ x: x0, y: y0 }, dims);
               const r = (Math.hypot(x1 - x0, y1 - y0) / 100) * dims.width;
               return <circle cx={c.x} cy={c.y} r={r} fill="none" stroke="#fff" strokeDasharray="4 3" strokeWidth={2} />;
+            })()}
+
+          {polygonDraft &&
+            polygonDraft.length > 0 &&
+            (() => {
+              const points = polygonDraft.map((point) => toViewBox(point, dims));
+              const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+              const canClose = polygonDraft.length >= 3;
+              const last = points[points.length - 1];
+              const previewPoint = preview ? toViewBox(preview, dims) : null;
+              return (
+                // Purely a visual guide — pointerEvents: none keeps the filled
+                // "click here to close" dot from swallowing the very click
+                // meant to land on the background rect beneath it.
+                <g style={{ pointerEvents: 'none' }}>
+                  <path d={pathD} fill="none" stroke="#fff" strokeDasharray="4 3" strokeWidth={2} />
+                  {previewPoint && (
+                    <line
+                      x1={last.x}
+                      y1={last.y}
+                      x2={previewPoint.x}
+                      y2={previewPoint.y}
+                      stroke="#fff"
+                      strokeDasharray="4 3"
+                      strokeWidth={2}
+                    />
+                  )}
+                  {points.map((p, i) => (
+                    <circle
+                      key={i}
+                      cx={p.x}
+                      cy={p.y}
+                      r={i === 0 && canClose ? 7 : 3.5}
+                      fill={i === 0 && canClose ? '#ab47bc' : '#fff'}
+                      stroke="#ab47bc"
+                      strokeWidth={1.5}
+                    />
+                  ))}
+                </g>
+              );
             })()}
 
           {arrows.map((arrow) => (
@@ -1955,6 +2161,41 @@ export const TacticalBoard = forwardRef(
                 />
               );
             })()}
+
+          {deleteBadge && (
+            <g
+              role="button"
+              aria-label={t('label_delete_selected')}
+              tabIndex={-1}
+              style={{ cursor: 'pointer' }}
+              onPointerDown={(evt) => evt.stopPropagation()}
+              onClick={(evt) => {
+                evt.stopPropagation();
+                deleteSelected();
+              }}
+            >
+              <title>{t('label_delete_selected')}</title>
+              <circle cx={deleteBadge.x} cy={deleteBadge.y} r={9} fill="#d32f2f" stroke="#fff" strokeWidth={1.5} />
+              <line
+                x1={deleteBadge.x - 3.5}
+                y1={deleteBadge.y - 3.5}
+                x2={deleteBadge.x + 3.5}
+                y2={deleteBadge.y + 3.5}
+                stroke="#fff"
+                strokeWidth={1.6}
+                strokeLinecap="round"
+              />
+              <line
+                x1={deleteBadge.x + 3.5}
+                y1={deleteBadge.y - 3.5}
+                x2={deleteBadge.x - 3.5}
+                y2={deleteBadge.y + 3.5}
+                stroke="#fff"
+                strokeWidth={1.6}
+                strokeLinecap="round"
+              />
+            </g>
+          )}
         </svg>
       </Box>
     </Stack>
