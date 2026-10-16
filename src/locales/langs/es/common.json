@@ -1943,6 +1943,7 @@
   "label_session_approved": "Sesión aprobada",
   "label_session_rejected": "Sesión rechazada",
   "label_session_needs_exercise": "Agregá al menos un ejercicio con nombre antes de enviar la sesión",
+  "label_session_too_large": "La sesión es muy grande para guardar ({{size}} KB). Reducí los pasos de las secuencias o los dibujos a mano alzada, o mové algunos ejercicios a otra sesión.",
   "status_draft": "Borrador",
   "status_sent": "Enviada",
   "status_approved": "Aprobada",

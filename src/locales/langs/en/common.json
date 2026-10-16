@@ -1943,6 +1943,7 @@
   "label_session_approved": "Session approved",
   "label_session_rejected": "Session rejected",
   "label_session_needs_exercise": "Add at least one named exercise before sending the session",
+  "label_session_too_large": "The session is too large to save ({{size}} KB). Trim down sequence steps or freehand drawings, or move some exercises to another session.",
   "status_draft": "Draft",
   "status_sent": "Sent",
   "status_approved": "Approved",

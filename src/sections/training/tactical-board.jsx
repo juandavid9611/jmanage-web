@@ -216,11 +216,20 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+// Every stored coordinate on the board goes through this — raw pointer math
+// (division, atan2, hypot...) produces ~16-digit floats, and a freehand
+// stroke or a multi-step sequence can accumulate thousands of them. Two
+// decimal places is already finer than a pitch diagram needs, and keeps the
+// saved diagram well clear of the API's payload-size limit.
+function round2(value) {
+  return Math.round(value * 100) / 100;
+}
+
 function pointFromEvent(svgEl, evt) {
   const rect = svgEl.getBoundingClientRect();
   return {
-    x: clamp(((evt.clientX - rect.left) / rect.width) * 100, 0, 100),
-    y: clamp(((evt.clientY - rect.top) / rect.height) * 100, 0, 100),
+    x: round2(clamp(((evt.clientX - rect.left) / rect.width) * 100, 0, 100)),
+    y: round2(clamp(((evt.clientY - rect.top) / rect.height) * 100, 0, 100)),
   };
 }
 
@@ -1022,7 +1031,10 @@ export const TacticalBoard = forwardRef(
                 ...zone,
                 x: point.x,
                 y: point.y,
-                points: zone.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+                points: zone.points.map((p) => ({
+                  x: round2(clamp(p.x + dx, 0, 100)),
+                  y: round2(clamp(p.y + dy, 0, 100)),
+                })),
               };
             }
             return { ...zone, x: point.x, y: point.y };
@@ -1038,11 +1050,11 @@ export const TacticalBoard = forwardRef(
       const zone = zones.find((item) => item.id === id);
       if (!zone || zone.type === 'zone_polygon') return;
       if (zone.type === 'zone_rect') {
-        const w = clamp(point.x - zone.x, 3, 100);
-        const h = clamp(point.y - zone.y, 3, 100);
+        const w = round2(clamp(point.x - zone.x, 3, 100));
+        const h = round2(clamp(point.y - zone.y, 3, 100));
         emitChange({ zones: zones.map((item) => (item.id === id ? { ...item, w, h } : item)) });
       } else {
-        const r = clamp(Math.hypot(point.x - zone.x, point.y - zone.y), 3, 60);
+        const r = round2(clamp(Math.hypot(point.x - zone.x, point.y - zone.y), 3, 60));
         emitChange({ zones: zones.map((item) => (item.id === id ? { ...item, r } : item)) });
       }
     },
@@ -1056,7 +1068,7 @@ export const TacticalBoard = forwardRef(
       const centerPx = toViewBox(token, dims);
       const pointPx = toViewBox(point, dims);
       const dist = Math.hypot(pointPx.x - centerPx.x, pointPx.y - centerPx.y);
-      const scale = clamp(dist / (tokenFootprint(token.type) * Math.SQRT1_2), MIN_TOKEN_SCALE, MAX_TOKEN_SCALE);
+      const scale = round2(clamp(dist / (tokenFootprint(token.type) * Math.SQRT1_2), MIN_TOKEN_SCALE, MAX_TOKEN_SCALE));
       emitChange({ tokens: tokens.map((item) => (item.id === id ? { ...item, scale } : item)) });
     },
     [tokens, dims, emitChange]
@@ -1069,7 +1081,7 @@ export const TacticalBoard = forwardRef(
       const centerPx = toViewBox(token, dims);
       const pointPx = toViewBox(point, dims);
       const angleDeg = (Math.atan2(pointPx.y - centerPx.y, pointPx.x - centerPx.x) * 180) / Math.PI;
-      const rotation = ((angleDeg + 90) % 360 + 360) % 360;
+      const rotation = round2(((angleDeg + 90) % 360 + 360) % 360);
       emitChange({ tokens: tokens.map((item) => (item.id === id ? { ...item, rotation } : item)) });
     },
     [tokens, dims, emitChange]
@@ -1171,6 +1183,15 @@ export const TacticalBoard = forwardRef(
         id: uuidv4(),
         x: clamp(zone.x + DUPLICATE_OFFSET, 0, 100),
         y: clamp(zone.y + DUPLICATE_OFFSET, 0, 100),
+        // A polygon's shape lives in `points`, not x/y (just its anchor) —
+        // without offsetting them too, the copy lands exactly on top of the
+        // original, invisible until the first drag moves it off.
+        ...(zone.type === 'zone_polygon' && {
+          points: zone.points.map((p) => ({
+            x: clamp(p.x + DUPLICATE_OFFSET, 0, 100),
+            y: clamp(p.y + DUPLICATE_OFFSET, 0, 100),
+          })),
+        }),
       };
       emitChange({ zones: [...zones, newZone] });
       setSelectedId(newZone.id);
@@ -1322,11 +1343,13 @@ export const TacticalBoard = forwardRef(
     (token, evt) => {
       if (readOnly) return;
       evt.stopPropagation();
-      // Clicking an existing piece always grabs it, whatever tool is active
-      // (placing more players, drawing a zone...) — arrow tools are the one
-      // exception, since clicking a token there snaps an arrow endpoint to
-      // it (handleTokenClick) instead of moving the piece.
-      if (tool.startsWith('arrow_')) return;
+      // Clicking an existing piece grabs it for placement tools (more
+      // players, more equipment...) and for "select". Every drawing tool —
+      // arrows, freehand, and the three zone tools — needs that same click
+      // for its own thing instead (snapping an arrow endpoint, starting a
+      // stroke, placing/closing a polygon vertex on the token's spot via
+      // handleTokenClick below), so none of them should start a drag here.
+      if (tool.startsWith('arrow_') || tool.startsWith('zone_') || tool === 'freehand') return;
       if (multiSelectedIds.length > 1 && multiSelectedIds.includes(token.id)) {
         const point = pointFromEvent(svgRef.current, evt);
         const positions = {};
@@ -1353,9 +1376,11 @@ export const TacticalBoard = forwardRef(
       evt.stopPropagation();
       if (tool.startsWith('arrow_')) {
         registerPoint({ x: token.x, y: token.y });
+      } else if (tool === 'zone_polygon') {
+        registerPolygonPoint({ x: token.x, y: token.y });
       }
     },
-    [readOnly, tool, registerPoint]
+    [readOnly, tool, registerPoint, registerPolygonPoint]
   );
 
   const handleZonePointerDown = useCallback(
@@ -1596,7 +1621,8 @@ export const TacticalBoard = forwardRef(
     function handleKeyDown(evt) {
       if (evt.key !== 'Delete' && evt.key !== 'Backspace') return;
       const tag = evt.target?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || evt.target?.isContentEditable) return;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || evt.target?.isContentEditable) return;
+      if (evt.target?.closest?.('[role="combobox"]')) return;
       // Mid-draw on a "zona libre", Backspace undoes the last vertex instead
       // of deleting a selected piece (there isn't one while drawing).
       if (polygonDraft && polygonDraft.length) {

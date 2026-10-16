@@ -170,6 +170,17 @@ export function SessionNewEditForm({ currentSession }) {
         })),
       };
 
+      // A session with several multi-step sequences, or any freehand-heavy
+      // diagram, can approach the API's payload-size limit — catch that
+      // here with a specific message instead of letting the save fail with
+      // a generic error after the fact.
+      const MAX_PAYLOAD_BYTES = 290 * 1024;
+      const payloadBytes = new Blob([JSON.stringify(payload)]).size;
+      if (payloadBytes > MAX_PAYLOAD_BYTES) {
+        toast.error(t('label_session_too_large', { size: Math.round(payloadBytes / 1024) }));
+        return;
+      }
+
       try {
         const saved = currentSession?.id
           ? await updateTrainingSession({ ...payload, id: currentSession.id }, selectedWorkspace?.id)

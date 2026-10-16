@@ -52,17 +52,23 @@ function framesFromDiagram(diagram) {
   return { pitchMode: base.pitchMode || 'half', frames: [frame], activeFrameId: frame.id };
 }
 
+// The top-level tokens/arrows/zones/drawings fields only exist so a
+// single-step diagram round-trips through the same shape older code (and
+// the legacy-frame migration above) expects. Nothing reads them once
+// `frames` has more than one entry, so they're left out there instead of
+// duplicating the active frame's content on every save — a multi-step
+// sequence with any freehand drawing can otherwise approach the API's
+// payload-size limit.
 function buildDiagramPatch(pitchMode, frames, activeFrameId) {
   const active = frames.find((frame) => frame.id === activeFrameId) || frames[0];
-  return {
-    pitchMode,
-    frames,
-    activeFrameId,
-    tokens: active.tokens,
-    arrows: active.arrows,
-    zones: active.zones,
-    drawings: active.drawings,
-  };
+  const patch = { pitchMode, frames, activeFrameId };
+  if (frames.length <= 1) {
+    patch.tokens = active.tokens;
+    patch.arrows = active.arrows;
+    patch.zones = active.zones;
+    patch.drawings = active.drawings;
+  }
+  return patch;
 }
 
 function clamp01(value) {
@@ -283,7 +289,12 @@ export const SequenceBoard = forwardRef(
         )}
 
         <Box sx={{ display: isPlaying ? 'none' : 'block' }}>
+          {/* Remounts the editor per frame — without this it kept its own
+              undo/redo history across frame switches, so an Undo after
+              switching frames silently overwrote the new frame with the
+              previous one's content. */}
           <TacticalBoard
+            key={activeFrameId}
             ref={editorRef}
             value={{ pitchMode, ...activeFrame }}
             readOnly={readOnly}
