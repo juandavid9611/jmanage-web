@@ -357,22 +357,44 @@ function PublicTournamentCard({ tournament, onView }) {
             </Stack>
 
             {champion?.name && (
-              <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={1.5}
+                sx={{
+                  p: 1.25,
+                  borderRadius: 1.5,
+                  bgcolor: (theme) => alpha(theme.palette.warning.main, 0.1),
+                  border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.32)}`,
+                }}
+              >
+                <Stack sx={{ minWidth: 0 }}>
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <Iconify icon="mdi:trophy" width={14} sx={{ color: 'warning.dark' }} />
+                    <Typography variant="caption" sx={{ color: 'warning.dark', fontWeight: 700 }}>
+                      {t('label_tournament_champion')}
+                    </Typography>
+                  </Stack>
+                  <Typography variant="subtitle2" noWrap>
+                    {champion.name}
+                  </Typography>
+                </Stack>
+
                 <Avatar
                   src={champion.logo_url || undefined}
                   alt={champion.name}
-                  sx={{ width: 24, height: 24, bgcolor: 'warning.lighter', color: 'warning.dark' }}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    flexShrink: 0,
+                    bgcolor: 'warning.lighter',
+                    color: 'warning.dark',
+                    border: (theme) => `2px solid ${theme.palette.warning.main}`,
+                  }}
                 >
-                  <Iconify icon="mdi:trophy" width={14} />
+                  <Iconify icon="mdi:trophy" width={22} />
                 </Avatar>
-                <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>
-                  <Box component="span" sx={{ color: 'text.secondary' }}>
-                    {t('label_tournament_champion')}:
-                  </Box>{' '}
-                  <Box component="span" sx={{ fontWeight: 700 }}>
-                    {champion.name}
-                  </Box>
-                </Typography>
               </Stack>
             )}
           </Stack>
