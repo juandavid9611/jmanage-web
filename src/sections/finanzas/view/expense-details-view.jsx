@@ -25,6 +25,7 @@ import { fDate } from 'src/utils/format-time';
 import { fCurrency } from 'src/utils/format-number';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetBankAccounts } from 'src/actions/bankAccounts';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetExpense, rejectExpense, approveExpense } from 'src/actions/expenses';
 
@@ -58,8 +59,10 @@ export function ExpenseDetailsView() {
   const { id } = useParams();
   const { selectedWorkspace, workspaceRole } = useWorkspace();
   const { expense, expenseLoading } = useGetExpense(id, selectedWorkspace?.id);
+  const { bankAccounts } = useGetBankAccounts(selectedWorkspace?.id);
 
   const isAdmin = workspaceRole === 'admin';
+  const accountName = bankAccounts.find((account) => account.id === expense?.account_id)?.name;
 
   const approveConfirm = useBoolean();
   const rejectDialog = useBoolean();
@@ -142,7 +145,7 @@ export function ExpenseDetailsView() {
         <Row label={t('label_total_amount')} value={fCurrency(expense.total_amount)} />
         <Row label={t('label_paid_amount')} value={fCurrency(expense.paid_amount || 0)} />
         <Row label={t('label_pending_balance')} value={fCurrency(pendingBalance)} />
-        <Row label={t('label_account')} value={expense.account?.name} />
+        <Row label={t('label_account')} value={accountName} />
 
         {!!expense.proof_images?.length && (
           <>
