@@ -43,7 +43,7 @@ export function ExpenseMarkPaidDialog({ open, onClose, expense }) {
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(schema),
-    values: {
+    defaultValues: {
       account_id: expense?.account_id || '',
       amount: pendingBalance,
       paid_at: dayjs().valueOf(),

@@ -42,7 +42,7 @@ export function BankAccountNewEditDialog({ open, onClose, currentAccount }) {
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(schema),
-    values: {
+    defaultValues: {
       name: currentAccount?.name || '',
       type: currentAccount?.type || 'personal_bank',
       opening_balance: currentAccount?.opening_balance ?? 0,
