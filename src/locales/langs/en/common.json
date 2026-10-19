@@ -2153,6 +2153,7 @@
   "label_expense_approved": "Expense approved",
   "label_expense_rejected": "Expense rejected",
   "label_expense_paid": "Expense marked as paid",
+  "label_expense_not_found": "Expense not found",
   "label_expense_account_required": "Pick the account the payment came from",
   "label_income_vs_expense": "Income vs. expenses",
   "label_search_expense_placeholder": "Search by detail, beneficiary or category...",

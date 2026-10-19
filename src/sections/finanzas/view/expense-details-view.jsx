@@ -33,6 +33,7 @@ import { Label } from 'src/components/label';
 import { Image } from 'src/components/image';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -98,6 +99,28 @@ export function ExpenseDetailsView() {
   };
 
   if (expenseLoading) return <LoadingScreen />;
+
+  if (!expense) {
+    return (
+      <DashboardContent>
+        <EmptyContent
+          filled
+          title={t('label_expense_not_found')}
+          action={
+            <Button
+              component={RouterLink}
+              href={paths.dashboard.finanzas.root}
+              startIcon={<Iconify icon="eva:arrow-ios-back-fill" />}
+              sx={{ mt: 3 }}
+            >
+              {t('label_back_to_list')}
+            </Button>
+          }
+          sx={{ py: 10 }}
+        />
+      </DashboardContent>
+    );
+  }
 
   const pendingBalance = Math.max((expense?.total_amount || 0) - (expense?.paid_amount || 0), 0);
 

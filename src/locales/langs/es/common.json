@@ -2153,6 +2153,7 @@
   "label_expense_approved": "Egreso aprobado",
   "label_expense_rejected": "Egreso rechazado",
   "label_expense_paid": "Egreso marcado como pagado",
+  "label_expense_not_found": "No se encontró el egreso",
   "label_expense_account_required": "Elegí la cuenta por la que se pagó",
   "label_income_vs_expense": "Ingresos vs. egresos",
   "label_search_expense_placeholder": "Buscar por detalle, beneficiario o categoría...",
