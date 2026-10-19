@@ -486,6 +486,7 @@
   "word_team_lowercase": "equipo",
   "label_no_teams": "Sin equipos",
   "label_knockout_in_progress": "Fase eliminatoria en curso",
+  "label_tournament_champion": "Campeón",
   "label_tournament_finished": "Torneo finalizado",
   "label_view_tournament": "Ver torneo",
   "position_goalkeepers": "Porteros",
