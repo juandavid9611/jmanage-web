@@ -97,7 +97,6 @@ export function BankAccountNewEditDialog({ open, onClose, currentAccount }) {
               type="number"
               label={t('label_opening_balance')}
               disabled={!!currentAccount}
-              helperText={currentAccount ? undefined : t('label_opening_balance_date')}
             />
 
             <Field.DatePicker
