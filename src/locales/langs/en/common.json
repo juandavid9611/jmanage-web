@@ -2104,8 +2104,10 @@
   "label_account_adjustments": "Adjustments",
   "label_add_adjustment": "Add adjustment",
   "label_adjustment_amount": "Amount",
+  "label_adjustment_amount_helper": "Positive if money came in, negative for a correction or withdrawal",
   "label_adjustment_note": "Note",
   "label_no_accounts": "No accounts registered yet",
+  "label_no_adjustments": "No adjustments registered yet",
   "label_deactivate_account": "Deactivate account",
   "label_account_deactivated": "Account deactivated",
 

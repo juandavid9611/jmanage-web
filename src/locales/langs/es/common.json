@@ -2104,8 +2104,10 @@
   "label_account_adjustments": "Ajustes",
   "label_add_adjustment": "Agregar ajuste",
   "label_adjustment_amount": "Monto",
+  "label_adjustment_amount_helper": "Positivo si entró plata, negativo si fue una corrección o salida",
   "label_adjustment_note": "Nota",
   "label_no_accounts": "Todavía no hay cuentas registradas",
+  "label_no_adjustments": "Todavía no hay ajustes registrados",
   "label_deactivate_account": "Desactivar cuenta",
   "label_account_deactivated": "Cuenta desactivada",
 

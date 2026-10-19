@@ -28,6 +28,7 @@ import {
 
 import { BankAccountTableRow } from '../bank-account-table-row';
 import { BankAccountNewEditDialog } from '../bank-account-new-edit-dialog';
+import { BankAccountAdjustmentsDialog } from '../bank-account-adjustments-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -49,6 +50,7 @@ export function BankAccountListView() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentAccount, setCurrentAccount] = useState(null);
   const [deactivateTarget, setDeactivateTarget] = useState(null);
+  const [adjustTarget, setAdjustTarget] = useState(null);
 
   const handleOpenCreate = useCallback(() => {
     setCurrentAccount(null);
@@ -114,6 +116,7 @@ export function BankAccountListView() {
                     account={account}
                     onEdit={() => handleOpenEdit(account)}
                     onDeactivate={() => setDeactivateTarget(account)}
+                    onAdjust={() => setAdjustTarget(account)}
                   />
                 ))}
 
@@ -137,6 +140,14 @@ export function BankAccountListView() {
           open={dialogOpen}
           currentAccount={currentAccount}
           onClose={() => setDialogOpen(false)}
+        />
+      )}
+
+      {adjustTarget && (
+        <BankAccountAdjustmentsDialog
+          open={!!adjustTarget}
+          account={adjustTarget}
+          onClose={() => setAdjustTarget(null)}
         />
       )}
 

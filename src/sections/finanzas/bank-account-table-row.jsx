@@ -13,7 +13,7 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function BankAccountTableRow({ account, onEdit, onDeactivate }) {
+export function BankAccountTableRow({ account, onEdit, onDeactivate, onAdjust }) {
   const { t } = useTranslation();
 
   return (
@@ -37,6 +37,10 @@ export function BankAccountTableRow({ account, onEdit, onDeactivate }) {
 
       <TableCell align="right">
         <Stack direction="row" justifyContent="flex-end">
+          <IconButton onClick={onAdjust}>
+            <Iconify icon="solar:wallet-money-bold" />
+          </IconButton>
+
           <IconButton onClick={onEdit}>
             <Iconify icon="solar:pen-bold" />
           </IconButton>
