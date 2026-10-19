@@ -138,6 +138,13 @@ export function getNavData(t, language) {
           clubOnly: true,
         },
         {
+          title: t('label_finanzas'),
+          path: paths.dashboard.finanzas.root,
+          icon: <Iconify icon="solar:wallet-money-bold-duotone" />,
+          roles: ['admin'],
+          clubOnly: true,
+        },
+        {
           title: t('nav_votes'),
           path: paths.dashboard.votaciones.root,
           icon: ICONS.votaciones,
