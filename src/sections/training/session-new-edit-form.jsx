@@ -200,7 +200,10 @@ export function SessionNewEditForm({ currentSession }) {
         }
 
         toast.success(currentSession?.id ? t('update_success') : t('create_success'));
-        router.push(paths.dashboard.trainingSessions.list);
+        // Tell the list which tab to land on — otherwise a reviewer who just
+        // saved a draft gets bounced to their default "sent" tab, which is
+        // empty, and the save looks like it silently failed.
+        router.push(`${paths.dashboard.trainingSessions.list}?status=${status}`);
       } catch (error) {
         console.error(error);
         toast.error(error.message || t('label_session_action_error'));
