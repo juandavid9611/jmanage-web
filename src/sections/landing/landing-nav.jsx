@@ -9,7 +9,6 @@ import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
-import { paths } from 'src/routes/paths';
 import { useRouter, usePathname } from 'src/routes/hooks';
 
 import { varAlpha } from 'src/theme/styles';
@@ -26,7 +25,6 @@ const NAV_LINKS = [
   { label: 'clubs', href: '#clubs' },
   { label: 'footer_link_features', href: '#features' },
   { label: 'nav_results', href: '#stats' },
-  { label: 'nav_donations', href: paths.publicDonations.root, absolute: true },
 ];
 
 const LANGS = [
@@ -50,15 +48,6 @@ export function LandingNav({ basePath = '' }) {
   const activeLanguage = languages.includes(i18n.resolvedLanguage)
     ? i18n.resolvedLanguage
     : fallbackLng;
-  const donationPath = paths.publicDonations.localized(activeLanguage);
-  const isDonationPage = /^\/(en|es)\/donations\/?$/.test(pathname);
-
-  const handleLanguageChange = (newLanguage) => {
-    if (isDonationPage) {
-      router.replace(`${paths.publicDonations.localized(newLanguage)}${window.location.hash}`);
-    }
-  };
-
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', handler, { passive: true });
@@ -105,13 +94,7 @@ export function LandingNav({ basePath = '' }) {
               <Typography
                 key={link.label}
                 component="a"
-                href={
-                  link.label === 'nav_donations'
-                    ? donationPath
-                    : link.absolute
-                      ? link.href
-                      : `${basePath}${link.href}`
-                }
+                href={link.absolute ? link.href : `${basePath}${link.href}`}
                 variant="body2"
                 sx={{
                   fontWeight: 500,
@@ -134,25 +117,8 @@ export function LandingNav({ basePath = '' }) {
           >
             <LanguagePopover
               data={LANGS}
-              onLanguageChange={handleLanguageChange}
               sx={{ width: { xs: 34, sm: 40 }, height: { xs: 34, sm: 40 } }}
             />
-
-            <Tooltip title={t('nav_donations')}>
-              <IconButton
-                component="a"
-                href={donationPath}
-                aria-label={t('nav_donations')}
-                sx={{
-                  width: { xs: 34, sm: 40 },
-                  height: { xs: 34, sm: 40 },
-                  display: { xs: 'inline-flex', md: 'none' },
-                  color: 'warning.dark',
-                }}
-              >
-                <Iconify icon="solar:hand-heart-bold-duotone" />
-              </IconButton>
-            </Tooltip>
 
             <Tooltip title={t('nav_live_tournaments')}>
               <IconButton

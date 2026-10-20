@@ -14,8 +14,6 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
-import { paths } from 'src/routes/paths';
-
 import { varAlpha, textGradient } from 'src/theme/styles';
 
 import { Logo } from 'src/components/logo';
@@ -26,7 +24,6 @@ import { varFade, MotionViewport, MotionContainer } from 'src/components/animate
 import { ScrollProgress, useScrollProgress } from 'src/components/animate/scroll-progress';
 
 import { LandingNav } from './landing-nav';
-import { LandingDonationCampaign } from './landing-donation-campaign';
 
 // ─── DATA ───────────────────────────────────────────────────────────
 
@@ -4602,8 +4599,6 @@ export function LandingPage() {
 
       <LandingNav />
 
-      <LandingDonationCampaign />
-
       {/* ── HERO ── */}
       <Box
         component="section"
@@ -6332,10 +6327,6 @@ export function LandingPage() {
                     { label: 'footer_link_features', href: '#features' },
                     { label: 'footer_link_live_results', href: '#' },
                     { label: 'footer_link_stats', href: '#' },
-                    {
-                      label: 'nav_donations',
-                      href: paths.publicDonations.localized(i18n.resolvedLanguage),
-                    },
                   ],
                 },
                 {

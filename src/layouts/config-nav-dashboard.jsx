@@ -144,12 +144,6 @@ export function getNavData(t, language) {
           roles: ['admin', 'user'],
           clubOnly: true,
         },
-        {
-          title: t('nav_donations'),
-          path: paths.publicDonations.localized(language),
-          icon: <Iconify icon="solar:hand-heart-bold-duotone" />,
-          roles: ['admin', 'user'],
-        },
       ],
     },
     /**
@@ -181,13 +175,6 @@ export function getNavData(t, language) {
           title: t('nav_orders'),
           path: paths.dashboard.order.root,
           icon: ICONS.order,
-          roles: ['admin'],
-          clubOnly: true,
-        },
-        {
-          title: t('nav_record_donation'),
-          path: paths.dashboard.donations.root,
-          icon: <Iconify icon="solar:clipboard-add-bold-duotone" />,
           roles: ['admin'],
           clubOnly: true,
         },
