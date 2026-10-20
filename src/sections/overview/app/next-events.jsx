@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
@@ -16,6 +17,8 @@ import { fDateTime } from 'src/utils/format-time';
 import { fPercent } from 'src/utils/format-number';
 
 import { varAlpha } from 'src/theme/styles';
+import { participateEvent } from 'src/actions/calendar';
+import { useWorkspace } from 'src/workspace/workspace-provider';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -74,6 +77,24 @@ function Item({ item, sx, ...other }) {
     (entry) => entry[0] === user?.id
   );
   const { copy } = useCopyToClipboard();
+  const { selectedWorkspace } = useWorkspace();
+  const [saving, setSaving] = useState(false);
+
+  // The calendar cache is revalidated by participateEvent, so the list (and this button)
+  // reflect the server state once the request finishes.
+  const onToggleParticipation = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await participateEvent(`${item.id}`, !userParticipates, selectedWorkspace?.id);
+      toast.success(t(userParticipates ? 'label_participate_removed' : 'label_participate_success'));
+    } catch (error) {
+      console.error(error);
+      toast.error(t('something_went_wrong'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const onCopyParticipants = () => {
     if (!item.participants || Object.keys(item.participants).length === 0) {
@@ -170,6 +191,23 @@ ${formattedParticipants}`;
             {fPercent(percent)}
           </Box>
         </Box>
+
+        <Button
+          size="small"
+          disabled={saving}
+          variant={userParticipates ? 'soft' : 'contained'}
+          color={userParticipates ? 'success' : 'primary'}
+          onClick={onToggleParticipation}
+          startIcon={
+            <Iconify
+              width={16}
+              icon={userParticipates ? 'eva:checkmark-circle-2-fill' : 'solar:user-plus-bold'}
+            />
+          }
+          sx={{ alignSelf: 'flex-start' }}
+        >
+          {userParticipates ? t('label_participating') : t('participate')}
+        </Button>
       </Box>
       <CustomPopover
         open={Boolean(clickPopover.open)}
