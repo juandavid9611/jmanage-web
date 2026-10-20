@@ -72,8 +72,6 @@ const TrainingSessionListPage = lazy(() => import('src/pages/dashboard/training-
 const TrainingSessionNewPage = lazy(() => import('src/pages/dashboard/training-sessions/new'));
 const TrainingSessionEditPage = lazy(() => import('src/pages/dashboard/training-sessions/edit'));
 const TrainingSessionDetailsPage = lazy(() => import('src/pages/dashboard/training-sessions/details'));
-// Donations
-const DonationRecordPage = lazy(() => import('src/pages/dashboard/donation'));
 // ----------------------------------------------------------------------
 
 const layoutContent = (
@@ -208,7 +206,6 @@ export const dashboardRoutes = [
         ],
       },
       { path: 'team-owner', element: <TeamOwnerPage /> },
-      { path: 'donations', element: <DonationRecordPage /> },
       {
         path: 'training-sessions',
         element: (

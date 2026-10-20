@@ -16,8 +16,6 @@ const PublicMatchDetailPage = lazy(() => import('src/pages/tournament/public-mat
 // Invitation
 const InvitationAcceptPage = lazy(() => import('src/pages/invitation/accept'));
 
-// Donations
-const PublicDonationPage = lazy(() => import('src/pages/donations/public-donation-page'));
 
 // ----------------------------------------------------------------------
 
@@ -39,8 +37,6 @@ export const mainRoutes = [
         ],
       },
       { path: 'invite/:token', element: <InvitationAcceptPage /> },
-      { path: 'donations', element: <PublicDonationPage /> },
-      { path: ':language/donations', element: <PublicDonationPage /> },
     ],
   },
 ];

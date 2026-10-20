@@ -25,8 +25,6 @@ import { Iconify } from 'src/components/iconify';
 import { Walktour, useWalktour } from 'src/components/walktour';
 import { WalktourWorkspaceSelector } from 'src/components/walktour/walktour-workspace-selector';
 
-import { DonationDashboardBanner } from 'src/sections/donation/donation-dashboard-banner';
-
 import { useAuthContext } from 'src/auth/hooks';
 
 import { AppWelcome } from '../app-welcome';
@@ -217,10 +215,6 @@ export function OverviewAppView() {
       />
       <DashboardContent maxWidth="xl">
         <Grid container spacing={3}>
-          <Grid xs={12}>
-            <DonationDashboardBanner />
-          </Grid>
-
           {/* Votaciones Banner */}
           {!isTournamentAccount && (
             <Grid xs={12}>

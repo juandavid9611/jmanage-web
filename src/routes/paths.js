@@ -21,10 +21,6 @@ export const paths = {
     detail: (id) => `/tournaments/${id}`,
     match: (id, matchId) => `/tournaments/${id}/matches/${matchId}`,
   },
-  publicDonations: {
-    root: '/donations',
-    localized: (language = 'es') => `/${language === 'en' ? 'en' : 'es'}/donations`,
-  },
   // AUTH
   auth: {
     amplify: {
@@ -86,9 +82,6 @@ export const paths = {
       demo: {
         details: `${ROOTS.DASHBOARD}/order/${MOCK_ID}`,
       },
-    },
-    donations: {
-      root: `${ROOTS.DASHBOARD}/donations`,
     },
     fileManager: `${ROOTS.DASHBOARD}/file-manager`,
     attendance: {
