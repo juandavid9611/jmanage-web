@@ -27,6 +27,10 @@ import { TourPerformanceChart } from './tour-performance-chart';
 // ----------------------------------------------------------------------
 
 function computeAIInsights(tour, bookers, t) {
+  // No final score yet (e.g. the match hasn't been played, or the result just
+  // hasn't been logged) — there's no result to narrate.
+  if (!tour?.scores) return [];
+
   const insights = [];
   const yellowCards = bookers.filter((b) => b.yellowCard).length;
   const redCards = bookers.filter((b) => b.redCard).length;
@@ -143,14 +147,24 @@ export function TourDetailsContent({ tour }) {
   const totalAssists = bookers.reduce((s, b) => s + b.assists, 0);
   const aiInsights = useMemo(() => computeAIInsights(tour, bookers, t), [tour, bookers, t]);
 
-  const { home, away } = tour.scores;
-  const resultType = home > away ? 'victory' : home === away ? 'draw' : 'loss';
+  const hasScore = !!tour?.scores;
+  const { home, away } = tour?.scores || {};
+  const resultType = !hasScore
+    ? 'pending'
+    : home > away
+      ? 'victory'
+      : home === away
+        ? 'draw'
+        : 'loss';
   const resultLabel = {
     victory: t('label_match_result_win'),
     draw: t('label_match_result_draw'),
     loss: t('label_match_result_loss'),
+    pending: t('label_match_result_pending'),
   }[resultType];
-  const resultColor = { victory: 'success', draw: 'default', loss: 'error' }[resultType];
+  const resultColor = { victory: 'success', draw: 'default', loss: 'error', pending: 'default' }[
+    resultType
+  ];
 
   const {
     selected: selectedImage,
@@ -262,7 +276,7 @@ export function TourDetailsContent({ tour }) {
                   textShadow: resultType === 'victory' ? '0 0 40px rgba(34,197,94,0.3)' : 'none',
                 }}
               >
-                {home}
+                {hasScore ? home : '—'}
               </Typography>
               <Typography
                 sx={{
@@ -282,7 +296,7 @@ export function TourDetailsContent({ tour }) {
                   lineHeight: 1,
                 }}
               >
-                {away}
+                {hasScore ? away : '—'}
               </Typography>
             </Stack>
             <Typography
