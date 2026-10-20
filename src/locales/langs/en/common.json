@@ -831,6 +831,8 @@
   "label_participants": "Participants",
   "label_participants_copied": "Participants copied!",
   "label_participate_success": "Successfully signed up!",
+  "label_participating": "Going",
+  "label_participate_removed": "You left the event",
   "label_quorum_of_22": "Quorum of 22 people",
   "label_range": "Range",
   "label_sign_up": "Sign up",

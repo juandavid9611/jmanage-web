@@ -831,6 +831,8 @@
   "label_participants": "Participantes",
   "label_participants_copied": "¡Participantes copiados!",
   "label_participate_success": "¡Inscrito satisfactoriamente!",
+  "label_participating": "Inscrito",
+  "label_participate_removed": "Inscripción cancelada",
   "label_quorum_of_22": "Quorum de 22 personas",
   "label_range": "Rango",
   "label_sign_up": "Inscribirme",
