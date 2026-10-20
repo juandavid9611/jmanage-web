@@ -13,7 +13,8 @@ import axios, { fetcher, endpoints } from 'src/utils/axios';
 //   tournament  { id, workspaceId, name, category, created_at }
 //   roster row  { id, tournament_id, user_id, guest_name, number, position }
 //   match       { id, tournament_id, date, rival, calendar_event_id, lineup }
-//   lineup      { entries: [{ roster_entry_id, called_up, status, minutes }], saved_at }
+//   lineup      { entries: [{ roster_entry_id, called_up, status, minutes,
+//                             goals, assists, mvp, late, yellowCard, redCard }], saved_at }
 //
 // Player identity still comes from the real Usuarios (src/actions/user.js):
 // pass `users` (from useGetUsers) into useGetEngagementRoster to join names.
@@ -53,6 +54,12 @@ function fromApiLineup(lineup) {
       called_up: !!e.calledUp,
       status: e.status || '',
       minutes: e.minutes ?? 0,
+      goals: e.goals ?? 0,
+      assists: e.assists ?? 0,
+      mvp: !!e.mvp,
+      late: !!e.late,
+      yellowCard: !!e.yellowCard,
+      redCard: !!e.redCard,
     })),
     saved_at: lineup.savedAt,
   };
@@ -64,6 +71,15 @@ function toApiLineupEntries(entries) {
     calledUp: !!e.called_up,
     status: e.called_up ? e.status || '' : '',
     minutes: e.called_up ? Number(e.minutes) || 0 : 0,
+    // Carried through as-is (not called-up-gated like status/minutes) so a
+    // bulk lineup save — e.g. toggling someone else's called-up flag — never
+    // wipes stats already recorded for this entry.
+    goals: Number(e.goals) || 0,
+    assists: Number(e.assists) || 0,
+    mvp: !!e.mvp,
+    late: !!e.late,
+    yellowCard: !!e.yellowCard,
+    redCard: !!e.redCard,
   }));
 }
 
@@ -230,6 +246,25 @@ export async function saveEngagementLineup(tournamentId, matchId, entries, works
   const res = await axios.put(url(`/${tournamentId}/matches/${matchId}/lineup`, workspaceId), {
     entries: toApiLineupEntries(entries),
   });
+  await revalidateClub();
+  return fromApiLineup(res.data?.lineup ?? res.data);
+}
+
+// field: 'goals'|'assists'|'mvp'|'late'|'yellowCard'|'redCard' — same single-
+// field patch shape as tours.js's patchBooker, so a guest call-up's stats can
+// be edited one click at a time instead of resending the whole lineup.
+export async function patchEngagementLineupEntryStat(
+  tournamentId,
+  matchId,
+  rosterEntryId,
+  field,
+  value,
+  workspaceId
+) {
+  const res = await axios.patch(
+    url(`/${tournamentId}/matches/${matchId}/lineup/${rosterEntryId}`, workspaceId),
+    { name: field, value: String(value) }
+  );
   await revalidateClub();
   return fromApiLineup(res.data?.lineup ?? res.data);
 }
