@@ -71,15 +71,10 @@ function toApiLineupEntries(entries) {
     calledUp: !!e.called_up,
     status: e.called_up ? e.status || '' : '',
     minutes: e.called_up ? Number(e.minutes) || 0 : 0,
-    // Carried through as-is (not called-up-gated like status/minutes) so a
-    // bulk lineup save — e.g. toggling someone else's called-up flag — never
-    // wipes stats already recorded for this entry.
-    goals: Number(e.goals) || 0,
-    assists: Number(e.assists) || 0,
-    mvp: !!e.mvp,
-    late: !!e.late,
-    yellowCard: !!e.yellowCard,
-    redCard: !!e.redCard,
+    // goals/assists/mvp/late/yellowCard/redCard are intentionally NOT sent
+    // here — the bulk lineup PUT only ever touches called-up/status/minutes
+    // server-side now; stats are only ever written through
+    // patchEngagementLineupEntryStat, one field at a time.
   }));
 }
 

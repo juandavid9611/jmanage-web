@@ -43,6 +43,10 @@ import { IncrementerButton } from './components/incrementer-button';
 
 const STATUS_LABEL_KEY = { titular: 'label_starter', suplente: 'label_substitute' };
 
+// Matches the API's own 0-99 range on the generous side, and the increment
+// button never needs to go further for a single match.
+const MAX_STAT_VALUE = 20;
+
 // Stable reference: a fresh `[]` each render would rebuild the roster (and the
 // guestCalled memo below) on every render.
 const NO_USERS = [];
@@ -50,8 +54,11 @@ const NO_USERS = [];
 export function TourDetailsManualBookers({ tourId }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { selectedWorkspace } = useWorkspace();
+  const { selectedWorkspace, workspaceRole } = useWorkspace();
   const workspaceId = selectedWorkspace?.id;
+  // Mirrors the API's own restriction (admin/coach only) — a player who
+  // reaches this page would otherwise see live stat controls that 403.
+  const canEdit = workspaceRole === 'admin' || workspaceRole === 'coach';
 
   const { events } = useGetEvents({ id: workspaceId });
   const linkedEvent = events?.find((event) => event.tourId === tourId);
@@ -67,6 +74,7 @@ export function TourDetailsManualBookers({ tourId }) {
   const tournament = tournaments.find((item) => item.id === link?.tournament_id);
 
   const [localEntries, setLocalEntries] = useState({});
+  const [savingIds, setSavingIds] = useState({});
 
   const guestCalled = useMemo(() => {
     if (!match?.lineup) return [];
@@ -77,12 +85,25 @@ export function TourDetailsManualBookers({ tourId }) {
       .filter(({ entry }) => entry?.called_up);
   }, [roster, match]);
 
+  // Clears a single field's local override, letting the row fall back to
+  // whatever the server/SWR cache has for it — used both to drop a stale
+  // optimistic value after a successful save (so another admin's edit shows
+  // up on revalidation) and to undo it after a failed one.
+  const clearLocalField = useCallback((playerId, field) => {
+    setLocalEntries((prev) => {
+      const playerOverrides = { ...prev[playerId] };
+      delete playerOverrides[field];
+      return { ...prev, [playerId]: playerOverrides };
+    });
+  }, []);
+
   const handleStatChange = useCallback(
     async (player, field, newValue) => {
       setLocalEntries((prev) => ({
         ...prev,
         [player.id]: { ...prev[player.id], [field]: newValue },
       }));
+      setSavingIds((prev) => ({ ...prev, [player.id]: true }));
       try {
         await patchEngagementLineupEntryStat(
           link.tournament_id,
@@ -92,22 +113,23 @@ export function TourDetailsManualBookers({ tourId }) {
           newValue,
           workspaceId
         );
+        // The patch already revalidated the club cache, so the real value
+        // is on its way in — drop the optimistic override instead of
+        // leaving it to shadow a change someone else makes afterwards.
+        clearLocalField(player.id, field);
       } catch (error) {
         toast.error(t('label_error_updating_player'));
         console.error(error);
-        // Clear the key rather than setting it to undefined — spreading
-        // { ...entry, ...localEntries[id] } still copies an explicit
-        // `undefined`, which would hide the real server value (e.g. a
-        // player with 5 goals would show 0 after a failed click instead
-        // of reverting to 5).
-        setLocalEntries((prev) => {
-          const playerOverrides = { ...prev[player.id] };
-          delete playerOverrides[field];
-          return { ...prev, [player.id]: playerOverrides };
+        clearLocalField(player.id, field);
+      } finally {
+        setSavingIds((prev) => {
+          const next = { ...prev };
+          delete next[player.id];
+          return next;
         });
       }
     },
-    [link, workspaceId, t]
+    [link, workspaceId, t, clearLocalField]
   );
 
   if (!clubMatchId || guestCalled.length === 0) return null;
@@ -118,9 +140,8 @@ export function TourDetailsManualBookers({ tourId }) {
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        flexWrap="wrap"
         gap={1.5}
-        sx={{ px: 2.5, py: 2, bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04) }}
+        sx={{ px: 2.5, py: 2, bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04), flexWrap: 'wrap' }}
       >
         <Stack direction="row" alignItems="center" spacing={1.5}>
           <Iconify icon="mdi:account-question" width={20} sx={{ color: 'warning.main' }} />
@@ -152,6 +173,8 @@ export function TourDetailsManualBookers({ tourId }) {
             key={player.id}
             player={player}
             entry={{ ...entry, ...localEntries[player.id] }}
+            canEdit={canEdit}
+            saving={!!savingIds[player.id]}
             onChange={(field, value) => handleStatChange(player, field, value)}
           />
         ))}
@@ -162,16 +185,16 @@ export function TourDetailsManualBookers({ tourId }) {
 
 // ── GuestBookerRow ────────────────────────────────────────────────────
 
-function GuestBookerRow({ player, entry, onChange }) {
+function GuestBookerRow({ player, entry, canEdit, saving, onChange }) {
   const { t } = useTranslation();
+  const disabled = !canEdit || saving;
 
   return (
     <Stack
-      direction="row"
-      alignItems="center"
-      flexWrap="wrap"
+      direction={{ xs: 'column', sm: 'row' }}
+      alignItems={{ xs: 'flex-start', sm: 'center' }}
       spacing={2}
-      sx={{ px: 2.5, py: 1.5 }}
+      sx={{ px: 2.5, py: 1.5, flexWrap: 'wrap' }}
     >
       <Box sx={{ position: 'relative' }}>
         <Avatar sx={{ width: 36, height: 36, fontSize: '0.85rem', fontWeight: 700 }}>
@@ -194,7 +217,7 @@ function GuestBookerRow({ player, entry, onChange }) {
               borderColor: 'background.paper',
             }}
           >
-            <Iconify icon="solar:star-bold" width={7} sx={{ color: 'white' }} />
+            <Iconify icon="solar:star-bold" width={7} sx={{ color: 'common.white' }} />
           </Box>
         )}
       </Box>
@@ -212,79 +235,87 @@ function GuestBookerRow({ player, entry, onChange }) {
         />
       </Stack>
 
-      {/* Goals + assists incrementers */}
-      <Stack spacing={0.5}>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Iconify icon="mdi:soccer" width={11} sx={{ color: 'primary.main', flexShrink: 0 }} />
-          <IncrementerButton
-            name="goals"
-            quantity={entry.goals || 0}
-            disabledDecrease={(entry.goals || 0) <= 0}
-            disabledIncrease={(entry.goals || 0) >= 20}
-            onIncrease={() => onChange('goals', (entry.goals || 0) + 1)}
-            onDecrease={() => onChange('goals', (entry.goals || 0) - 1)}
-          />
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Iconify icon="mdi:shoe-cleat" width={11} sx={{ color: 'warning.main', flexShrink: 0 }} />
-          <IncrementerButton
-            name="assists"
-            quantity={entry.assists || 0}
-            disabledDecrease={(entry.assists || 0) <= 0}
-            disabledIncrease={(entry.assists || 0) >= 20}
-            onIncrease={() => onChange('assists', (entry.assists || 0) + 1)}
-            onDecrease={() => onChange('assists', (entry.assists || 0) - 1)}
-          />
-        </Stack>
-      </Stack>
+      {canEdit && (
+        <>
+          {/* Goals + assists incrementers */}
+          <Stack spacing={0.5}>
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <Iconify icon="mdi:soccer" width={11} sx={{ color: 'primary.main', flexShrink: 0 }} />
+              <IncrementerButton
+                name="goals"
+                quantity={entry.goals || 0}
+                disabledDecrease={disabled || (entry.goals || 0) <= 0}
+                disabledIncrease={disabled || (entry.goals || 0) >= MAX_STAT_VALUE}
+                onIncrease={() => onChange('goals', (entry.goals || 0) + 1)}
+                onDecrease={() => onChange('goals', (entry.goals || 0) - 1)}
+              />
+            </Stack>
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <Iconify icon="mdi:shoe-cleat" width={11} sx={{ color: 'warning.main', flexShrink: 0 }} />
+              <IncrementerButton
+                name="assists"
+                quantity={entry.assists || 0}
+                disabledDecrease={disabled || (entry.assists || 0) <= 0}
+                disabledIncrease={disabled || (entry.assists || 0) >= MAX_STAT_VALUE}
+                onIncrease={() => onChange('assists', (entry.assists || 0) + 1)}
+                onDecrease={() => onChange('assists', (entry.assists || 0) - 1)}
+              />
+            </Stack>
+          </Stack>
 
-      {/* Incidents */}
-      <Stack direction="row" alignItems="center" spacing={0.25}>
-        <Tooltip title="MVP">
-          <Checkbox
-            size="small"
-            color="warning"
-            checked={!!entry.mvp}
-            icon={<Iconify icon="solar:star-outline" width={16} />}
-            checkedIcon={<Iconify icon="solar:star-bold" width={16} />}
-            onClick={() => onChange('mvp', !entry.mvp)}
-            sx={{ p: 0.5 }}
-          />
-        </Tooltip>
-        <Tooltip title={t('label_late_arrival')}>
-          <Checkbox
-            size="small"
-            color="info"
-            checked={!!entry.late}
-            icon={<Iconify icon="mdi:clock-alert-outline" width={16} />}
-            checkedIcon={<Iconify icon="mdi:clock-alert" width={16} />}
-            onClick={() => onChange('late', !entry.late)}
-            sx={{ p: 0.5 }}
-          />
-        </Tooltip>
-        <Tooltip title={t('label_yellow_card_singular')}>
-          <Checkbox
-            size="small"
-            color="warning"
-            checked={!!entry.yellowCard}
-            icon={<Iconify icon="mdi:card-outline" width={16} />}
-            checkedIcon={<Iconify icon="mdi:card" width={16} />}
-            onClick={() => onChange('yellowCard', !entry.yellowCard)}
-            sx={{ p: 0.5 }}
-          />
-        </Tooltip>
-        <Tooltip title={t('label_red_card_singular')}>
-          <Checkbox
-            size="small"
-            color="error"
-            checked={!!entry.redCard}
-            icon={<Iconify icon="mdi:card-remove-outline" width={16} />}
-            checkedIcon={<Iconify icon="mdi:card-remove" width={16} />}
-            onClick={() => onChange('redCard', !entry.redCard)}
-            sx={{ p: 0.5 }}
-          />
-        </Tooltip>
-      </Stack>
+          {/* Incidents */}
+          <Stack direction="row" alignItems="center" spacing={0.25}>
+            <Tooltip title={t('label_mvp')}>
+              <Checkbox
+                size="small"
+                color="warning"
+                checked={!!entry.mvp}
+                disabled={disabled}
+                icon={<Iconify icon="solar:star-outline" width={16} />}
+                checkedIcon={<Iconify icon="solar:star-bold" width={16} />}
+                onClick={() => onChange('mvp', !entry.mvp)}
+                sx={{ p: 0.5 }}
+              />
+            </Tooltip>
+            <Tooltip title={t('label_late_arrival')}>
+              <Checkbox
+                size="small"
+                color="info"
+                checked={!!entry.late}
+                disabled={disabled}
+                icon={<Iconify icon="mdi:clock-alert-outline" width={16} />}
+                checkedIcon={<Iconify icon="mdi:clock-alert" width={16} />}
+                onClick={() => onChange('late', !entry.late)}
+                sx={{ p: 0.5 }}
+              />
+            </Tooltip>
+            <Tooltip title={t('label_yellow_card_singular')}>
+              <Checkbox
+                size="small"
+                color="warning"
+                checked={!!entry.yellowCard}
+                disabled={disabled}
+                icon={<Iconify icon="mdi:card-outline" width={16} />}
+                checkedIcon={<Iconify icon="mdi:card" width={16} />}
+                onClick={() => onChange('yellowCard', !entry.yellowCard)}
+                sx={{ p: 0.5 }}
+              />
+            </Tooltip>
+            <Tooltip title={t('label_red_card_singular')}>
+              <Checkbox
+                size="small"
+                color="error"
+                checked={!!entry.redCard}
+                disabled={disabled}
+                icon={<Iconify icon="mdi:card-remove-outline" width={16} />}
+                checkedIcon={<Iconify icon="mdi:card-remove" width={16} />}
+                onClick={() => onChange('redCard', !entry.redCard)}
+                sx={{ p: 0.5 }}
+              />
+            </Tooltip>
+          </Stack>
+        </>
+      )}
 
       {entry.status && (
         <Chip
