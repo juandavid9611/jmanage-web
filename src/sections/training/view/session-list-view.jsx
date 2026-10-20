@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
@@ -71,10 +71,22 @@ export function SessionListView() {
   const isCoach = workspaceRole === 'coach' || workspaceRole === 'admin' || workspaceRole === 'team_owner';
   const isReviewer = workspaceRole === 'admin' || workspaceRole === 'team_owner';
 
+  // Coming back from "save as draft"/"send" carries ?status= so the list lands
+  // on the tab that actually has the session just saved — otherwise a
+  // reviewer who saves a draft gets bounced to their default "sent" tab,
+  // which is empty, and the save looks like it silently failed.
+  const [searchParams] = useSearchParams();
+  const requestedStatus = searchParams.get('status');
+  // Ignore unknown values (e.g. a hand-edited URL) so the tabs never get a
+  // value that matches no tab.
+  const statusFromNav = STATUS_OPTIONS.some((opt) => opt.value && opt.value === requestedStatus)
+    ? requestedStatus
+    : '';
+
   // Reviewers land on the pending ("sent") tab; workspaceRole arrives async, so
   // seed it once it is known and only if the user hasn't picked a filter yet.
-  const [statusFilter, setStatusFilter] = useState('');
-  const filterTouchedRef = useRef(false);
+  const [statusFilter, setStatusFilter] = useState(statusFromNav);
+  const filterTouchedRef = useRef(!!statusFromNav);
   useEffect(() => {
     if (isReviewer && !filterTouchedRef.current) setStatusFilter('sent');
   }, [isReviewer]);
