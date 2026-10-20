@@ -95,10 +95,16 @@ export function TourDetailsManualBookers({ tourId }) {
       } catch (error) {
         toast.error(t('label_error_updating_player'));
         console.error(error);
-        setLocalEntries((prev) => ({
-          ...prev,
-          [player.id]: { ...prev[player.id], [field]: undefined },
-        }));
+        // Clear the key rather than setting it to undefined — spreading
+        // { ...entry, ...localEntries[id] } still copies an explicit
+        // `undefined`, which would hide the real server value (e.g. a
+        // player with 5 goals would show 0 after a failed click instead
+        // of reverting to 5).
+        setLocalEntries((prev) => {
+          const playerOverrides = { ...prev[player.id] };
+          delete playerOverrides[field];
+          return { ...prev, [player.id]: playerOverrides };
+        });
       }
     },
     [link, workspaceId, t]
