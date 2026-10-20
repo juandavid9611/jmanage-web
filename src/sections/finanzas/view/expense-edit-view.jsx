@@ -1,18 +1,46 @@
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import Button from '@mui/material/Button';
+
 import { paths } from 'src/routes/paths';
+import { RouterLink } from 'src/routes/components';
 
 import { useGetExpense } from 'src/actions/expenses';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 
+import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { ExpenseNewEditForm } from '../expense-new-edit-form';
 
 // ----------------------------------------------------------------------
+
+function ExpenseEditViewError({ title }) {
+  const { t } = useTranslation();
+  return (
+    <DashboardContent>
+      <EmptyContent
+        filled
+        title={title}
+        action={
+          <Button
+            component={RouterLink}
+            href={paths.dashboard.finanzas.root}
+            startIcon={<Iconify icon="eva:arrow-ios-back-fill" />}
+            sx={{ mt: 3 }}
+          >
+            {t('label_back_to_list')}
+          </Button>
+        }
+        sx={{ py: 10 }}
+      />
+    </DashboardContent>
+  );
+}
 
 export function ExpenseEditView() {
   const { t } = useTranslation();
@@ -21,6 +49,17 @@ export function ExpenseEditView() {
   const { expense, expenseLoading } = useGetExpense(id, selectedWorkspace?.id);
 
   if (expenseLoading) return <LoadingScreen />;
+
+  if (!expense) {
+    return <ExpenseEditViewError title={t('label_expense_not_found')} />;
+  }
+
+  // Once an expense has moved past pendiente, only the approve/reject/mark-paid
+  // workflow is allowed to change it — editing it here would let anyone
+  // rewrite the amount or account behind an already-approved or paid record.
+  if (expense.status !== 'pendiente') {
+    return <ExpenseEditViewError title={t('label_expense_not_editable')} />;
+  }
 
   return (
     <DashboardContent>

@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -21,12 +22,22 @@ import { useWorkspace } from 'src/workspace/workspace-provider';
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
 
-// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-function getSchema(t) {
+function getSchema(t, pendingBalance) {
   return zod.object({
     account_id: zod.string().min(1, { message: t('label_expense_account_required') }),
-    amount: zod.number().min(0).optional(),
+    // The amount field is optional — leaving it blank means "pay the full
+    // pending balance" per the API contract. The shared RHFTextField turns
+    // an emptied field into 0 (not undefined), so 0 doubles as the "unset"
+    // sentinel here and is stripped from the payload on submit.
+    amount: zod
+      .number()
+      .min(0)
+      .refine((value) => value <= pendingBalance, {
+        message: t('label_amount_exceeds_balance'),
+      })
+      .optional(),
     paid_at: zod.union([zod.string(), zod.number()]),
   });
 }
@@ -35,10 +46,12 @@ export function ExpenseMarkPaidDialog({ open, onClose, expense }) {
   const { t } = useTranslation();
   const { selectedWorkspace } = useWorkspace();
   const { bankAccounts } = useGetBankAccounts(selectedWorkspace?.id);
+  const activeAccounts = bankAccounts.filter((account) => account.is_active);
 
   const pendingBalance = Math.max((expense?.total_amount || 0) - (expense?.paid_amount || 0), 0);
+  const canMarkPaid = expense?.status === 'aprobado';
 
-  const schema = useMemo(() => getSchema(t), [t]);
+  const schema = useMemo(() => getSchema(t, pendingBalance), [t, pendingBalance]);
 
   const methods = useForm({
     mode: 'all',
@@ -61,7 +74,7 @@ export function ExpenseMarkPaidDialog({ open, onClose, expense }) {
         expense.id,
         {
           account_id: data.account_id,
-          amount: data.amount,
+          amount: data.amount > 0 ? data.amount : undefined,
           paid_at: dayjs(data.paid_at).format('YYYY-MM-DD'),
         },
         selectedWorkspace?.id
@@ -80,8 +93,14 @@ export function ExpenseMarkPaidDialog({ open, onClose, expense }) {
 
         <DialogContent>
           <Stack spacing={2.5} sx={{ pt: 1 }}>
-            <Field.Select name="account_id" label={t('label_account')}>
-              {bankAccounts.map((account) => (
+            {!canMarkPaid && <Alert severity="warning">{t('label_expense_not_approved')}</Alert>}
+
+            <Field.Select
+              name="account_id"
+              label={t('label_account')}
+              disabled={!canMarkPaid}
+            >
+              {activeAccounts.map((account) => (
                 <MenuItem key={account.id} value={account.id}>
                   {account.name}
                 </MenuItem>
@@ -92,11 +111,16 @@ export function ExpenseMarkPaidDialog({ open, onClose, expense }) {
               name="amount"
               type="number"
               label={t('label_payment_amount')}
-              inputProps={{ min: 0 }}
-              helperText={t('label_pending_balance')}
+              inputProps={{ min: 0, max: pendingBalance }}
+              helperText={t('label_pending_balance_helper')}
+              disabled={!canMarkPaid}
             />
 
-            <Field.DatePicker name="paid_at" label={t('label_payment_date')} />
+            <Field.DatePicker
+              name="paid_at"
+              label={t('label_payment_date')}
+              disabled={!canMarkPaid}
+            />
           </Stack>
         </DialogContent>
 
@@ -104,7 +128,12 @@ export function ExpenseMarkPaidDialog({ open, onClose, expense }) {
           <Button variant="soft" color="inherit" onClick={onClose}>
             {t('label_close')}
           </Button>
-          <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
+          <LoadingButton
+            type="submit"
+            variant="contained"
+            loading={isSubmitting}
+            disabled={!canMarkPaid}
+          >
             {t('label_mark_paid')}
           </LoadingButton>
         </DialogActions>

@@ -57,6 +57,11 @@ export function ExpenseNewEditForm({ currentExpense }) {
   const router = useRouter();
   const { selectedWorkspace } = useWorkspace();
   const { bankAccounts } = useGetBankAccounts(selectedWorkspace?.id);
+  // Keep offering an already-assigned account even if it's since been
+  // deactivated, so editing an older expense doesn't silently blank it out.
+  const selectableAccounts = bankAccounts.filter(
+    (account) => account.is_active || account.id === currentExpense?.account_id
+  );
 
   const schema = useMemo(() => getExpenseSchema(t), [t]);
 
@@ -187,7 +192,7 @@ export function ExpenseNewEditForm({ currentExpense }) {
 
             <Field.Select name="account_id" label={t('label_account')} sx={{ flex: 1 }}>
               <MenuItem value="">—</MenuItem>
-              {bankAccounts.map((account) => (
+              {selectableAccounts.map((account) => (
                 <MenuItem key={account.id} value={account.id}>
                   {account.name}
                 </MenuItem>

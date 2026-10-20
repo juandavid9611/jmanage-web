@@ -15,6 +15,7 @@ import { deleteBankAccount, useGetBankAccounts } from 'src/actions/bankAccounts'
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
 import { useSettingsContext } from 'src/components/settings';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -45,7 +46,9 @@ export function BankAccountListView() {
   const table = useTable({ defaultRowsPerPage: 25 });
   const { selectedWorkspace } = useWorkspace();
 
-  const { bankAccounts, bankAccountsLoading } = useGetBankAccounts(selectedWorkspace?.id);
+  const { bankAccounts, bankAccountsLoading, bankAccountsError } = useGetBankAccounts(
+    selectedWorkspace?.id
+  );
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentAccount, setCurrentAccount] = useState(null);
@@ -74,6 +77,14 @@ export function BankAccountListView() {
   }, [deactivateTarget, selectedWorkspace?.id, t]);
 
   if (bankAccountsLoading) return <LoadingScreen />;
+
+  if (bankAccountsError) {
+    return (
+      <DashboardContent maxWidth={settings.themeStretch ? false : 'lg'}>
+        <EmptyContent filled title={t('label_finanzas_load_error')} sx={{ py: 10 }} />
+      </DashboardContent>
+    );
+  }
 
   return (
     <DashboardContent maxWidth={settings.themeStretch ? false : 'lg'}>

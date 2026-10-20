@@ -18,6 +18,9 @@ export function InvoiceNewEditStatusDate({ disableFields }) {
   const { bankAccounts } = useGetBankAccounts(selectedWorkspace?.id);
 
   const values = watch();
+  const selectableAccounts = bankAccounts.filter(
+    (account) => account.is_active || account.id === values.account_id
+  );
 
   return (
     <Stack
@@ -56,7 +59,7 @@ export function InvoiceNewEditStatusDate({ disableFields }) {
           name="account_id"
           label={t('label_account')}
         >
-          {bankAccounts.map((account) => (
+          {selectableAccounts.map((account) => (
             <MenuItem key={account.id} value={account.id}>
               {account.name}
             </MenuItem>

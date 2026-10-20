@@ -32,6 +32,7 @@ import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -77,7 +78,7 @@ export function ExpenseListView() {
   const table = useTable({ defaultOrderBy: 'expense_date' });
   const { selectedWorkspace } = useWorkspace();
 
-  const { expenses, expensesLoading } = useGetExpenses(selectedWorkspace?.id);
+  const { expenses, expensesLoading, expensesError } = useGetExpenses(selectedWorkspace?.id);
   const { bankAccounts } = useGetBankAccounts(selectedWorkspace?.id);
 
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -131,6 +132,14 @@ export function ExpenseListView() {
   }, [deleteTarget, selectedWorkspace?.id, t]);
 
   if (expensesLoading) return <LoadingScreen />;
+
+  if (expensesError) {
+    return (
+      <DashboardContent>
+        <EmptyContent filled title={t('label_finanzas_load_error')} sx={{ py: 10 }} />
+      </DashboardContent>
+    );
+  }
 
   return (
     <>

@@ -20,6 +20,7 @@ import { useWorkspace } from 'src/workspace/workspace-provider';
 import { useGetPaymentRequests } from 'src/actions/paymentRequest';
 
 import { Scrollbar } from 'src/components/scrollbar';
+import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -32,11 +33,25 @@ export function FinanzasSummaryView() {
   const theme = useTheme();
   const { selectedWorkspace } = useWorkspace();
 
-  const { expenses, expensesLoading } = useGetExpenses(selectedWorkspace?.id);
-  const { bankAccounts, bankAccountsLoading } = useGetBankAccounts(selectedWorkspace?.id);
-  const { paymentRequests, paymentRequestsLoading } = useGetPaymentRequests(selectedWorkspace?.id);
+  const { expenses, expensesLoading, expensesError } = useGetExpenses(selectedWorkspace?.id);
+  const { bankAccounts, bankAccountsLoading, bankAccountsError } = useGetBankAccounts(
+    selectedWorkspace?.id
+  );
+  const {
+    paymentRequests,
+    paymentRequestsLoading,
+    paymentRequestsError,
+  } = useGetPaymentRequests(selectedWorkspace?.id);
 
   if (expensesLoading || bankAccountsLoading || paymentRequestsLoading) return <LoadingScreen />;
+
+  if (expensesError || bankAccountsError || paymentRequestsError) {
+    return (
+      <DashboardContent>
+        <EmptyContent filled title={t('label_finanzas_load_error')} sx={{ py: 10 }} />
+      </DashboardContent>
+    );
+  }
 
   const getExpenseLength = (status) => expenses.filter((item) => item.status === status).length;
   const getExpenseTotal = (status) =>
@@ -51,7 +66,14 @@ export function FinanzasSummaryView() {
     paymentRequests.filter((item) => item.status === 'paid'),
     (item) => item.totalAmount
   );
-  const totalExpensePaid = getExpenseTotal('pagado');
+  // Paid-out money isn't only the expenses that reached 'pagado' — an
+  // 'aprobado' expense can already have partial payments (cuotas) against
+  // it, and those are real money out the door too. Only 'rechazado' never
+  // paid anything.
+  const totalExpensePaid = sumBy(
+    expenses.filter((item) => item.status !== 'rechazado'),
+    (item) => item.paid_amount || 0
+  );
   const netBalance = totalIncome - totalExpensePaid;
 
   return (
