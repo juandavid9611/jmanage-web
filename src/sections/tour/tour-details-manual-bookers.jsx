@@ -37,6 +37,10 @@ import { Iconify } from 'src/components/iconify';
 
 const STATUS_LABEL_KEY = { titular: 'label_starter', suplente: 'label_substitute' };
 
+// Stable reference: a fresh `[]` each render would rebuild the roster (and the
+// guestCalled memo below) on every render.
+const NO_USERS = [];
+
 export function TourDetailsManualBookers({ tourId }) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -51,7 +55,7 @@ export function TourDetailsManualBookers({ tourId }) {
   const { link } = useGetCalendarEventLink(clubMatchId, tournaments, workspaceId);
 
   // No real players needed to join here — only guest entries are shown.
-  const { roster } = useGetEngagementRoster(link?.tournament_id, [], workspaceId);
+  const { roster } = useGetEngagementRoster(link?.tournament_id, NO_USERS, workspaceId);
   const { matches } = useGetEngagementMatches(link?.tournament_id, workspaceId);
   const match = matches.find((item) => item.id === link?.match_id);
   const tournament = tournaments.find((item) => item.id === link?.tournament_id);
