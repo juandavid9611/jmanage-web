@@ -82,4 +82,6 @@ export const endpoints = {
   donations: '/donations',
   trainingSessions: '/training-sessions',
   clubTournaments: '/club-tournaments',
+  bankAccounts: '/bank-accounts',
+  expenses: '/expenses',
 };

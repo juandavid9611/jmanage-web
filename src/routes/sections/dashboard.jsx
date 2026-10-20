@@ -72,6 +72,12 @@ const TrainingSessionListPage = lazy(() => import('src/pages/dashboard/training-
 const TrainingSessionNewPage = lazy(() => import('src/pages/dashboard/training-sessions/new'));
 const TrainingSessionEditPage = lazy(() => import('src/pages/dashboard/training-sessions/edit'));
 const TrainingSessionDetailsPage = lazy(() => import('src/pages/dashboard/training-sessions/details'));
+const FinanzasListPage = lazy(() => import('src/pages/dashboard/finanzas/list'));
+const FinanzasNewPage = lazy(() => import('src/pages/dashboard/finanzas/new'));
+const FinanzasEditPage = lazy(() => import('src/pages/dashboard/finanzas/edit'));
+const FinanzasDetailsPage = lazy(() => import('src/pages/dashboard/finanzas/details'));
+const FinanzasAccountsPage = lazy(() => import('src/pages/dashboard/finanzas/accounts'));
+const FinanzasSummaryPage = lazy(() => import('src/pages/dashboard/finanzas/summary'));
 // Donations
 const DonationRecordPage = lazy(() => import('src/pages/dashboard/donation'));
 // ----------------------------------------------------------------------
@@ -221,6 +227,26 @@ export const dashboardRoutes = [
           { path: 'new', element: <TrainingSessionNewPage /> },
           { path: ':id', element: <TrainingSessionDetailsPage /> },
           { path: ':id/edit', element: <TrainingSessionEditPage /> },
+        ],
+      },
+      {
+        path: 'finanzas',
+        // La plata de todo el club, no un cobro individual como en Pagos —
+        // a diferencia de ese módulo, acá solo un admin puede entrar.
+        element: (
+          <ClubOnlyGuard>
+            <AdminOnlyGuard>
+              <Outlet />
+            </AdminOnlyGuard>
+          </ClubOnlyGuard>
+        ),
+        children: [
+          { element: <FinanzasListPage />, index: true },
+          { path: 'new', element: <FinanzasNewPage /> },
+          { path: 'accounts', element: <FinanzasAccountsPage /> },
+          { path: 'summary', element: <FinanzasSummaryPage /> },
+          { path: ':id', element: <FinanzasDetailsPage /> },
+          { path: ':id/edit', element: <FinanzasEditPage /> },
         ],
       },
     ],

@@ -191,6 +191,18 @@ export function getNavData(t, language) {
           roles: ['admin'],
           clubOnly: true,
         },
+        {
+          title: t('label_finanzas'),
+          path: paths.dashboard.finanzas.root,
+          icon: <Iconify icon="solar:wallet-money-bold-duotone" />,
+          roles: ['admin'],
+          clubOnly: true,
+          children: [
+            { title: t('label_expenses'), path: paths.dashboard.finanzas.root },
+            { title: t('label_bank_accounts'), path: paths.dashboard.finanzas.accounts },
+            { title: t('label_finanzas_summary'), path: paths.dashboard.finanzas.summary },
+          ],
+        },
       ],
     },
   ];

@@ -13,7 +13,7 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function InvoiceAnalytic({ title, total, icon, color, percent, price }) {
+export function InvoiceAnalytic({ title, total, icon, color, percent, price, unitLabel }) {
   const { t } = useTranslation();
   return (
     <Stack
@@ -53,7 +53,7 @@ export function InvoiceAnalytic({ title, total, icon, color, percent, price }) {
         <Typography variant="subtitle1">{title}</Typography>
 
         <Box component="span" sx={{ color: 'text.disabled', typography: 'body2' }}>
-          {fShortenNumber(total)} {t('invoices')}
+          {fShortenNumber(total)} {unitLabel ?? t('invoices')}
         </Box>
 
         <Typography variant="subtitle2">{fCurrency(price)}</Typography>

@@ -123,5 +123,14 @@ export const paths = {
       details: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}`,
       edit: (id) => `${ROOTS.DASHBOARD}/training-sessions/${id}/edit`,
     },
+    finanzas: {
+      root: `${ROOTS.DASHBOARD}/finanzas`,
+      list: `${ROOTS.DASHBOARD}/finanzas`,
+      new: `${ROOTS.DASHBOARD}/finanzas/new`,
+      details: (id) => `${ROOTS.DASHBOARD}/finanzas/${id}`,
+      edit: (id) => `${ROOTS.DASHBOARD}/finanzas/${id}/edit`,
+      accounts: `${ROOTS.DASHBOARD}/finanzas/accounts`,
+      summary: `${ROOTS.DASHBOARD}/finanzas/summary`,
+    },
   },
 };

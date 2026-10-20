@@ -62,6 +62,7 @@ export function getNewInvoiceSchema(t) {
         .min(1, { message: t('payment_request_to_required') }),
       userPrice: zod.number().min(1, { message: t('user_price_required') }),
       overduePrice: zod.number(),
+      account_id: zod.string().optional(),
     })
     .refine((data) => !fIsAfter(data.createDate, data.dueDate), {
       message: t('due_date_before_create_date'),
@@ -105,6 +106,7 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       userPrice: currentInvoice?.totalAmount || 0,
       overduePrice: currentInvoice?.overduePrice || 0,
       images: currentInvoice?.images || [],
+      account_id: currentInvoice?.account_id || '',
     }),
     [currentInvoice, workspaceGroup]
   );
