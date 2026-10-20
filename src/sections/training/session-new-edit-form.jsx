@@ -200,7 +200,10 @@ export function SessionNewEditForm({ currentSession }) {
         }
 
         toast.success(currentSession?.id ? t('update_success') : t('create_success'));
-        router.push(paths.dashboard.trainingSessions.list);
+        // Saving never changes status (a rejected session stays rejected until
+        // it is sent again), so land on the tab where the session really is.
+        const landingStatus = status === 'sent' ? 'sent' : saved.status;
+        router.push(`${paths.dashboard.trainingSessions.list}?status=${landingStatus}`);
       } catch (error) {
         console.error(error);
         toast.error(error.message || t('label_session_action_error'));

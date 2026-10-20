@@ -12,6 +12,7 @@ import { SplashScreen } from 'src/components/loading-screen';
 import { TourDetailsContent } from '../tour-details-content';
 import { TourDetailsBookers } from '../tour-details-bookers';
 import { TourDetailsToolbar } from '../tour-details-toolbar';
+import { TourDetailsManualBookers } from '../tour-details-manual-bookers';
 
 // ----------------------------------------------------------------------
 
@@ -45,6 +46,8 @@ export function TourDetailsView({ tour }) {
         tourId={tour?.id}
         bookers={Object.values(tour?.bookers || {})}
       />
+
+      <TourDetailsManualBookers tourId={tour?.id} />
     </DashboardContent>
   );
 }

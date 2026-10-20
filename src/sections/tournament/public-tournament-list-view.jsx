@@ -69,7 +69,7 @@ const TYPE_ICON = {
 export function PublicTournamentListView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState('active');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const { tournaments, countsByStatus, tournamentsLoading, tournamentsEmpty } =
     useGetPublicTournaments(statusFilter || undefined);
@@ -156,7 +156,8 @@ export function PublicTournamentListView() {
 
 function PublicTournamentCard({ tournament, onView }) {
   const { t } = useTranslation();
-  const { name, season, type, status, current_matchweek, rules, teams, logo_url } = tournament;
+  const { name, season, type, status, current_matchweek, rules, teams, logo_url, champion } =
+    tournament;
 
   const meta = STATUS_META[status] || STATUS_META.draft;
   const totalMw = rules?.total_matchweeks || 0;
@@ -347,11 +348,55 @@ function PublicTournamentCard({ tournament, onView }) {
           })()}
 
         {status === 'finished' && (
-          <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1 }}>
-            <Iconify icon="mdi:check-circle" width={16} sx={{ color: 'info.main' }} />
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {t('label_tournament_finished')}
-            </Typography>
+          <Stack spacing={1} sx={{ mb: 1 }}>
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Iconify icon="mdi:check-circle" width={16} sx={{ color: 'info.main' }} />
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {t('label_tournament_finished')}
+              </Typography>
+            </Stack>
+
+            {champion?.name && (
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={1.5}
+                sx={{
+                  p: 1.25,
+                  borderRadius: 1.5,
+                  bgcolor: (theme) => alpha(theme.palette.warning.main, 0.1),
+                  border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.32)}`,
+                }}
+              >
+                <Stack sx={{ minWidth: 0 }}>
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <Iconify icon="mdi:trophy" width={14} sx={{ color: 'warning.dark' }} />
+                    <Typography variant="caption" sx={{ color: 'warning.dark', fontWeight: 700 }}>
+                      {t('label_tournament_champion')}
+                    </Typography>
+                  </Stack>
+                  <Typography variant="subtitle2" noWrap>
+                    {champion.name}
+                  </Typography>
+                </Stack>
+
+                <Avatar
+                  src={champion.logo_url || undefined}
+                  alt={champion.name}
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    flexShrink: 0,
+                    bgcolor: 'warning.lighter',
+                    color: 'warning.dark',
+                    border: (theme) => `2px solid ${theme.palette.warning.main}`,
+                  }}
+                >
+                  <Iconify icon="mdi:trophy" width={22} />
+                </Avatar>
+              </Stack>
+            )}
           </Stack>
         )}
       </Stack>
