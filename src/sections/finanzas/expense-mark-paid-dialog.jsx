@@ -33,6 +33,7 @@ function getSchema(t, pendingBalance) {
     // sentinel here and is stripped from the payload on submit.
     amount: zod
       .number()
+      .int()
       .min(0)
       .refine((value) => value <= pendingBalance, {
         message: t('label_amount_exceeds_balance'),

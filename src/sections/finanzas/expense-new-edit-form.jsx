@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import { z as zod } from 'zod';
 import { useForm } from 'react-hook-form';
-import { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo, useState, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -46,7 +46,7 @@ function getExpenseSchema(t) {
     detail: zod.string().min(1, { message: t('title_required') }),
     beneficiary_name: zod.string().optional(),
     expense_date: zod.union([zod.string(), zod.number()]),
-    total_amount: zod.number().positive(),
+    total_amount: zod.number().int().positive(),
     account_id: zod.string().optional(),
     proof_images: zod.array(zod.any()).optional(),
   });
@@ -92,6 +92,13 @@ export function ExpenseNewEditForm({ currentExpense }) {
 
   const proofImages = watch('proof_images');
 
+  // Creating isn't atomic (create → upload comprobantes → update). If a step
+  // after the create fails, the expense already exists — this remembers its
+  // id so retrying the same Save click updates it instead of creating a
+  // second, duplicate expense.
+  const [createdId, setCreatedId] = useState(null);
+  const effectiveExpense = currentExpense || (createdId ? { id: createdId } : null);
+
   const handleRemoveFile = useCallback(
     (inputFile) => {
       setValue(
@@ -115,33 +122,27 @@ export function ExpenseNewEditForm({ currentExpense }) {
     };
 
     try {
-      if (currentExpense) {
-        const uploadedPaths = await processExpenseProofImages(
-          currentExpense.id,
-          images,
-          selectedWorkspace?.id
-        );
+      let expenseId = effectiveExpense?.id;
+      const isRetryOrEdit = !!expenseId;
+
+      if (!expenseId) {
+        const created = await createExpense(basePayload, selectedWorkspace?.id);
+        expenseId = created.id;
+        // Remembered so that if anything below fails, clicking Save again
+        // retries against this same expense instead of creating another one.
+        setCreatedId(expenseId);
+      }
+
+      const newFiles = images?.filter((image) => image instanceof File);
+      if (isRetryOrEdit || newFiles?.length) {
+        const uploadedPaths = await processExpenseProofImages(expenseId, images, selectedWorkspace?.id);
         await updateExpense(
-          currentExpense.id,
+          expenseId,
           { ...basePayload, proof_images: uploadedPaths },
           selectedWorkspace?.id
         );
-      } else {
-        const created = await createExpense(basePayload, selectedWorkspace?.id);
-        const newFiles = images?.filter((image) => image instanceof File);
-        if (newFiles?.length) {
-          const uploadedPaths = await processExpenseProofImages(
-            created.id,
-            newFiles,
-            selectedWorkspace?.id
-          );
-          await updateExpense(
-            created.id,
-            { ...basePayload, proof_images: uploadedPaths },
-            selectedWorkspace?.id
-          );
-        }
       }
+
       toast.success(t(currentExpense ? 'update_success' : 'create_success'));
       router.push(paths.dashboard.finanzas.root);
     } catch (error) {

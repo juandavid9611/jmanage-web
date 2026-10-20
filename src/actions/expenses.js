@@ -101,11 +101,15 @@ async function uploadExpenseProofFiles(expenseId, files, workspaceId) {
   const res = await axiosInstance.post(url, fileMetadata);
   const presignedUrlMappings = res.data;
 
+  // fetch does not reject on HTTP errors, so check each PUT explicitly —
+  // otherwise an expired/forbidden presigned URL would still record the
+  // filename in proof_images as if the upload had actually succeeded.
   return Promise.all(
     files.map(async (file, index) => {
       const mapping = presignedUrlMappings[index];
       const fileName = Object.keys(mapping)[0];
-      await uploadFileToS3(file, mapping[fileName]);
+      const uploadRes = await uploadFileToS3(file, mapping[fileName]);
+      if (!uploadRes.ok) throw new Error(`Image upload failed (${uploadRes.status})`);
       return fileName;
     })
   );

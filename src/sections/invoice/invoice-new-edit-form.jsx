@@ -140,6 +140,9 @@ export function InvoiceNewEditForm({ currentInvoice }) {
   const onSubmit = handleSubmit(async (data) => {
     data.createDate = fDateTime(data?.createDate, 'YYYY-MM-DDTHH:mm:ss');
     data.dueDate = fDateTime(data?.dueDate, 'YYYY-MM-DDTHH:mm:ss');
+    // Only meaningful once the payment is actually paid — omit it rather
+    // than send an empty string on every other save.
+    data.account_id = data.status === 'paid' ? data.account_id || undefined : undefined;
 
     try {
       if (currentInvoice) {

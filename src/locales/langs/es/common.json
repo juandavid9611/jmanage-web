@@ -2111,6 +2111,7 @@
   "label_account_adjustments": "Ajustes",
   "label_add_adjustment": "Agregar ajuste",
   "label_adjustment_amount": "Monto",
+  "label_adjustment_amount_required": "El monto no puede ser cero",
   "label_adjustment_amount_helper": "Positivo si entró plata, negativo si fue una corrección o salida",
   "label_adjustment_note": "Nota",
   "label_no_accounts": "Todavía no hay cuentas registradas",

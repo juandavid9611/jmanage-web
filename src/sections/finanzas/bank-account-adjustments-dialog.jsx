@@ -32,7 +32,10 @@ import { Form, Field } from 'src/components/hook-form';
 
 function getSchema(t) {
   return zod.object({
-    amount: zod.number({ invalid_type_error: t('title_required') }),
+    amount: zod
+      .number({ invalid_type_error: t('title_required') })
+      .int()
+      .refine((value) => value !== 0, { message: t('label_adjustment_amount_required') }),
     date: zod.union([zod.string(), zod.number()]),
     note: zod.string().optional(),
   });

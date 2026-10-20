@@ -28,7 +28,7 @@ function getAccountSchema(t) {
   return zod.object({
     name: zod.string().min(1, { message: t('title_required') }),
     type: zod.string().min(1),
-    opening_balance: zod.number(),
+    opening_balance: zod.number().int(),
     opening_balance_date: zod.union([zod.string(), zod.number()]),
   });
 }
