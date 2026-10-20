@@ -76,11 +76,16 @@ export function SessionListView() {
   // reviewer who saves a draft gets bounced to their default "sent" tab,
   // which is empty, and the save looks like it silently failed.
   const [searchParams] = useSearchParams();
-  const statusFromNav = searchParams.get('status');
+  const requestedStatus = searchParams.get('status');
+  // Ignore unknown values (e.g. a hand-edited URL) so the tabs never get a
+  // value that matches no tab.
+  const statusFromNav = STATUS_OPTIONS.some((opt) => opt.value && opt.value === requestedStatus)
+    ? requestedStatus
+    : '';
 
   // Reviewers land on the pending ("sent") tab; workspaceRole arrives async, so
   // seed it once it is known and only if the user hasn't picked a filter yet.
-  const [statusFilter, setStatusFilter] = useState(statusFromNav || '');
+  const [statusFilter, setStatusFilter] = useState(statusFromNav);
   const filterTouchedRef = useRef(!!statusFromNav);
   useEffect(() => {
     if (isReviewer && !filterTouchedRef.current) setStatusFilter('sent');
