@@ -7,8 +7,21 @@
 // database instead. The moment the real backend starts responding, every
 // call succeeds for real and this file never runs again — nothing to clean
 // up later.
+//
+// Seed data (bankAccounts/adjustments/expenses) comes from
+// finanzas-seed-data.json — the real "Finanzas Vittoria.xlsx" history
+// (836 egresos, 2025-2026), transformed into this module's shape. Each
+// account's opening_balance is the REAL current balance from the sheet's
+// own "Summary" tab (as Daniel read it off screen), dated today — not
+// derived by replaying the historical rows, which would double-count
+// them. That's also why computeBalance() below only counts
+// expenses/adjustments dated on/after the account's opening_balance_date:
+// the historical rows are imported for reference/filtering, not to be
+// subtracted a second time from a balance that already reflects them.
 
-const STORE_KEY = 'finanzas_mock_store_v1';
+import seedData from './finanzas-seed-data.json';
+
+const STORE_KEY = 'finanzas_mock_store_v2';
 
 function uid(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -19,97 +32,10 @@ function today() {
 }
 
 function seed() {
-  const accountId1 = uid('acc');
-  const accountId2 = uid('acc');
-  return {
-    bankAccounts: [
-      {
-        id: accountId1,
-        name: 'Bancolombia Club',
-        type: 'club_bank',
-        opening_balance: 2500000,
-        opening_balance_date: '2026-01-01',
-        is_active: true,
-        created_at: '2026-01-01',
-      },
-      {
-        id: accountId2,
-        name: 'Efectivo Luis',
-        type: 'cash',
-        opening_balance: 300000,
-        opening_balance_date: '2026-01-01',
-        is_active: true,
-        created_at: '2026-01-01',
-      },
-    ],
-    adjustments: [
-      {
-        id: uid('adj'),
-        bank_account_id: accountId1,
-        amount: 450000,
-        date: '2026-02-10',
-        note: 'Cuotas de inscripción cobradas directo a la cuenta',
-        created_at: '2026-02-10',
-      },
-    ],
-    expenses: [
-      {
-        id: uid('exp'),
-        team: 'masculino',
-        category: 'Cancha',
-        subcategory: 'Alquiler mensual',
-        detail: 'Alquiler cancha Campus Prince — octubre',
-        beneficiary_name: 'Complejo Deportivo Prince',
-        expense_date: '2026-10-05',
-        total_amount: 800000,
-        paid_amount: 800000,
-        status: 'pagado',
-        account_id: accountId1,
-        proof_images: [],
-        requested_by: 'Luis',
-        approved_by: 'Vittoria Masculino',
-        approved_at: '2026-10-06',
-        created_at: '2026-10-05',
-        updated_at: '2026-10-06',
-      },
-      {
-        id: uid('exp'),
-        team: 'femenino',
-        category: 'Arbitraje',
-        subcategory: '',
-        detail: 'Árbitros fecha 8',
-        beneficiary_name: 'Colegio de Árbitros',
-        expense_date: '2026-10-12',
-        total_amount: 250000,
-        paid_amount: 150000,
-        status: 'aprobado',
-        account_id: accountId2,
-        proof_images: [],
-        requested_by: 'Luis',
-        approved_by: 'Vittoria Masculino',
-        approved_at: '2026-10-12',
-        created_at: '2026-10-12',
-        updated_at: '2026-10-14',
-      },
-      {
-        id: uid('exp'),
-        team: 'general',
-        category: 'Indumentaria',
-        subcategory: 'Uniformes',
-        detail: 'Camisetas suplentes temporada 2026',
-        beneficiary_name: 'Deportes Trinche',
-        expense_date: '2026-10-18',
-        total_amount: 1200000,
-        paid_amount: 0,
-        status: 'pendiente',
-        account_id: null,
-        proof_images: [],
-        requested_by: 'Luis',
-        created_at: '2026-10-18',
-        updated_at: '2026-10-18',
-      },
-    ],
-  };
+  // Deep-cloned so mutating the live store never touches the imported
+  // module object itself (which stays shared/frozen-in-spirit across
+  // every seed() call in this session).
+  return JSON.parse(JSON.stringify(seedData));
 }
 
 function load() {
@@ -131,11 +57,14 @@ function save(store) {
 function computeBalance(store, accountId) {
   const account = store.bankAccounts.find((a) => a.id === accountId);
   if (!account) return 0;
+  // Only count activity from the opening_balance_date forward — anything
+  // dated earlier is historical reference already baked into that opening
+  // number (see the comment on `seed`), not a fresh movement to subtract.
   const adjustmentsSum = store.adjustments
-    .filter((a) => a.bank_account_id === accountId)
+    .filter((a) => a.bank_account_id === accountId && a.date >= account.opening_balance_date)
     .reduce((sum, a) => sum + a.amount, 0);
   const paidSum = store.expenses
-    .filter((e) => e.account_id === accountId)
+    .filter((e) => e.account_id === accountId && e.expense_date >= account.opening_balance_date)
     .reduce((sum, e) => sum + (e.paid_amount || 0), 0);
   return account.opening_balance + adjustmentsSum - paidSum;
 }
