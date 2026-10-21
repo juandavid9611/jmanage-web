@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
 
+import { finanzasMock } from 'src/utils/finanzas-mock-store';
 import axiosInstance, { fetcher, endpoints } from 'src/utils/axios';
 
 import { uploadFileToS3 } from './filesS3';
@@ -9,12 +10,31 @@ import { uploadFileToS3 } from './filesS3';
 // Finanzas del club: egresos, con flujo pendiente → aprobado → pagado.
 // Reemplaza el seguimiento manual que hoy se lleva en un Excel — ver el
 // contrato de API completo en el issue del módulo de Finanzas.
+//
+// El backend real todavía no existe (issue en curso) — mientras tanto, cada
+// función intenta la llamada real primero y, solo si falla y estamos en un
+// build de desarrollo (import.meta.env.DEV, eliminado del build de
+// producción), cae a un mock local en localStorage (finanzas-mock-store.js)
+// para poder construir y mostrar las pantallas. En cuanto el backend
+// responda de verdad, este camino deja de usarse solo.
 
 const URL = endpoints.expenses;
 
+async function fetcherWithMockFallback(url, mockFn) {
+  try {
+    return await fetcher(url);
+  } catch (error) {
+    if (import.meta.env.DEV) return mockFn();
+    throw error;
+  }
+}
+
 export function useGetExpenses(workspaceId) {
   const url = workspaceId ? `${URL}?workspace_id=${workspaceId}` : null;
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(
+    url,
+    (key) => fetcherWithMockFallback(key, () => finanzasMock.listExpenses())
+  );
 
   return useMemo(
     () => ({
@@ -30,7 +50,10 @@ export function useGetExpenses(workspaceId) {
 
 export function useGetExpense(id, workspaceId) {
   const url = id && workspaceId ? `${URL}/${id}?workspace_id=${workspaceId}` : null;
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher);
+  const { data, isLoading, error, isValidating } = useSWR(
+    url,
+    (key) => fetcherWithMockFallback(key, () => finanzasMock.getExpense(id))
+  );
 
   return useMemo(
     () => ({
@@ -45,49 +68,91 @@ export function useGetExpense(id, workspaceId) {
 
 export async function createExpense(expenseData, workspaceId) {
   const url = workspaceId ? `${URL}?workspace_id=${workspaceId}` : URL;
-  const res = await axiosInstance.post(url, expenseData);
-  mutate((key) => typeof key === 'string' && key.startsWith(URL));
-  return res.data;
+  try {
+    const res = await axiosInstance.post(url, expenseData);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return res.data;
+  } catch (error) {
+    if (!import.meta.env.DEV) throw error;
+    const created = finanzasMock.createExpense(expenseData);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return created;
+  }
 }
 
 export async function updateExpense(id, expenseData, workspaceId) {
   const url = workspaceId ? `${URL}/${id}?workspace_id=${workspaceId}` : `${URL}/${id}`;
-  const res = await axiosInstance.put(url, expenseData);
-  mutate((key) => typeof key === 'string' && key.startsWith(URL));
-  return res.data;
+  try {
+    const res = await axiosInstance.put(url, expenseData);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return res.data;
+  } catch (error) {
+    if (!import.meta.env.DEV) throw error;
+    const updated = finanzasMock.updateExpense(id, expenseData);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return updated;
+  }
 }
 
 // Solo permitido server-side mientras status='pendiente'.
 export async function deleteExpense(id, workspaceId) {
   const url = workspaceId ? `${URL}/${id}?workspace_id=${workspaceId}` : `${URL}/${id}`;
-  const res = await axiosInstance.delete(url);
-  mutate((key) => typeof key === 'string' && key.startsWith(URL));
-  return res.data;
+  try {
+    const res = await axiosInstance.delete(url);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return res.data;
+  } catch (error) {
+    if (!import.meta.env.DEV) throw error;
+    const result = finanzasMock.deleteExpense(id);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return result;
+  }
 }
 
 // ── Flujo pendiente → aprobado → pagado ──────────────────────────────
 
 export async function approveExpense(id, workspaceId) {
   const url = workspaceId ? `${URL}/${id}/approve?workspace_id=${workspaceId}` : `${URL}/${id}/approve`;
-  const res = await axiosInstance.post(url, {});
-  mutate((key) => typeof key === 'string' && key.startsWith(URL));
-  return res.data;
+  try {
+    const res = await axiosInstance.post(url, {});
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return res.data;
+  } catch (error) {
+    if (!import.meta.env.DEV) throw error;
+    const updated = finanzasMock.approveExpense(id);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return updated;
+  }
 }
 
 export async function rejectExpense(id, reason, workspaceId) {
   const url = workspaceId ? `${URL}/${id}/reject?workspace_id=${workspaceId}` : `${URL}/${id}/reject`;
-  const res = await axiosInstance.post(url, { reason });
-  mutate((key) => typeof key === 'string' && key.startsWith(URL));
-  return res.data;
+  try {
+    const res = await axiosInstance.post(url, { reason });
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return res.data;
+  } catch (error) {
+    if (!import.meta.env.DEV) throw error;
+    const updated = finanzasMock.rejectExpense(id, reason);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return updated;
+  }
 }
 
 // payment: { amount?, account_id, paid_at, file_names? } — `amount` vacío
 // paga el saldo completo; se puede llamar varias veces para cuotas.
 export async function markExpensePaid(id, payment, workspaceId) {
   const url = workspaceId ? `${URL}/${id}/mark-paid?workspace_id=${workspaceId}` : `${URL}/${id}/mark-paid`;
-  const res = await axiosInstance.post(url, payment);
-  mutate((key) => typeof key === 'string' && key.startsWith(URL));
-  return res.data;
+  try {
+    const res = await axiosInstance.post(url, payment);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return res.data;
+  } catch (error) {
+    if (!import.meta.env.DEV) throw error;
+    const updated = finanzasMock.markExpensePaid(id, payment);
+    mutate((key) => typeof key === 'string' && key.startsWith(URL));
+    return updated;
+  }
 }
 
 // ── Comprobantes de pago (reemplazables, no de una sola subida) ─────
@@ -98,8 +163,17 @@ async function uploadExpenseProofFiles(expenseId, files, workspaceId) {
     ? `${URL}/${expenseId}/generate-presigned-urls?workspace_id=${workspaceId}`
     : `${URL}/${expenseId}/generate-presigned-urls`;
   const fileMetadata = files.map((file) => ({ file_name: file.name, content_type: file.type }));
-  const res = await axiosInstance.post(url, fileMetadata);
-  const presignedUrlMappings = res.data;
+
+  let presignedUrlMappings;
+  try {
+    const res = await axiosInstance.post(url, fileMetadata);
+    presignedUrlMappings = res.data;
+  } catch (error) {
+    if (!import.meta.env.DEV) throw error;
+    // No hay S3 real en el mock — los comprobantes se guardan como data
+    // URL directamente, así que no hace falta pedir URLs prefirmadas.
+    return finanzasMock.uploadProofFiles(files);
+  }
 
   // fetch does not reject on HTTP errors, so check each PUT explicitly —
   // otherwise an expired/forbidden presigned URL would still record the
