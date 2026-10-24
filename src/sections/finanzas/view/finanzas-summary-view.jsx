@@ -62,9 +62,12 @@ export function FinanzasSummaryView() {
   const getExpensePercent = (status) =>
     expenses.length ? (getExpenseLength(status) / expenses.length) * 100 : 0;
 
+  // paymentRequests ya trae paidAmount en todos los cobros (total si está
+  // pagado, 0 si no) — un cobro 'partial' u 'overdue' con abonos aprobados
+  // ya tiene plata real cobrada que un filtro solo por 'paid' ignoraría.
   const totalIncome = sumBy(
-    paymentRequests.filter((item) => item.status === 'paid'),
-    (item) => item.totalAmount
+    paymentRequests.filter((item) => item.status !== 'canceled'),
+    (item) => item.paidAmount || 0
   );
   // Paid-out money isn't only the expenses that reached 'pagado' — an
   // 'aprobado' expense can already have partial payments (cuotas) against

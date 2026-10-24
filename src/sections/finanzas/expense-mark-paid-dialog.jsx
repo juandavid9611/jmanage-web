@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { z as zod } from 'zod';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,6 +51,10 @@ export function ExpenseMarkPaidDialog({ open, onClose, expense }) {
 
   const pendingBalance = Math.max((expense?.total_amount || 0) - (expense?.paid_amount || 0), 0);
   const canMarkPaid = expense?.status === 'aprobado';
+  // Se genera una sola vez por apertura del diálogo (se monta de nuevo cada
+  // vez que se abre) — así un reintento del mismo envío usa la misma clave,
+  // y un doble clic o un reintento de red no registra el pago dos veces.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const schema = useMemo(() => getSchema(t, pendingBalance), [t, pendingBalance]);
 
@@ -77,6 +81,7 @@ export function ExpenseMarkPaidDialog({ open, onClose, expense }) {
           account_id: data.account_id,
           amount: data.amount > 0 ? data.amount : undefined,
           paid_at: dayjs(data.paid_at).format('YYYY-MM-DD'),
+          idempotency_key: idempotencyKey,
         },
         selectedWorkspace?.id
       );

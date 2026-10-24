@@ -62,7 +62,7 @@ export function getNewInvoiceSchema(t) {
         .min(1, { message: t('payment_request_to_required') }),
       userPrice: zod.number().min(1, { message: t('user_price_required') }),
       overduePrice: zod.number(),
-      account_id: zod.string().optional(),
+      accountId: zod.string().optional(),
     })
     .refine((data) => !fIsAfter(data.createDate, data.dueDate), {
       message: t('due_date_before_create_date'),
@@ -106,7 +106,9 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       userPrice: currentInvoice?.totalAmount || 0,
       overduePrice: currentInvoice?.overduePrice || 0,
       images: currentInvoice?.images || [],
-      account_id: currentInvoice?.account_id || '',
+      // payment_requests habla camelCase (totalAmount, paymentRequestTo...);
+      // la API no devuelve account_id en snake_case acá.
+      accountId: currentInvoice?.accountId || '',
     }),
     [currentInvoice, workspaceGroup]
   );
@@ -140,9 +142,9 @@ export function InvoiceNewEditForm({ currentInvoice }) {
   const onSubmit = handleSubmit(async (data) => {
     data.createDate = fDateTime(data?.createDate, 'YYYY-MM-DDTHH:mm:ss');
     data.dueDate = fDateTime(data?.dueDate, 'YYYY-MM-DDTHH:mm:ss');
-    // Only meaningful once the payment is actually paid — omit it rather
-    // than send an empty string on every other save.
-    data.account_id = data.status === 'paid' ? data.account_id || undefined : undefined;
+    // Solo tiene efecto al pasar el cobro a pagado — omitirlo en cualquier
+    // otro guardado en vez de mandar un string vacío.
+    data.accountId = data.status === 'paid' ? data.accountId || undefined : undefined;
 
     try {
       if (currentInvoice) {
@@ -267,7 +269,10 @@ export function InvoiceNewEditForm({ currentInvoice }) {
       <Form methods={methods}>
         <Stack spacing={{ xs: 3, md: 5 }} sx={{ mx: 'auto', maxWidth: { xs: 720, xl: 990 } }}>
           <Card>
-            <InvoiceNewEditStatusDate disableFields={isUser} />
+            <InvoiceNewEditStatusDate
+              disableFields={isUser}
+              accountAlreadyPaid={currentInvoice?.status === 'paid'}
+            />
             <Stack spacing={3} sx={{ p: 3 }}>
               <Box
                 columnGap={2}

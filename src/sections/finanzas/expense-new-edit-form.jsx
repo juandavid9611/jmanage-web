@@ -15,7 +15,6 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { useGetBankAccounts } from 'src/actions/bankAccounts';
 import { useWorkspace } from 'src/workspace/workspace-provider';
 import { createExpense, updateExpense, processExpenseProofImages } from 'src/actions/expenses';
 
@@ -47,7 +46,6 @@ function getExpenseSchema(t) {
     beneficiary_name: zod.string().optional(),
     expense_date: zod.union([zod.string(), zod.number()]),
     total_amount: zod.number().int().positive(),
-    account_id: zod.string().optional(),
     proof_images: zod.array(zod.any()).optional(),
   });
 }
@@ -56,12 +54,6 @@ export function ExpenseNewEditForm({ currentExpense }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { selectedWorkspace } = useWorkspace();
-  const { bankAccounts } = useGetBankAccounts(selectedWorkspace?.id);
-  // Keep offering an already-assigned account even if it's since been
-  // deactivated, so editing an older expense doesn't silently blank it out.
-  const selectableAccounts = bankAccounts.filter(
-    (account) => account.is_active || account.id === currentExpense?.account_id
-  );
 
   const schema = useMemo(() => getExpenseSchema(t), [t]);
 
@@ -78,7 +70,6 @@ export function ExpenseNewEditForm({ currentExpense }) {
         ? dayjs(currentExpense.expense_date).valueOf()
         : dayjs().valueOf(),
       total_amount: currentExpense?.total_amount || 0,
-      account_id: currentExpense?.account_id || '',
       proof_images: currentExpense?.proof_images || [],
     },
   });
@@ -114,10 +105,11 @@ export function ExpenseNewEditForm({ currentExpense }) {
   }, [setValue]);
 
   const onSubmit = handleSubmit(async (data) => {
-    const { proof_images: images, account_id: accountId, ...rest } = data;
+    // account_id no se manda: la API lo ignora al crear/editar — la cuenta
+    // la fija el primer pago (ver ExpenseMarkPaidDialog).
+    const { proof_images: images, ...rest } = data;
     const basePayload = {
       ...rest,
-      account_id: accountId || undefined,
       expense_date: dayjs(data.expense_date).format('YYYY-MM-DD'),
     };
 
@@ -182,24 +174,12 @@ export function ExpenseNewEditForm({ currentExpense }) {
 
           <Field.Text name="beneficiary_name" label={t('label_beneficiary')} />
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-            <Field.Text
-              name="total_amount"
-              type="number"
-              label={t('label_total_amount')}
-              inputProps={{ min: 0 }}
-              sx={{ flex: 1 }}
-            />
-
-            <Field.Select name="account_id" label={t('label_account')} sx={{ flex: 1 }}>
-              <MenuItem value="">—</MenuItem>
-              {selectableAccounts.map((account) => (
-                <MenuItem key={account.id} value={account.id}>
-                  {account.name}
-                </MenuItem>
-              ))}
-            </Field.Select>
-          </Stack>
+          <Field.Text
+            name="total_amount"
+            type="number"
+            label={t('label_total_amount')}
+            inputProps={{ min: 0 }}
+          />
 
           <Stack spacing={1.5}>
             <Typography variant="subtitle2">{t('label_proof_images')}</Typography>

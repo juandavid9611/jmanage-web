@@ -11,7 +11,7 @@ import { Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export function InvoiceNewEditStatusDate({ disableFields }) {
+export function InvoiceNewEditStatusDate({ disableFields, accountAlreadyPaid }) {
   const { t } = useTranslation();
   const { watch } = useFormContext();
   const { selectedWorkspace } = useWorkspace();
@@ -19,7 +19,7 @@ export function InvoiceNewEditStatusDate({ disableFields }) {
 
   const values = watch();
   const selectableAccounts = bankAccounts.filter(
-    (account) => account.is_active || account.id === values.account_id
+    (account) => account.is_active || account.id === values.accountId
   );
 
   return (
@@ -54,9 +54,12 @@ export function InvoiceNewEditStatusDate({ disableFields }) {
 
       {values.status === 'paid' && (
         <Field.Select
-          disabled={disableFields}
+          // Solo tiene efecto al momento de pasar a pagado — si ya estaba
+          // pagado antes de esta edición, cambiarlo acá no mueve nada en el
+          // backend, así que se deja de solo lectura para no sugerir que sí.
+          disabled={disableFields || accountAlreadyPaid}
           fullWidth
-          name="account_id"
+          name="accountId"
           label={t('label_account')}
         >
           {selectableAccounts.map((account) => (

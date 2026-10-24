@@ -164,10 +164,11 @@ async function uploadExpenseProofFiles(expenseId, files, workspaceId) {
     : `${URL}/${expenseId}/generate-presigned-urls`;
   const fileMetadata = files.map((file) => ({ file_name: file.name, content_type: file.type }));
 
-  let presignedUrlMappings;
+  let urls;
   try {
     const res = await axiosInstance.post(url, fileMetadata);
-    presignedUrlMappings = res.data;
+    // Mismo formato que payments/productos: { urls: { "<file_name>": "<url>" } }.
+    ({ urls } = res.data);
   } catch (error) {
     if (!import.meta.env.DEV) throw error;
     // No hay S3 real en el mock — los comprobantes se guardan como data
@@ -179,12 +180,10 @@ async function uploadExpenseProofFiles(expenseId, files, workspaceId) {
   // otherwise an expired/forbidden presigned URL would still record the
   // filename in proof_images as if the upload had actually succeeded.
   return Promise.all(
-    files.map(async (file, index) => {
-      const mapping = presignedUrlMappings[index];
-      const fileName = Object.keys(mapping)[0];
-      const uploadRes = await uploadFileToS3(file, mapping[fileName]);
+    files.map(async (file) => {
+      const uploadRes = await uploadFileToS3(file, urls[file.name]);
       if (!uploadRes.ok) throw new Error(`Image upload failed (${uploadRes.status})`);
-      return fileName;
+      return file.name;
     })
   );
 }
